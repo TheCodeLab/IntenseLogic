@@ -1,0 +1,7 @@
+*.dll	filter=lfs diff=lfs merge=lfs -crlf
+*.exe	filter=lfs diff=lfs merge=lfs -crlf
+*.mtl	filter=lfs diff=lfs merge=lfs -crlf
+*.obj	filter=lfs diff=lfs merge=lfs -crlf
+*.png	filter=lfs diff=lfs merge=lfs -crlf
+*.so	filter=lfs diff=lfs merge=lfs -crlf
+*.ttf	filter=lfs diff=lfs merge=lfs -crlf
