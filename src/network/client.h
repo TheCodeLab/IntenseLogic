@@ -3,7 +3,7 @@
 
 #include "network.h"
 
-int il_Network_connect(const struct {unsigned length; char* data} address, il_Network_Connection* ptr);
+int il_Network_connect(const il_Network_String address, il_Network_Connection* ptr);
 
 int il_Netowrk_authenticate(il_Network_Connection* ptr, il_Network_Authcode auth);
 
