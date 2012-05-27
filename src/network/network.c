@@ -9,7 +9,7 @@
 #include <netdb.h>
 #include <errno.h>
 #include <sys/select.h>
-#include <time.h>
+#include <sys/timeb.h>
 
 #include "network.h"
 
@@ -61,15 +61,17 @@ int il_Network_disconnect(il_Network_Connection* ptr, il_Network_String reason) 
   return 0;
 }
 
-int il_Network_ping(il_Network_Connection* ptr, long long timestamp) {
+int il_Network_ping(il_Network_Connection* ptr, long long timestamp, unsigned short msec) {
 
   struct ping_packet_t {
     unsigned char id;
     long long timestamp;
+    unsigned short msec;
   } ping_packet;
   
   ping_packet.id = 0x07;
   ping_packet.timestamp = timestamp;
+  ping_packet.msec = msec;
   
   if (write(ptr->sock_fd, &ping_packet, sizeof(struct ping_packet_t)) != -1) {
     set_error(strerror(errno));
@@ -129,6 +131,7 @@ int il_Network_Handler_ping(il_Network_Connection* ptr, const il_Network_Packet*
   struct ping_packet_t {
     unsigned char id;
     long long timestamp;
+    unsigned short msec;
   } *ping_packet = (struct ping_packet_t*) packet;
   
   if (sizeof(struct ping_packet_t) < maxlen)
@@ -141,7 +144,7 @@ int il_Network_Handler_ping(il_Network_Connection* ptr, const il_Network_Packet*
     }
   }
   
-  il_Network_ping(ptr, ping_packet->timestamp);
+  il_Network_ping(ptr, ping_packet->timestamp, ping_packet->msec);
   
   return sizeof(struct ping_packet_t);
 }
@@ -151,6 +154,7 @@ int il_Network_Handler_pong(il_Network_Connection* ptr, const il_Network_Packet*
   struct pong_packet_t {
     unsigned char id;
     long long timestamp;
+    unsigned short msec;
   } *pong_packet = (struct pong_packet_t*) packet;
   
   if (sizeof(struct pong_packet_t) < maxlen)
@@ -163,7 +167,10 @@ int il_Network_Handler_pong(il_Network_Connection* ptr, const il_Network_Packet*
     }
   }
   
-  ptr->latency = (float) (time(NULL) - (time_t)pong_packet->timestamp);
+  struct timeb tp;
+  ftime(&tp);
+  
+  ptr->latency = (float)(tp.time - (time_t)pong_packet->timestamp) + (tp.millitm - pong_packet->msec)/1000.0;
   
   return sizeof(struct pong_packet_t);
 }
