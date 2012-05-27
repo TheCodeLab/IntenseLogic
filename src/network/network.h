@@ -45,7 +45,7 @@ int il_Network_RegisterCallback(unsigned char id, il_Network_Callback callback);
 int il_Network_UnregisterCallback(unsigned char id, int num);
 
 int il_Network_disconnect(il_Network_Connection* ptr, il_Network_String reason);
-int il_Network_ping(il_Network_Connection* ptr, long long timestamp);
+int il_Network_ping(il_Network_Connection* ptr, long long timestamp, unsigned short msec);
 int il_Network_chat(il_Network_Connection* ptr, const il_Network_String message);
 
 int il_Network_Handler_disconnect(il_Network_Connection* ptr, const il_Network_Packet* packet, size_t maxlen);
