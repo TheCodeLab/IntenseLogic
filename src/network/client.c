@@ -135,14 +135,19 @@ int il_Network_Handler_connectResponse(il_Network_Connection* ptr, const il_Netw
     unsigned int ip_address;
   } *connect_packet = (struct connect_packet_t*) packet;
   
+  if (sizeof(struct connect_packet_t) < maxlen)
+    return 0;
+  
   int i;
   for (i=0; i < callbacks[0x03].length; i++) {
     if (callbacks[0x03].data[i]) {
       callbacks[0x03].data[i](ptr, packet, sizeof(struct connect_packet_t));
     }
   }
+  
+  ptr->is_ready = 1;
 
-  return 0;
+  return sizeof(struct connect_packet_t);
 }
 
 int il_Network_Handler_probeResponse(il_Network_Connection* ptr, const il_Network_Packet* packet, size_t maxlen) {
@@ -154,6 +159,9 @@ int il_Network_Handler_probeResponse(il_Network_Connection* ptr, const il_Networ
     unsigned short players;
   } *probe_packet = (struct probe_packet_t*) packet;
   
+  if (sizeof(struct probe_packet_t) < maxlen)
+    return 0;
+  
   int i;
   for (i=0; i < callbacks[0x06].length; i++) {
     if (callbacks[0x06].data[i]) {
@@ -161,5 +169,5 @@ int il_Network_Handler_probeResponse(il_Network_Connection* ptr, const il_Networ
     }
   }
 
-  return 0;
+  return sizeof(struct probe_packet_t);
 }

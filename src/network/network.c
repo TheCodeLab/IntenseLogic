@@ -8,6 +8,8 @@
 #include <unistd.h>
 #include <netdb.h>
 #include <errno.h>
+#include <sys/select.h>
+#include <time.h>
 
 #include "network.h"
 
@@ -105,6 +107,11 @@ int il_Network_Handler_disconnect(il_Network_Connection* ptr, const il_Network_P
     char reason[];
   } *disconnect_packet = (struct disconnect_packet_t*) packet;
   
+  if (sizeof(struct disconnect_packet_t) < maxlen)
+    return 0;
+  if (sizeof(struct disconnect_packet_t) + disconnect_packet->reasonl < maxlen)
+    return 0;
+  
   size_t len = sizeof(struct disconnect_packet_t) + disconnect_packet->reasonl;
   
   int i;
@@ -114,7 +121,7 @@ int il_Network_Handler_disconnect(il_Network_Connection* ptr, const il_Network_P
     }
   }
 
-  return 0;
+  return len;
 }
 
 int il_Network_Handler_ping(il_Network_Connection* ptr, const il_Network_Packet* packet, size_t maxlen) {
@@ -123,6 +130,9 @@ int il_Network_Handler_ping(il_Network_Connection* ptr, const il_Network_Packet*
     unsigned char id;
     long long timestamp;
   } *ping_packet = (struct ping_packet_t*) packet;
+  
+  if (sizeof(struct ping_packet_t) < maxlen)
+    return 0;
   
   int i;
   for (i=0; i < callbacks[0x07].length; i++) {
@@ -133,7 +143,7 @@ int il_Network_Handler_ping(il_Network_Connection* ptr, const il_Network_Packet*
   
   il_Network_ping(ptr, ping_packet->timestamp);
   
-  return 0;
+  return sizeof(struct ping_packet_t);
 }
 
 int il_Network_Handler_pong(il_Network_Connection* ptr, const il_Network_Packet* packet, size_t maxlen) {
@@ -143,6 +153,9 @@ int il_Network_Handler_pong(il_Network_Connection* ptr, const il_Network_Packet*
     long long timestamp;
   } *pong_packet = (struct pong_packet_t*) packet;
   
+  if (sizeof(struct pong_packet_t) < maxlen)
+    return 0;
+  
   int i;
   for (i=0; i < callbacks[0x08].length; i++) {
     if (callbacks[0x08].data[i]) {
@@ -150,7 +163,9 @@ int il_Network_Handler_pong(il_Network_Connection* ptr, const il_Network_Packet*
     }
   }
   
-  return 0;
+  ptr->latency = (float) (time(NULL) - (time_t)pong_packet->timestamp);
+  
+  return sizeof(struct pong_packet_t);
 }
 
 int il_Network_Handler_chat(il_Network_Connection* ptr, const il_Network_Packet* packet, size_t maxlen) {
@@ -161,11 +176,51 @@ int il_Network_Handler_chat(il_Network_Connection* ptr, const il_Network_Packet*
     char chat[];
   } *chat_packet = (struct chat_packet_t*) packet;
   
+  if (sizeof(struct chat_packet_t) < maxlen)
+    return 0;
+  if (sizeof(struct chat_packet_t) + chat_packet->chatl < maxlen)
+    return 0;
+  
   int i;
   for (i=0; i < callbacks[0x09].length; i++) {
     if (callbacks[0x09].data[i]) {
       callbacks[0x09].data[i](ptr, packet, sizeof(struct chat_packet_t) + chat_packet->chatl);
     }
+  }
+  
+  return sizeof(struct chat_packet_t) + chat_packet->chatl;
+}
+
+void* extrabuf;
+size_t overflow;
+int il_Network_update(il_Network_Connection* ptr) {
+
+  int pos = overflow;
+  void* data = malloc(1024 + overflow);
+  memcpy(data, extrabuf, overflow);
+  free(extrabuf);
+  ssize_t size;
+  
+  size = recv(ptr->sock_fd, data, 1024, MSG_DONTWAIT);
+  
+  if (size <= 0)
+    return -1;
+  
+  size += overflow;
+  
+  while (pos < size) {
+    unsigned char id = (unsigned char)data+pos;
+    if (!ptr->handlers[id])
+      return -1;
+    int res = ptr->handlers[id](ptr, (il_Network_Packet*)data+pos, size-pos);
+    if (res > 0) {
+      pos += res;
+      continue;
+    }
+    overflow = size - pos;
+    extrabuf = malloc(overflow);
+    memcpy(extrabuf, data+pos, overflow);
+    return 0;
   }
   
   return 0;
