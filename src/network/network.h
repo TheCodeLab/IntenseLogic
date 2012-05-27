@@ -22,6 +22,8 @@ typedef struct {
 typedef struct il_Network_Connection_t {
   unsigned short version;
   int sock_fd;
+  int is_ready;
+  float latency;
   int (*handlers[256])(struct il_Network_Connection_t *, const il_Network_Packet *, size_t);
   int (*extrahandlers[256])(struct il_Network_Connection_t *, const il_Network_PacketExtra *, size_t);
 } il_Network_Connection;
@@ -50,5 +52,7 @@ int il_Network_Handler_disconnect(il_Network_Connection* ptr, const il_Network_P
 int il_Network_Handler_ping(il_Network_Connection* ptr, const il_Network_Packet* packet, size_t maxlen);
 int il_Network_Handler_pong(il_Network_Connection* ptr, const il_Network_Packet* packet, size_t maxlen);
 int il_Network_Handler_chat(il_Network_Connection* ptr, const il_Network_Packet* packet, size_t maxlen);
+
+int il_Network_update(il_Network_Connection* ptr);
 
 #endif
