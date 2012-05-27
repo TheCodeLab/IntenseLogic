@@ -9,7 +9,7 @@
 #include <netdb.h>
 #include <errno.h>
 #include <sys/select.h>
-#include <sys/timeb.h>
+#include <sys/time.h>
 
 #include "network.h"
 
@@ -167,10 +167,10 @@ int il_Network_Handler_pong(il_Network_Connection* ptr, const il_Network_Packet*
     }
   }
   
-  struct timeb tp;
-  ftime(&tp);
+  struct timeval tv;
+  gettimeofday(&tv,NULL);
   
-  ptr->latency = (float)(tp.time - (time_t)pong_packet->timestamp) + (tp.millitm - pong_packet->msec)/1000.0;
+  ptr->latency = (float)(tv.tv_sec - (time_t)pong_packet->timestamp) + ((tv.tv_usec/1000 - pong_packet->msec)/1000.0f);
   
   return sizeof(struct pong_packet_t);
 }
