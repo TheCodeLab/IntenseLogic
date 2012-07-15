@@ -163,3 +163,32 @@ pip-log.txt
 
 # Mac crap
 .DS_Store
+
+#########
+## GNU
+#########
+
+# Autoconf
+configure
+config.status
+config.log
+autom4te.cache
+config.h
+stamp-h1
+
+# Automake
+Makefile
+Makefile.in
+
+# M4
+.deps
+
+# Output files
+*.o
+*.a
+
+###################
+## IntenseLogic
+###################
+
+src/il

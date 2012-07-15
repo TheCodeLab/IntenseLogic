@@ -1,3 +1,4 @@
 bin_PROGRAMS = il
-il_SOURCES = main.c common/event.c common/input.c
-#SUBDIRS = common network
+il_SOURCES = main.c
+il_LDADD = common/libilcommon.a network/libilnetwork.a graphics/libilgraphics.a
+SUBDIRS = common network graphics
