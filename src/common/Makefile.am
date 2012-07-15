@@ -1,2 +1,2 @@
-lib_LIBRARIES = common
-common_SOURCES = event.c input.c
+lib_LIBRARIES = libilcommon.a
+libilcommon_a_SOURCES = event.c input.c matrix.c

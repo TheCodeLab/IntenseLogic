@@ -6,6 +6,7 @@ AC_INIT([Intense Logic], [0.0.1], [help@physibots.info])
 AM_INIT_AUTOMAKE([-Wall -Werror foreign])
 AC_CONFIG_SRCDIR([src/main.c])
 AC_CONFIG_HEADERS([config.h])
+AC_PROG_RANLIB
 
 # Checks for programs.
 AC_PROG_CC
@@ -25,5 +26,8 @@ AC_FUNC_REALLOC
 AC_CHECK_FUNCS([gettimeofday memset socket strerror])
 
 AC_CONFIG_FILES([Makefile
-                 src/Makefile])
+                 src/Makefile
+                 src/common/Makefile
+                 src/graphics/Makefile
+                 src/network/Makefile])
 AC_OUTPUT

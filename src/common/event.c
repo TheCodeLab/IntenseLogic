@@ -45,6 +45,8 @@ void il_Event_handle(il_Event_Event* ev) {
     container->callbacks[i](ev);
   }
   
+  free(ev);
+  
 }
 
 void il_Event_register(unsigned short eventid, il_Event_Callback callback) {
