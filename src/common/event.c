@@ -51,7 +51,10 @@ void il_Event_handle(il_Event_Event* ev) {
 
 void il_Event_register(unsigned short eventid, il_Event_Callback callback) {
   int i;
-  struct il_Event_CallbackContainer* container;
+  struct il_Event_CallbackContainer* container = NULL;
+  if (il_Event_Callbacks == NULL) {
+  
+  }
   for (i = 0; i < il_Event_Callbacks_len; i++) {
     if (il_Event_Callbacks[i].eventid == eventid) {
       container = &il_Event_Callbacks[i];
@@ -59,15 +62,17 @@ void il_Event_register(unsigned short eventid, il_Event_Callback callback) {
     }
   }
   
-  if (!container) {
+  if (container == NULL) {
     container = malloc(sizeof(struct il_Event_CallbackContainer));
     container->eventid = eventid;
     container->length = 0;
     container->callbacks = NULL;
   }
   
-  il_Event_Callback* temp = (il_Event_Callback*)realloc(container->callbacks, container->length);
+  il_Event_Callback* temp = (il_Event_Callback*)malloc(container->length+1);
   memcpy(temp, container->callbacks, container->length);
+  //if (container->callbacks != NULL)
+  free(container->callbacks);
   temp[container->length] = callback;
   container->length++;
   container->callbacks = temp;
