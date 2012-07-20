@@ -192,3 +192,6 @@ Makefile.in
 ###################
 
 src/il
+bin/
+lib/
+.tup/
