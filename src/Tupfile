@@ -1,4 +1,6 @@
-: foreach common/*.c |> gcc -g -c %f -o %o |> %B.o {common}
-: foreach graphics/*.c |> gcc -g -c %f -o %o |> %B.o {graphics}
-: foreach network/*.c |> gcc -g -c %f -o %o |> %B.o {network}
-: main.c {common} {graphics} {network} |> gcc -g -lc -lm %f -o %o |> il
+CFLAGS = -Wall -g
+
+: foreach common/*.c |> gcc $(CFLAGS) -c %f -o %o |> %B.o {common}
+: foreach graphics/*.c |> gcc $(CFLAGS) -c %f -o %o |> %B.o {graphics}
+: foreach network/*.c |> gcc $(CFLAGS) -c %f -o %o |> %B.o {network}
+: main.c {common} {graphics} {network} |> gcc $(CFLAGS) -lc -lm %f -o %o |> il

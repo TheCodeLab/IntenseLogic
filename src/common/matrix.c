@@ -4,6 +4,51 @@
 #include "matrix.h"
 
 
+inline sg_Vector2 sg_Vector2_add(sg_Vector2 a, sg_Vector2 b) {
+  return (sg_Vector2) {a.x + b.x, a.y + b.y};
+}
+
+inline sg_Vector2 sg_Vector2_sub(sg_Vector2 a, sg_Vector2 b) {
+  return (sg_Vector2) {a.x - b.x, a.y - b.y};
+}
+
+inline sg_Vector2 sg_Vector2_mul(sg_Vector2 a, sg_Vector2 b) {
+  return (sg_Vector2) {a.x * b.x, a.y * b.y};
+}
+
+inline sg_Vector2 sg_Vector2_mul_f(sg_Vector2 a, float b) {
+  return (sg_Vector2) {a.x * b, a.y * b};
+}
+
+inline sg_Vector2 sg_Vector2_div(sg_Vector2 a, sg_Vector2 b) {
+  return (sg_Vector2) {a.x / b.x, a.y / b.y};
+}
+
+inline sg_Vector2 sg_Vector2_div_f(sg_Vector2 a, float b) {
+  return (sg_Vector2) {a.x / b, a.y / b};
+}
+
+inline float sg_Vector2_len(sg_Vector2 v) {
+  return sqrt(v.x*v.x + v.y*v.y);
+}
+
+inline sg_Vector2 sg_Vector2_normalise(sg_Vector2 v) {
+  float l = sg_Vector2_len(v);
+  return (sg_Vector2) {v.x/l, v.y/l};
+}
+
+inline float sg_Vector2_dot(sg_Vector2 a, sg_Vector2 b) {
+  return (a.x*b.x) + (a.y*b.y);
+}
+
+// u = (a,b,c) and v = (p,r,q)
+// u x v = (br-cq,cp-ar,aq-bp)
+/*inline sg_Vector2 sg_Vector2_cross(sg_Vector2 a, sg_Vector2 b) {
+  // TODO: 2d version
+  return (sg_Vector2) {a.y*b.y - a.z*b.z, a.y*b.x - a.x*b.y, a.x*b.z - a.y*b.x};
+}*/
+
+
 inline sg_Vector3 sg_Vector3_add(sg_Vector3 a, sg_Vector3 b) {
   return (sg_Vector3) {a.x + b.x, a.y + b.y, a.z + b.z};
 }
