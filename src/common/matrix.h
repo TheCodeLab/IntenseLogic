@@ -16,7 +16,7 @@ typedef struct sg_Vector2 {
 } sg_Vector2;
 
 /* Function: sg_Vector2_add
-Adds two vectors together using (x1+x2, y1+y2, z1+z2).
+Adds two vectors together using (x1+x2, y1+y2).
 */
 inline sg_Vector2 sg_Vector2_add(sg_Vector2 a, sg_Vector2 b);
 
@@ -26,7 +26,7 @@ sg_Vector2_add except subtracting.
 inline sg_Vector2 sg_Vector2_sub(sg_Vector2 a, sg_Vector2 b);
 
 /* Function: sg_Vector2_mul
-Multiplies two vectors together using the useful (x1*x2,y1*y2,z1*z2).
+Multiplies two vectors together using the useful (x1*x2,y1*y2).
 */
 inline sg_Vector2 sg_Vector2_mul(sg_Vector2 a, sg_Vector2 b);
 
@@ -36,7 +36,7 @@ Multiplies all the values in a given vector by a given number.
 inline sg_Vector2 sg_Vector2_mul_f(sg_Vector2 a, float b);
 
 /* Function: sg_Vector2_div
-Divides two vectors using (x1/x2,y1/y2,z1/z2).
+Divides two vectors using (x1/x2,y1/y2).
 */
 inline sg_Vector2 sg_Vector2_div(sg_Vector2 a, sg_Vector2 b);
 
@@ -47,7 +47,7 @@ inline sg_Vector2 sg_Vector2_div_f(sg_Vector2 a, float b);
 
 /* Function: sg_Vector2_len
 Uses pythagorean theorem on the given vector, to return the number of units from
-the point specified by it to the origin (0,0,0).
+the point specified by it to the origin (0,0).
 */
 inline float sg_Vector2_len(sg_Vector2 v);
 
