@@ -41,13 +41,6 @@ inline float sg_Vector2_dot(sg_Vector2 a, sg_Vector2 b) {
   return (a.x*b.x) + (a.y*b.y);
 }
 
-// u = (a,b,c) and v = (p,r,q)
-// u x v = (br-cq,cp-ar,aq-bp)
-/*inline sg_Vector2 sg_Vector2_cross(sg_Vector2 a, sg_Vector2 b) {
-  // TODO: 2d version
-  return (sg_Vector2) {a.y*b.y - a.z*b.z, a.y*b.x - a.x*b.y, a.x*b.z - a.y*b.x};
-}*/
-
 
 inline sg_Vector3 sg_Vector3_add(sg_Vector3 a, sg_Vector3 b) {
   return (sg_Vector3) {a.x + b.x, a.y + b.y, a.z + b.z};
