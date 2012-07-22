@@ -1,7 +1,6 @@
 #include "physics.h"
 
 #include <ode/ode.h>
-#include <stdio.h>
 
 #include "common/base.h"
 #include "common/event.h"
@@ -13,7 +12,6 @@ unsigned numworlds;
 
 void tick (il_Event_Event e) {
   int i;
-  printf("tick!\n");
   for (i=0; i < numworlds; i++) {
     dWorldQuickStep(worlds[i]->worldid, IL_BASE_TICK);
   }

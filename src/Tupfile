@@ -1,8 +1,13 @@
+ifdef CC
+CC = @(CC)
+else
 CC = gcc
+endif
 CFLAGS = -Wall -g -I.
 
 : foreach common/*.c |> $(CC) $(CFLAGS) -c %f -o %o |> %B.o {common}
 : foreach graphics/*.c |> $(CC) $(CFLAGS) -c %f -o %o |> %B.o {graphics}
 : foreach network/*.c |> $(CC) $(CFLAGS) -c %f -o %o |> %B.o {network}
 : foreach physics/*.c |> $(CC) $(CFLAGS) -c %f -o %o |> %B.o {physics}
-: main.c {common} {graphics} {network} {physics} |> $(CC) $(CFLAGS) -lc -lm -lode %f -o %o |> il
+: foreach script/*.c |> $(CC) $(CFLAGS) -c %f -o %o |> %B.o {script}
+: main.c {common} {graphics} {network} {physics} {script} |> $(CC) $(CFLAGS) -lc -lm -lode -llua5.1 %f -o %o |> il
