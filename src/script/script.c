@@ -4,7 +4,7 @@ void il_Script_init(){
 }
 
 il_Script_status *il_Script_loadfile(char *filename){
-    static il_Script_status *status;
+    static il_Script_status *status = malloc(sizeof(il_Script_status));
     lua_State *L = luaL_newstate();
     luaL_openlibs(L);
 
