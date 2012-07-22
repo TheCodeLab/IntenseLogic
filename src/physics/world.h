@@ -13,6 +13,6 @@ typedef struct il_Physics_World {
   int active;
 } il_Physics_World;
 
-void il_Physics_World_initialise(il_Physics_World *world);
+il_Physics_World* il_Physics_World_create(const il_Common_World* parent);
 
 #endif

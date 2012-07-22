@@ -26,7 +26,9 @@ const il_Event_Event* il_Event_pop() {
   }
   il_Event_EventQueue_first = node->next;
   
-  return node->event;
+  il_Event_Event* ev = node->event;
+  free(node);
+  return ev;
 }
 
 void il_Event_handle(il_Event_Event* ev) {
@@ -76,7 +78,7 @@ void il_Event_register(unsigned short eventid, il_Event_Callback callback) {
   container->length++;
   container->callbacks = temp;
   
-  il_Event_CallbackContainer *temp2 = (il_Event_CallbackContainer*)malloc(sizeof(il_Event_CallbackContainer) * il_Event_Callbacks_len);
+  il_Event_CallbackContainer *temp2 = (il_Event_CallbackContainer*)malloc(sizeof(il_Event_CallbackContainer) * (il_Event_Callbacks_len+1));
   memcpy(temp2, il_Event_Callbacks, il_Event_Callbacks_len);
   temp2[il_Event_Callbacks_len] = *container;
   free(il_Event_Callbacks);
