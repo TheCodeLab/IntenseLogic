@@ -62,11 +62,6 @@ Returns the dot product of the two vectors.
 */
 inline float sg_Vector2_dot(sg_Vector2 a, sg_Vector2 b);
 
-/* Function: sg_Vector2_cross
-Returns the cross product of the two vectors.
-*/
-inline sg_Vector2 sg_Vector2_cross(sg_Vector2 a, sg_Vector2 b);
-
 
 /* Typedef: sg_Vector3
 A type used for representing 3-dimensional vectors. 

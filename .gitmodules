@@ -1,0 +1,3 @@
+[submodule "SOIL"]
+	path = SOIL
+	url = https://github.com/epatel/SOIL.git

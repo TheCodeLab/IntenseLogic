@@ -17,6 +17,7 @@ typedef struct il_Graphics_Drawable3d {
   GLuint shader;
   GLuint texture;
   void (*draw)(struct il_Graphics_Drawable3d*);
+  unsigned refs;
 } il_Graphics_Drawable3d;
 
 #endif

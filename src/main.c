@@ -8,6 +8,7 @@
 #include "common/event.h"
 #include "graphics/graphics.h"
 #include "network/network.h"
+#include "physics/physics.h"
 
 const char *optstring = "h";
 
@@ -60,6 +61,7 @@ int main(int argc, char **argv) {
   // initialise engine
   il_Network_init();
   il_Graphics_init();
+  il_Physics_init();
   il_Event_register(IL_BASE_SHUTDOWN, (il_Event_Callback)&shutdown_callback);
   
   
@@ -85,9 +87,12 @@ int main(int argc, char **argv) {
     tick->size = 0;
     il_Event_push(ev);
     
+    printf("loop\n");
+    
     // handle events
-    while (il_Event_EventQueue_first) {
+    while (il_Event_EventQueue_first != NULL) {
       il_Event_handle((il_Event_Event*)il_Event_pop());
+      printf("test\n");
     }
     
     // calculate time to sleep
