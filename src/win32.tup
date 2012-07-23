@@ -1,0 +1,2 @@
+EXTENSION=.exe
+LDFLAGS += -lopengl32
