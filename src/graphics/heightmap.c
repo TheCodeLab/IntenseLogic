@@ -1,5 +1,8 @@
 #include "heightmap.h"
 
+#include <stdlib.h>
+#include <stdio.h>
+
 il_Graphics_Heightmap_Quad* il_Graphics_Heightmap_Quad_new(float* heights, int depth) {
 	il_Graphics_Heightmap_Quad* quad = malloc(sizeof(il_Graphics_Heightmap_Quad));
 	int i;
