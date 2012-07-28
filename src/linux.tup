@@ -1,1 +1,2 @@
+LINKSUFFIX=.so
 LDFLAGS += -lc -lGL
