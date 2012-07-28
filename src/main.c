@@ -5,6 +5,7 @@
 #include <sys/time.h>
 #include "timersub.h"
 
+#include "sdl/SDL.h"
 #include "common/base.h"
 #include "common/event.h"
 #include "graphics/graphics.h"
@@ -90,7 +91,17 @@ int main(int argc, char **argv) {
     il_Event_Event* tick = malloc(sizeof(il_Event_Event));
     tick->eventid = IL_BASE_TICK;
     tick->size = 0;
-    il_Event_push(ev);
+    il_Event_push(tick);
+
+    SDL_Event sdlEvent;
+    if (SDL_PollEvent(&sdlEvent)) {
+      if (sdlEvent.type == SDL_QUIT) {
+        il_Event_Event* quit = malloc(sizeof(il_Event_Event));
+        quit->eventid = IL_BASE_SHUTDOWN;
+        quit->size = 0;
+        il_Event_push(quit);
+      } 
+    }
     
     printf("loop\n");
     
@@ -115,6 +126,7 @@ int main(int argc, char **argv) {
   
   
   // shutdown code (only reached after receiving a IL_BASE_SHUTDOWN event)
+  il_Graphics_quit();
   
   return 0;
 }
