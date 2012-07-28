@@ -16,16 +16,16 @@ echo "LDFLAGS: $LDFLAGS";
 
 if $(test $1 = "mingw"); then
 EXTENSION=.exe
-LDFLAGS="$LDFLAGS -static-libgcc -static-libstdc++ -static -llua -lode"
+LDFLAGS="$LDFLAGS -static-libgcc -static -llua"
 echo "Target: mingw";
 else
-LDFLAGS="$LDFLAGS -llua5.1 -lc -lGL -lode"
+LDFLAGS="$LDFLAGS -llua5.1 -lc -lGL"
 echo "Target: linux";
 fi;
 
 cd src;
 
-SOURCES="main.c common/*.c graphics/*.c network/*.c script/*.c" # physics/*.c
+SOURCES="main.c common/*.c graphics/*.c network/*.c script/*.c asset/*.c" # physics/*.c
 
 echo "SOURCES: $SOURCES";
 

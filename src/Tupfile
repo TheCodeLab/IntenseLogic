@@ -6,13 +6,14 @@ endif
 INCLUDES += -I.
 CFLAGS += -Wall -g $(INCLUDES)
 CFLAGS += -DdDOUBLE
-LDFLAGS += -lm -lode -llua5.1 $(INCLUDES)
+LDFLAGS += -lm -llua5.1
 
 include @(TUP_PLATFORM).tup
 
 : foreach common/*.c |> $(CC) $(CFLAGS) -c %f -o %o |> %B.o {common}
 : foreach graphics/*.c |> $(CC) $(CFLAGS) -c %f -o %o |> %B.o {graphics}
 : foreach network/*.c |> $(CC) $(CFLAGS) -c %f -o %o |> %B.o {network}
-: foreach physics/*.c |> $(CC) $(CFLAGS) -c %f -o %o |> %B.o {physics}
+#: foreach physics/*.c |> $(CC) $(CFLAGS) -c %f -o %o |> %B.o {physics}
 : foreach script/*.c |> $(CC) $(CFLAGS) -c %f -o %o |> %B.o {script}
-: main.c {common} {graphics} {network} {physics} {script} |> $(CC) $(LDFLAGS) %f -o %o |> il$(EXTENSION)
+: foreach asset/*.c |> $(CC) $(CFLAGS) -c %f -o %o |> %B.o {asset}
+: main.c {common} {graphics} {network} {physics} {script} |> $(CC) %f -o %o $(LDFLAGS) |> il$(EXTENSION)
