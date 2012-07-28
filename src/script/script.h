@@ -10,7 +10,7 @@
 typedef struct {
     int success;
     size_t errlen;
-    char *error;
+    const char *error;
 } il_Script_Status;
 
 void il_Script_init();

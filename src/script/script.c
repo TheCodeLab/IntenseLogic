@@ -10,7 +10,7 @@ il_Script_Status il_Script_loadfile(char *filename){
 
     if (luaL_loadfile(L, filename) || lua_pcall(L, 0, 0, 0)){
         status.success = 0;
-        status.error   = (char*)lua_tolstring(L, -1, &status.errlen);
+        status.error   = lua_tolstring(L, -1, &status.errlen);
     } else{
         status.success = 1;
     }
