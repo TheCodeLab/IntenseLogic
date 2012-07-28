@@ -8,7 +8,7 @@ echo "Compiler: $CC";
 
 INCLUDES="$INCLUDES -I."
 CFLAGS="$CFLAGS -Wall -g -DdDOUBLE $INCLUDES"
-LDFLAGS="$LDFLAGS -lm -lode $INCLUDES"
+LDFLAGS="$LDFLAGS -Llib/ -lm $INCLUDES"
 
 echo "INCLUDES: $INCLUDES";
 echo "CFLAGS: $CFLAGS";
@@ -16,16 +16,16 @@ echo "LDFLAGS: $LDFLAGS";
 
 if $(test $1 = "mingw"); then
 EXTENSION=.exe
-LDFLAGS=$LDFLAGS -static -llua
+LDFLAGS="$LDFLAGS -static-libgcc -static-libstdc++ -static -llua -lode"
 echo "Target: mingw";
 else
-LDFLAGS=$LDFLAGS -llua5.1 -lc -lGL
+LDFLAGS="$LDFLAGS -llua5.1 -lc -lGL -lode"
 echo "Target: linux";
 fi;
 
 cd src;
 
-SOURCES="main.c common/*.c physics/*.c graphics/*.c network/*.c script/*.c"
+SOURCES="main.c common/*.c graphics/*.c network/*.c script/*.c" # physics/*.c
 
 echo "SOURCES: $SOURCES";
 
@@ -35,4 +35,4 @@ done;
 
 cd ..
 
-$CC $LDFLAGS obj/*.o -o bin/il$EXTENSION
+$CC obj/*.o $LDFLAGS -o bin/il$EXTENSION
