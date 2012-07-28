@@ -5,5 +5,6 @@
 #define IL_GRAPHICS_TICK    ((IL_GRAPHICS_RANGE<<8) + 0)
 
 void il_Graphics_init();
+void il_Graphics_quit();
 
 #endif
