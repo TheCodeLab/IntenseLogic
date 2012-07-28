@@ -3,13 +3,14 @@
 #include <unistd.h>
 #include <getopt.h>
 #include <sys/time.h>
+#include "timersub.h"
 
 #include "sdl/SDL.h"
 #include "common/base.h"
 #include "common/event.h"
 #include "graphics/graphics.h"
 #include "network/network.h"
-#include "physics/physics.h"
+//#include "physics/physics.h"
 #include "script/script.h"
 
 const char *optstring = "h";
@@ -63,7 +64,7 @@ int main(int argc, char **argv) {
   // initialise engine
   il_Network_init();
   il_Graphics_init();
-  il_Physics_init();
+  //il_Physics_init();
   il_Script_init();
   il_Event_register(IL_BASE_SHUTDOWN, (il_Event_Callback)&shutdown_callback);
   
