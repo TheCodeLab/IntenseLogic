@@ -36,6 +36,7 @@ void shutdown_callback(il_Event_Event* ev) {
   running = 0;
 }
 
+#undef main
 int main(int argc, char **argv) {
 
   // build config file
@@ -103,12 +104,12 @@ int main(int argc, char **argv) {
       } 
     }
     
-    printf("loop\n");
+    //printf("loop\n");
     
     // handle events
     while (il_Event_EventQueue_first != NULL) {
       il_Event_handle((il_Event_Event*)il_Event_pop());
-      printf("test\n");
+      //printf("test\n");
     }
     
     // calculate time to sleep

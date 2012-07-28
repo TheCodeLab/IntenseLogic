@@ -3,10 +3,10 @@ CC = @(CC)
 else
 CC = gcc
 endif
-INCLUDES += -I.
+INCLUDES += -I. -I../include
 CFLAGS += -Wall -g $(INCLUDES)
 CFLAGS += -DdDOUBLE
-LDFLAGS += -lm -llua5.1
+LDFLAGS += -lm -llua5.1 -lSDL
 
 include @(TUP_PLATFORM).tup
 
@@ -16,4 +16,4 @@ include @(TUP_PLATFORM).tup
 #: foreach physics/*.c |> $(CC) $(CFLAGS) -c %f -o %o |> %B.o {physics}
 : foreach script/*.c |> $(CC) $(CFLAGS) -c %f -o %o |> %B.o {script}
 : foreach asset/*.c |> $(CC) $(CFLAGS) -c %f -o %o |> %B.o {asset}
-: main.c {common} {graphics} {network} {physics} {script} |> $(CC) %f -o %o $(LDFLAGS) |> il$(EXTENSION)
+: main.c ../lib/*$(LINKSUFFIX) {common} {graphics} {network} {physics} {script} |> $(CC) %f -o %o $(LDFLAGS) |> il$(EXTENSION)
