@@ -194,3 +194,4 @@ Makefile.in
 src/il
 bin/
 .tup/
+include/
