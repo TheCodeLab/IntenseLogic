@@ -12,6 +12,7 @@
 #include "network/network.h"
 //#include "physics/physics.h"
 #include "script/script.h"
+#include "asset/asset.h"
 
 const char *optstring = "h";
 
@@ -35,6 +36,7 @@ void shutdown_callback(il_Event_Event* ev) {
   running = 0;
 }
 
+#undef main
 int main(int argc, char **argv) {
 
   // build config file
@@ -66,6 +68,7 @@ int main(int argc, char **argv) {
   il_Graphics_init();
   //il_Physics_init();
   il_Script_init();
+  il_Asset_init();
   il_Event_register(IL_BASE_SHUTDOWN, (il_Event_Callback)&shutdown_callback);
   
   
@@ -101,12 +104,12 @@ int main(int argc, char **argv) {
       } 
     }
     
-    printf("loop\n");
+    //printf("loop\n");
     
     // handle events
     while (il_Event_EventQueue_first != NULL) {
       il_Event_handle((il_Event_Event*)il_Event_pop());
-      printf("test\n");
+      //printf("test\n");
     }
     
     // calculate time to sleep
