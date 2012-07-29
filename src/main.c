@@ -3,7 +3,7 @@
 #include <unistd.h>
 #include <getopt.h>
 #include <sys/time.h>
-#include "timersub.h"
+#include "time.h"
 
 #include "sdl/SDL.h"
 #include "common/base.h"
@@ -29,6 +29,38 @@ const char *help[] = {
   "Prints this page", // -h --help
   NULL
 };
+
+void update() {
+  SDL_Event sdlEvent;
+  if (SDL_PollEvent(&sdlEvent)) {
+    if (sdlEvent.type == SDL_QUIT) {
+      il_Event_Event* quit = malloc(sizeof(il_Event_Event));
+      quit->eventid = IL_BASE_SHUTDOWN;
+      quit->size = 0;
+      il_Event_push(quit);
+    } 
+  }
+  
+  // handle events
+  while (il_Event_EventQueue_first != NULL) {
+    il_Event_handle((il_Event_Event*)il_Event_pop());
+    //printf("test\n");
+  }
+}
+
+void tick() {
+  il_Event_Event* tick = malloc(sizeof(il_Event_Event));
+  tick->eventid = IL_BASE_TICK;
+  tick->size = 0;
+  il_Event_push(tick);
+}
+
+void draw() {
+  il_Event_Event* frame = malloc(sizeof(il_Event_Event));
+  frame->eventid = IL_GRAPHICS_TICK;
+  frame->size = 0;
+  il_Event_push(frame);
+}
 
 int running = 1;
 
@@ -78,51 +110,72 @@ int main(int argc, char **argv) {
   ev->size = 0; // no extra data
   il_Event_push(ev);
   
+  update();
+  
   struct timeval start;
   struct timeval stop;
   struct timeval sleep;
-  struct timeval len;
-  len.tv_sec = 0;
-  len.tv_usec = IL_BASE_TICK_LENGTH;
+  struct timeval ticks_temp;
+  struct timeval frames_temp;
+  struct timeval ticklen;
+  ticklen.tv_sec = 0;
+  ticklen.tv_usec = IL_BASE_TICK_LENGTH;
+  struct timeval framelen;
+  framelen.tv_sec = 0;
+  framelen.tv_usec = IL_GRAPHICS_TICK_LENGTH;
+  struct timeval lasttick;
+  gettimeofday(&lasttick,NULL);
+  struct timeval lastframe;
+  gettimeofday(&lastframe,NULL);
   struct timeval empty;
   timerclear(&empty);
+  int state;
   while (running) {
-    // push tick event
     gettimeofday(&start,NULL);
-    il_Event_Event* tick = malloc(sizeof(il_Event_Event));
-    tick->eventid = IL_BASE_TICK;
-    tick->size = 0;
-    il_Event_push(tick);
 
-    SDL_Event sdlEvent;
-    if (SDL_PollEvent(&sdlEvent)) {
-      if (sdlEvent.type == SDL_QUIT) {
-        il_Event_Event* quit = malloc(sizeof(il_Event_Event));
-        quit->eventid = IL_BASE_SHUTDOWN;
-        quit->size = 0;
-        il_Event_push(quit);
-      } 
+    //printf("state: %i\n", state);
+    
+    if (state == 0) {
+      tick();
+    } else {
+      draw();
     }
     
-    //printf("loop\n");
+    update();
     
-    // handle events
-    while (il_Event_EventQueue_first != NULL) {
-      il_Event_handle((il_Event_Event*)il_Event_pop());
-      //printf("test\n");
+    if (state == 1) {
+      il_Graphics_draw();
     }
     
     // calculate time to sleep
     gettimeofday(&stop,NULL);
+    
     timersub(&stop, &start, &sleep);
-    timersub(&len, &sleep, &sleep);
+    
+    //printf("frame length: %i\n", sleep.tv_usec);
+    
+    timeradd(&ticklen, &lasttick, &ticks_temp);
+    timeradd(&framelen, &lastframe, &frames_temp);
+
+    state = timercmp(&ticks_temp, &frames_temp, >);
+    
+    if (state == 0) {
+      timersub(&ticks_temp, &stop, &sleep);
+    } else {
+      timersub(&frames_temp, &stop, &sleep);
+    }
+    
     if (timercmp(&empty, &sleep, >) != 0) {
       printf("Behind on ticks!\n");
     }
-    usleep(sleep.tv_usec);
     
-    //printf("Test!\n");
-    il_Graphics_draw();
+    if (state == 0) {
+      lasttick = start;
+    } else {
+      lastframe = start;
+    }
+    
+    usleep(sleep.tv_usec);
     
   }
   

@@ -6,7 +6,7 @@ endif
 INCLUDES += -I. -I../include
 CFLAGS += -Wall -g $(INCLUDES)
 CFLAGS += -DdDOUBLE
-LDFLAGS += -lm -llua5.1 -lSDL
+LDFLAGS += -lm -llua5.1 -lSDL -lSOIL
 
 include @(TUP_PLATFORM).tup
 
