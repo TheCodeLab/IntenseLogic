@@ -6,9 +6,11 @@ fi;
 
 echo "Compiler: $CC";
 
-INCLUDES="$INCLUDES -I."
+INCLUDES="$INCLUDES -I. -I../include"
 CFLAGS="$CFLAGS -Wall -g -DdDOUBLE $INCLUDES"
+CFLAGS="$CFLAGS `sdl-config --cflags`"
 LDFLAGS="$LDFLAGS -Llib/ -lm $INCLUDES"
+#LDFLAGS="$LDFLAGS `sdl-config --libs`"
 
 echo "INCLUDES: $INCLUDES";
 echo "CFLAGS: $CFLAGS";
@@ -16,16 +18,18 @@ echo "LDFLAGS: $LDFLAGS";
 
 if $(test $1 = "mingw"); then
 EXTENSION=.exe
-LDFLAGS="$LDFLAGS -static-libgcc -static-libstdc++ -static -llua -lode"
+LINKSUFFIX=.dll
+LDFLAGS="$LDFLAGS -static-libgcc -static -llua"
 echo "Target: mingw";
 else
-LDFLAGS="$LDFLAGS -llua5.1 -lc -lGL -lode"
+LINKSUFFIX=.so
+LDFLAGS="$LDFLAGS -llua5.1 -lc -lGL -lSDL"
 echo "Target: linux";
 fi;
 
 cd src;
 
-SOURCES="main.c common/*.c graphics/*.c network/*.c script/*.c" # physics/*.c
+SOURCES="main.c common/*.c graphics/*.c network/*.c script/*.c asset/*.c" # physics/*.c
 
 echo "SOURCES: $SOURCES";
 
@@ -35,4 +39,4 @@ done;
 
 cd ..
 
-$CC obj/*.o $LDFLAGS -o bin/il$EXTENSION
+$CC obj/*.o lib/*$LINKSUFFIX $LDFLAGS -o bin/il$EXTENSION
