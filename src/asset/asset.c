@@ -7,6 +7,7 @@
 #include <fcntl.h>
 
 #include "uthash.h"
+#include "SOIL.h"
 
 struct il_Asset_Asset {
   il_Common_String path;
@@ -179,4 +180,8 @@ int il_Asset_delete(il_Asset_Asset* asset) {
   remove(il_Common_toC(asset->fullpath));
   il_Asset_close(asset);
   return 0;
+}
+
+unsigned int il_Asset_assetToTexture(il_Asset_Asset *asset) {
+  return SOIL_load_OGL_texture(il_Common_toC(asset->fullpath), 0, 0, 0);
 }

@@ -9,7 +9,7 @@ echo "Compiler: $CC";
 INCLUDES="$INCLUDES -I. -I../include"
 CFLAGS="$CFLAGS -Wall -g -DdDOUBLE $INCLUDES"
 CFLAGS="$CFLAGS `sdl-config --cflags`"
-LDFLAGS="$LDFLAGS -Llib/ -lm $INCLUDES"
+LDFLAGS="$LDFLAGS -Llib/ -lSOIL -lm $INCLUDES"
 #LDFLAGS="$LDFLAGS `sdl-config --libs`"
 
 echo "INCLUDES: $INCLUDES";
@@ -19,7 +19,7 @@ echo "LDFLAGS: $LDFLAGS";
 if $(test $1 = "mingw"); then
 EXTENSION=.exe
 LINKSUFFIX=.dll
-LDFLAGS="$LDFLAGS -static-libgcc -static -llua"
+LDFLAGS="$LDFLAGS -static-libgcc -static -llua -lopengl32"
 echo "Target: mingw";
 else
 LINKSUFFIX=.so
