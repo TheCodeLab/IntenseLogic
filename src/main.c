@@ -122,6 +122,7 @@ int main(int argc, char **argv) {
     usleep(sleep.tv_usec);
     
     //printf("Test!\n");
+    il_Graphics_draw();
     
   }
   
