@@ -130,6 +130,10 @@ int main(int argc, char **argv) {
   struct timeval empty;
   timerclear(&empty);
   int state;
+  
+  int frames_this_second;
+  int ticks_this_second;
+  int last_second;
   while (running) {
     gettimeofday(&start,NULL);
 
@@ -143,7 +147,7 @@ int main(int argc, char **argv) {
     
     update();
     
-    if (state == 1) {
+    if (state != 0) {
       il_Graphics_draw();
     }
     
@@ -166,13 +170,35 @@ int main(int argc, char **argv) {
     }
     
     if (timercmp(&empty, &sleep, >) != 0) {
-      printf("Behind on ticks!\n");
+      sleep = empty;
+      /*printf("Behind on ticks!\n");
+      printf( "start: %u %u\n"
+              "stop: %u %u\n"
+              "sleep: %u %i\n"
+              "state: %i\n"
+              "ticklen: %u %u\n"
+              "framelen: %u %u\n"
+              "lasttick: %u %u\n"
+              "lastframe: %u %u\n",
+              start.tv_sec, start.tv_usec, stop.tv_sec, stop.tv_usec, sleep.tv_sec, sleep.tv_usec, state, 
+              ticklen.tv_sec, ticklen.tv_usec, framelen.tv_sec, framelen.tv_usec, lasttick.tv_sec, lasttick.tv_usec, 
+              lastframe.tv_sec, lastframe.tv_usec );
+      */
+    }
+    
+    if (last_second != start.tv_sec) {
+      last_second = start.tv_sec;
+      printf("fps: %i\ntps: %i\n", frames_this_second, ticks_this_second);
+      frames_this_second = 0;
+      ticks_this_second = 0;
     }
     
     if (state == 0) {
       lasttick = start;
+      ticks_this_second++;
     } else {
       lastframe = start;
+      frames_this_second++;
     }
     
     usleep(sleep.tv_usec);
