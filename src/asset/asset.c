@@ -1,10 +1,9 @@
 #include "asset.h"
 
 #include <stdlib.h>
-#include <stdio.h>
+//#include <stdio.h>
 #include <libgen.h>
 #include <dirent.h>
-#include <fcntl.h>
 
 #include "uthash.h"
 #include "SOIL.h"
@@ -14,7 +13,7 @@ struct il_Asset_Asset {
   il_Common_String searchdir;
   il_Common_String fullpath;
   unsigned refs;
-  int handle;
+  FILE* handle;
   unsigned handlerefs;
   UT_hash_handle hh;
 };
@@ -133,7 +132,7 @@ il_Asset_Asset* il_Asset_open(il_Common_String path) {
   asset = malloc(sizeof(il_Asset_Asset));
   asset->path = path;
   asset->searchdir = res;
-  asset->handle = -1;
+  asset->handle = NULL;
   
   asset->fullpath = il_Common_concat(res, il_Common_fromC("/"), path);
   
@@ -141,15 +140,15 @@ il_Asset_Asset* il_Asset_open(il_Common_String path) {
   return asset;
 }
 
-int il_Asset_getHandle(il_Asset_Asset* asset) { 
+FILE* il_Asset_getHandle(il_Asset_Asset* asset) { 
 
   asset->handlerefs++;
 
-  if (asset->handle != -1) {
+  if (asset->handle != NULL) {
     return asset->handle;
   }
   
-  asset->handle = open(il_Common_toC(asset->fullpath), O_RDONLY | O_CREAT);
+  asset->handle = fopen(il_Common_toC(asset->fullpath), "r");
   
   return asset->handle;
   
@@ -166,7 +165,7 @@ void il_Asset_close(il_Asset_Asset* asset) {
     asset->refs = 0;
   
   if (asset->handlerefs == 0)
-    close(asset->handle);
+    fclose(asset->handle);
   if (asset->refs == 0) {
     HASH_DELETE(hh, assets, asset);
     free(asset);
