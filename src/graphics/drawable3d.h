@@ -10,7 +10,7 @@ enum il_Graphics_Shapes {
   Cylinder,
   Sphere,
   Plane
-}
+};
 
 typedef struct il_Graphics_Drawable3d {
   il_Common_Positionable* positionable;
