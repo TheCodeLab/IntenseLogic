@@ -5,14 +5,16 @@
 #include <sys/time.h>
 #include "time.h"
 
-#include "sdl/SDL.h"
+#include "SDL/SDL.h"
 #include "common/base.h"
 #include "common/event.h"
 #include "graphics/graphics.h"
 #include "network/network.h"
 //#include "physics/physics.h"
 #include "script/script.h"
-#include "asset/asset.h"
+//#include "asset/asset.h"
+#include "graphics/heightmap.h"
+#include "graphics/drawable3d.h"
 
 const char *optstring = "h";
 
@@ -100,7 +102,7 @@ int main(int argc, char **argv) {
   il_Graphics_init();
   //il_Physics_init();
   il_Script_init();
-  il_Asset_init();
+  //il_Asset_init();
   il_Event_register(IL_BASE_SHUTDOWN, (il_Event_Callback)&shutdown_callback);
   
   
@@ -134,6 +136,7 @@ int main(int argc, char **argv) {
   int frames_this_second;
   int ticks_this_second;
   int last_second;
+
   while (running) {
     gettimeofday(&start,NULL);
 
