@@ -7,9 +7,9 @@ fi;
 echo "Compiler: $CC";
 
 INCLUDES="$INCLUDES -I. -I../include"
-CFLAGS="$CFLAGS -Wall -g -DdDOUBLE $INCLUDES"
+CFLAGS="$CFLAGS -Wall -pg -DdDOUBLE $INCLUDES"
 CFLAGS="$CFLAGS `sdl-config --cflags`"
-LDFLAGS="$LDFLAGS -Llib/ -lSOIL -lm $INCLUDES"
+LDFLAGS="$LDFLAGS -Llib/ -lSOIL -lm -pg $INCLUDES"
 #LDFLAGS="$LDFLAGS `sdl-config --libs`"
 
 echo "INCLUDES: $INCLUDES";
@@ -34,9 +34,11 @@ SOURCES="main.c common/*.c graphics/*.c network/*.c script/*.c asset/*.c" # phys
 echo "SOURCES: $SOURCES";
 
 for f in $SOURCES; do
+echo "$CC $CFLAGS -c $f -o ../obj/$(basename $f .c).o";
 $CC $CFLAGS -c $f -o ../obj/$(basename $f .c).o;
 done;
 
 cd ..
 
+echo "$CC obj/*.o lib/*$LINKSUFFIX $LDFLAGS -o bin/il$EXTENSION"
 $CC obj/*.o lib/*$LINKSUFFIX $LDFLAGS -o bin/il$EXTENSION

@@ -1,5 +1,5 @@
 #include "graphics.h"
-#include "sdl/SDL.h"
+#include "SDL/SDL.h"
 #include "GL/gl.h"
 
 SDL_Surface* canvas;

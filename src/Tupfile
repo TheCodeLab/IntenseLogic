@@ -17,4 +17,4 @@ include @(TUP_PLATFORM).tup
 : foreach script/*.c |> $(CC) $(CFLAGS) -c %f -o %o |> %B.o {script}
 : foreach asset/*.c |> $(CC) $(CFLAGS) -c %f -o %o |> %B.o {asset}
 : main.c |> $(CC) $(CFLAGS) -c %f -o %o |> %B.o {main}
-: ../lib/*$(LINKSUFFIX) {main} {common} {graphics} {network} {physics} {script} |> $(CC) %f -o %o $(LDFLAGS) |> il$(EXTENSION)
+: ../lib/*$(LINKSUFFIX) {main} {common} {graphics} {network} {script} {asset} |> $(CC) %f -o %o $(LDFLAGS) |> il$(EXTENSION)
