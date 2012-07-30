@@ -185,7 +185,6 @@ Makefile.in
 
 # Output files
 *.o
-*.a
 
 ###################
 ## IntenseLogic
