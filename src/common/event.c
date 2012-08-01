@@ -53,7 +53,7 @@ void il_Event_handle(il_Event_Event* ev) {
   
 }
 
-void il_Event_register(unsigned short eventid, il_Event_Callback callback) {
+void il_Event_register(uint16_t eventid, il_Event_Callback callback) {
   int i;
   struct il_Event_CallbackContainer* container = NULL;
   for (i = 0; i < il_Event_Callbacks_len; i++) {
