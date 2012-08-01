@@ -49,7 +49,7 @@
 *.sln text=auto eol=crlf merge=union 
 
 ### Your repo appears to have been created with autocrlf=false or has mixed line endings
-core.eol = crlf
+core.autocrlf=input
 *.dll	filter=lfs diff=lfs merge=lfs -crlf
 *.exe	filter=lfs diff=lfs merge=lfs -crlf
 *.mtl	filter=lfs diff=lfs merge=lfs -crlf

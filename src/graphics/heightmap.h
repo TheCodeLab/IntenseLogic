@@ -14,7 +14,7 @@ typedef struct il_Graphics_Heightmap_Quad {
 } il_Graphics_Heightmap_Quad;
 
 typedef struct il_Graphics_Heightmap {
-	il_Graphics_Drawable3d* drawable;
+	il_Graphics_Drawable3d drawable;
 	il_Graphics_Heightmap_Quad* root;
 	float size;
 } il_Graphics_Heightmap;
