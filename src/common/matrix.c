@@ -82,7 +82,7 @@ inline float sg_Vector3_dot(sg_Vector3 a, sg_Vector3 b) {
 // u = (a,b,c) and v = (p,r,q)
 // u x v = (br-cq,cp-ar,aq-bp)
 inline sg_Vector3 sg_Vector3_cross(sg_Vector3 a, sg_Vector3 b) {
-  return (sg_Vector3) {a.y*b.y - a.z*b.z, a.y*b.x - a.x*b.y, a.x*b.z - a.y*b.x};
+  return (sg_Vector3) {a.y*b.z - a.z*b.y, a.z*b.x - a.x*b.z, a.x*b.y - a.y*b.x};
 }
 
 // pRot = p + 2*cross(q.xyz, q.w*p + cross(q.xyz, p))
