@@ -48,7 +48,7 @@ void il_Graphics_init() {
 	h = il_Graphics_Heightmap_new(heights, 20);
 
 	int i;
-	for (i = 0; i < 4; i++) {
+	for (i = 0; i < 6; i++) {
 		il_Graphics_Heightmap_Quad_divide(h->root, 20);
 	}
 
