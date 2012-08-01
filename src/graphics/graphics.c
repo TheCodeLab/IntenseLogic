@@ -24,33 +24,32 @@ void il_Graphics_init() {
 	glClearDepth(1.0);
 	glDepthFunc(GL_LESS);
 	glEnable(GL_DEPTH_TEST);
-	glShadeModel(GL_SMOOTH);
+	glShadeModel(GL_FLAT);
 	glViewport(0, 0, width, height);
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-
-	GLfloat diffuse[] = { 0.0, 1.0, 0.0};
-	GLfloat ambient[] = {0.4, 0.4, 0.4};
-   	GLfloat lightPosition[] = { 0.0, 1.0, 0.0, 0.0};
-	glLightfv(GL_LIGHT0, GL_DIFFUSE, diffuse);
-	glLightfv(GL_LIGHT0, GL_SPECULAR, diffuse);
-	//glLightfv(GL_LIGHT0, GL_AMBIENT, ambient);
-	glLightfv(GL_LIGHT0, GL_POSITION, lightPosition);
-
-	glEnable(GL_LIGHTING);
-	glEnable(GL_LIGHT0);
 
 	glFrustum(-2, 2, -1, 1, 1.0f, 100.0f);
 	glMatrixMode(GL_MODELVIEW);
 	glEnable(GL_TEXTURE_2D);
 	glLoadIdentity();
-	
-	h = il_Graphics_Heightmap_new(heights);
-	h->size = 20;
+
+	GLfloat diffuse[] = { 1.0, 1.0, 1.0};
+        GLfloat ambient[] = {0.4, 0.4, 0.4};
+        GLfloat lightPosition[] = { 0.0, 1.0, 0.0, 0.0};
+        glLightfv(GL_LIGHT0, GL_DIFFUSE, diffuse);
+        glLightfv(GL_LIGHT0, GL_SPECULAR, diffuse);
+        //glLightfv(GL_LIGHT0, GL_AMBIENT, ambient);
+        glLightfv(GL_LIGHT0, GL_POSITION, lightPosition);
+
+        glEnable(GL_LIGHTING);
+        glEnable(GL_LIGHT0);
+
+	h = il_Graphics_Heightmap_new(heights, 20);
 
 	int i;
-	for (i = 0; i < 6; i++) {
-		il_Graphics_Heightmap_Quad_divide(h->root, 15);
+	for (i = 0; i < 4; i++) {
+		il_Graphics_Heightmap_Quad_divide(h->root, 20);
 	}
 
 }
