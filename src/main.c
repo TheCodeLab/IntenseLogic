@@ -33,9 +33,9 @@ const struct option long_options[] = {
 };
 
 const char *help[] = {
-  "Prints this page", // -h --help
+  "Prints this page",                 // -h --help
   "Sets the file to print output to", // -l --logfile
-  "Sets the verbosity level", // -v --verbose
+  "Sets the verbosity level",         // -v --verbose
   NULL
 };
 
@@ -74,6 +74,7 @@ void draw() {
 int running = 1;
 
 void shutdown_callback(il_Event_Event* ev) {
+  il_Common_log(3, "Shutting down.");
   running = 0;
 }
 
@@ -95,11 +96,12 @@ int main(int argc, char **argv) {
   while( (c = getopt_long(argc, argv, optstring, long_options, &option_index)) != -1 ) {
     switch(c) {
       case '?':
-        il_Common_log(3, "Unrecognised option, ignoring.\n");
+        il_Common_log(2, "Unrecognised option, ignoring.\n");
         break;
       case HELP:
+        printf("IntenseLogic - Game engine\n\tUsage: il [options]\n\n");
         while (long_options[i].name != 0) {
-          printf("%c  %s  %s\n", (char)long_options[i].val, long_options[i].name, help[i]);
+          printf("-%c\t--%s\t%s\n", (char)long_options[i].val, long_options[i].name, help[i]);
           i++;
         }
         exit(0);
@@ -156,8 +158,6 @@ int main(int argc, char **argv) {
 
   while (running) {
     gettimeofday(&start,NULL);
-
-    //printf("state: %i\n", state);
     
     if (state == 0) {
       tick();
@@ -171,15 +171,22 @@ int main(int argc, char **argv) {
       il_Graphics_draw();
     }
     
+    timeradd(&ticklen, &lasttick, &ticks_temp);
+    timeradd(&framelen, &lastframe, &frames_temp);
+    
+    if (last_second != start.tv_sec) {
+      last_second = start.tv_sec;
+      il_Common_log(3,"fps: %i; tps: %i\n", frames_this_second, ticks_this_second);
+      frames_this_second = 0;
+      ticks_this_second = 0;
+    }
+    
     // calculate time to sleep
     gettimeofday(&stop,NULL);
     
     timersub(&stop, &start, &sleep);
     
-    //printf("frame length: %i\n", sleep.tv_usec);
-    
-    timeradd(&ticklen, &lasttick, &ticks_temp);
-    timeradd(&framelen, &lastframe, &frames_temp);
+    il_Common_log(5, "Frame length: %i %u", sleep.tv_sec, sleep.tv_usec);
 
     state = timercmp(&ticks_temp, &frames_temp, >);
     
@@ -191,26 +198,19 @@ int main(int argc, char **argv) {
     
     if (timercmp(&empty, &sleep, >) != 0) {
       sleep = empty;
-      /*printf("Behind on ticks!\n");
-      printf( "start: %u %u\n"
-              "stop: %u %u\n"
-              "sleep: %u %i\n"
-              "state: %i\n"
-              "ticklen: %u %u\n"
-              "framelen: %u %u\n"
-              "lasttick: %u %u\n"
-              "lastframe: %u %u\n",
-              start.tv_sec, start.tv_usec, stop.tv_sec, stop.tv_usec, sleep.tv_sec, sleep.tv_usec, state, 
-              ticklen.tv_sec, ticklen.tv_usec, framelen.tv_sec, framelen.tv_usec, lasttick.tv_sec, lasttick.tv_usec, 
-              lastframe.tv_sec, lastframe.tv_usec );
-      */
-    }
-    
-    if (last_second != start.tv_sec) {
-      last_second = start.tv_sec;
-      il_Common_log(4,"fps: %i\ntps: %i\n", frames_this_second, ticks_this_second);
-      frames_this_second = 0;
-      ticks_this_second = 0;
+      il_Common_log ( 5, 
+                      "*** Behind on ticks! *** \n"
+                      "start: %u %u\n"
+                      "stop: %u %u\n"
+                      "sleep: %u %i\n"
+                      "state: %i\n"
+                      "ticklen: %u %u\n"
+                      "framelen: %u %u\n"
+                      "lasttick: %u %u\n"
+                      "lastframe: %u %u\n",
+                      start.tv_sec, start.tv_usec, stop.tv_sec, stop.tv_usec, sleep.tv_sec, sleep.tv_usec, state, 
+                      ticklen.tv_sec, ticklen.tv_usec, framelen.tv_sec, framelen.tv_usec, lasttick.tv_sec, lasttick.tv_usec, 
+                      lastframe.tv_sec, lastframe.tv_usec );
     }
     
     if (state == 0) {

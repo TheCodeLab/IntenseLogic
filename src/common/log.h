@@ -10,10 +10,11 @@ enum il_Common_LogLevel {
   IL_COMMON_LOGERROR,
   IL_COMMON_LOGWARNING,
   IL_COMMON_LOGNOTICE,
-  IL_COMMON_LOGDEBUG
+  IL_COMMON_LOGDEBUG,
+  IL_COMMON_LOGFLOOD
 } il_Common_loglevel;
 
-const char* il_Common_loglevel_str[] = {"FATAL", "ERROR", "WARNING", "NOTICE", "DEBUG"};
+const char* il_Common_loglevel_str[] = {"FATAL", "ERROR", "WARNING", "NOTICE", "DEBUG", "FLOOD"};
 #define il_Common_loglevel_tostring(level) \
   (il_Common_loglevel_str[level])
 
