@@ -15,20 +15,27 @@
 //#include "asset/asset.h"
 #include "graphics/heightmap.h"
 #include "graphics/drawable3d.h"
+#include "common/log.h"
 
-const char *optstring = "h";
+const char *optstring = "hl:v::";
 
 enum {
-  HELP = 'h'
+  HELP = 'h',
+  LOGFILE = 'l',
+  VERBOSE = 'v'
 };
 
 const struct option long_options[] = {
-  {"help", no_argument, 0, HELP},
+  {"help",      no_argument,       0, HELP    },
+  {"logfile",   required_argument, 0, LOGFILE },
+  {"verbose",   optional_argument, 0, VERBOSE },
   {0, 0, 0, 0}
 };
 
 const char *help[] = {
   "Prints this page", // -h --help
+  "Sets the file to print output to", // -l --logfile
+  "Sets the verbosity level", // -v --verbose
   NULL
 };
 
@@ -73,6 +80,10 @@ void shutdown_callback(il_Event_Event* ev) {
 #undef main
 int main(int argc, char **argv) {
 
+  #ifdef DEBUG
+  il_Common_logfile = stdout;
+  #endif
+
   // build config file
   
   
@@ -84,7 +95,7 @@ int main(int argc, char **argv) {
   while( (c = getopt_long(argc, argv, optstring, long_options, &option_index)) != -1 ) {
     switch(c) {
       case '?':
-        printf("Unrecognised option, ignoring.\n");
+        il_Common_log(3, "Unrecognised option, ignoring.\n");
         break;
       case HELP:
         while (long_options[i].name != 0) {
@@ -92,6 +103,12 @@ int main(int argc, char **argv) {
           i++;
         }
         exit(0);
+      case LOGFILE:
+        il_Common_logfile = fopen(optarg, "a");
+        break;
+      case VERBOSE:
+        il_Common_loglevel = atoi(optarg)?atoi(optarg):3;
+        break;
     }
     //printf ("asdf");
   }
@@ -191,7 +208,7 @@ int main(int argc, char **argv) {
     
     if (last_second != start.tv_sec) {
       last_second = start.tv_sec;
-      printf("fps: %i\ntps: %i\n", frames_this_second, ticks_this_second);
+      il_Common_log(4,"fps: %i\ntps: %i\n", frames_this_second, ticks_this_second);
       frames_this_second = 0;
       ticks_this_second = 0;
     }

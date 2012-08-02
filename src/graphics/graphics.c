@@ -35,7 +35,7 @@ void il_Graphics_init() {
 	glLoadIdentity();
 
 	GLfloat diffuse[] = { 1.0, 1.0, 1.0};
-        GLfloat ambient[] = {0.4, 0.4, 0.4};
+        //GLfloat ambient[] = {0.4, 0.4, 0.4};
         GLfloat lightPosition[] = { 0.0, 1.0, 0.0, 0.0};
         glLightfv(GL_LIGHT0, GL_DIFFUSE, diffuse);
         glLightfv(GL_LIGHT0, GL_SPECULAR, diffuse);
@@ -69,7 +69,7 @@ glLightfv(GL_LIGHT0, GL_POSITION, lightPosition);
 
 	glLightfv(GL_LIGHT0, GL_POSITION, lightPosition);
 
-	h->drawable->draw(h);
+	h->drawable.draw(&h->drawable);
 
 	SDL_GL_SwapBuffers();
 }

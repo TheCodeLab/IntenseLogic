@@ -194,3 +194,4 @@ src/il
 bin/
 .tup/
 include/
+gmon.out
