@@ -1,8 +1,14 @@
 #include <stdlib.h>
 #include <time.h>
+#ifdef __APPLE__
+#include <OpenGL/OpenGL.h>
+#include <OpenGL/gl.h>
+#else
 #include <GL/gl.h>
+#endif
 
 #include "SDL/SDL.h"
+#include "SDL/SDL_opengl.h"
 
 #include "graphics.h"
 #include "heightmap.h"
@@ -23,7 +29,7 @@ sg_Vector3 speed = (sg_Vector3){0, 0, 0};
 void il_Graphics_init() {
 	srand((unsigned)time(NULL)); //temp
 	SDL_Init(SDL_INIT_EVERYTHING);
-	canvas = SDL_SetVideoMode(width, height, 32, SDL_OPENGL| SDL_HWSURFACE); 
+        canvas = SDL_SetVideoMode(width, height, 32, SDL_OPENGL| SDL_HWSURFACE);
 	SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
 	SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
 	SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8); 

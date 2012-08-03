@@ -1,7 +1,12 @@
 #ifndef IL_GRAPHICS_DRAWABLE3D_H
 #define IL_GRAPHICS_DRAWABLE3D_H
 
+#ifdef __APPLE__
+#include <OpenGL/OpenGL.h>
+#include <OpenGL/gl.h>
+#else
 #include <GL/gl.h>
+#endif
 
 #include "common/positionable.h"
 
