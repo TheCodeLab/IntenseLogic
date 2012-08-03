@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include "GL/gl.h"
 
 #include "common/positionable.h"
@@ -19,5 +20,4 @@ void il_Graphics_Camera_translate(il_Graphics_Camera* camera, float x, float y, 
 	camera->positionable->position.x = camera->positionable->position.x + x;
 	camera->positionable->position.y = camera->positionable->position.y + y;
 	camera->positionable->position.z = camera->positionable->position.z + z;
-
 }

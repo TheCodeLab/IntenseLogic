@@ -7,6 +7,7 @@
 
 #include "SDL/SDL.h"
 #include "common/base.h"
+#include "common/input.h"
 #include "common/event.h"
 #include "graphics/graphics.h"
 #include "network/network.h"
@@ -41,12 +42,24 @@ const char *help[] = {
 
 void update() {
   SDL_Event sdlEvent;
-  if (SDL_PollEvent(&sdlEvent)) {
+  while (SDL_PollEvent(&sdlEvent)) {
     if (sdlEvent.type == SDL_QUIT) {
       il_Event_Event* quit = malloc(sizeof(il_Event_Event));
       quit->eventid = IL_BASE_SHUTDOWN;
       quit->size = 0;
       il_Event_push(quit);
+    } else if (sdlEvent.type == SDL_KEYDOWN) {
+      il_Event_Event* keyDown = malloc(sizeof(il_Event_Event));
+      keyDown->eventid = IL_INPUT_KEYDOWN;
+      keyDown->size = 0;
+	  *(int*)&keyDown->data = sdlEvent.key.keysym.sym;
+      il_Event_push(keyDown);
+    } else if (sdlEvent.type == SDL_KEYUP) {
+      il_Event_Event* keyUp = malloc(sizeof(il_Event_Event));
+      keyUp->eventid = IL_INPUT_KEYUP;
+      keyUp->size = 0;
+	  *(int*)&keyUp->data = sdlEvent.key.keysym.sym;
+      il_Event_push(keyUp);
     } 
   }
   
