@@ -14,7 +14,6 @@ il_Graphics_Heightmap_Quad* il_Graphics_Heightmap_Quad_new(float* heights, int d
 	quad->depth = depth;
 	quad->numChildren = 0; 
 	quad->size = size;
-	//printf("%f\n", size);
 	il_Graphics_Heightmap_Quad_calculateNormals(quad);
 	return quad;
 }
@@ -22,7 +21,6 @@ il_Graphics_Heightmap_Quad* il_Graphics_Heightmap_Quad_new(float* heights, int d
 il_Graphics_Heightmap* il_Graphics_Heightmap_new(float* heights, float size) {
 	il_Graphics_Heightmap* map = malloc(sizeof(il_Graphics_Heightmap));
 	il_Graphics_Heightmap_Quad* root = il_Graphics_Heightmap_Quad_new(heights, 0, size);
-	//map->drawable = malloc(sizeof(il_Graphics_Drawable3d));
 	map->root = root;
 	map->drawable.draw = &drawMap;
 	map->size = size;
@@ -31,10 +29,10 @@ il_Graphics_Heightmap* il_Graphics_Heightmap_new(float* heights, float size) {
 
 void il_Graphics_Heightmap_Quad_draw(il_Graphics_Heightmap_Quad* quad, float x, float y) {
 	if (quad->numChildren != 0) {
-                il_Graphics_Heightmap_Quad_draw(quad->children[0], x, y);
+		il_Graphics_Heightmap_Quad_draw(quad->children[0], x, y);
 		il_Graphics_Heightmap_Quad_draw(quad->children[1], x + quad->size / 2, y);
-                il_Graphics_Heightmap_Quad_draw(quad->children[2], x + quad->size / 2, y + quad->size / 2);
-                il_Graphics_Heightmap_Quad_draw(quad->children[3], x, y + quad->size / 2);
+		il_Graphics_Heightmap_Quad_draw(quad->children[2], x + quad->size / 2, y + quad->size / 2);
+		il_Graphics_Heightmap_Quad_draw(quad->children[3], x, y + quad->size / 2);
 	} else {
 		glBegin(GL_TRIANGLE_FAN);
 		glNormal3f(quad->normals[0].x, quad->normals[0].y, quad->normals[0].z);
@@ -89,15 +87,10 @@ void il_Graphics_Heightmap_Quad_divide(il_Graphics_Heightmap_Quad* parent, float
 
 void il_Graphics_Heightmap_Quad_calculateNormals(il_Graphics_Heightmap_Quad* quad) {
 	float avHeight = (quad->heights[0] + quad->heights[1] + quad->heights[2] + quad->heights[3]) / 4;
-	//quad->normals[0] = sg_Vector3_normalise(sg_Vector3_cross((sg_Vector3){quad->size, quad->heights[1] - quad->heights[0], 0}, (sg_Vector3){0, quad->heights[2] - quad->heights[1], quad->size}));
 
 	quad->normals[0] = sg_Vector3_mul_f(sg_Vector3_normalise(sg_Vector3_cross((sg_Vector3){quad->size, quad->heights[1] - quad->heights[0], 0}, (sg_Vector3){-quad->size / 2, avHeight - quad->heights[1], quad->size / 2})), -1);
-
 	quad->normals[1] = sg_Vector3_mul_f(sg_Vector3_normalise(sg_Vector3_cross((sg_Vector3){0.0f, quad->heights[2] - quad->heights[1], quad->size}, (sg_Vector3){-quad->size / 2, avHeight - quad->heights[2], -quad->size / 2})), -1);
-  //printf("%f, %f, %f\n", quad->normals[1].x, quad->normals[1].y, quad->normals[1].z);
-
 	quad->normals[2] = sg_Vector3_mul_f(sg_Vector3_normalise(sg_Vector3_cross((sg_Vector3){-quad->size, quad->heights[3] - quad->heights[2], 0}, (sg_Vector3){quad->size / 2, avHeight - quad->heights[3], -quad->size / 2})), -1);
-
 	quad->normals[3] = sg_Vector3_mul_f(sg_Vector3_normalise(sg_Vector3_cross((sg_Vector3){0, quad->heights[0] - quad->heights[3], -quad->size}, (sg_Vector3){quad->size / 2, avHeight - quad->heights[0], quad->size / 2})), -1);
 
 }

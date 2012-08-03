@@ -20,15 +20,10 @@ typedef struct il_Graphics_Heightmap {
 } il_Graphics_Heightmap;
 
 il_Graphics_Heightmap_Quad* il_Graphics_Heightmap_Quad_new(float* heights, int depth, float size);
-
 void drawMap(il_Graphics_Drawable3d* map);
-
 void il_Graphics_Heightmap_Quad_divide(il_Graphics_Heightmap_Quad* parent, float scale);
-
 void il_Graphics_Heightmap_Quad_print(il_Graphics_Heightmap_Quad* quad);
-
 il_Graphics_Heightmap* il_Graphics_Heightmap_new(float* heights, float size);
-
 void il_Graphics_Heightmap_Quad_calculateNormals(il_Graphics_Heightmap_Quad* quad);
 
 #endif
