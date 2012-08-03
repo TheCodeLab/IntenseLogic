@@ -100,7 +100,10 @@ void shutdown_callback(il_Event_Event* ev) {
   running = 0;
 }
 
-#undef main
+#ifdef __APPLE__
+#else
+    #undef main
+#endif
 int main(int argc, char **argv) {
 
   #ifdef DEBUG
