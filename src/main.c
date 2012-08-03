@@ -43,24 +43,32 @@ const char *help[] = {
 void update() {
   SDL_Event sdlEvent;
   while (SDL_PollEvent(&sdlEvent)) {
-    if (sdlEvent.type == SDL_QUIT) {
+    switch (sdlEvent.type) {
+    case (SDL_QUIT): {
       il_Event_Event* quit = malloc(sizeof(il_Event_Event));
       quit->eventid = IL_BASE_SHUTDOWN;
       quit->size = 0;
       il_Event_push(quit);
-    } else if (sdlEvent.type == SDL_KEYDOWN) {
+	  break;
+    }
+	case (SDL_KEYDOWN): {
       il_Event_Event* keyDown = malloc(sizeof(il_Event_Event));
       keyDown->eventid = IL_INPUT_KEYDOWN;
       keyDown->size = 0;
 	  *(int*)&keyDown->data = sdlEvent.key.keysym.sym;
       il_Event_push(keyDown);
-    } else if (sdlEvent.type == SDL_KEYUP) {
+	  break;
+    }
+	case (SDL_KEYUP): {
       il_Event_Event* keyUp = malloc(sizeof(il_Event_Event));
       keyUp->eventid = IL_INPUT_KEYUP;
       keyUp->size = 0;
 	  *(int*)&keyUp->data = sdlEvent.key.keysym.sym;
       il_Event_push(keyUp);
-    } 
+	  break;
+    }
+	default:;
+	}
   }
   
   // handle events
