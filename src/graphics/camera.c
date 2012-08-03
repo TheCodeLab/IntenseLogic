@@ -1,5 +1,5 @@
 #include <stdlib.h>
-#include "GL/gl.h"
+#include <GL/gl.h>
 
 #include "common/positionable.h"
 #include "camera.h"

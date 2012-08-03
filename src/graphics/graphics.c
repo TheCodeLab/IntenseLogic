@@ -1,8 +1,8 @@
 #include <stdlib.h>
 #include <time.h>
+#include <GL/gl.h>
 
 #include "SDL/SDL.h"
-#include "GL/gl.h"
 
 #include "graphics.h"
 #include "heightmap.h"
