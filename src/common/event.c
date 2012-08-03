@@ -79,7 +79,8 @@ void il_Event_register(uint16_t eventid, il_Event_Callback callback) {
   container->callbacks = temp;
   
   il_Event_CallbackContainer *temp2 = (il_Event_CallbackContainer*)malloc(sizeof(il_Event_CallbackContainer) * (il_Event_Callbacks_len+1));
-  memcpy(temp2, il_Event_Callbacks, sizeof(il_Event_CallbackContainer) * il_Event_Callbacks_len);  temp2[il_Event_Callbacks_len] = *container;
+  memcpy(temp2, il_Event_Callbacks, sizeof(il_Event_CallbackContainer) * il_Event_Callbacks_len);
+  temp2[il_Event_Callbacks_len] = *container;
   free(il_Event_Callbacks);
   il_Event_Callbacks = temp2;
   il_Event_Callbacks_len++;
