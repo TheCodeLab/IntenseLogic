@@ -1,5 +1,11 @@
 #include <stdlib.h>
+
+#ifdef __APPLE__
+#include <OpenGL/OpenGL.h>
+#include <OpenGL/gl.h>
+#else
 #include <GL/gl.h>
+#endif
 
 #include "common/positionable.h"
 #include "camera.h"
