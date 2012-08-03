@@ -9,6 +9,7 @@
 #include "camera.h"
 #include "common/event.h"
 #include "common/input.h"
+#include "common/matrix.h"
 
 SDL_Surface* canvas;
 int width = 800;
@@ -17,7 +18,7 @@ float heights[4] = {0, 0, 0, 0}; //temp
 il_Graphics_Heightmap* h;
 il_Graphics_Camera* camera;
 float theta;
-float speedZ = 0;
+sg_Vector3 speed = (sg_Vector3){0, 0, 0};
 
 void il_Graphics_init() {
 	srand((unsigned)time(NULL)); //temp
@@ -39,7 +40,7 @@ void il_Graphics_init() {
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 
-	glFrustum(-2, 2, -1, 1, 1.0f, 10000.0f);
+	glFrustum(-2, 2, -1, 1, 1.0f, 1000.0f);
 	glMatrixMode(GL_MODELVIEW);
 	glEnable(GL_TEXTURE_2D);
 	glLoadIdentity();
@@ -74,10 +75,9 @@ void il_Graphics_draw() {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glLoadIdentity();
 	glLightfv(GL_LIGHT0, GL_POSITION, lightPosition);
-	il_Graphics_Camera_translate(camera, 0, 0, speedZ);
+	il_Graphics_Camera_translate(camera, speed.x, speed.y, speed.z);
 	il_Graphics_Camera_render(camera);
 
-	//glTranslatef(-10, -5, -30);
 	glRotatef(theta, 0, 1, 0);
 	theta += 0.1;
 
@@ -89,16 +89,32 @@ void il_Graphics_draw() {
 }
 
 void handleKeyDown(il_Event_Event* ev) {
-	if (*(int*)&ev->data == SDLK_DOWN) {
-		speedZ = 0.1f;
-	} else if (*(int*)&ev->data == SDLK_UP) {
-		speedZ = -0.1f;
+	int keyCode = *(int*)&ev->data;
+	if (keyCode == SDLK_LEFT || keyCode == SDLK_a) {
+		speed.x = -0.1f;
+	} else if (keyCode == SDLK_RIGHT || keyCode == SDLK_d) {
+		speed.x = 0.1f;
+	}
+	if (keyCode == SDLK_r) {
+		speed.y = 0.1f;
+	} else if (keyCode == SDLK_f) {
+		speed.y = -0.1f;
+	}
+	if (keyCode == SDLK_DOWN || keyCode == SDLK_s) {
+		speed.z = 0.1f;
+	} else if (keyCode == SDLK_UP || keyCode == SDLK_w) {
+		speed.z = -0.1f;
 	}
 }
 
 void handleKeyUp(il_Event_Event* ev) {
-	if (*(int*)&ev->data == SDLK_DOWN || *(int*)&ev->data == SDLK_UP) {
-		speedZ = 0;
+	int keyCode = *(int*)&ev->data;
+	if (keyCode == SDLK_LEFT || keyCode == SDLK_RIGHT || keyCode == SDLK_a || keyCode == SDLK_d) {
+		speed.x = 0;
+	} else if (keyCode == SDLK_r || keyCode == SDLK_f) {
+		speed.y = 0;
+	} else if (keyCode == SDLK_DOWN || keyCode == SDLK_UP || keyCode == SDLK_w || keyCode == SDLK_s) {
+		speed.z = 0;
 	}
 }
 
