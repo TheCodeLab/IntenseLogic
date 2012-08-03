@@ -14,7 +14,7 @@ enum il_Common_LogLevel {
   IL_COMMON_LOGFLOOD
 } il_Common_loglevel;
 
-const char* il_Common_loglevel_str[] = {"FATAL", "ERROR", "WARNING", "NOTICE", "DEBUG", "FLOOD"};
+const char* il_Common_loglevel_str[6];
 #define il_Common_loglevel_tostring(level) \
   (il_Common_loglevel_str[level])
 

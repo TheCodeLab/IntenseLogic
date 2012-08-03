@@ -17,6 +17,7 @@
 #include "graphics/heightmap.h"
 #include "graphics/drawable3d.h"
 #include "common/log.h"
+#include "common/entity.h"
 
 const char *optstring = "hl:v::";
 
