@@ -1,7 +1,7 @@
 #include "heightmap.h"
 #include "drawable3d.h"
-#include "GL/gl.h"
 
+#include <GL/gl.h>
 #include <stdlib.h>
 #include <stdio.h>
 
