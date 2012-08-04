@@ -8,7 +8,7 @@
 il_Common_Heightmap_Quad* il_Common_Heightmap_Quad_new(float heights[4], int depth) {
   il_Common_Heightmap_Quad* quad = malloc(sizeof(il_Common_Heightmap_Quad));
   memset(quad, 0, sizeof(il_Common_Heightmap_Quad));
-  memcpy(&quad->heights, &heights, 4 * sizeof(float));
+  memcpy(&quad->heights[0], &heights[0], 4 * sizeof(float));
 	quad->depth = depth;
 	quad->packed.numChildren = 0; 
 	il_Common_Heightmap_Quad_calculateNormals(quad);
@@ -28,13 +28,13 @@ void il_Common_Heightmap_Quad_divide(il_Common_Heightmap_Quad * quad, size_t num
     (quad->heights[0] + quad->heights[1])/2, 
     quad->heights[1],
     
-    (quad->heights[0] + quad->heights[2])/2,
+    (quad->heights[0] + quad->heights[3])/2,
     (quad->heights[0] + quad->heights[1] + quad->heights[2] + quad->heights[3])/4, 
-    (quad->heights[1] + quad->heights[3])/2,
+    (quad->heights[1] + quad->heights[2])/2,
     
-    quad->heights[2], 
-    (quad->heights[2] + quad->heights[3])/2, 
-    quad->heights[3]
+    quad->heights[3], 
+    (quad->heights[3] + quad->heights[2])/2, 
+    quad->heights[2]
   };
   switch (numPoints) {
     case 0:
@@ -58,13 +58,26 @@ void il_Common_Heightmap_Quad_divide(il_Common_Heightmap_Quad * quad, size_t num
       break;
   }
   
+  // counter-clockwise
+  int lookup_table[16] = {
+    0, 1, 4, 3, // UL
+    1, 2, 5, 4, // UR
+    4, 5, 8, 7, // LR
+    3, 4, 7, 6  // LL
+  };
+  
   int i;
   for (i = 0; i < 4; i++) {
     float subheights[4];
-    unsigned offset = (i%2) + (i/2)*3;
+    int j;
+    for (j=0; j<4; j++) {
+      int idx = lookup_table[i*4 + j];
+      subheights[j] = heights[idx];
+    }
+    /*unsigned offset = (i%2) + (i/2)*3;
     int j;
     for (j = 0; j < 4; j++)
-      subheights[j] = heights[offset + (j%2) + (j/2)*3];
+      subheights[j] = heights[offset + (j%2) + (j/2)*3];*/
     
     if (quad->children[i]) {
       il_Common_Heightmap_Quad_divide(quad->children[i], 0, NULL);
