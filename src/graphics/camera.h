@@ -2,6 +2,7 @@
 
 typedef struct il_Graphics_Camera {
         il_Common_Positionable* positionable;
+        unsigned refs;
 } il_Graphics_Camera;
 
 il_Graphics_Camera* il_Graphics_Camera_new();

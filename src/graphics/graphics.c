@@ -11,6 +11,7 @@
 
 #include "graphics.h"
 #include "heightmap.h"
+#include "common/heightmap.h"
 #include "camera.h"
 #include "common/event.h"
 #include "common/input.h"
@@ -60,11 +61,11 @@ void il_Graphics_init() {
 	glEnable(GL_LIGHTING);
 	glEnable(GL_LIGHT0);
 
-	h = il_Graphics_Heightmap_new(heights, 20);
+	h = il_Graphics_Heightmap_new(il_Common_Heightmap_new(heights));
 
 	int i;
 	for (i = 0; i < 6; i++) {
-		il_Graphics_Heightmap_Quad_divide(h->root, 20);
+		il_Common_Heightmap_Quad_divide(h->heightmap->root, 0, NULL);
 	}
 	
 	il_Event_register(IL_INPUT_KEYDOWN, (il_Event_Callback)&handleKeyDown);
