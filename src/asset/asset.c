@@ -6,6 +6,7 @@
 #include <dirent.h>
 
 #include "uthash.h"
+#include "IL/il.h"
 /* #include "SOIL.h" */
 
 struct il_Asset_Asset {
@@ -183,4 +184,5 @@ int il_Asset_delete(il_Asset_Asset* asset) {
 
 unsigned int il_Asset_assetToTexture(il_Asset_Asset *asset) {
   /* return SOIL_load_OGL_texture(il_Common_toC(asset->fullpath), 0, 0, 0); */
+  return 1;
 }
