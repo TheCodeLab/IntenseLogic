@@ -18,49 +18,49 @@ typedef struct sg_Vector2 {
 /* Function: sg_Vector2_add
 Adds two vectors together using (x1+x2, y1+y2).
 */
-inline sg_Vector2 sg_Vector2_add(sg_Vector2 a, sg_Vector2 b);
+sg_Vector2 sg_Vector2_add(sg_Vector2 a, sg_Vector2 b);
 
 /* Function: sg_Vector2_sub
 sg_Vector2_add except subtracting.
 */
-inline sg_Vector2 sg_Vector2_sub(sg_Vector2 a, sg_Vector2 b);
+sg_Vector2 sg_Vector2_sub(sg_Vector2 a, sg_Vector2 b);
 
 /* Function: sg_Vector2_mul
 Multiplies two vectors together using the useful (x1*x2,y1*y2).
 */
-inline sg_Vector2 sg_Vector2_mul(sg_Vector2 a, sg_Vector2 b);
+sg_Vector2 sg_Vector2_mul(sg_Vector2 a, sg_Vector2 b);
 
 /* Function: sg_Vector2_mul_f
 Multiplies all the values in a given vector by a given number.
 */
-inline sg_Vector2 sg_Vector2_mul_f(sg_Vector2 a, float b);
+sg_Vector2 sg_Vector2_mul_f(sg_Vector2 a, float b);
 
 /* Function: sg_Vector2_div
 Divides two vectors using (x1/x2,y1/y2).
 */
-inline sg_Vector2 sg_Vector2_div(sg_Vector2 a, sg_Vector2 b);
+sg_Vector2 sg_Vector2_div(sg_Vector2 a, sg_Vector2 b);
 
 /* Function: sg_Vector2_div_f
 Divides the values in a vector by the given number.
 */
-inline sg_Vector2 sg_Vector2_div_f(sg_Vector2 a, float b);
+sg_Vector2 sg_Vector2_div_f(sg_Vector2 a, float b);
 
 /* Function: sg_Vector2_len
 Uses pythagorean theorem on the given vector, to return the number of units from
 the point specified by it to the origin (0,0).
 */
-inline float sg_Vector2_len(sg_Vector2 v);
+float sg_Vector2_len(sg_Vector2 v);
 
 /* Function: sg_Vector2_normalise
 Returns a vector whose length is always 1, pointing in the same direction as the
 given vector.
 */
-inline sg_Vector2 sg_Vector2_normalise(sg_Vector2 v);
+sg_Vector2 sg_Vector2_normalise(sg_Vector2 v);
 
 /* Function: sg_Vector2_dot
 Returns the dot product of the two vectors.
 */
-inline float sg_Vector2_dot(sg_Vector2 a, sg_Vector2 b);
+float sg_Vector2_dot(sg_Vector2 a, sg_Vector2 b);
 
 
 /* Typedef: sg_Vector3
@@ -76,54 +76,54 @@ typedef struct sg_Vector3 {
 /* Function: sg_Vector3_add
 Adds two vectors together using (x1+x2, y1+y2, z1+z2).
 */
-inline sg_Vector3 sg_Vector3_add(sg_Vector3 a, sg_Vector3 b);
+sg_Vector3 sg_Vector3_add(sg_Vector3 a, sg_Vector3 b);
 
 /* Function: sg_Vector3_sub
 sg_Vector3_add except subtracting.
 */
-inline sg_Vector3 sg_Vector3_sub(sg_Vector3 a, sg_Vector3 b);
+sg_Vector3 sg_Vector3_sub(sg_Vector3 a, sg_Vector3 b);
 
 /* Function: sg_Vector3_mul
 Multiplies two vectors together using the useful (x1*x2,y1*y2,z1*z2).
 */
-inline sg_Vector3 sg_Vector3_mul(sg_Vector3 a, sg_Vector3 b);
+sg_Vector3 sg_Vector3_mul(sg_Vector3 a, sg_Vector3 b);
 
 /* Function: sg_Vector3_mul_f
 Multiplies all the values in a given vector by a given number.
 */
-inline sg_Vector3 sg_Vector3_mul_f(sg_Vector3 a, float b);
+sg_Vector3 sg_Vector3_mul_f(sg_Vector3 a, float b);
 
 /* Function: sg_Vector3_div
 Divides two vectors using (x1/x2,y1/y2,z1/z2).
 */
-inline sg_Vector3 sg_Vector3_div(sg_Vector3 a, sg_Vector3 b);
+sg_Vector3 sg_Vector3_div(sg_Vector3 a, sg_Vector3 b);
 
 /* Function: sg_Vector3_div_f
 Divides the values in a vector by the given number.
 */
-inline sg_Vector3 sg_Vector3_div_f(sg_Vector3 a, float b);
+sg_Vector3 sg_Vector3_div_f(sg_Vector3 a, float b);
 
 /* Function: sg_Vector3_len
 Uses pythagorean theorem on the given vector, to return the number of units from
 the point specified by it to the origin (0,0,0).
 */
-inline float sg_Vector3_len(sg_Vector3 v);
+float sg_Vector3_len(sg_Vector3 v);
 
 /* Function: sg_Vector3_normalise
 Returns a vector whose length is always 1, pointing in the same direction as the
 given vector.
 */
-inline sg_Vector3 sg_Vector3_normalise(sg_Vector3 v);
+sg_Vector3 sg_Vector3_normalise(sg_Vector3 v);
 
 /* Function: sg_Vector3_dot
 Returns the dot product of the two vectors.
 */
-inline float sg_Vector3_dot(sg_Vector3 a, sg_Vector3 b);
+float sg_Vector3_dot(sg_Vector3 a, sg_Vector3 b);
 
 /* Function: sg_Vector3_cross
 Returns the cross product of the two vectors.
 */
-inline sg_Vector3 sg_Vector3_cross(sg_Vector3 a, sg_Vector3 b);
+sg_Vector3 sg_Vector3_cross(sg_Vector3 a, sg_Vector3 b);
 
 
 /* Typedef: sg_Matrix
@@ -176,7 +176,7 @@ sg_Quaternion sg_Quaternion_new(sg_Vector3 v, float a);
 /* Function: sg_Vector3_rotate
 Rotates a given vector using a quaternion.
 */
-inline sg_Vector3 sg_Vector3_rotate(sg_Vector3 p, sg_Quaternion q);
+sg_Vector3 sg_Vector3_rotate(sg_Vector3 p, sg_Quaternion q);
 
 /* Function: sg_Matrix_rotate_q
 Rotates a matrix using a quaternion.

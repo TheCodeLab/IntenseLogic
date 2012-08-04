@@ -4,89 +4,89 @@
 #include "matrix.h"
 
 
-inline sg_Vector2 sg_Vector2_add(sg_Vector2 a, sg_Vector2 b) {
+sg_Vector2 sg_Vector2_add(sg_Vector2 a, sg_Vector2 b) {
   return (sg_Vector2) {a.x + b.x, a.y + b.y};
 }
 
-inline sg_Vector2 sg_Vector2_sub(sg_Vector2 a, sg_Vector2 b) {
+sg_Vector2 sg_Vector2_sub(sg_Vector2 a, sg_Vector2 b) {
   return (sg_Vector2) {a.x - b.x, a.y - b.y};
 }
 
-inline sg_Vector2 sg_Vector2_mul(sg_Vector2 a, sg_Vector2 b) {
+sg_Vector2 sg_Vector2_mul(sg_Vector2 a, sg_Vector2 b) {
   return (sg_Vector2) {a.x * b.x, a.y * b.y};
 }
 
-inline sg_Vector2 sg_Vector2_mul_f(sg_Vector2 a, float b) {
+sg_Vector2 sg_Vector2_mul_f(sg_Vector2 a, float b) {
   return (sg_Vector2) {a.x * b, a.y * b};
 }
 
-inline sg_Vector2 sg_Vector2_div(sg_Vector2 a, sg_Vector2 b) {
+sg_Vector2 sg_Vector2_div(sg_Vector2 a, sg_Vector2 b) {
   return (sg_Vector2) {a.x / b.x, a.y / b.y};
 }
 
-inline sg_Vector2 sg_Vector2_div_f(sg_Vector2 a, float b) {
+sg_Vector2 sg_Vector2_div_f(sg_Vector2 a, float b) {
   return (sg_Vector2) {a.x / b, a.y / b};
 }
 
-inline float sg_Vector2_len(sg_Vector2 v) {
+float sg_Vector2_len(sg_Vector2 v) {
   return sqrt(v.x*v.x + v.y*v.y);
 }
 
-inline sg_Vector2 sg_Vector2_normalise(sg_Vector2 v) {
+sg_Vector2 sg_Vector2_normalise(sg_Vector2 v) {
   float l = sg_Vector2_len(v);
   return (sg_Vector2) {v.x/l, v.y/l};
 }
 
-inline float sg_Vector2_dot(sg_Vector2 a, sg_Vector2 b) {
+float sg_Vector2_dot(sg_Vector2 a, sg_Vector2 b) {
   return (a.x*b.x) + (a.y*b.y);
 }
 
 
-inline sg_Vector3 sg_Vector3_add(sg_Vector3 a, sg_Vector3 b) {
+sg_Vector3 sg_Vector3_add(sg_Vector3 a, sg_Vector3 b) {
   return (sg_Vector3) {a.x + b.x, a.y + b.y, a.z + b.z};
 }
 
-inline sg_Vector3 sg_Vector3_sub(sg_Vector3 a, sg_Vector3 b) {
+sg_Vector3 sg_Vector3_sub(sg_Vector3 a, sg_Vector3 b) {
   return (sg_Vector3) {a.x - b.x, a.y - b.y, a.z - b.z};
 }
 
-inline sg_Vector3 sg_Vector3_mul(sg_Vector3 a, sg_Vector3 b) {
+sg_Vector3 sg_Vector3_mul(sg_Vector3 a, sg_Vector3 b) {
   return (sg_Vector3) {a.x * b.x, a.y * b.y, a.z * b.z};
 }
 
-inline sg_Vector3 sg_Vector3_mul_f(sg_Vector3 a, float b) {
+sg_Vector3 sg_Vector3_mul_f(sg_Vector3 a, float b) {
   return (sg_Vector3) {a.x * b, a.y * b, a.z * b};
 }
 
-inline sg_Vector3 sg_Vector3_div(sg_Vector3 a, sg_Vector3 b) {
+sg_Vector3 sg_Vector3_div(sg_Vector3 a, sg_Vector3 b) {
   return (sg_Vector3) {a.x / b.x, a.y / b.y, a.z / b.z};
 }
 
-inline sg_Vector3 sg_Vector3_div_f(sg_Vector3 a, float b) {
+sg_Vector3 sg_Vector3_div_f(sg_Vector3 a, float b) {
   return (sg_Vector3) {a.x / b, a.y / b, a.z / b};
 }
 
-inline float sg_Vector3_len(sg_Vector3 v) {
+float sg_Vector3_len(sg_Vector3 v) {
   return sqrt(v.x*v.x + v.y*v.y + v.z*v.z);
 }
 
-inline sg_Vector3 sg_Vector3_normalise(sg_Vector3 v) {
+sg_Vector3 sg_Vector3_normalise(sg_Vector3 v) {
   float l = sg_Vector3_len(v);
   return (sg_Vector3) {v.x/l, v.y/l, v.z/l};
 }
 
-inline float sg_Vector3_dot(sg_Vector3 a, sg_Vector3 b) {
+float sg_Vector3_dot(sg_Vector3 a, sg_Vector3 b) {
   return (a.x*b.x) + (a.y*b.y) + (a.z*b.z);
 }
 
 // u = (a,b,c) and v = (p,r,q)
 // u x v = (br-cq,cp-ar,aq-bp)
-inline sg_Vector3 sg_Vector3_cross(sg_Vector3 a, sg_Vector3 b) {
+sg_Vector3 sg_Vector3_cross(sg_Vector3 a, sg_Vector3 b) {
   return (sg_Vector3) {a.y*b.z - a.z*b.y, a.z*b.x - a.x*b.z, a.x*b.y - a.y*b.x};
 }
 
 // pRot = p + 2*cross(q.xyz, q.w*p + cross(q.xyz, p))
-inline sg_Vector3 sg_Vector3_rotate(sg_Vector3 p, sg_Quaternion q) {
+sg_Vector3 sg_Vector3_rotate(sg_Vector3 p, sg_Quaternion q) {
   return sg_Vector3_add (
            p, 
            sg_Vector3_mul_f (
