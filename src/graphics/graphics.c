@@ -20,7 +20,7 @@
 SDL_Surface* canvas;
 int width = 800;
 int height = 600;
-float heights[4] = {0, 0, 0, 0}; //temp
+float heights[4] = {100, 0,0,0}; //temp
 il_Graphics_Heightmap* h;
 il_Graphics_Camera* camera;
 float theta;
@@ -62,6 +62,7 @@ void il_Graphics_init() {
 	glEnable(GL_LIGHT0);
 
 	h = il_Graphics_Heightmap_new(il_Common_Heightmap_new(heights));
+  //h->drawable.positionable->position = (sg_Vector3){-5, 0, -5};
 
 	int i;
 	for (i = 0; i < 6; i++) {

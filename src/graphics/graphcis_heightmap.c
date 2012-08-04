@@ -11,7 +11,7 @@
 #include <stdio.h>
 #include <math.h>
 
-void drawquad(il_Common_Heightmap_Quad* quad, float x, float y);
+void drawquad(il_Common_Heightmap_Quad* quad, float x, float y, float s);
 
 void drawMap(il_Graphics_Drawable3d* map) {
   il_Graphics_Heightmap* map2 = (il_Graphics_Heightmap*)map;
@@ -23,7 +23,8 @@ void drawMap(il_Graphics_Drawable3d* map) {
   
   glDrawArrays(GL_TRIANGLE_FAN, 0, map2->num_vertices);*/
   
-  drawquad(map2->heightmap->root, map2->drawable.positionable->position.x, map2->drawable.positionable->position.y);
+  drawquad(map2->heightmap->root, -50, -50, 100);
+  //drawquad(map2->heightmap->root, map2->drawable.positionable->position.x, map2->drawable.positionable->position.y, 100);
 }
 
 il_Graphics_Heightmap* il_Graphics_Heightmap_new(il_Common_Heightmap *heightmap) {
@@ -37,13 +38,13 @@ void il_Graphics_Heightmap_redraw(il_Graphics_Heightmap *heightmap) {
 
 }
 
-void drawquad(il_Common_Heightmap_Quad* quad, float x, float y) {
-  float size = pow(2, quad->depth);
+void drawquad(il_Common_Heightmap_Quad* quad, float x, float y, float s) {
+  float size = s*pow(2, -(float)quad->depth);
 	if (quad->packed.numChildren != 0) {
-		drawquad(quad->children[0], x, y);
-		drawquad(quad->children[1], x + size / 2, y);
-		drawquad(quad->children[2], x + size / 2, y + size / 2);
-		drawquad(quad->children[3], x, y + size / 2);
+		drawquad(quad->children[0], x, y, s);
+		drawquad(quad->children[1], x + size / 2, y, s);
+		drawquad(quad->children[2], x + size / 2, y + size / 2, s);
+		drawquad(quad->children[3], x, y + size / 2, s);
 	} else {
 		glBegin(GL_TRIANGLE_FAN);
 		glNormal3f(quad->normals[0].x, quad->normals[0].y, quad->normals[0].z);
