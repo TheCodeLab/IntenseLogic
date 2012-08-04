@@ -21,6 +21,8 @@ typedef struct il_Graphics_Drawable3d {
   il_Common_Positionable* positionable;
   GLuint shader;
   GLuint texture;
+  GLenum texture_target;
+  void *drawcontext;
   void (*draw)(struct il_Graphics_Drawable3d*);
   unsigned refs;
 } il_Graphics_Drawable3d;
