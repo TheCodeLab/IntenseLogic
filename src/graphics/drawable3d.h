@@ -9,6 +9,7 @@
 #endif
 
 #include "common/positionable.h"
+#include "camera.h"
 
 enum il_Graphics_Shapes {
   Box,
@@ -23,7 +24,7 @@ typedef struct il_Graphics_Drawable3d {
   GLuint texture;
   GLenum texture_target;
   void *drawcontext;
-  void (*draw)(struct il_Graphics_Drawable3d*);
+  void (*draw)(il_Graphics_Camera*, struct il_Graphics_Drawable3d*);
   unsigned refs;
 } il_Graphics_Drawable3d;
 
