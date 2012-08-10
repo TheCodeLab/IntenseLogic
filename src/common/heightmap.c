@@ -92,12 +92,13 @@ void il_Common_Heightmap_Quad_divide(il_Common_Heightmap_Quad * quad, size_t num
 
 void il_Common_Heightmap_Quad_calculateNormals(il_Common_Heightmap_Quad* quad) {
 	float avHeight = (quad->heights[0] + quad->heights[1] + quad->heights[2] + quad->heights[3]) / 4;
+	float size = pow(2, -(float)quad->depth);
 
 	quad->normals[0] = sg_Vector3_mul_f(
     sg_Vector3_normalise(
       sg_Vector3_cross(
-        (sg_Vector3){1.0f, quad->heights[1] - quad->heights[0], 0}, 
-        (sg_Vector3){-0.5f, avHeight - quad->heights[1], 0.5f}
+        (sg_Vector3){size, quad->heights[1] - quad->heights[0], 0}, 
+        (sg_Vector3){-size / 2, avHeight - quad->heights[1], size / 2}
       )
     ), 
     -1
@@ -106,8 +107,8 @@ void il_Common_Heightmap_Quad_calculateNormals(il_Common_Heightmap_Quad* quad) {
 	quad->normals[1] = sg_Vector3_mul_f(
     sg_Vector3_normalise(
       sg_Vector3_cross(
-        (sg_Vector3){0.0f, quad->heights[2] - quad->heights[1], 1.0f}, 
-        (sg_Vector3){-0.5f, avHeight - quad->heights[2], -0.5f}
+        (sg_Vector3){0.0f, quad->heights[2] - quad->heights[1], size}, 
+        (sg_Vector3){-size / 2, avHeight - quad->heights[2], -size / 2}
       )
     ), 
     -1
@@ -116,8 +117,8 @@ void il_Common_Heightmap_Quad_calculateNormals(il_Common_Heightmap_Quad* quad) {
 	quad->normals[2] = sg_Vector3_mul_f(
     sg_Vector3_normalise(
       sg_Vector3_cross(
-        (sg_Vector3){-1.0f, quad->heights[3] - quad->heights[2], 0}, 
-        (sg_Vector3){0.5f, avHeight - quad->heights[3], -0.5f}
+        (sg_Vector3){-size, quad->heights[3] - quad->heights[2], 0}, 
+        (sg_Vector3){size / 2, avHeight - quad->heights[3], -size / 2}
       )
     ), 
     -1
@@ -126,8 +127,8 @@ void il_Common_Heightmap_Quad_calculateNormals(il_Common_Heightmap_Quad* quad) {
 	quad->normals[3] = sg_Vector3_mul_f(
     sg_Vector3_normalise(
       sg_Vector3_cross(
-        (sg_Vector3){0, quad->heights[0] - quad->heights[3], -1.0f}, 
-        (sg_Vector3){0.5f, avHeight - quad->heights[0], 0.5f}
+        (sg_Vector3){0, quad->heights[0] - quad->heights[3], -size}, 
+        (sg_Vector3){size / 2, avHeight - quad->heights[0], size / 2}
       )
     ), 
     -1

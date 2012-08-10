@@ -28,8 +28,9 @@ sg_Vector3 speed = (sg_Vector3){0, 0, 0};
 
 void il_Graphics_init() {
 	srand((unsigned)time(NULL)); //temp
-        SDL_Init(SDL_INIT_EVERYTHING);
-        canvas = SDL_SetVideoMode(width, height, 32, SDL_OPENGL| SDL_HWSURFACE);
+	
+	SDL_Init(SDL_INIT_EVERYTHING);
+	canvas = SDL_SetVideoMode(width, height, 32, SDL_OPENGL| SDL_HWSURFACE);
 
 	SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
 	SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
@@ -65,7 +66,7 @@ void il_Graphics_init() {
   //h->drawable.positionable->position = (sg_Vector3){-5, 0, -5};
 
 	int i;
-	for (i = 0; i < 6; i++) {
+	for (i = 0; i < 7; i++) {
 		il_Common_Heightmap_Quad_divide(h->heightmap->root, 0, NULL);
 	}
 	
@@ -86,12 +87,12 @@ void il_Graphics_draw() {
 	il_Graphics_Camera_translate(camera, speed.x, speed.y, speed.z);
 	il_Graphics_Camera_render(camera);
 
-	glRotatef(theta, 0, 1, 0);
+	//glRotatef(theta, 0, 1, 0);
 	theta += 0.1;
 
 	glLightfv(GL_LIGHT0, GL_POSITION, lightPosition);
 
-	h->drawable.draw(&h->drawable);
+	h->drawable.draw(camera, &h->drawable);
 
 	SDL_GL_SwapBuffers();
 }
