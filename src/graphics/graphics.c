@@ -1,11 +1,14 @@
 #include <stdlib.h>
 #include <time.h>
+#include <sys/time.h>
 #ifdef __APPLE__
 #include <OpenGL/OpenGL.h>
 #include <OpenGL/gl.h>
 #else
 #include <GL/gl.h>
 #endif
+
+extern int time(int*);
 
 #include "SDL/SDL.h"
 
@@ -70,8 +73,14 @@ void il_Graphics_init() {
 		il_Common_Heightmap_Quad_divide(h->heightmap->root, 0, NULL);
 	}
 	
-	il_Event_register(IL_INPUT_KEYDOWN, (il_Event_Callback)&handleKeyDown);
-	il_Event_register(IL_INPUT_KEYUP, (il_Event_Callback)&handleKeyUp);
+	il_Event_register(IL_INPUT_KEYDOWN, (il_Event_Callback)&handleKeyDown, NULL);
+	il_Event_register(IL_INPUT_KEYUP, (il_Event_Callback)&handleKeyUp, NULL);
+  
+  il_Event_register(IL_GRAPHICS_TICK, &il_Graphics_draw, NULL);
+  
+  struct timeval * frame = malloc(sizeof(struct timeval));
+  *frame = (struct timeval){0, IL_GRAPHICS_TICK_LENGTH};
+  il_Event_timer(il_Event_new(IL_GRAPHICS_TICK, 0, NULL), frame);
 	
 	camera = il_Graphics_Camera_new();
 
