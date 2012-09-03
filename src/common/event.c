@@ -2,36 +2,33 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
+#include <sys/time.h>
 
-void il_Event_push(const il_Event_Event* event) {
-  struct il_Event_Node *node = malloc(sizeof(struct il_Event_Node));
-  
-  node->event = (il_Event_Event*)event;
-  node->next = NULL;
-  
-  if (il_Event_EventQueue_last != NULL)
-    il_Event_EventQueue_last->next = node;
-  il_Event_EventQueue_last = node;
-  if (il_Event_EventQueue_first == NULL)
-    il_Event_EventQueue_first = node;
-}
+#include <event2/event.h>
 
-const il_Event_Event* il_Event_pop() {
-  struct il_Event_Node *node = il_Event_EventQueue_first;
-  if (node == NULL) {
-    return NULL;
-  }
-  if (node == il_Event_EventQueue_last) {
-    il_Event_EventQueue_last = NULL;
-  }
-  il_Event_EventQueue_first = node->next;
-  
-  il_Event_Event* ev = node->event;
-  free(node);
-  return ev;
-}
+#include "common/base.h"
+#include "common/log.h"
 
-void il_Event_handle(il_Event_Event* ev) {
+struct event_base * il_Event_base;
+
+struct callback {
+  il_Event_Callback callback;
+  void * ctx;
+};
+
+typedef struct il_Event_CallbackContainer {
+  uint16_t eventid;
+  size_t length;
+  struct callback *callbacks;
+} il_Event_CallbackContainer;
+
+il_Event_CallbackContainer *il_Event_Callbacks;
+size_t il_Event_Callbacks_len;
+
+void il_Event_dispatch(evutil_socket_t fd, short events, il_Event_Event * ev) {
+  il_Common_log(5, "Event %i dispatched, %i bytes of data\n", (int)ev->eventid,
+    (int)ev->size);
   int i;
   struct il_Event_CallbackContainer* container = NULL;
   for (i = 0; i < il_Event_Callbacks_len; i++) {
@@ -46,16 +43,52 @@ void il_Event_handle(il_Event_Event* ev) {
   }
   
   for (i = 0; i < container->length; i++) {
-    container->callbacks[i](ev);
+    container->callbacks[i].callback(ev, container->callbacks[i].ctx);
   }
   
-  free(ev);
-  
+  // TODO: find a way to get rid of this memory leak
+  /*if (!(events & EV_PERSIST))
+    free(ev);*/
 }
 
-void il_Event_register(uint16_t eventid, il_Event_Callback callback) {
+const il_Event_Event* il_Event_new(uint16_t eventid, uint8_t size, void * data) {
+  il_Event_Event * ev = malloc(sizeof(il_Event_Event) + size);
+  ev->eventid = eventid;
+  ev->size = size;
+  if (data)
+    memcpy(&ev->data, data, size);
+  return ev;
+}
+
+int il_Event_push(const il_Event_Event* event) {
+  if (event == NULL) return -1;
+  struct event * ev = event_new(il_Event_base, -1, 0, 
+    (event_callback_fn)&il_Event_dispatch, (void*)event);
+  int res = event_add(ev, NULL);
+  if (res != 0) return -1;
+  event_active(ev, 0, 0);
+  return 0;
+}
+
+int il_Event_pushnew(uint16_t eventid, uint8_t size, void * data) {
+  return il_Event_push(il_Event_new(eventid, size, data));
+}
+
+int il_Event_timer(const il_Event_Event* event, struct timeval * interval) {
+  int res;
+  struct event * ev = event_new( il_Event_base, -1, EV_TIMEOUT|EV_PERSIST, 
+    (event_callback_fn)&il_Event_dispatch, (void*)event);
+  res = event_add(ev, interval);
+  if (res != 0) return -1;
+  event_active(ev, 0, 0);
+  
+  return 0;
+}
+
+int il_Event_register(uint16_t eventid, il_Event_Callback callback, void * ctx) {
   int i;
   struct il_Event_CallbackContainer* container = NULL;
+  int append = 0;
   for (i = 0; i < il_Event_Callbacks_len; i++) {
     if (il_Event_Callbacks[i].eventid == eventid) {
       container = &il_Event_Callbacks[i];
@@ -68,21 +101,33 @@ void il_Event_register(uint16_t eventid, il_Event_Callback callback) {
     container->eventid = eventid;
     container->length = 0;
     container->callbacks = NULL;
+    append = 1;
   }
   
-  il_Event_Callback* temp = (il_Event_Callback*)malloc(sizeof(il_Event_Callback) * (container->length+1));
-  memcpy(temp, container->callbacks, sizeof(il_Event_Callback) * container->length);
-  //if (container->callbacks != NULL)
+  struct callback* temp = (struct callback*)malloc(sizeof(struct callback) * (container->length+1));
+  memcpy(temp, container->callbacks, sizeof(struct callback) * container->length);
   free(container->callbacks);
-  temp[container->length] = callback;
+  temp[container->length] = (struct callback){callback, ctx};
   container->length++;
   container->callbacks = temp;
   
-  il_Event_CallbackContainer *temp2 = (il_Event_CallbackContainer*)malloc(sizeof(il_Event_CallbackContainer) * (il_Event_Callbacks_len+1));
-  memcpy(temp2, il_Event_Callbacks, sizeof(il_Event_CallbackContainer) * il_Event_Callbacks_len);
-  temp2[il_Event_Callbacks_len] = *container;
-  free(il_Event_Callbacks);
-  il_Event_Callbacks = temp2;
-  il_Event_Callbacks_len++;
+  if (append) {
+    il_Event_CallbackContainer *temp2 = (il_Event_CallbackContainer*)malloc(sizeof(il_Event_CallbackContainer) * (il_Event_Callbacks_len+1));
+    memcpy(temp2, il_Event_Callbacks, sizeof(il_Event_CallbackContainer) * il_Event_Callbacks_len);
+    temp2[il_Event_Callbacks_len] = *container;
+    free(il_Event_Callbacks);
+    il_Event_Callbacks = temp2;
+    il_Event_Callbacks_len++;
+  }
   
+  return 0;
+}
+
+void il_Event_init() {
+  il_Event_base = event_base_new();
+  
+  const il_Event_Event * tick = il_Event_new(IL_BASE_TICK, 0, NULL);
+  struct timeval * tv = malloc(sizeof(struct timeval));
+  *tv = (struct timeval){0, IL_BASE_TICK_LENGTH};
+  il_Event_timer(tick, tv);
 }
