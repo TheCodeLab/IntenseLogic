@@ -6,7 +6,7 @@
 #include <dirent.h>
 
 #include "uthash.h"
-#include "IL/il.h"
+//#include "IL/il.h"
 /* #include "SOIL.h" */
 
 struct il_Asset_Asset {

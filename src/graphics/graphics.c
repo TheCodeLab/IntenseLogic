@@ -8,7 +8,9 @@
 #include <GL/gl.h>
 #endif
 
+/*#ifndef time
 extern int time(int*);
+#endif*/
 
 #include "SDL/SDL.h"
 
@@ -27,7 +29,7 @@ float heights[4] = {100, 0,0,0}; //temp
 il_Graphics_Heightmap* h;
 il_Graphics_Camera* camera;
 float theta;
-sg_Vector3 speed = (sg_Vector3){0, 0, 0};
+sg_Vector3 speed;
 
 void il_Graphics_init() {
 	srand((unsigned)time(NULL)); //temp
@@ -81,7 +83,8 @@ void il_Graphics_init() {
   struct timeval * frame = malloc(sizeof(struct timeval));
   *frame = (struct timeval){0, IL_GRAPHICS_TICK_LENGTH};
   il_Event_timer(il_Event_new(IL_GRAPHICS_TICK, 0, NULL), frame);
-	
+
+  speed = (sg_Vector3){0, 0, 0};
 	camera = il_Graphics_Camera_new();
 
 }

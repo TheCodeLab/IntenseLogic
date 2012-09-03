@@ -42,7 +42,7 @@ void il_Graphics_Heightmap_redraw(il_Graphics_Heightmap *heightmap) {
 void drawquad(il_Common_Heightmap_Quad* quad, sg_Vector3 position, float s, il_Graphics_Camera* camera) {
 	float size = s * pow(2, -(float)quad->depth);
 	float x = position.x;
-	float y = position.y;
+	//float y = position.y;
 	float z = position.z;
 	float distance = pow(x + size / 2 - camera->positionable->position.x, 2) + pow((quad->heights[0] + quad->heights[1] + quad->heights[2] + quad->heights[3]) / 4, 2) + pow(z + size / 2 - camera->positionable->position.z, 2);
 	if (quad->packed.numChildren != 0 && distance <	pow((10 - quad->depth) * s / (quad->depth + 1) / 2, 2)) {
