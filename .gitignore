@@ -186,6 +186,15 @@ Makefile.in
 # Output files
 *.o
 
+###############
+## CodeLite
+###############
+
+IntenseLogic.*
+Debug/
+Release/
+*_wsp.mk
+
 ###################
 ## IntenseLogic
 ###################

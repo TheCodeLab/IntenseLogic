@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CodeLite_Project Name="IntenseLogic" InternalType="Console">
+  <Plugins>
+    <Plugin Name="qmake">
+      <![CDATA[00010001N0005Debug000000000000]]>
+    </Plugin>
+  </Plugins>
+  <Description/>
+  <Dependencies/>
+  <VirtualDirectory Name="src">
+    <VirtualDirectory Name="common">
+      <VirtualDirectory Name="mesh">
+        <File Name="src/common/mesh/obj.h"/>
+      </VirtualDirectory>
+      <File Name="src/common/base.h"/>
+      <File Name="src/common/common.c"/>
+      <File Name="src/common/entity.c"/>
+      <File Name="src/common/entity.h"/>
+      <File Name="src/common/event.c"/>
+      <File Name="src/common/event.h"/>
+      <File Name="src/common/heightmap.c"/>
+      <File Name="src/common/heightmap.h"/>
+      <File Name="src/common/input.h"/>
+      <File Name="src/common/log.c"/>
+      <File Name="src/common/log.h"/>
+      <File Name="src/common/matrix.c"/>
+      <File Name="src/common/matrix.h"/>
+      <File Name="src/common/positionable.h"/>
+      <File Name="src/common/string.c"/>
+      <File Name="src/common/string.h"/>
+      <File Name="src/common/world.h"/>
+    </VirtualDirectory>
+    <VirtualDirectory Name="asset">
+      <File Name="src/asset/asset.c"/>
+      <File Name="src/asset/asset.h"/>
+      <File Name="src/asset/SOIL.h"/>
+      <File Name="src/asset/texture.h"/>
+      <File Name="src/asset/uthash.h"/>
+    </VirtualDirectory>
+    <VirtualDirectory Name="graphics">
+      <File Name="src/graphics/camera.c"/>
+      <File Name="src/graphics/camera.h"/>
+      <File Name="src/graphics/drawable3d.h"/>
+      <File Name="src/graphics/graphics.c"/>
+      <File Name="src/graphics/graphics.h"/>
+      <File Name="src/graphics/graphics_heightmap.c"/>
+      <File Name="src/graphics/heightmap.h"/>
+      <File Name="src/graphics/world.h"/>
+    </VirtualDirectory>
+    <VirtualDirectory Name="network">
+      <File Name="src/network/connection.c"/>
+      <File Name="src/network/connection.h"/>
+      <File Name="src/network/network.c"/>
+      <File Name="src/network/network.h"/>
+    </VirtualDirectory>
+    <VirtualDirectory Name="script">
+      <File Name="src/script/script.c"/>
+      <File Name="src/script/script.h"/>
+    </VirtualDirectory>
+    <File Name="src/main.c"/>
+    <File Name="src/time.h"/>
+    <File Name="src/Tupfile"/>
+  </VirtualDirectory>
+  <Settings Type="Executable">
+    <GlobalSettings>
+      <Compiler Options="" C_Options="">
+        <IncludePath Value="."/>
+      </Compiler>
+      <Linker Options="">
+        <LibraryPath Value="."/>
+      </Linker>
+      <ResourceCompiler Options=""/>
+    </GlobalSettings>
+    <Configuration Name="Debug" CompilerType="clang" DebuggerType="GNU gdb debugger" Type="Executable" BuildCmpWithGlobalSettings="append" BuildLnkWithGlobalSettings="append" BuildResWithGlobalSettings="append">
+      <Compiler Options="-g;-O0;-Wall" C_Options="-g;-O0;-Wall;-std=c99;-DWIN32" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" UseDifferentPCHFlags="no" PCHFlags="">
+        <IncludePath Value="src"/>
+        <IncludePath Value="include"/>
+      </Compiler>
+      <Linker Options="" Required="yes">
+        <Library Value="event"/>
+        <Library Value="SDL"/>
+        <Library Value="SDLmain"/>
+        <Library Value="lua"/>
+        <Library Value="opengl32"/>
+        <Library Value="ws2_32"/>
+      </Linker>
+      <ResourceCompiler Options="" Required="no"/>
+      <General OutputFile="$(IntermediateDirectory)/$(ProjectName)" IntermediateDirectory="./Debug" Command="./$(ProjectName)" CommandArguments="" UseSeparateDebugArgs="no" DebugArguments="" WorkingDirectory="$(IntermediateDirectory)" PauseExecWhenProcTerminates="no"/>
+      <Environment EnvVarSetName="&lt;Use Defaults&gt;" DbgSetName="&lt;Use Defaults&gt;">
+        <![CDATA[]]>
+      </Environment>
+      <Debugger IsRemote="no" RemoteHostName="" RemoteHostPort="" DebuggerPath="">
+        <PostConnectCommands/>
+        <StartupCommands/>
+      </Debugger>
+      <PreBuild/>
+      <PostBuild/>
+      <CustomBuild Enabled="no">
+        <RebuildCommand/>
+        <CleanCommand/>
+        <BuildCommand/>
+        <PreprocessFileCommand/>
+        <SingleFileCommand/>
+        <MakefileGenerationCommand/>
+        <ThirdPartyToolName>None</ThirdPartyToolName>
+        <WorkingDirectory/>
+      </CustomBuild>
+      <AdditionalRules>
+        <CustomPostBuild/>
+        <CustomPreBuild/>
+      </AdditionalRules>
+      <Completion EnableCpp11="no">
+        <ClangCmpFlagsC/>
+        <ClangCmpFlags/>
+        <ClangPP/>
+        <SearchPaths/>
+      </Completion>
+    </Configuration>
+    <Configuration Name="Release" CompilerType="gnu gcc" DebuggerType="GNU gdb debugger" Type="" BuildCmpWithGlobalSettings="append" BuildLnkWithGlobalSettings="append" BuildResWithGlobalSettings="append">
+      <Compiler Options="-O2;-Wall" C_Options="-O2;-Wall" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" UseDifferentPCHFlags="no" PCHFlags="">
+        <IncludePath Value="."/>
+      </Compiler>
+      <Linker Options="" Required="yes"/>
+      <ResourceCompiler Options="" Required="no"/>
+      <General OutputFile="$(IntermediateDirectory)/$(ProjectName)" IntermediateDirectory="./Release" Command="./$(ProjectName)" CommandArguments="" UseSeparateDebugArgs="no" DebugArguments="" WorkingDirectory="$(IntermediateDirectory)" PauseExecWhenProcTerminates="yes"/>
+      <Environment EnvVarSetName="&lt;Use Defaults&gt;" DbgSetName="&lt;Use Defaults&gt;">
+        <![CDATA[]]>
+      </Environment>
+      <Debugger IsRemote="no" RemoteHostName="" RemoteHostPort="" DebuggerPath="">
+        <PostConnectCommands/>
+        <StartupCommands/>
+      </Debugger>
+      <PreBuild/>
+      <PostBuild/>
+      <CustomBuild Enabled="no">
+        <RebuildCommand/>
+        <CleanCommand/>
+        <BuildCommand/>
+        <PreprocessFileCommand/>
+        <SingleFileCommand/>
+        <MakefileGenerationCommand/>
+        <ThirdPartyToolName>None</ThirdPartyToolName>
+        <WorkingDirectory/>
+      </CustomBuild>
+      <AdditionalRules>
+        <CustomPostBuild/>
+        <CustomPreBuild/>
+      </AdditionalRules>
+      <Completion EnableCpp11="no">
+        <ClangCmpFlagsC/>
+        <ClangCmpFlags/>
+        <ClangPP/>
+        <SearchPaths/>
+      </Completion>
+    </Configuration>
+  </Settings>
+</CodeLite_Project>
