@@ -50,8 +50,8 @@
     <VirtualDirectory Name="network">
       <File Name="src/network/connection.c"/>
       <File Name="src/network/connection.h"/>
-      <File Name="src/network/network.c"/>
       <File Name="src/network/network.h"/>
+      <File Name="src/network/network.c"/>
     </VirtualDirectory>
     <VirtualDirectory Name="script">
       <File Name="src/script/script.c"/>
@@ -72,14 +72,16 @@
       <ResourceCompiler Options=""/>
     </GlobalSettings>
     <Configuration Name="Debug" CompilerType="clang" DebuggerType="GNU gdb debugger" Type="Executable" BuildCmpWithGlobalSettings="append" BuildLnkWithGlobalSettings="append" BuildResWithGlobalSettings="append">
-      <Compiler Options="-g;-O0;-Wall" C_Options="-g;-O0;-Wall;-std=c99;-DWIN32" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" UseDifferentPCHFlags="no" PCHFlags="">
+      <Compiler Options="-g;-O0;-Wall" C_Options="-g;-O0;-Wall;-std=c99;-DWIN32;-pg" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" UseDifferentPCHFlags="no" PCHFlags="">
         <IncludePath Value="src"/>
         <IncludePath Value="include"/>
       </Compiler>
-      <Linker Options="" Required="yes">
-        <Library Value="event"/>
-        <Library Value="SDL"/>
+      <Linker Options="-g;-pg" Required="yes">
+        <Library Value="event_core"/>
+        <Library Value="event_extra"/>
+        <Library Value="mingw32"/>
         <Library Value="SDLmain"/>
+        <Library Value="SDL"/>
         <Library Value="lua"/>
         <Library Value="opengl32"/>
         <Library Value="ws2_32"/>

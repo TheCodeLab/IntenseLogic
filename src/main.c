@@ -76,10 +76,10 @@ void shutdown_callback(il_Event_Event* ev) {
   event_base_loopbreak(il_Event_base);
 }
 
-#ifdef __APPLE__
+/*#ifdef __APPLE__
 #else
     #undef main
-#endif
+#endif*/
 int main(int argc, char **argv) {
 
   #ifdef DEBUG
