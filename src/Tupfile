@@ -6,7 +6,7 @@ endif
 INCLUDES += -I. -I../include
 CFLAGS += -Wall -DDEBUG -g $(INCLUDES)
 #CFLAGS += -DdDOUBLE
-LDFLAGS += -lm -llua -lSDL -lIL
+LDFLAGS += -lm -llua -lIL
 
 include @(TUP_PLATFORM).tup
 

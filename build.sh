@@ -15,7 +15,7 @@ echo "LDFLAGS: $LDFLAGS";
 if $(test $1 = "mingw"); then
 EXTENSION=.exe
 LINKSUFFIX=.dll
-LDFLAGS="$LDFLAGS -lws2_32 -static-libgcc -static -llua -lopengl32"
+LDFLAGS="-lmingw32 -lSDLmain -lSDL $LDFLAGS -lws2_32 -static-libgcc -static -llua -lopengl32"
 echo "Target: mingw";
 else
 LINKSUFFIX=.so
@@ -37,4 +37,4 @@ done;
 cd ..
 
 echo "$CC obj/*.o lib/*$LINKSUFFIX $LDFLAGS -o bin/il$EXTENSION"
-$CC obj/*.o lib/*$LINKSUFFIX $LDFLAGS -o bin/il$EXTENSION
+$CC obj/*.o $LDFLAGS -o bin/il$EXTENSION
