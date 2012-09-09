@@ -100,7 +100,7 @@ int main(int argc, char **argv) {
         il_Common_log(2, "Unrecognised option, ignoring.\n");
         break;
       case HELP:
-        printf("IntenseLogic - Game engine\n\tUsage: il [options]\n\n");
+        printf("IntenseLogic - Game engine\n\tUsage: %s [options]\n\n", argv[0]);
         while (long_options[i].name != 0) {
           printf("-%c\t--%s\t%s\n", (char)long_options[i].val, long_options[i].name, help[i]);
           i++;
