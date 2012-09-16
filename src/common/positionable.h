@@ -1,15 +1,20 @@
 #ifndef IL_COMMON_POSITIONABLE_H
 #define IL_COMMON_POSITIONABLE_H
 
+#include <sys/time.h>
+
 #include "matrix.h"
 #include "world.h"
 
 typedef struct il_Common_Positionable {
   sg_Vector3 position;
-  sg_Matrix rotation;
+  sg_Quaternion rotation;
   sg_Vector3 size;
   il_Common_World *parent;
   unsigned refs;
+  struct timeval last_update;
 } il_Common_Positionable;
+
+il_Common_Positionable * il_Common_Positionable_new(il_Common_World * parent);
 
 #endif

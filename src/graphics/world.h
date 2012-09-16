@@ -10,6 +10,11 @@ typedef struct il_Graphics_World {
   il_Graphics_Camera *camera;
 } il_Graphics_World;
 
-il_Graphics_World *active;
+il_Graphics_World *il_Graphics_active_world;
+
+il_Graphics_World * il_Graphics_World_new();
+il_Graphics_World * il_Graphics_World_new_world(il_Common_World * world);
+
+il_Graphics_World * il_Common_World_getGraphicsWorld(il_Common_World * world);
 
 #endif

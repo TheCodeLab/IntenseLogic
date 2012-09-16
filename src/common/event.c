@@ -27,8 +27,8 @@ il_Event_CallbackContainer *il_Event_Callbacks;
 size_t il_Event_Callbacks_len;
 
 void il_Event_dispatch(evutil_socket_t fd, short events, il_Event_Event * ev) {
-  il_Common_log(5, "Event %i dispatched, %i bytes of data\n", (int)ev->eventid,
-    (int)ev->size);
+  /*il_Common_log(5, "Event %i dispatched, %i bytes of data\n", (int)ev->eventid,
+    (int)ev->size);*/
   int i;
   struct il_Event_CallbackContainer* container = NULL;
   for (i = 0; i < il_Event_Callbacks_len; i++) {

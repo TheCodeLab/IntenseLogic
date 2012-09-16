@@ -64,6 +64,30 @@ void update(il_Event_Event * ev, void * ctx) {
         il_Event_pushnew(IL_INPUT_KEYUP, sizeof(int), &sdlEvent.key.keysym.sym);
         break;
       }
+      case (SDL_MOUSEMOTION): {
+        il_Input_MouseMove mousemove = 
+          (il_Input_MouseMove){sdlEvent.motion.x, sdlEvent.motion.y};
+        // the provided data pointer is memcpy'd and not preserved after its 
+        // stack frame exits, so this is fine
+        il_Event_pushnew(IL_INPUT_MOUSEMOVE, sizeof(il_Input_MouseMove), &mousemove);
+        break;
+      }
+      /*case (SDL_MOUSEWHEEL): {
+        il_Input_MouseWheel mousewheel = 
+          (il_Input_MouseWheel){sdlEvent.wheel.x, sdlEvent.wheel.y};
+        il_Event_pushnew(IL_INPUT_MOUSEWHEEL, sizeof(il_Input_MouseWheel), &mousewheel);
+        break;
+      }*/
+      case (SDL_MOUSEBUTTONDOWN): {
+        int button = sdlEvent.button.button;
+        il_Event_pushnew(IL_INPUT_MOUSEDOWN, sizeof(int), &button);
+        break;
+      }
+      case (SDL_MOUSEBUTTONUP): {
+        int button = sdlEvent.button.button;
+        il_Event_pushnew(IL_INPUT_MOUSEUP, sizeof(int), &button);
+        break;
+      }
       default: break;
     }
   }
@@ -72,7 +96,7 @@ void update(il_Event_Event * ev, void * ctx) {
 int running = 1;
 
 void shutdown_callback(il_Event_Event* ev) {
-  il_Common_log(3, "Shutting down.");
+  il_Common_log(3, "Shutting down.\n");
   event_base_loopbreak(il_Event_base);
 }
 
@@ -82,9 +106,13 @@ void shutdown_callback(il_Event_Event* ev) {
 #endif*/
 int main(int argc, char **argv) {
 
+  printf("test\n");
+  
   #ifdef DEBUG
   il_Common_logfile = stdout;
   #endif
+  
+  il_Common_log(3, "Initialising engine.");
 
   // build config file
   
@@ -139,7 +167,6 @@ int main(int argc, char **argv) {
   //il_Asset_init();
   il_Event_register(IL_BASE_SHUTDOWN, (il_Event_Callback)&shutdown_callback, NULL);
   
-  
   // finished initialising, send startup event
   il_Event_pushnew(IL_BASE_STARTUP, 0, NULL);
   
@@ -147,7 +174,6 @@ int main(int argc, char **argv) {
   event_base_loop(il_Event_base, 0);
   
   // shutdown code (only reached after receiving a IL_BASE_SHUTDOWN event)
-  il_Graphics_quit();
   
   return 0;
 }

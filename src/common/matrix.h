@@ -125,6 +125,13 @@ Returns the cross product of the two vectors.
 */
 sg_Vector3 sg_Vector3_cross(sg_Vector3 a, sg_Vector3 b);
 
+/* Struct: sg_Vector4
+  Four-dimensional vector.
+*/
+typedef struct sg_Vector4 {
+  float x,y,z,w;
+} sg_Vector4;
+
 
 /* Typedef: sg_Matrix
 Represents a 4x4 matrix for use in transformation, rotation, and scaling.
@@ -136,10 +143,17 @@ typedef struct sg_Matrix {
   float data[16];
 } sg_Matrix;
 
+sg_Matrix sg_Matrix_identity;
+
 /* Function: sg_Matrix_mul
 Multiplies two matrices together and returns the result.
 */
 sg_Matrix sg_Matrix_mul(sg_Matrix a, sg_Matrix b);
+
+/* Function: sg_Vector3_mul_m
+Multiplies a vector by a matrix.
+*/
+sg_Vector4 sg_Vector4_mul_m(sg_Vector4 a, sg_Matrix b);
 
 /* Function: sg_Matrix_transform
 Transforms a given matrix by the given vector and returns the result.

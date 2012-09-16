@@ -5,4 +5,6 @@ typedef struct il_Common_World {
   unsigned refs;
 } il_Common_World;
 
+il_Common_World* il_Common_World_new();
+
 #endif

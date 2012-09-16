@@ -9,9 +9,5 @@
 #define IL_GRAPHICS_TICK_LENGTH (16666)
 
 void il_Graphics_init();
-void il_Graphics_draw();
-void il_Graphics_quit();
-void handleKeyDown(il_Event_Event* ev);
-void handleKeyUp(il_Event_Event* ev);
 
 #endif
