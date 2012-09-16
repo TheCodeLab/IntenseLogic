@@ -108,6 +108,14 @@ sg_Vector3 sg_Vector3_rotate(sg_Vector3 p, sg_Quaternion q) {
          );
 }
 
+sg_Matrix sg_Matrix_identity = {
+  {
+    1, 0, 0, 0,
+    0, 1, 0, 0,
+    0, 0, 1, 0,
+    0, 0, 0, 1
+  }
+};
 
 sg_Matrix sg_Matrix_mul(sg_Matrix a, sg_Matrix b) {
   sg_Matrix c;
@@ -131,6 +139,22 @@ sg_Matrix sg_Matrix_mul(sg_Matrix a, sg_Matrix b) {
   }
   
   return c;
+}
+
+sg_Vector4 sg_Vector4_mul_m(sg_Vector4 vec, sg_Matrix b) {
+  float c[4];
+  float *a = (float*)&vec;
+  
+  int row1, col;
+  
+  for (row1 = 0; row1 < 4; row1++) {
+    c[row1] = 0;
+    for (col = 0; col < 4; col++) {
+      c[row1] += a[col] * b.data[row1*4 + col];
+    }
+  }
+  
+  return (sg_Vector4){c[0],c[1],c[2],c[3]};
 }
 
 sg_Matrix sg_Matrix_transform(sg_Matrix m, sg_Vector3 t) {

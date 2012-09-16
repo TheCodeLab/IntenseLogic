@@ -14,7 +14,7 @@
 
 void drawquad(il_Common_Heightmap_Quad* quad, sg_Vector3 position, float s, il_Graphics_Camera* camera);
 
-void drawMap(il_Graphics_Camera* camera, il_Graphics_Drawable3d* map) {
+void drawMap(il_Graphics_Camera* camera, il_Graphics_Drawable3d* map, struct timeval * tv) {
   il_Graphics_Heightmap* map2 = (il_Graphics_Heightmap*)map;
 	/*if (!map2->vbo) {
     il_Graphics_Heightmap_redraw(map2);
@@ -31,7 +31,7 @@ void drawMap(il_Graphics_Camera* camera, il_Graphics_Drawable3d* map) {
 il_Graphics_Heightmap* il_Graphics_Heightmap_new(il_Common_Heightmap *heightmap) {
 	il_Graphics_Heightmap* map = malloc(sizeof(il_Graphics_Heightmap));
 	map->heightmap = heightmap;
-	map->drawable.draw = &drawMap;
+	map->drawable.draw = (il_Graphics_Drawable3d_cb)&drawMap;
 	return map;
 }
 

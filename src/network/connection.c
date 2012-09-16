@@ -1,7 +1,10 @@
 #include "connection.h"
 
 #include <stdio.h>
-#include "asprintf.c"
+#include <errno.h>
+#include <limits.h>
+#include <stdarg.h>
+#include <stdlib.h>
 #include <event2/event.h>
 #include <event2/bufferevent.h>
 #include <event2/tag.h>
@@ -9,6 +12,8 @@
 #include <event2/listener.h>
 #include <event2/dns.h>
 #include <event2/util.h>
+
+extern int asprintf(char **str, const char *fmt, ...);
 
 #include "common/base.h"
 

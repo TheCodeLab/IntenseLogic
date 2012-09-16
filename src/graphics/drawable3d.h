@@ -12,20 +12,25 @@
 #include "camera.h"
 
 enum il_Graphics_Shapes {
-  Box,
-  Cylinder,
-  Sphere,
-  Plane
+  il_Graphics_Box,
+  il_Graphics_Cylinder,
+  il_Graphics_Sphere,
+  il_Graphics_Plane
 };
+
+struct il_Graphics_Drawable3d;
+
+typedef void (*il_Graphics_Drawable3d_cb)(const il_Graphics_Camera*, 
+struct il_Graphics_Drawable3d*, const struct timeval*);
 
 typedef struct il_Graphics_Drawable3d {
   il_Common_Positionable* positionable;
   GLuint shader;
-  GLuint texture;
-  GLenum texture_target;
   void *drawcontext;
-  void (*draw)(il_Graphics_Camera*, struct il_Graphics_Drawable3d*);
+  il_Graphics_Drawable3d_cb draw;
   unsigned refs;
 } il_Graphics_Drawable3d;
+
+il_Graphics_Drawable3d * il_Graphics_Drawable3d_new(il_Common_Positionable * parent);
 
 #endif

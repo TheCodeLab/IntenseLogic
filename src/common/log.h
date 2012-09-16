@@ -22,9 +22,10 @@ const char* il_Common_loglevel_str[6];
   do {                                    \
     if ((level) <= il_Common_loglevel) {  \
       fprintf ( il_Common_logfile,        \
-                ("%s:%i %s: " format),    \
+                ("%s:%i (%s) %s: " format), \
                 __FILE__,                 \
                 __LINE__,                 \
+                __func__,                 \
                 il_Common_loglevel_tostring(level), \
                 ##__VA_ARGS__ );          \
     }                                     \

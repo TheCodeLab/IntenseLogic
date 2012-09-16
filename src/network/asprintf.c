@@ -17,9 +17,12 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+#include <string.h>
+
 extern int vsnprintf();
 
 /* Include vasprintf() if not on your OS. */
+#ifdef WIN32
 #ifndef HAVE_VASPRINTF
 
 #include <errno.h>
@@ -100,4 +103,5 @@ int asprintf(char **str, const char *fmt, ...)
 
         return ret;
 }
+#endif
 #endif

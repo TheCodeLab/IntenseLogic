@@ -2,6 +2,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <math.h>
 
 #include "common/log.h"
 
@@ -9,17 +10,17 @@ il_Common_Heightmap_Quad* il_Common_Heightmap_Quad_new(float heights[4], int dep
   il_Common_Heightmap_Quad* quad = malloc(sizeof(il_Common_Heightmap_Quad));
   memset(quad, 0, sizeof(il_Common_Heightmap_Quad));
   memcpy(&quad->heights[0], &heights[0], 4 * sizeof(float));
-	quad->depth = depth;
-	quad->packed.numChildren = 0; 
-	il_Common_Heightmap_Quad_calculateNormals(quad);
-	return quad;
+  quad->depth = depth;
+  quad->packed.numChildren = 0; 
+  il_Common_Heightmap_Quad_calculateNormals(quad);
+  return quad;
 }
 
 il_Common_Heightmap * il_Common_Heightmap_new(float points[4]) {
-	il_Common_Heightmap* map = (il_Common_Heightmap*)malloc(sizeof(il_Common_Heightmap));
-	il_Common_Heightmap_Quad* root = il_Common_Heightmap_Quad_new(points, 0);
-	map->root = root;
-	return map;
+  il_Common_Heightmap* map = (il_Common_Heightmap*)malloc(sizeof(il_Common_Heightmap));
+  il_Common_Heightmap_Quad* root = il_Common_Heightmap_Quad_new(points, 0);
+  map->root = root;
+  return map;
 }
 
 void il_Common_Heightmap_Quad_divide(il_Common_Heightmap_Quad * quad, size_t numPoints, const float * points) {
@@ -91,10 +92,10 @@ void il_Common_Heightmap_Quad_divide(il_Common_Heightmap_Quad * quad, size_t num
 }
 
 void il_Common_Heightmap_Quad_calculateNormals(il_Common_Heightmap_Quad* quad) {
-	float avHeight = (quad->heights[0] + quad->heights[1] + quad->heights[2] + quad->heights[3]) / 4;
-	float size = pow(2, -(float)quad->depth);
+  float avHeight = (quad->heights[0] + quad->heights[1] + quad->heights[2] + quad->heights[3]) / 4;
+  float size = pow(2, -(float)quad->depth);
 
-	quad->normals[0] = sg_Vector3_mul_f(
+  quad->normals[0] = sg_Vector3_mul_f(
     sg_Vector3_normalise(
       sg_Vector3_cross(
         (sg_Vector3){size, quad->heights[1] - quad->heights[0], 0}, 
@@ -104,7 +105,7 @@ void il_Common_Heightmap_Quad_calculateNormals(il_Common_Heightmap_Quad* quad) {
     -1
   );
   
-	quad->normals[1] = sg_Vector3_mul_f(
+  quad->normals[1] = sg_Vector3_mul_f(
     sg_Vector3_normalise(
       sg_Vector3_cross(
         (sg_Vector3){0.0f, quad->heights[2] - quad->heights[1], size}, 
@@ -114,7 +115,7 @@ void il_Common_Heightmap_Quad_calculateNormals(il_Common_Heightmap_Quad* quad) {
     -1
   );
   
-	quad->normals[2] = sg_Vector3_mul_f(
+  quad->normals[2] = sg_Vector3_mul_f(
     sg_Vector3_normalise(
       sg_Vector3_cross(
         (sg_Vector3){-size, quad->heights[3] - quad->heights[2], 0}, 
@@ -124,7 +125,7 @@ void il_Common_Heightmap_Quad_calculateNormals(il_Common_Heightmap_Quad* quad) {
     -1
   );
   
-	quad->normals[3] = sg_Vector3_mul_f(
+  quad->normals[3] = sg_Vector3_mul_f(
     sg_Vector3_normalise(
       sg_Vector3_cross(
         (sg_Vector3){0, quad->heights[0] - quad->heights[3], -size}, 

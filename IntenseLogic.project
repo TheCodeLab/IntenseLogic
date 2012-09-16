@@ -29,6 +29,14 @@
       <File Name="src/common/string.c"/>
       <File Name="src/common/string.h"/>
       <File Name="src/common/world.h"/>
+      <File Name="src/common/world.c"/>
+      <File Name="src/common/positionable.c"/>
+      <File Name="src/common/config.h"/>
+      <File Name="src/common/keymap.h"/>
+      <File Name="src/common/keymap.defs"/>
+      <File Name="src/common/keymap.c"/>
+      <File Name="src/common/config.c.h"/>
+      <File Name="src/common/input.c"/>
     </VirtualDirectory>
     <VirtualDirectory Name="asset">
       <File Name="src/asset/asset.c"/>
@@ -46,12 +54,15 @@
       <File Name="src/graphics/graphics_heightmap.c"/>
       <File Name="src/graphics/heightmap.h"/>
       <File Name="src/graphics/world.h"/>
+      <File Name="src/graphics/graphicsworld.c"/>
+      <File Name="src/graphics/drawable3d.c"/>
     </VirtualDirectory>
     <VirtualDirectory Name="network">
       <File Name="src/network/connection.c"/>
       <File Name="src/network/connection.h"/>
       <File Name="src/network/network.h"/>
       <File Name="src/network/network.c"/>
+      <File Name="src/network/asprintf.c"/>
     </VirtualDirectory>
     <VirtualDirectory Name="script">
       <File Name="src/script/script.c"/>
@@ -60,6 +71,9 @@
     <File Name="src/main.c"/>
     <File Name="src/time.h"/>
     <File Name="src/Tupfile"/>
+    <File Name="src/ini.c"/>
+    <File Name="src/ini.h"/>
+    <File Name="src/uthash.h"/>
   </VirtualDirectory>
   <Settings Type="Executable">
     <GlobalSettings>
@@ -68,15 +82,16 @@
       </Compiler>
       <Linker Options="">
         <LibraryPath Value="."/>
+        <LibraryPath Value="lib/"/>
       </Linker>
       <ResourceCompiler Options=""/>
     </GlobalSettings>
-    <Configuration Name="Debug" CompilerType="clang" DebuggerType="GNU gdb debugger" Type="Executable" BuildCmpWithGlobalSettings="append" BuildLnkWithGlobalSettings="append" BuildResWithGlobalSettings="append">
+    <Configuration Name="Debug" CompilerType="gnu gcc" DebuggerType="GNU gdb debugger" Type="Executable" BuildCmpWithGlobalSettings="append" BuildLnkWithGlobalSettings="append" BuildResWithGlobalSettings="append">
       <Compiler Options="-g;-O0;-Wall" C_Options="-g;-O0;-Wall;-std=c99;-DWIN32;-pg" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" UseDifferentPCHFlags="no" PCHFlags="">
         <IncludePath Value="src"/>
         <IncludePath Value="include"/>
       </Compiler>
-      <Linker Options="-g;-pg" Required="yes">
+      <Linker Options="-pg" Required="yes">
         <Library Value="event_core"/>
         <Library Value="event_extra"/>
         <Library Value="mingw32"/>
@@ -87,7 +102,7 @@
         <Library Value="ws2_32"/>
       </Linker>
       <ResourceCompiler Options="" Required="no"/>
-      <General OutputFile="$(IntermediateDirectory)/$(ProjectName)" IntermediateDirectory="./Debug" Command="./$(ProjectName)" CommandArguments="" UseSeparateDebugArgs="no" DebugArguments="" WorkingDirectory="$(IntermediateDirectory)" PauseExecWhenProcTerminates="no"/>
+      <General OutputFile="$(IntermediateDirectory)/$(ProjectName)" IntermediateDirectory="./Debug" Command="./$(ProjectName)" CommandArguments="" UseSeparateDebugArgs="yes" DebugArguments="-v5" WorkingDirectory="$(IntermediateDirectory)" PauseExecWhenProcTerminates="no"/>
       <Environment EnvVarSetName="&lt;Use Defaults&gt;" DbgSetName="&lt;Use Defaults&gt;">
         <![CDATA[]]>
       </Environment>
