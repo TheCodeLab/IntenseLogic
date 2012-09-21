@@ -14,8 +14,8 @@
 #include "network/network.h"
 //#include "physics/physics.h"
 #include "script/script.h"
-//#include "asset/asset.h"
-#include "graphics/heightmap.h"
+#include "asset/asset.h"
+//#include "graphics/heightmap.h"
 #include "graphics/drawable3d.h"
 #include "common/log.h"
 #include "common/entity.h"
@@ -106,7 +106,7 @@ void shutdown_callback(il_Event_Event* ev) {
 #endif*/
 int main(int argc, char **argv) {
 
-  printf("test\n");
+  //printf("test\n");
   
   #ifdef DEBUG
   il_Common_logfile = stdout;
@@ -115,7 +115,7 @@ int main(int argc, char **argv) {
   il_Common_log(3, "Initialising engine.");
 
   // build config file
-  
+  il_Asset_registerReadDir(il_Common_fromC("."), 0);
   
   
   // build command line overrides

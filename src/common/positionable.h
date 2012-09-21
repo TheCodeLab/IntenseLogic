@@ -10,6 +10,7 @@ typedef struct il_Common_Positionable {
   sg_Vector3 position;
   sg_Quaternion rotation;
   sg_Vector3 size;
+  sg_Vector3 velocity;
   il_Common_World *parent;
   unsigned refs;
   struct timeval last_update;

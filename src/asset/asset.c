@@ -2,12 +2,13 @@
 
 #include <stdlib.h>
 //#include <stdio.h>
-#include <libgen.h>
-#include <dirent.h>
+#include <unistd.h>
+#include <errno.h>
 
 #include "uthash.h"
 //#include "IL/il.h"
 /* #include "SOIL.h" */
+#include "common/log.h"
 
 struct il_Asset_Asset {
   il_Common_String path;
@@ -49,7 +50,7 @@ void il_Asset_registerReadDir(il_Common_String path, int priority) {
   }
   
   struct SearchPath *last;
-  while (cur->next || cur->priority >= priority) {
+  while (cur && cur->priority >= priority) {
     last = cur;
     cur = cur->next;
   }
@@ -64,53 +65,29 @@ void il_Asset_registerReadDir(il_Common_String path, int priority) {
 
 il_Common_String search_paths(il_Common_String path) {
   struct SearchPath *cur = first;
-  char *dir = malloc(path.length+1);
-  char *base = malloc(path.length+1);
-  strncpy(dir,path.data,path.length);
-  strncpy(base,path.data,path.length);
-  dir[path.length] = 0;
-  base[path.length] = 0;
-  dir = dirname(dir);
-  base = basename(base);
   while (cur) {
-    
-    // path ~ '/' ~ dir ~ 0
-    char *fullpath = malloc(strlen(dir) + path.length + 2);
+    // dir ~ '/' ~ path ~ 0
+    char *fullpath = malloc(cur->path.length + path.length + 2);
     char *p = fullpath;
     
-    strncpy(p, path.data, path.length);
-    p += path.length;
+    strncpy(p, cur->path.data, cur->path.length);
+    p+= cur->path.length;
     
     *p = '/';
     p++;
     
-    strncpy(p, dir, strlen(dir));
-    p+= strlen(dir);
+    strncpy(p, path.data, path.length);
+    p += path.length;
     
     *p = 0;
     
-    struct dirent *entry;
-    DIR *dp;
-    dp = opendir(fullpath);
-    if (dp == NULL) {
-      //perror("opendir: Path does not exist or could not be read.");
-      return (il_Common_String){0, NULL};
-    }
-   
-    while ((entry = readdir(dp))) {
-      if ( 0 == strncmp(base, entry->d_name, strlen(base)>256?256:strlen(base)) ) {
-        closedir(dp);
-        free(dir);
-        free(base);
-        return cur->path;
-      }
-    }
-   
-    closedir(dp);
+    // returns zero on success
+    if (!access(fullpath, R_OK|W_OK))
+      return cur->path;
+    
+    // try again
     cur = cur->next;
   }
-  free(dir);
-  free(base);
   return (il_Common_String){0, NULL};
 }
 
@@ -141,18 +118,26 @@ il_Asset_Asset* il_Asset_open(il_Common_String path) {
   return asset;
 }
 
-FILE* il_Asset_getHandle(il_Asset_Asset* asset) { 
+FILE* il_Asset_getHandle(il_Asset_Asset* asset, const char *flags) {
+  return fopen(il_Common_toC(asset->fullpath), flags);
+}
 
-  asset->handlerefs++;
-
-  if (asset->handle != NULL) {
-    return asset->handle;
+il_Common_String il_Asset_readContents(il_Asset_Asset* asset) {
+  FILE* handle = il_Asset_getHandle(asset, "r");
+  if (!handle) {
+    il_Common_log(2, "Could not open file \"%s\": %s (%i)\n", il_Common_toC(asset->path), strerror(errno), errno);
+    return (il_Common_String){0,NULL};
   }
+  il_Common_String str;
   
-  asset->handle = fopen(il_Common_toC(asset->fullpath), "r");
+  fseek(handle, 0, SEEK_END); /* Seek to the end of the file */
+  str.length = ftell(handle); /* Find out how many bytes into the file we are */
+  str.data = (char*)malloc(str.length); /* Allocate a buffer for the entire length of the file */
+  fseek(handle, 0, SEEK_SET); /* Go back to the beginning of the file */
+  fread(str.data, str.length, 1, handle); /* Read the contents of the file in to the buffer */
+  fclose(handle); /* Close the file */
   
-  return asset->handle;
-  
+  return str;
 }
 
 void il_Asset_close(il_Asset_Asset* asset) {

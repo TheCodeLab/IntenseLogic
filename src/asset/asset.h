@@ -6,6 +6,8 @@
 
 void il_Asset_init();
 
+#define IL_ASSET_READFILE(name) (il_Asset_readContents(il_Asset_open(il_Common_fromC(name))))
+
 typedef struct il_Asset_Asset il_Asset_Asset;
 
 void il_Asset_setWriteDir(il_Common_String path);
@@ -14,7 +16,9 @@ void il_Asset_registerReadDir(il_Common_String path, int priority);
 
 il_Asset_Asset* il_Asset_open(il_Common_String path);
 
-FILE* il_Asset_getHandle(il_Asset_Asset* asset);
+FILE* il_Asset_getHandle(il_Asset_Asset* asset, const char *flags);
+
+il_Common_String il_Asset_readContents(il_Asset_Asset* asset);
 
 void il_Asset_close(il_Asset_Asset* asset);
 

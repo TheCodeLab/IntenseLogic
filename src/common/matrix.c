@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <math.h>
+#include <string.h>
 
 #include "matrix.h"
 
@@ -120,21 +121,13 @@ sg_Matrix sg_Matrix_identity = {
 sg_Matrix sg_Matrix_mul(sg_Matrix a, sg_Matrix b) {
   sg_Matrix c;
   
-  int row1, row2, col;
-  
-  for (row1 = 0; row1 < 4; row1++) {
-    float p = 1;
-    for (col = 0; col < 4; col++) {
-      p *= a.data[row1*4 + col];
-    }
-    
-    for (row2 = 0; row2 < 4; row2++) {
-      float p2 = 1;
-      for (col = 0; col < 4; col++) {
-        p2 *= b.data[col*4 + row2];
+  int i,j,k;
+  for(i=0;i<4;i++){
+    for(j=0;j<4;j++){
+      c.data[i*4+j]=0;
+      for(k=0;k<4;k++){
+        c.data[i*4+j]+=a.data[i*4+k]*b.data[k*4+j];
       }
-      
-      c.data[row1*4 + row2] = p+p2;
     }
   }
   
@@ -158,12 +151,11 @@ sg_Vector4 sg_Vector4_mul_m(sg_Vector4 vec, sg_Matrix b) {
 }
 
 sg_Matrix sg_Matrix_transform(sg_Matrix m, sg_Vector3 t) {
-  sg_Matrix n;
+  sg_Matrix n = sg_Matrix_identity;
   n.data[3] = t.x;
   n.data[7] = t.y;
   n.data[11] = t.z;
-  n = sg_Matrix_mul(m, n);
-  return n;
+  return sg_Matrix_mul(m, n);
 }
 
 sg_Matrix sg_Matrix_rotate_v(sg_Matrix m, float a, sg_Vector3 n) {
@@ -195,6 +187,7 @@ qMat = mat3(
 sg_Matrix sg_Matrix_rotate_q(sg_Matrix m, sg_Quaternion q) {
   sg_Vector3 Q = sg_Vector3_mul_f((sg_Vector3){q.x,q.y,q.z},2.0f);
   sg_Matrix n;
+  memset(&n, 0, sizeof(sg_Matrix));
   
   n.data[0] = 1 - (Q.y*q.y) - (Q.z*q.z);
   n.data[1] = (Q.x*q.y) + (Q.z*q.w);
@@ -208,9 +201,9 @@ sg_Matrix sg_Matrix_rotate_q(sg_Matrix m, sg_Quaternion q) {
   n.data[9] = (Q.y*q.z) - (Q.x*q.w);
   n.data[10]= 1 - (Q.x*q.x) - (Q.y*q.y);
   
-  n = sg_Matrix_mul(m, n);
-  
-  return n;
+  n.data[15] = 1;
+
+  return sg_Matrix_mul(m, n);
 }
 
 sg_Matrix sg_Matrix_scale(sg_Matrix m, sg_Vector3 v) {
@@ -224,6 +217,23 @@ sg_Matrix sg_Matrix_scale(sg_Matrix m, sg_Vector3 v) {
   return n;
 }
 
+// blatantly ripped off from
+// http://www.opengl.org/sdk/docs/man/xhtml/gluPerspective.xml
+sg_Matrix sg_Matrix_perspective(double fovy, double aspect, double znear, double zfar) {
+  sg_Matrix res;
+  memset(&res, 0, sizeof(sg_Matrix));
+  
+  double f = 1.0/tan(fovy/2);
+  
+  res.data[0] = f / aspect;
+  res.data[5] = f;
+  res.data[10] = (zfar+znear)/(znear-zfar);
+  res.data[11] = (2*zfar*znear)/(znear-zfar);
+  res.data[14] = -1;
+  
+  return res;
+}
+
 
 sg_Quaternion sg_Quaternion_new(sg_Vector3 v, float a) {
   sg_Quaternion q;
@@ -235,3 +245,19 @@ sg_Quaternion sg_Quaternion_new(sg_Vector3 v, float a) {
   return q;
 }
 
+sg_Quaternion sg_Quaternion_fromEulerAngles(float bank, float heading, float attitude) {
+  sg_Quaternion quat;
+  float c1 = cos(heading/2);
+  float c2 = cos(attitude/2);
+  float c3 = cos(bank/2);
+  float s1 = sin(heading/2);
+  float s2 = sin(attitude/2);
+  float s3 = sin(bank/2);
+  
+  quat.w = (c1 * c2 * c3) - (s1 * s2 * s3);
+  quat.x = (s1 * s2 * c3) + (c1 * c2 * s3);
+  quat.y = (s1 * c2 * c3) + (c1 * s2 * s3);
+  quat.z = (c1 * s2 * c3) - (s1 * c2 * s3);
+  
+  return quat;
+}

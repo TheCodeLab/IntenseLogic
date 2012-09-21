@@ -5,7 +5,7 @@ echo "Compiler: $CC";
 INCLUDES="$INCLUDES -I."
 CFLAGS="$CFLAGS -Wall -Wextra -g -DDEBUG $INCLUDES"
 CFLAGS="$CFLAGS `sdl-config --cflags`"
-LDFLAGS="$LDFLAGS -Llib/ -lSOIL -levent_core -levent_extra -lm -g $INCLUDES"
+LDFLAGS="$LDFLAGS -Llib/ -levent_core -levent_extra -lm -g $INCLUDES"
 #LDFLAGS="$LDFLAGS `sdl-config --libs`"
 
 echo "INCLUDES: $INCLUDES";
@@ -16,11 +16,11 @@ if $(test "$1" = "mingw"); then
 EXTENSION=.exe
 LINKSUFFIX=.dll
 CFLAGS="$CFLAGS -I../include"
-LDFLAGS="-lmingw32 -lSDLmain -lSDL $LDFLAGS -lws2_32 -static-libgcc -static -llua -lopengl32"
+LDFLAGS="-lmingw32 -lSDLmain -lSDL $LDFLAGS -lws2_32 -static-libgcc -static -llua -lopengl32 -lglew32"
 echo "Target: mingw";
 else
 LINKSUFFIX=.so
-LDFLAGS="$LDFLAGS -llua5.1 -lc -lGL -lSDL"
+LDFLAGS="$LDFLAGS -llua -lc -lGL -lSDL -lGLEW"
 echo "Target: linux";
 fi;
 
@@ -39,3 +39,4 @@ cd ..
 
 echo "$CC obj/*.o $LDFLAGS -o bin/il$EXTENSION"
 $CC obj/*.o $LDFLAGS -o bin/il$EXTENSION
+
