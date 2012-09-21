@@ -28,9 +28,11 @@ il_Common_String il_Common_concatfunc(const il_Common_String s, ...) {
   
   va_start(va, s);
   char *p = str.data;
+  arg = s;
   while (arg.length) {
     strncpy(p, arg.data, arg.length);
     p += arg.length;
+    arg = va_arg(va, il_Common_String);
   }
   va_end(va);
   

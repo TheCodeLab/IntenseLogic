@@ -170,6 +170,8 @@ Scales the given matrix by the given vector and returns it.
 */
 sg_Matrix sg_Matrix_scale(sg_Matrix m, sg_Vector3 v); 
 
+sg_Matrix sg_Matrix_perspective(double fovy, double aspect, double znear, double zfar);
+
 
 /* Typedef: sg_Quaternion
 Used for representing rotation without gimbal lock.
@@ -186,6 +188,8 @@ Returns a pointer to a new quaternion, based on a given lookvector and rotation
 angle. 
 */
 sg_Quaternion sg_Quaternion_new(sg_Vector3 v, float a);
+
+sg_Quaternion sg_Quaternion_fromEulerAngles(float bank, float heading, float attitutde);
 
 /* Function: sg_Vector3_rotate
 Rotates a given vector using a quaternion.

@@ -29,7 +29,7 @@ void FN(IL_CONFIG_TYPE,defaults)(struct IL_CONFIG_TYPE * cfg) {
 }
 
 void FN(IL_CONFIG_TYPE,parse)(const char *file, struct IL_CONFIG_TYPE * cfg) {
-  if (!cfg) return NULL;
+  if (!cfg) return;
   ini_parse(file, FN(IL_CONFIG_TYPE,handle), cfg);
 }
 

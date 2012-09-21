@@ -8,7 +8,8 @@
 typedef struct il_Graphics_Camera {
   il_Common_Positionable* positionable;
   sg_Vector3 movespeed;
-  float rotfactor;
+  sg_Matrix projection_matrix;
+  float sensitivity;
   unsigned refs;
 } il_Graphics_Camera;
 

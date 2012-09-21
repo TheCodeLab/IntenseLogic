@@ -1,12 +1,8 @@
 #include "camera.h"
 
 #include <stdlib.h>
-#ifdef __APPLE__
-#include <OpenGL/OpenGL.h>
-#include <OpenGL/gl.h>
-#else
-#include <GL/gl.h>
-#endif
+#include <SDL/SDL.h>
+#include <GL/glew.h>
 
 #include "common/keymap.h"
 #include "common/event.h"
@@ -18,6 +14,8 @@
 il_Graphics_Camera* il_Graphics_Camera_new(il_Common_Positionable * parent) {
   il_Graphics_Camera* camera = calloc(sizeof(il_Graphics_Camera),1);
   camera->positionable = parent;
+  camera->projection_matrix = sg_Matrix_identity;
+  camera->sensitivity = 0.02;
   camera->refs = 1;
   return camera;
 }
@@ -25,10 +23,27 @@ il_Graphics_Camera* il_Graphics_Camera_new(il_Common_Positionable * parent) {
 struct ctx {
   il_Graphics_Camera* camera;
   il_Common_Keymap* keymap;
+  float x,y;
 };
 
 static void handleMouseMove(il_Event_Event* ev, struct ctx * ctx) {
   il_Input_MouseMove * mousemove = (il_Input_MouseMove*)ev->data;
+  
+  if (!il_Input_isButtonSet(SDL_BUTTON_LEFT)) return;
+  
+  il_Common_log(5, "MouseMove: %i %i\n", mousemove->x-400, mousemove->y-300);
+  
+  if (mousemove->x == 400 && mousemove->y == 300) return;
+  SDL_WarpMouse(400,300);
+  
+  ctx->x += (mousemove->x-400) * ctx->camera->sensitivity;
+  ctx->y += (mousemove->y-300) * ctx->camera->sensitivity;
+  
+  sg_Quaternion quat = sg_Quaternion_fromEulerAngles(ctx->y * ctx->camera->sensitivity, ctx->x * 
+    ctx->camera->sensitivity, 0);
+  
+  ctx->camera->positionable->rotation = quat;
+  
 }
 
 static void handleTick(il_Event_Event* ev, struct ctx * ctx) {
