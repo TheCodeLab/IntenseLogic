@@ -66,7 +66,7 @@ void update(il_Event_Event * ev, void * ctx) {
       }
       case (SDL_MOUSEMOTION): {
         il_Input_MouseMove mousemove = 
-          (il_Input_MouseMove){sdlEvent.motion.x, sdlEvent.motion.y};
+          (il_Input_MouseMove){sdlEvent.motion.xrel, sdlEvent.motion.yrel};
         // the provided data pointer is memcpy'd and not preserved after its 
         // stack frame exits, so this is fine
         il_Event_pushnew(IL_INPUT_MOUSEMOVE, sizeof(il_Input_MouseMove), &mousemove);

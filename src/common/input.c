@@ -2,6 +2,7 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include <SDL/SDL.h>
 
 #include "common/log.h"
 #include "common/event.h"
@@ -58,4 +59,14 @@ int il_Input_isButtonSet(int button) {
   int i = 0;
   while (i < 16 && buttons_set[i] != button) i++;
   return i != 16;
+}
+
+void il_Input_GrabMouse(int mode){
+	if(mode){
+		SDL_WM_GrabInput(SDL_GRAB_ON);
+		SDL_ShowCursor(SDL_DISABLE);
+	} else{
+		SDL_WM_GrabInput(SDL_GRAB_OFF);
+		SDL_ShowCursor(SDL_ENABLE);
+	}
 }
