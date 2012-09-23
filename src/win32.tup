@@ -1,3 +1,3 @@
 EXTENSION=.exe
 LINKSUFFIX=.dll
-LDFLAGS += -lmingw32 -lSDLmain -lSDL -lopengl32
+LDFLAGS += -lmingw32 -lws2_32
