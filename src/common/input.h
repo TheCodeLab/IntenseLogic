@@ -21,4 +21,6 @@ typedef struct il_Input_MouseWheel {
 int il_Input_isKeySet(int key);
 int il_Input_isButtonSet(int button);
 
+void il_Input_GrabMouse(int mode);
+
 #endif

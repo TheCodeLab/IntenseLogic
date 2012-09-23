@@ -32,12 +32,9 @@ static void handleMouseMove(il_Event_Event* ev, struct ctx * ctx) {
   if (!il_Input_isButtonSet(SDL_BUTTON_LEFT)) return;
   
   il_Common_log(5, "MouseMove: %i %i\n", mousemove->x-400, mousemove->y-300);
-  
-  if (mousemove->x == 400 && mousemove->y == 300) return;
-  SDL_WarpMouse(400,300);
-  
-  ctx->x += (mousemove->x-400) * ctx->camera->sensitivity;
-  ctx->y += (mousemove->y-300) * ctx->camera->sensitivity;
+
+  ctx->x += (mousemove->x) * ctx->camera->sensitivity;
+  ctx->y += (mousemove->y) * ctx->camera->sensitivity;
   
   sg_Quaternion quat = sg_Quaternion_fromEulerAngles(ctx->y * ctx->camera->sensitivity, ctx->x * 
     ctx->camera->sensitivity, 0);
@@ -67,12 +64,24 @@ static void handleTick(il_Event_Event* ev, struct ctx * ctx) {
   );
 }
 
+
+static void mousedown(il_Event_Event* ev, int ctx){
+	il_Input_GrabMouse(1);	// Grab input and hide cursor
+}
+
+static void mouseup(il_Event_Event* ev, int ctx){
+	il_Input_GrabMouse(0);	// Release input and show mouse again
+}
+
 void il_Graphics_Camera_setEgoCamKeyHandlers(il_Graphics_Camera* camera, il_Common_Keymap * keymap) {
   struct ctx * ctx = malloc(sizeof(struct ctx));
   ctx->camera = camera;
   ctx->keymap = keymap;
   il_Event_register(IL_BASE_TICK, (il_Event_Callback)&handleTick, ctx);
   il_Event_register(IL_INPUT_MOUSEMOVE, (il_Event_Callback)&handleMouseMove, ctx);
+  il_Event_register(IL_INPUT_MOUSEDOWN, (il_Event_Callback)&mousedown, NULL);
+  il_Event_register(IL_INPUT_MOUSEUP, (il_Event_Callback)&mouseup, NULL);
+
 }
 
 void il_Graphics_Camera_render(il_Graphics_Camera* camera) {
