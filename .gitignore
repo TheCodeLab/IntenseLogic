@@ -190,10 +190,27 @@ Makefile.in
 ## CodeLite
 ###############
 
-IntenseLogic.*
+#IntenseLogic.*
 Debug/
 Release/
 *_wsp.mk
+
+#################
+# MonoDevelop
+#################
+
+#User Specific
+*.userprefs
+*.usertasks
+
+#Mono Project Files
+*.pidb
+*.resources
+test-results/
+*.mk
+*.tags
+*.db
+IntenseLogic.txt
 
 ###################
 ## IntenseLogic
