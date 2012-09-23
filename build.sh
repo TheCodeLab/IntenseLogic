@@ -1,11 +1,15 @@
-CC=gcc;
+#!/bin/bash
+
+CC=${CC:-gcc};
+LD=${LD:-gcc};
 
 echo "Compiler: $CC";
+echo "Linker: $LD";
 
 INCLUDES="$INCLUDES -I."
 CFLAGS="$CFLAGS -Wall -Wextra -g -DDEBUG $INCLUDES"
-CFLAGS="$CFLAGS `sdl-config --cflags`"
-LDFLAGS="$LDFLAGS -Llib/ -levent_core -levent_extra -lm -g $INCLUDES"
+CFLAGS="$CFLAGS $(pkg-config --cflags sdl) $(pkg-config --cflags libevent) $(pkg-config --cflags glew) $(pkg-config --cflags lua) $(pkg-config --cflags gl)"
+LDFLAGS="$LDFLAGS $(pkg-config --libs sdl) $(pkg-config --libs libevent) $(pkg-config --libs glew) $(pkg-config --libs lua) $(pkg-config --libs gl) -lm -g"
 #LDFLAGS="$LDFLAGS `sdl-config --libs`"
 
 echo "INCLUDES: $INCLUDES";
@@ -13,16 +17,18 @@ echo "CFLAGS: $CFLAGS";
 echo "LDFLAGS: $LDFLAGS";
 
 if $(test "$1" = "mingw"); then
-EXTENSION=.exe
-LINKSUFFIX=.dll
-CFLAGS="$CFLAGS -I../include"
-LDFLAGS="-lmingw32 -lSDLmain -lSDL $LDFLAGS -lws2_32 -static-libgcc -static -llua -lopengl32 -lglew32"
-echo "Target: mingw";
+	EXTENSION=.exe
+	LINKSUFFIX=.dll
+	LDFLAGS="-lmingw32 $LDFLAGS -lws2_32 -static-libgcc -static"
+	echo "Target: mingw";
 else
-LINKSUFFIX=.so
-LDFLAGS="$LDFLAGS -llua -lc -lGL -lSDL -lGLEW"
-echo "Target: linux";
+	LINKSUFFIX=.so
+	LDFLAGS="$LDFLAGS -lc"
+	echo "Target: linux";
 fi;
+
+mkdir -p obj;
+mkdir -p bin;
 
 cd src;
 
@@ -31,12 +37,17 @@ SOURCES="*.c common/*.c graphics/*.c network/*.c script/*.c asset/*.c" # physics
 echo "SOURCES: $SOURCES";
 
 for f in $SOURCES; do
-echo "$CC $CFLAGS -c $f -o ../obj/$(basename $f .c).o";
-$CC $CFLAGS -c $f -o ../obj/$(basename $f .c).o;
+	echo "$CC $CFLAGS -c $f -o ../obj/$(basename $f .c).o";
+	$CC $CFLAGS -c $f -o ../obj/$(basename $f .c).o;
+
+	if $(test $? -ne 0); then # test to see if it failed
+		echo "Compilation terminated";
+		exit 1;
+	fi;
 done;
 
 cd ..
 
 echo "$CC obj/*.o $LDFLAGS -o bin/il$EXTENSION"
-$CC obj/*.o $LDFLAGS -o bin/il$EXTENSION
+$LD obj/*.o $LDFLAGS -o bin/il$EXTENSION
 

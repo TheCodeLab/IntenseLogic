@@ -1,3 +1,2 @@
 LINKSUFFIX=.dylib
-LDFLAGS += -lc -framework OpenGL `sdl-config --cflags --libs`
-CC=clang
+LDFLAGS += -lc -framework

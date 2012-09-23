@@ -1,2 +1,2 @@
 LINKSUFFIX=.so
-LDFLAGS += -lc -lGL -lSDL
+LDFLAGS += -lc
