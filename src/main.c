@@ -108,6 +108,12 @@ int main(int argc, char **argv) {
 
   //printf("test\n");
   
+  #if defined(WIN32) && !defined(DEBUG)
+  il_Common_logfile = fopen("nul", "w");
+  #else
+  il_Common_logfile = fopen("/dev/null", "w");
+  #endif
+  
   #ifdef DEBUG
   il_Common_logfile = stdout;
   #endif

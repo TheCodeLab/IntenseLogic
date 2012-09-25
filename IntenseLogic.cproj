@@ -42,11 +42,12 @@
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <OutputPath>bin\Release</OutputPath>
-    <DefineSymbols>MONODEVELOP</DefineSymbols>
+    <DefineSymbols>RELEASE MONODEVELOP</DefineSymbols>
     <SourceDirectory>.</SourceDirectory>
     <OptimizationLevel>3</OptimizationLevel>
     <OutputName>IntenseLogic</OutputName>
     <CompileTarget>Bin</CompileTarget>
+    <ExtraCompilerArguments>-std=c99</ExtraCompilerArguments>
   </PropertyGroup>
   <ItemGroup>
     <Folder Include="src\" />
