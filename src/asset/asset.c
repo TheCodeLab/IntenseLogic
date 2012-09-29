@@ -125,7 +125,7 @@ FILE* il_Asset_getHandle(il_Asset_Asset* asset, const char *flags) {
 il_Common_String il_Asset_readContents(il_Asset_Asset* asset) {
   FILE* handle = il_Asset_getHandle(asset, "r");
   if (!handle) {
-    il_Common_log(2, "Could not open file \"%s\": %s (%i)\n", il_Common_toC(asset->path), strerror(errno), errno);
+    il_Common_log(2, "Could not open file \"%s\": %s (%i)", il_Common_toC(asset->path), strerror(errno), errno);
     return (il_Common_String){0,NULL};
   }
   il_Common_String str;

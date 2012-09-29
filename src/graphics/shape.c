@@ -170,11 +170,11 @@ il_Graphics_Shape * il_Graphics_Shape_new(il_Common_Positionable * parent, int t
   fragment_source = IL_ASSET_READFILE("cube.frag");
   
   if (!vertex_source.length) {
-    il_Common_log(1, "Unable to open cube vertex shader\n");
+    il_Common_log(1, "Unable to open cube vertex shader");
     return NULL;
   }
   if (!fragment_source.length) {
-    il_Common_log(1, "Unable to open cube fragment shader\n");
+    il_Common_log(1, "Unable to open cube fragment shader");
     return NULL;
   }
   

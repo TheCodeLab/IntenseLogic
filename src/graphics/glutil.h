@@ -27,7 +27,7 @@ const char * il_Graphics_strerror(GLenum err);
   {                                                 \
     GLenum err;                                     \
     if ((err = glGetError()) != GL_NO_ERROR)        \
-      il_Common_log(1, str ": %s (%i)\n", ##__VA_ARGS__, il_Graphics_strerror(err), err); \
+      il_Common_log(1, str ": %s (%i)", ##__VA_ARGS__, il_Graphics_strerror(err), err); \
   }
 
 GLuint il_Graphics_makeShader(GLenum type, il_Common_String source);
