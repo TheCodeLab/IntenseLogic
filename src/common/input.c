@@ -19,7 +19,7 @@ static void set(il_Event_Event* ev, void * ctx) {
     return;
   }
   arr[i] = *(int*)&ev->data;
-  il_Common_log(4, "Pressed key %i, assigned slot %i\n", arr[i], i);
+  il_Common_log(4, "Pressed key %i, assigned slot %i", arr[i], i);
   /*int test = il_Input_isKeySet(arr[i]);
   il_Common_log(4, "Test key on/off: %i\n", test);*/
 }
@@ -34,11 +34,11 @@ static void unset(il_Event_Event* ev, void * ctx) {
     return;
   }
   arr[i] = 0;
-  il_Common_log(4, "Unset key %i at slot %i\n", key, i);
+  il_Common_log(4, "Unset key %i at slot %i", key, i);
 }
 
 void il_Input_init() {
-  il_Common_log(4, "\n");
+  //il_Common_log(4, "");
   memset(keys_set, 0, sizeof(int) * 16);
   memset(buttons_set, 0, sizeof(int) * 16);
   

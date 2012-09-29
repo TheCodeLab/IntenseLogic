@@ -45,7 +45,7 @@ void il_Graphics_init() {
   keymap = calloc(sizeof(il_Common_Keymap), 1);
   il_Common_Keymap_defaults(keymap);
   il_Common_Keymap_parse("keymap.ini", keymap);
-  il_Common_log(3, "camera: %s %s %s %s %s %s\n", keymap->camera_up, keymap->camera_down, keymap->camera_left, keymap->camera_right, keymap->camera_forward, keymap->camera_backward);
+  il_Common_log(3, "camera: %s %s %s %s %s %s", keymap->camera_up, keymap->camera_down, keymap->camera_left, keymap->camera_right, keymap->camera_forward, keymap->camera_backward);
   
   // initialise SDL and create a window
   SDL_Init(SDL_INIT_EVERYTHING);
@@ -59,10 +59,10 @@ void il_Graphics_init() {
   // GLEW
   GLenum err = glewInit();
   if (GLEW_OK != err) {
-    il_Common_log(0, "glewInit() failed: %s\n", glewGetErrorString(err));
+    il_Common_log(0, "glewInit() failed: %s", glewGetErrorString(err));
     abort();
   }
-  il_Common_log(3, "Using GLEW %s\n", glewGetString(GLEW_VERSION));
+  il_Common_log(3, "Using GLEW %s", glewGetString(GLEW_VERSION));
   
   if (!GLEW_VERSION_3_1) {
     il_Common_log(0, "GL version 3.1 is required.");

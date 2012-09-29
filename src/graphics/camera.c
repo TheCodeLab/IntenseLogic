@@ -31,7 +31,7 @@ static void handleMouseMove(il_Event_Event* ev, struct ctx * ctx) {
   
   if (!il_Input_isButtonSet(SDL_BUTTON_LEFT)) return;
   
-  il_Common_log(5, "MouseMove: %i %i\n", mousemove->x-400, mousemove->y-300);
+  il_Common_log(5, "MouseMove: %i %i", mousemove->x-400, mousemove->y-300);
 
   ctx->x += (mousemove->x) * ctx->camera->sensitivity;
   ctx->y += (mousemove->y) * ctx->camera->sensitivity;
@@ -52,7 +52,7 @@ static void handleTick(il_Event_Event* ev, struct ctx * ctx) {
                 - il_Input_isKeySet(il_Common_Keymap_getkey(ctx->keymap->camera_down));
   
   if (forward == 0 && leftward == 0 && upward == 0) return;
-  il_Common_log(5, "Moving camera.\n");
+  il_Common_log(5, "Moving camera.");
   
   il_Graphics_Camera_translate ( 
     ctx->camera, 
@@ -94,7 +94,7 @@ void il_Graphics_Camera_setMovespeed(il_Graphics_Camera* camera, sg_Vector3 move
 }
 
 void il_Graphics_Camera_translate(il_Graphics_Camera* camera, sg_Vector3 vec) {
-  il_Common_log(5, "Translating camera by (%f, %f, %f)\n", vec.x, vec.y, vec.z);
+  il_Common_log(5, "Translating camera by (%f, %f, %f)", vec.x, vec.y, vec.z);
   sg_Vector3 res = sg_Vector3_rotate(vec, camera->positionable->rotation);
   camera->positionable->position.x += res.x;
   camera->positionable->position.y += res.y;
