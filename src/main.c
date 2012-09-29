@@ -5,6 +5,7 @@
 #include <sys/time.h>
 #include "time.h"
 #include <event2/event.h>
+#include <string.h>
 
 #include "SDL/SDL.h"
 #include "common/base.h"
@@ -96,7 +97,7 @@ void update(il_Event_Event * ev, void * ctx) {
 int running = 1;
 
 void shutdown_callback(il_Event_Event* ev) {
-  il_Common_log(3, "Shutting down.\n");
+  il_Common_log(3, "Shutting down.");
   event_base_loopbreak(il_Event_base);
 }
 
@@ -104,9 +105,10 @@ void shutdown_callback(il_Event_Event* ev) {
 #else
     #undef main
 #endif*/
-int main(int argc, char **argv) {
 
-  //printf("test\n");
+char *strtok_r(char *str, const char *delim, char **saveptr);
+
+int main(int argc, char **argv) {
   
   #if defined(WIN32) && !defined(DEBUG)
   il_Common_logfile = fopen("nul", "w");
@@ -116,13 +118,32 @@ int main(int argc, char **argv) {
   
   #ifdef DEBUG
   il_Common_logfile = stdout;
+  il_Common_loglevel = IL_COMMON_LOGNOTICE;
   #endif
   
   il_Common_log(3, "Initialising engine.");
-
-  // build config file
-  il_Asset_registerReadDir(il_Common_fromC("."), 0);
   
+  // search path priority (lower to highest): 
+  // defaults, config files, environment variables, command line options
+  
+  // read environment variables
+  char *path = getenv("IL_PATH");
+  if (path) {
+    char *saveptr = NULL;
+    char *str = strdup(path);
+    char *token;
+    
+    token = strtok_r(str, ":", &saveptr);
+    while(token) {
+      il_Asset_registerReadDir(il_Common_fromC(token), 3);
+      token = strtok_r(NULL, ":", &saveptr);
+    }
+  } else {
+    // reasonable defaults
+    il_Asset_registerReadDir(il_Common_fromC((char*)"."), 4);
+    il_Asset_registerReadDir(il_Common_fromC((char*)"config"), 4);
+    il_Asset_registerReadDir(il_Common_fromC((char*)"shaders"), 4);
+  }
   
   // build command line overrides
   int c;
@@ -131,7 +152,7 @@ int main(int argc, char **argv) {
   while( (c = getopt_long(argc, argv, optstring, long_options, &option_index)) != -1 ) {
     switch(c) {
       case '?':
-        il_Common_log(2, "Unrecognised option, ignoring.\n");
+        il_Common_log(2, "Unrecognised option, ignoring.");
         break;
       case HELP:
         printf("IntenseLogic - Game engine\n\tUsage: %s [options]\n\n", argv[0]);
@@ -152,6 +173,11 @@ int main(int argc, char **argv) {
     }
     //printf ("asdf");
   }
+  
+  // build config file
+  
+  
+  il_Common_log(3, "Asset paths loaded");
   
   // I have no idea why I have to use this piece of code
   #ifdef WIN32
@@ -177,6 +203,7 @@ int main(int argc, char **argv) {
   il_Event_pushnew(IL_BASE_STARTUP, 0, NULL);
   
   // main loop
+  il_Common_log(3, "Starting main loop");
   event_base_loop(il_Event_base, 0);
   
   // shutdown code (only reached after receiving a IL_BASE_SHUTDOWN event)
