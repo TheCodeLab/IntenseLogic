@@ -24,20 +24,22 @@
 extern struct event_base * il_Event_base;
 extern void il_Common_init();
 
-const char *optstring = "hl:v::r:";
+const char *optstring = "hl:v::r:p:";
 
 enum {
   HELP = 'h',
   LOGFILE = 'l',
   VERBOSE = 'v',
-  RUN = 'r'
+  RUN = 'r',
+  PATH = 'p'
 };
 
 const struct option long_options[] = {
   {"help",      no_argument,       0, HELP    },
   {"logfile",   required_argument, 0, LOGFILE },
   {"verbose",   optional_argument, 0, VERBOSE },
-  {"run",       required_argument, 0, RUN },
+  {"run",       required_argument, 0, RUN     },
+  {"path",      required_argument, 0, PATH    },
   {0, 0, 0, 0}
 };
 
@@ -46,6 +48,7 @@ const char *help[] = {
   "Sets the file to print output to", // -l --logfile
   "Sets the verbosity level",         // -v --verbose
   "Runs script",                      // -r --run
+  "Adds an asset search path",        // -p --path
   NULL
 };
 
@@ -169,6 +172,9 @@ int main(int argc, char **argv) {
         break;
       case RUN:
         il_Script_loadfile(optarg);
+        break;
+      case PATH:
+        il_Asset_registerReadDir(il_Common_fromC(optarg), 1);
         break;
     }
     //printf ("asdf");
