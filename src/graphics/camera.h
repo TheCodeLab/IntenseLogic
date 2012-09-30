@@ -3,6 +3,8 @@
 
 #include "common/positionable.h"
 #include "common/matrix.h"
+#include "common/vector.h"
+#include "common/quaternion.h"
 #include "common/keymap.h"
 
 typedef struct il_Graphics_Camera {

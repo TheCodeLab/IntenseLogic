@@ -36,7 +36,7 @@ static void handleMouseMove(il_Event_Event* ev, struct ctx * ctx) {
   ctx->x += (mousemove->x) * ctx->camera->sensitivity;
   ctx->y += (mousemove->y) * ctx->camera->sensitivity;
   
-  sg_Quaternion quat = sg_Quaternion_fromEulerAngles(ctx->y * ctx->camera->sensitivity, ctx->x * 
+  sg_Quaternion quat = sg_Quaternion_fromYPR(ctx->y * ctx->camera->sensitivity, ctx->x * 
     ctx->camera->sensitivity, 0);
   
   ctx->camera->positionable->rotation = quat;
@@ -95,7 +95,7 @@ void il_Graphics_Camera_setMovespeed(il_Graphics_Camera* camera, sg_Vector3 move
 
 void il_Graphics_Camera_translate(il_Graphics_Camera* camera, sg_Vector3 vec) {
   il_Common_log(5, "Translating camera by (%f, %f, %f)", vec.x, vec.y, vec.z);
-  sg_Vector3 res = sg_Vector3_rotate(vec, camera->positionable->rotation);
+  sg_Vector3 res = sg_Vector3_rotate_q(vec, camera->positionable->rotation);
   camera->positionable->position.x += res.x;
   camera->positionable->position.y += res.y;
   camera->positionable->position.z += res.z;

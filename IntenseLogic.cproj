@@ -98,6 +98,8 @@
     <None Include="shaders\heightmap.vert" />
     <None Include="shaders\cube.frag" />
     <None Include="src\network\connection.c" />
+    <None Include="src\common\vector.h" />
+    <None Include="src\common\quaternion.h" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="src\ini.c" />
@@ -124,6 +126,8 @@
     <Compile Include="src\network\network.c" />
     <Compile Include="src\script\script.c" />
     <Compile Include="src\graphics\glutil.c" />
+    <Compile Include="src\common\vector.c" />
+    <Compile Include="src\common\quaternion.c" />
   </ItemGroup>
   <ProjectExtensions>
     <MonoDevelop>

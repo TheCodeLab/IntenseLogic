@@ -1,0 +1,8 @@
+2012-09-30  tiffany  <${AuthorEmail}>
+
+* src/common/vector.h, src/common/matrix.c, src/common/matrix.h,
+  src/common/vector.c, src/graphics/camera.c, src/graphics/camera.h,
+  src/common/quaternion.h, src/common/quaternion.c,
+  src/common/positionable.h:
+  
+

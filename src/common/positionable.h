@@ -3,7 +3,8 @@
 
 #include <sys/time.h>
 
-#include "matrix.h"
+#include "common/quaternion.h"
+#include "common/vector.h"
 #include "world.h"
 
 typedef struct il_Common_Positionable {
