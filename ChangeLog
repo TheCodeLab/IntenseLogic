@@ -1,3 +1,11 @@
+2012-10-03  tiffany  <${AuthorEmail}>
+
+* src/common/input.c, src/common/vector.c, src/common/matrix.h,
+  src/common/matrix.c, src/graphics/camera.h, src/graphics/camera.c,
+  src/graphics/glutil.c, src/common/positionable.c,
+  src/common/positionable.h:
+  
+
 2012-09-30  tiffany  <${AuthorEmail}>
 
 * src/common/vector.h, src/common/matrix.c, src/common/matrix.h,

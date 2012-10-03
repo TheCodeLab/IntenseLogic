@@ -18,8 +18,6 @@ typedef struct il_Graphics_Camera {
 il_Graphics_Camera* il_Graphics_Camera_new(il_Common_Positionable * parent);
 
 void il_Graphics_Camera_setEgoCamKeyHandlers(il_Graphics_Camera* camera, il_Common_Keymap * keymap);
-void il_Graphics_Camera_render(il_Graphics_Camera* camera);
 void il_Graphics_Camera_setMovespeed(il_Graphics_Camera* camera, sg_Vector3 movespeed, float radians_per_pixel);
-void il_Graphics_Camera_translate(il_Graphics_Camera* camera, sg_Vector3 vec);
 
 #endif

@@ -83,25 +83,45 @@ sg_Vector3 sg_Vector3_cross(sg_Vector3 a, sg_Vector3 b) {
   return (sg_Vector3) {a.y*b.z - a.z*b.y, a.z*b.x - a.x*b.z, a.x*b.y - a.y*b.x};
 }
 
-// pRot = p + 2*cross(q.xyz, q.w*p + cross(q.xyz, p))
-sg_Vector3 sg_Vector3_rotate_q(sg_Vector3 p, sg_Quaternion q) {
-  return sg_Vector3_add (
-    p, 
-    sg_Vector3_mul_f (
-      sg_Vector3_cross (
-        (sg_Vector3){q.x,q.y,q.z}, 
-        sg_Vector3_add (
-          sg_Vector3_mul_f (
-            p, 
-            q.w
-          ),
-          sg_Vector3_cross (
-            (sg_Vector3){q.x,q.y,q.z}, 
-            p
-          )
-        )
-      ),
-      2.0f
-    )
-  );
+/*
+stolen from quaternion.inl in glm source
+  template <typename T>
+  GLM_FUNC_QUALIFIER detail::tvec3<T> operator* 
+  (detail::tquat<T> const & q, detail::tvec3<T> const & v) {
+    typename detail::tquat<T>::value_type Two(2);
+
+    detail::tvec3<T> uv, uuv;
+    detail::tvec3<T> QuatVector(q.x, q.y, q.z);
+    uv = glm::cross(QuatVector, v);
+    uuv = glm::cross(QuatVector, uv);
+    uv *= (Two * q.w); 
+    uuv *= Two; 
+
+    return v + uv + uuv;
+  }
+  
+  // in non-alien:
+  vec3 rotate(quat q, vec3 v) {
+    uv = cross(q.xyz, v)
+    uuv = cross(q.xyz, uv)
+    uv = uv * (2 * q.w)
+    uuv = uuv * 2
+    return v + uv + uuv;
+  }
+*/
+sg_Vector3 sg_Vector3_rotate_q(sg_Vector3 v, sg_Quaternion q) {
+
+  sg_Vector3 uv, uuv, q_vec;
+  q_vec = (sg_Vector3){q.x, q.y, q.z};
+  uv = sg_Vector3_cross(q_vec, v);
+  uuv = sg_Vector3_cross(q_vec, uv);
+  uv = sg_Vector3_mul_f(uv, 2 * q.w);
+  uuv = sg_Vector3_mul_f(uuv, 2);
+  
+  return sg_Vector3_add(
+    v,
+    sg_Vector3_add(
+    uv,
+    uuv
+  ));
 }

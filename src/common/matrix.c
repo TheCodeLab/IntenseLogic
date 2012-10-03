@@ -47,15 +47,15 @@ sg_Vector4 sg_Vector4_mul_m(sg_Vector4 vec, sg_Matrix b) {
   return (sg_Vector4){c[0],c[1],c[2],c[3]};
 }
 
-sg_Matrix sg_Matrix_transform(sg_Matrix m, sg_Vector3 t) {
+sg_Matrix sg_Matrix_translate(sg_Vector3 t) {
   sg_Matrix n = sg_Matrix_identity;
   n.data[3] = t.x;
   n.data[7] = t.y;
   n.data[11] = t.z;
-  return sg_Matrix_mul(m, n);
+  return n;
 }
 
-sg_Matrix sg_Matrix_rotate_v(sg_Matrix m, float a, sg_Vector3 n) {
+sg_Matrix sg_Matrix_rotate_v(float a, sg_Vector3 n) {
   sg_Matrix b;
   float c = cosf(a);
   float s = sinf(a);
@@ -71,7 +71,6 @@ sg_Matrix sg_Matrix_rotate_v(sg_Matrix m, float a, sg_Vector3 n) {
   b.data[9] = n.y*n.z*(1-c)+(n.x*s);
   b.data[10]= n.z*n.z*(1-c)+c;
   
-  b = sg_Matrix_mul(m, b);
   return b;
 }
 
@@ -81,7 +80,7 @@ qMat = mat3(
  	1 - Q.y*q.y - Q.z*q.z, Q.x*q.y + Q.z*q.w, Q.x*q.z - Q.y*q.w,
  	Q.x*q.y - Q.z*q.w, 1 - Q.x*q.x - Q.z*q.z, Q.y*q.z + Q.x*q.w,
  	Q.x*q.z + Q.y*q.w, Q.y*q.z - Q.x*q.w, 1 - Q.x*q.x - Q.y*q.y); */
-sg_Matrix sg_Matrix_rotate_q(sg_Matrix m, sg_Quaternion q) {
+sg_Matrix sg_Matrix_rotate_q(sg_Quaternion q) {
   sg_Vector3 Q = sg_Vector3_mul_f((sg_Vector3){q.x,q.y,q.z},2.0f);
   sg_Matrix n;
   memset(&n, 0, sizeof(sg_Matrix));
@@ -100,16 +99,16 @@ sg_Matrix sg_Matrix_rotate_q(sg_Matrix m, sg_Quaternion q) {
   
   n.data[15] = 1;
 
-  return sg_Matrix_mul(m, n);
+  return n;
 }
 
-sg_Matrix sg_Matrix_scale(sg_Matrix m, sg_Vector3 v) {
+sg_Matrix sg_Matrix_scale(sg_Vector3 v) {
   sg_Matrix n;
+  memset(&n, 0, sizeof(sg_Matrix));
   n.data[0] = v.x;
   n.data[5] = v.y;
   n.data[10] = v.z;
-  
-  n = sg_Matrix_mul(m, n);
+  n.data[15] = 1.0;
   
   return n;
 }
@@ -129,4 +128,133 @@ sg_Matrix sg_Matrix_perspective(double fovy, double aspect, double znear, double
   res.data[14] = -1;
   
   return res;
+}
+
+int sg_Matrix_invert(sg_Matrix m, sg_Matrix* invOut) {
+
+  double inv[16], det;
+  int i;
+
+  inv[0] = m.data[5]  * m.data[10] * m.data[15] - 
+           m.data[5]  * m.data[11] * m.data[14] - 
+           m.data[9]  * m.data[6]  * m.data[15] + 
+           m.data[9]  * m.data[7]  * m.data[14] +
+           m.data[13] * m.data[6]  * m.data[11] - 
+           m.data[13] * m.data[7]  * m.data[10];
+
+  inv[4] = -m.data[4]  * m.data[10] * m.data[15] + 
+            m.data[4]  * m.data[11] * m.data[14] + 
+            m.data[8]  * m.data[6]  * m.data[15] - 
+            m.data[8]  * m.data[7]  * m.data[14] - 
+            m.data[12] * m.data[6]  * m.data[11] + 
+            m.data[12] * m.data[7]  * m.data[10];
+
+  inv[8] = m.data[4]  * m.data[9] * m.data[15] - 
+           m.data[4]  * m.data[11] * m.data[13] - 
+           m.data[8]  * m.data[5] * m.data[15] + 
+           m.data[8]  * m.data[7] * m.data[13] + 
+           m.data[12] * m.data[5] * m.data[11] - 
+           m.data[12] * m.data[7] * m.data[9];
+
+  inv[12] = -m.data[4]  * m.data[9] * m.data[14] + 
+             m.data[4]  * m.data[10] * m.data[13] +
+             m.data[8]  * m.data[5] * m.data[14] - 
+             m.data[8]  * m.data[6] * m.data[13] - 
+             m.data[12] * m.data[5] * m.data[10] + 
+             m.data[12] * m.data[6] * m.data[9];
+
+  inv[1] = -m.data[1]  * m.data[10] * m.data[15] + 
+            m.data[1]  * m.data[11] * m.data[14] + 
+            m.data[9]  * m.data[2] * m.data[15] - 
+            m.data[9]  * m.data[3] * m.data[14] - 
+            m.data[13] * m.data[2] * m.data[11] + 
+            m.data[13] * m.data[3] * m.data[10];
+
+  inv[5] = m.data[0]  * m.data[10] * m.data[15] - 
+           m.data[0]  * m.data[11] * m.data[14] - 
+           m.data[8]  * m.data[2] * m.data[15] + 
+           m.data[8]  * m.data[3] * m.data[14] + 
+           m.data[12] * m.data[2] * m.data[11] - 
+           m.data[12] * m.data[3] * m.data[10];
+
+  inv[9] = -m.data[0]  * m.data[9] * m.data[15] + 
+            m.data[0]  * m.data[11] * m.data[13] + 
+            m.data[8]  * m.data[1] * m.data[15] - 
+            m.data[8]  * m.data[3] * m.data[13] - 
+            m.data[12] * m.data[1] * m.data[11] + 
+            m.data[12] * m.data[3] * m.data[9];
+
+  inv[13] = m.data[0]  * m.data[9] * m.data[14] - 
+            m.data[0]  * m.data[10] * m.data[13] - 
+            m.data[8]  * m.data[1] * m.data[14] + 
+            m.data[8]  * m.data[2] * m.data[13] + 
+            m.data[12] * m.data[1] * m.data[10] - 
+            m.data[12] * m.data[2] * m.data[9];
+
+  inv[2] = m.data[1]  * m.data[6] * m.data[15] - 
+           m.data[1]  * m.data[7] * m.data[14] - 
+           m.data[5]  * m.data[2] * m.data[15] + 
+           m.data[5]  * m.data[3] * m.data[14] + 
+           m.data[13] * m.data[2] * m.data[7] - 
+           m.data[13] * m.data[3] * m.data[6];
+
+  inv[6] = -m.data[0]  * m.data[6] * m.data[15] + 
+            m.data[0]  * m.data[7] * m.data[14] + 
+            m.data[4]  * m.data[2] * m.data[15] - 
+            m.data[4]  * m.data[3] * m.data[14] - 
+            m.data[12] * m.data[2] * m.data[7] + 
+            m.data[12] * m.data[3] * m.data[6];
+
+  inv[10] = m.data[0]  * m.data[5] * m.data[15] - 
+            m.data[0]  * m.data[7] * m.data[13] - 
+            m.data[4]  * m.data[1] * m.data[15] + 
+            m.data[4]  * m.data[3] * m.data[13] + 
+            m.data[12] * m.data[1] * m.data[7] - 
+            m.data[12] * m.data[3] * m.data[5];
+
+  inv[14] = -m.data[0]  * m.data[5] * m.data[14] + 
+             m.data[0]  * m.data[6] * m.data[13] + 
+             m.data[4]  * m.data[1] * m.data[14] - 
+             m.data[4]  * m.data[2] * m.data[13] - 
+             m.data[12] * m.data[1] * m.data[6] + 
+             m.data[12] * m.data[2] * m.data[5];
+
+  inv[3] = -m.data[1] * m.data[6] * m.data[11] + 
+            m.data[1] * m.data[7] * m.data[10] + 
+            m.data[5] * m.data[2] * m.data[11] - 
+            m.data[5] * m.data[3] * m.data[10] - 
+            m.data[9] * m.data[2] * m.data[7] + 
+            m.data[9] * m.data[3] * m.data[6];
+
+  inv[7] = m.data[0] * m.data[6] * m.data[11] - 
+           m.data[0] * m.data[7] * m.data[10] - 
+           m.data[4] * m.data[2] * m.data[11] + 
+           m.data[4] * m.data[3] * m.data[10] + 
+           m.data[8] * m.data[2] * m.data[7] - 
+           m.data[8] * m.data[3] * m.data[6];
+
+  inv[11] = -m.data[0] * m.data[5] * m.data[11] + 
+             m.data[0] * m.data[7] * m.data[9] + 
+             m.data[4] * m.data[1] * m.data[11] - 
+             m.data[4] * m.data[3] * m.data[9] - 
+             m.data[8] * m.data[1] * m.data[7] + 
+             m.data[8] * m.data[3] * m.data[5];
+
+  inv[15] = m.data[0] * m.data[5] * m.data[10] - 
+            m.data[0] * m.data[6] * m.data[9] - 
+            m.data[4] * m.data[1] * m.data[10] + 
+            m.data[4] * m.data[2] * m.data[9] + 
+            m.data[8] * m.data[1] * m.data[6] - 
+            m.data[8] * m.data[2] * m.data[5];
+
+  det = m.data[0] * inv[0] + m.data[1] * inv[4] + m.data[2] * inv[8] + m.data[3] * inv[12];
+
+  if (det == 0) return -1;
+
+  det = 1.0 / det;
+
+  for (i = 0; i < 16; i++)
+      invOut->data[i] = inv[i] * det;
+
+  return 0;
 }
