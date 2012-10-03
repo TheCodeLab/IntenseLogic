@@ -19,4 +19,6 @@ typedef struct il_Common_Positionable {
 
 il_Common_Positionable * il_Common_Positionable_new(il_Common_World * parent);
 
+void il_Common_Positionable_translate(il_Common_Positionable*, sg_Vector3 vec);
+
 #endif

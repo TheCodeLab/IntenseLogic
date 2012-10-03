@@ -15,7 +15,7 @@ il_Graphics_Camera* il_Graphics_Camera_new(il_Common_Positionable * parent) {
   il_Graphics_Camera* camera = calloc(sizeof(il_Graphics_Camera),1);
   camera->positionable = parent;
   camera->projection_matrix = sg_Matrix_identity;
-  camera->sensitivity = 0.02;
+  camera->sensitivity = 0.002;
   camera->refs = 1;
   return camera;
 }
@@ -23,7 +23,6 @@ il_Graphics_Camera* il_Graphics_Camera_new(il_Common_Positionable * parent) {
 struct ctx {
   il_Graphics_Camera* camera;
   il_Common_Keymap* keymap;
-  float x,y;
 };
 
 static void handleMouseMove(il_Event_Event* ev, struct ctx * ctx) {
@@ -31,14 +30,23 @@ static void handleMouseMove(il_Event_Event* ev, struct ctx * ctx) {
   
   if (!il_Input_isButtonSet(SDL_BUTTON_LEFT)) return;
   
-  il_Common_log(5, "MouseMove: %i %i", mousemove->x-400, mousemove->y-300);
+  il_Common_log(5, "MouseMove: %i %i", mousemove->x, mousemove->y);
+  
+  sg_Quaternion yaw = sg_Quaternion_fromAxisAngle(
+    (sg_Vector3) {0, 1, 0},
+    -mousemove->x * ctx->camera->sensitivity
+  );
+  
+  sg_Quaternion pitch = sg_Quaternion_fromAxisAngle(
+    (sg_Vector3) {1, 0, 0},
+    -mousemove->y * ctx->camera->sensitivity
+  );
+  
+  sg_Quaternion quat;
+  
+  quat = sg_Quaternion_mul(ctx->camera->positionable->rotation, yaw);
+  quat = sg_Quaternion_mul(pitch, quat);
 
-  ctx->x += (mousemove->x) * ctx->camera->sensitivity;
-  ctx->y += (mousemove->y) * ctx->camera->sensitivity;
-  
-  sg_Quaternion quat = sg_Quaternion_fromYPR(ctx->y * ctx->camera->sensitivity, ctx->x * 
-    ctx->camera->sensitivity, 0);
-  
   ctx->camera->positionable->rotation = quat;
   
 }
@@ -54,11 +62,11 @@ static void handleTick(il_Event_Event* ev, struct ctx * ctx) {
   if (forward == 0 && leftward == 0 && upward == 0) return;
   il_Common_log(5, "Moving camera.");
   
-  il_Graphics_Camera_translate ( 
-    ctx->camera, 
+  il_Common_Positionable_translate ( 
+    ctx->camera->positionable, 
     (sg_Vector3) {
-      ctx->camera->movespeed.x * leftward, 
-      ctx->camera->movespeed.y * upward, 
+      ctx->camera->movespeed.x * -leftward, 
+      ctx->camera->movespeed.y * -upward, 
       ctx->camera->movespeed.z * forward
     }
   );
@@ -84,19 +92,7 @@ void il_Graphics_Camera_setEgoCamKeyHandlers(il_Graphics_Camera* camera, il_Comm
 
 }
 
-void il_Graphics_Camera_render(il_Graphics_Camera* camera) {
-  glTranslatef(-camera->positionable->position.x, -camera->positionable->position.y, -camera->positionable->position.z);
-}
-
-void il_Graphics_Camera_setMovespeed(il_Graphics_Camera* camera, sg_Vector3 movespeed, float radians_per_pixel) {
+void il_Graphics_Camera_setMovespeed(il_Graphics_Camera* camera, sg_Vector3 movespeed, float pixels_per_radian) {
   camera->movespeed = movespeed;
-  
-}
-
-void il_Graphics_Camera_translate(il_Graphics_Camera* camera, sg_Vector3 vec) {
-  il_Common_log(5, "Translating camera by (%f, %f, %f)", vec.x, vec.y, vec.z);
-  sg_Vector3 res = sg_Vector3_rotate_q(vec, camera->positionable->rotation);
-  camera->positionable->position.x += res.x;
-  camera->positionable->position.y += res.y;
-  camera->positionable->position.z += res.z;
+  camera->sensitivity = 1.0/pixels_per_radian;
 }

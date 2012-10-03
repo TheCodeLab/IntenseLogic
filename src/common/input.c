@@ -30,7 +30,7 @@ static void unset(il_Event_Event* ev, void * ctx) {
   int i = 0;
   while (i < 16 && arr[i] != key) i++;
   if (i >= 16) {
-    il_Common_log(2, "Too many inputs set! (16)");
+    //il_Common_log(2, "Too many inputs set! (16)");
     return;
   }
   arr[i] = 0;

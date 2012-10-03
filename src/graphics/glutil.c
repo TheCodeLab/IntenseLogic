@@ -98,28 +98,30 @@ void il_Graphics_bindUniforms(GLuint program, const il_Graphics_Camera * camera,
   GLint utransform;
   utransform = glGetUniformLocation(program, "transform");
   
-  sg_Matrix view = sg_Matrix_transform(
-    sg_Matrix_rotate_q(
-      sg_Matrix_identity,
-      camera->positionable->rotation
-    ),
-    sg_Vector3_mul(camera->positionable->position, (sg_Vector3){1,1,-1})
+  sg_Matrix cam = sg_Matrix_mul(
+    sg_Matrix_translate(camera->positionable->position),
+    sg_Matrix_rotate_q(camera->positionable->rotation)
   );
   
-  sg_Matrix model = sg_Matrix_rotate_q(
-    sg_Matrix_scale(
-      sg_Matrix_transform(
-        sg_Matrix_identity,
-        object->position
-      ),
-      object->size
-    ), 
-    object->rotation
-  );
+  sg_Matrix view;
   
-  sg_Matrix mat = sg_Matrix_mul(sg_Matrix_mul(camera->projection_matrix, view), model);
-  //sg_Matrix mat = sg_Matrix_mul(camera->projection_matrix,model);
-  //sg_Matrix mat = sg_Matrix_transform(camera->projection_matrix, camera->positionable->position);
+  int res = sg_Matrix_invert(cam, &view);
+  if (res!=0)
+    il_Common_log(2, "Couldn't invert view matrix?");
+  
+  sg_Matrix model = sg_Matrix_mul(
+    sg_Matrix_rotate_q(object->rotation),
+    sg_Matrix_mul(
+    sg_Matrix_scale(object->size),
+    sg_Matrix_translate(object->position)
+  ));
+  
+  sg_Matrix mat = sg_Matrix_mul(
+    camera->projection_matrix,
+    sg_Matrix_mul(
+    view,
+    model
+  ));
   
   glUniformMatrix4fv(utransform, 1, GL_TRUE, (const GLfloat*)&mat.data);
 }
