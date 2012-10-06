@@ -1,3 +1,8 @@
+2012-10-06  tiffany  <tiffany@stormbit.net>
+
+* src/common/terrain.c:
+  
+
 2012-10-03  tiffany  <${AuthorEmail}>
 
 * src/common/input.c, src/common/vector.c, src/common/matrix.h,

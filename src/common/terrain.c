@@ -61,9 +61,8 @@ double heightmap_getPoint(il_Common_Terrain* ter, void * ctx, unsigned x, unsign
 
 // http://www.flipcode.com/archives/Calculating_Vertex_Normals_for_Height_Maps.shtml
 sg_Vector3 heightmap_getNormal(il_Common_Terrain* ter, void * ctx, unsigned x, unsigned y, double z) {
-  double h(int x, int y) {
-    return ((float*)ter->data)[y * ter->width + x];
-  }
+  #define h(x,y) (((float*)ter->data)[y * ter->width + x])
+  
   float sx = h(x<ter->width-1 ? x+1 : x, y) - h(x == 0 ? x-1 : x, y);
   if (x == 0 || x == ter->width-1)
     sx *= 2;
