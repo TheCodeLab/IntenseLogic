@@ -118,6 +118,10 @@ il_Asset_Asset* il_Asset_open(il_Common_String path) {
   return asset;
 }
 
+il_Common_String il_Asset_getPath(il_Asset_Asset* self) {
+  return self->fullpath;
+}
+
 FILE* il_Asset_getHandle(il_Asset_Asset* asset, const char *flags) {
   return fopen(il_Common_toC(asset->fullpath), flags);
 }
