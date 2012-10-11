@@ -1,6 +1,7 @@
 #include "script.h"
 
-#include <stdio.h>
+#include "script/il.h"
+#include "common/log.h"
 
 void il_Script_init(){
 
@@ -42,6 +43,9 @@ int il_Script_fromSource(il_Script_Script* self, il_Common_String source) {
     self->L = luaL_newstate();
   luaL_openlibs(self->L);
   
+  // temporary
+  il_Script_luaGlobals(self);
+  
   int res = lua_load(self->L, &reader, &data, chunkname);
   if (res) {
     self->err = lua_tolstring(self->L, -1, &self->errlen);
@@ -50,13 +54,35 @@ int il_Script_fromSource(il_Script_Script* self, il_Common_String source) {
   }
   return 0;
 }
+static int fromsource(lua_State* L) {
+  
+  il_Script_Script* self = (il_Script_Script*)il_Script_getPointer(L, 1, "script");
+  il_Common_String source = il_Script_getString(L, 2);
+  
+  int res = il_Script_fromSource(self, source);
+  if (res != 0) {
+    return luaL_error(L, self->err);
+  }
+  return 0;
+}
 
 int il_Script_fromFile(il_Script_Script* self, const char * filename) {
   return il_Script_fromAsset(self, il_Asset_open(il_Common_fromC((char*)filename)));
 }
+static int fromfile(lua_State* L) {
+  il_Script_Script* self = (il_Script_Script*)il_Script_getPointer(L, 1, "script");
+  il_Common_String filename = il_Script_getString(L, 2);
+  
+  int res = il_Script_fromFile(self, filename.data);
+  if (res != 0) {
+    return luaL_error(L, self->err);
+  }
+  return 0;
+}
 
 int il_Script_run(il_Script_Script* self) {
   self->running = 1;
+  il_Common_log(3, "Running script %s", self->filename);
   int res = lua_pcall(self->L, 0, 0, 0);
   if (res) {
     self->err = lua_tolstring(self->L, -1, &self->errlen);
@@ -64,4 +90,32 @@ int il_Script_run(il_Script_Script* self) {
     return -1;
   }
   return 0;
+}
+static int run(lua_State* L) {
+  il_Script_Script* self = (il_Script_Script*)il_Script_getPointer(L, 1, "script");
+  
+  int res = il_Script_run(self);
+  if (res != 0) {
+    return luaL_error(L, "Error running script");
+  }
+  return 0;
+}
+
+static int create(lua_State* L) {
+  il_Script_Script* self = il_Script_new();
+  return il_Script_createHelper(L, self, "script");
+}
+
+void il_Script_luaGlobals(il_Script_Script* self) {
+  il_Script_startTable(self);
+  
+  il_Script_addFunc(self, "create", &create);
+  il_Script_addTypeGetter(self, "script");
+  il_Script_addIsA(self, "Script", "test");
+  
+  il_Script_addFunc(self, "fromSource", &fromsource);
+  il_Script_addFunc(self, "fromFile", &fromfile);
+  il_Script_addFunc(self, "run", &run);
+  
+  il_Script_endTable(self, "script", &create);
 }
