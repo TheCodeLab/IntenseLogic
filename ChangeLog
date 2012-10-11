@@ -1,3 +1,10 @@
+2012-10-11  tiffany  <tiffany@stormbit.net>
+
+* src/main.c, src/asset/asset.h, src/asset/asset.c,
+  src/script/script.c, src/script/script.h, src/common/keymap.c,
+  src/common/quaternion.c:
+  
+
 2012-10-06  tiffany  <tiffany@stormbit.net>
 
 * src/common/terrain.c:

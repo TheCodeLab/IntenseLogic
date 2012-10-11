@@ -168,7 +168,7 @@ int main(int argc, char **argv) {
         il_Common_logfile = fopen(optarg, "a");
         break;
       case VERBOSE:
-        il_Common_loglevel = atoi(optarg)?atoi(optarg):3;
+        il_Common_loglevel = atoi(optarg)?atoi(optarg):4;
         break;
       case RUN:
         il_Script_loadfile(optarg);

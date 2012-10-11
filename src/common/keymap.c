@@ -9,6 +9,8 @@
 #undef IL_CONFIG_TYPE
 #undef IL_CONFIG_DEFS
 
+#include <stdlib.h>
+
 int il_Common_Keymap_getkey(const char* key) {
   if (strlen(key) == 1)
     return (int)key[0];
