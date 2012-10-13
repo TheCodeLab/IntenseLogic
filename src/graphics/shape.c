@@ -120,7 +120,7 @@ static void shape_draw(const il_Graphics_Camera* cam, struct il_Graphics_Drawabl
 }
 
 il_Graphics_Shape * il_Graphics_Shape_new(il_Common_Positionable * parent, int type) {
-  il_Graphics_Shape * shape = calloc(sizeof(il_Graphics_Shape),1);
+  il_Graphics_Shape * shape = calloc(1, sizeof(il_Graphics_Shape));
   shape->type = type;
   shape->drawable.positionable = parent;
   shape->drawable.draw = (il_Graphics_Drawable3d_cb)&shape_draw;
