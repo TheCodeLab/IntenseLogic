@@ -42,7 +42,7 @@ void il_Asset_setWriteDir(il_Common_String path) {
 void il_Asset_registerReadDir(il_Common_String path, int priority) {
   struct SearchPath *cur = first;
   if (!cur) {
-    cur = malloc(sizeof(struct SearchPath));
+    cur = calloc(1, sizeof(struct SearchPath));
     cur->path = path;
     cur->priority = priority;
     first = cur;
@@ -55,7 +55,7 @@ void il_Asset_registerReadDir(il_Common_String path, int priority) {
     cur = cur->next;
   }
   
-  struct SearchPath *ins = malloc(sizeof(struct SearchPath));
+  struct SearchPath *ins = calloc(1, sizeof(struct SearchPath));
   ins->path = path;
   ins->priority = priority;
   
@@ -67,7 +67,7 @@ il_Common_String search_paths(il_Common_String path) {
   struct SearchPath *cur = first;
   while (cur) {
     // dir ~ '/' ~ path ~ 0
-    char *fullpath = malloc(cur->path.length + path.length + 2);
+    char *fullpath = calloc(1, cur->path.length + path.length + 2);
     char *p = fullpath;
     
     strncpy(p, cur->path.data, cur->path.length);
@@ -107,7 +107,7 @@ il_Asset_Asset* il_Asset_open(il_Common_String path) {
     res = writedir;
   }
   
-  asset = malloc(sizeof(il_Asset_Asset));
+  asset = calloc(1, sizeof(il_Asset_Asset));
   asset->path = path;
   asset->searchdir = res;
   asset->handle = NULL;
@@ -136,7 +136,7 @@ il_Common_String il_Asset_readContents(il_Asset_Asset* asset) {
   
   fseek(handle, 0, SEEK_END); /* Seek to the end of the file */
   str.length = ftell(handle); /* Find out how many bytes into the file we are */
-  str.data = (char*)malloc(str.length); /* Allocate a buffer for the entire length of the file */
+  str.data = (char*)calloc(1, str.length); /* Allocate a buffer for the entire length of the file */
   fseek(handle, 0, SEEK_SET); /* Go back to the beginning of the file */
   fread(str.data, str.length, 1, handle); /* Read the contents of the file in to the buffer */
   fclose(handle); /* Close the file */

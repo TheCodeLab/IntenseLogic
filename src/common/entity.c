@@ -27,7 +27,7 @@ sg_Vector3 pathfind_default ( void **pathdata,
 
 il_Common_Entity* il_Common_Entity_new(il_Common_Positionable* parent) {
   parent->refs++;
-  il_Common_Entity *ent = malloc(sizeof(il_Common_Entity));
+  il_Common_Entity *ent = calloc(1, sizeof(il_Common_Entity));
   ent->positionable = parent;
   ent->living = 1;
   ent->walkspeed = 1.0f;

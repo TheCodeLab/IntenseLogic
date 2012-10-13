@@ -57,17 +57,19 @@ void il_Graphics_init() {
   SDL_GL_SetAttribute(SDL_GL_BUFFER_SIZE, 32);
   
   // GLEW
-  GLenum err = glewInit();
-  if (GLEW_OK != err) {
-    il_Common_log(0, "glewInit() failed: %s", glewGetErrorString(err));
-    abort();
-  }
-  il_Common_log(3, "Using GLEW %s", glewGetString(GLEW_VERSION));
-  
-  if (!GLEW_VERSION_3_1) {
-    il_Common_log(0, "GL version 3.1 is required.");
-    abort();
-  }
+      GLenum err = glewInit();
+#ifndef __APPLE__
+      if (GLEW_OK != err) {
+        il_Common_log(0, "glewInit() failed: %s", glewGetErrorString(err));
+        abort();
+      }
+      il_Common_log(3, "Using GLEW %s", glewGetString(GLEW_VERSION));
+
+      if (!GLEW_VERSION_3_1) {
+        il_Common_log(0, "GL version 3.1 is required.");
+        abort();
+      }
+#endif
   
   // setup our shader directory
   il_Asset_registerReadDir(il_Common_fromC("shaders"),0);
@@ -127,7 +129,7 @@ void il_Graphics_init() {
   }
   
   // start the frame timer
-  struct timeval * frame = malloc(sizeof(struct timeval));
+  struct timeval * frame = calloc(1, sizeof(struct timeval));
   *frame = (struct timeval){0, IL_GRAPHICS_TICK_LENGTH};
   il_Event_timer(il_Event_new(IL_GRAPHICS_TICK, 0, NULL), frame);
 
@@ -146,7 +148,7 @@ void il_Graphics_draw() {
   glClearColor(0,0,0,1);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-  struct timeval * tv = malloc(sizeof(struct timeval));
+  struct timeval * tv = calloc(1, sizeof(struct timeval));
   gettimeofday(tv, NULL);
 
   //h->drawable.draw(il_Graphics_active_world->camera, &h->drawable, tv);

@@ -22,7 +22,7 @@ void il_Physics_init() {
 }
 
 void il_Physics_registerWorld(il_Physics_World *world) {
-  il_Physics_World **temp = (il_Physics_World**)malloc(sizeof(il_Physics_World**) * (numworlds+1));
+  il_Physics_World **temp = (il_Physics_World**)calloc((numworlds+1), sizeof(il_Physics_World**));
   memcpy(temp, worlds, sizeof(il_Physics_World) * numworlds);
   temp[numworlds] = world;
   free(worlds);

@@ -82,7 +82,7 @@ static void mouseup(il_Event_Event* ev, int ctx){
 }
 
 void il_Graphics_Camera_setEgoCamKeyHandlers(il_Graphics_Camera* camera, il_Common_Keymap * keymap) {
-  struct ctx * ctx = malloc(sizeof(struct ctx));
+  struct ctx * ctx = calloc(1, sizeof(struct ctx));
   ctx->camera = camera;
   ctx->keymap = keymap;
   il_Event_register(IL_BASE_TICK, (il_Event_Callback)&handleTick, ctx);
