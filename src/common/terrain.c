@@ -81,7 +81,7 @@ int il_Common_Terrain_heightmapFromMemory(il_Common_Terrain* ter, int width, int
   ter->height = height;
   if (!points) return -1;
   ter->size = width * height * sizeof(float);
-  ter->data = malloc(ter->size);
+  ter->data = calloc(1, ter->size);
   memcpy(ter->data, points, ter->size);
   ter->destruct = &destruct;
   ter->getPoint = &heightmap_getPoint;
