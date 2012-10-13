@@ -3,8 +3,12 @@
 #include "script/il.h"
 #include "common/log.h"
 
-void il_Script_init(){
+void sg_Vector_luaGlobals(il_Script_Script* self, void* ctx);
+void il_Script_luaGlobals(il_Script_Script* self, void * ctx);
 
+void il_Script_init(){
+  il_Script_registerLuaRegister(&il_Script_luaGlobals, NULL);
+  il_Script_registerLuaRegister(&sg_Vector_luaGlobals, NULL);
 }
 
 il_Script_Script * il_Script_new() {
@@ -43,8 +47,7 @@ int il_Script_fromSource(il_Script_Script* self, il_Common_String source) {
     self->L = luaL_newstate();
   luaL_openlibs(self->L);
   
-  // temporary
-  il_Script_luaGlobals(self);
+  il_Script_openLibs(self);
   
   int res = lua_load(self->L, &reader, &data, chunkname);
   if (res) {
@@ -56,7 +59,7 @@ int il_Script_fromSource(il_Script_Script* self, il_Common_String source) {
 }
 static int fromsource(lua_State* L) {
   
-  il_Script_Script* self = (il_Script_Script*)il_Script_getPointer(L, 1, "script");
+  il_Script_Script* self = (il_Script_Script*)il_Script_getPointer(L, 1, "script", NULL);
   il_Common_String source = il_Script_getString(L, 2);
   
   int res = il_Script_fromSource(self, source);
@@ -70,7 +73,7 @@ int il_Script_fromFile(il_Script_Script* self, const char * filename) {
   return il_Script_fromAsset(self, il_Asset_open(il_Common_fromC((char*)filename)));
 }
 static int fromfile(lua_State* L) {
-  il_Script_Script* self = (il_Script_Script*)il_Script_getPointer(L, 1, "script");
+  il_Script_Script* self = (il_Script_Script*)il_Script_getPointer(L, 1, "script", NULL);
   il_Common_String filename = il_Script_getString(L, 2);
   
   int res = il_Script_fromFile(self, filename.data);
@@ -92,7 +95,7 @@ int il_Script_run(il_Script_Script* self) {
   return 0;
 }
 static int run(lua_State* L) {
-  il_Script_Script* self = (il_Script_Script*)il_Script_getPointer(L, 1, "script");
+  il_Script_Script* self = (il_Script_Script*)il_Script_getPointer(L, 1, "script", NULL);
   
   int res = il_Script_run(self);
   if (res != 0) {
@@ -103,10 +106,11 @@ static int run(lua_State* L) {
 
 static int create(lua_State* L) {
   il_Script_Script* self = il_Script_new();
-  return il_Script_createHelper(L, self, "script");
+  il_Script_createMakeLight(L, self, "script");
+  return il_Script_createEndMt(L);
 }
 
-void il_Script_luaGlobals(il_Script_Script* self) {
+void il_Script_luaGlobals(il_Script_Script* self, void * ctx) {
   il_Script_startTable(self);
   
   il_Script_addFunc(self, "create", &create);
@@ -117,5 +121,6 @@ void il_Script_luaGlobals(il_Script_Script* self) {
   il_Script_addFunc(self, "fromFile", &fromfile);
   il_Script_addFunc(self, "run", &run);
   
-  il_Script_endTable(self, "script", &create);
+  il_Script_startMetatable(self, "script", &create);
+  il_Script_endMetatable(self);
 }

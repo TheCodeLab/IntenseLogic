@@ -27,8 +27,10 @@ typedef struct il_Script_Script {
   script = il_Script_new();       \
   il_Script_fromFile(script, f);  \
   int res = il_Script_run(script);\
-  if (res != 0)                   \
+  if (res != 0) {                 \
     printf("%s\n", script->err);  \
+    abort();                      \
+  }                               \
 }
 
 il_Script_Script * il_Script_new();
@@ -36,6 +38,5 @@ int il_Script_fromAsset(il_Script_Script*, il_Asset_Asset * asset);
 int il_Script_fromSource(il_Script_Script*, il_Common_String source);
 int il_Script_fromFile(il_Script_Script*, const char * filename);
 int il_Script_run(il_Script_Script*);
-void il_Script_luaGlobals(il_Script_Script*);
 
 #endif

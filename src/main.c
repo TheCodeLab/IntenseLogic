@@ -152,6 +152,8 @@ int main(int argc, char **argv) {
   int c;
   int i = 0;
   int option_index = 0;
+  const char * scripts[argc];
+  int n_scripts = 0;
   while( (c = getopt_long(argc, argv, optstring, long_options, &option_index)) != -1 ) {
     switch(c) {
       case '?':
@@ -171,7 +173,8 @@ int main(int argc, char **argv) {
         il_Common_loglevel = atoi(optarg)?atoi(optarg):4;
         break;
       case RUN:
-        il_Script_loadfile(optarg);
+        scripts[n_scripts] = optarg;
+        n_scripts++;
         break;
       case PATH:
         il_Asset_registerReadDir(il_Common_fromC(optarg), 1);
@@ -207,6 +210,11 @@ int main(int argc, char **argv) {
   
   // finished initialising, send startup event
   il_Event_pushnew(IL_BASE_STARTUP, 0, NULL);
+  
+  // Run startup scripts
+  for (i = 0; i < n_scripts; i++) {
+    il_Script_loadfile(scripts[i]);
+  }
   
   // main loop
   il_Common_log(3, "Starting main loop");
