@@ -101,6 +101,8 @@
     <None Include="src\common\vector.h" />
     <None Include="src\common\quaternion.h" />
     <None Include="src\script\il.h" />
+    <None Include="src\script\vecd_index.inc" />
+    <None Include="src\script\vecd_create.inc" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="src\ini.c" />
@@ -130,12 +132,13 @@
     <Compile Include="src\common\vector.c" />
     <Compile Include="src\common\quaternion.c" />
     <Compile Include="src\script\il.c" />
+    <Compile Include="src\script\il_vector.c" />
   </ItemGroup>
   <ProjectExtensions>
     <MonoDevelop>
       <Properties>
         <Policies>
-          <StandardHeader Text="Copyright (c) 2012 Code Lab&#xA;&#xA;This software is provided 'as-is', without any express or implied warranty. In no event will the authors be held liable for any damages arising from the use of this software.&#xA;&#xA;Permission is granted to anyone to use this software for any purpose, including commercial applications, and to alter it and redistribute it freely, subject to the following restrictions:&#xA;&#xA;    1. The origin of this software must not be misrepresented; you must not claim that you wrote the original software. If you use this software in a product, an acknowledgment in the product documentation would be appreciated but is not required.&#xA;&#xA;    2. Altered source versions must be plainly marked as such, and must not be misrepresented as being the original software.&#xA;&#xA;    3. This notice may not be removed or altered from any source distribution.&#xA;" IncludeInNewFiles="True" />
+          <StandardHeader Text="" IncludeInNewFiles="False" />
           <NameConventionPolicy>
             <Rules>
               <NamingRule Name="Namespaces" AffectedEntity="Namespace" VisibilityMask="VisibilityMask" NamingStyle="PascalCase" IncludeInstanceMembers="True" IncludeStaticEntities="True" />
