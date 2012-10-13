@@ -16,194 +16,126 @@
 #include "script/script.h"
 
 static int vec2_wrap(lua_State* L, sg_Vector2 v);
+static int vec3_wrap(lua_State* L, sg_Vector3 v);
+static int vec4_wrap(lua_State* L, sg_Vector4 v);
 
-#define simple_op(name, op) \
-static int vec2_##name(lua_State* L) { \
-  sg_Vector2* a = (sg_Vector2*)il_Script_getPointer(L, 1, "vector2", NULL); \
-  sg_Vector2 res; \
+#define gen_fun(name, op, d) \
+static int vec##d##_##name(lua_State* L) { \
+  sg_Vector##d* a = (sg_Vector##d*)il_Script_getPointer(L, 1, "vector" #d, NULL); \
+  sg_Vector##d res; \
   if (lua_isnumber(L, 2)) { \
     float b = (float)lua_tonumber(L, 2); \
-    res = sg_Vector2_##name##_f(*a, b); \
+    res = sg_Vector##d##_##name##_f(*a, b); \
   } else { \
-    sg_Vector2* b = (sg_Vector2*)il_Script_getPointer(L, 2, "vector2", NULL); \
-    res = sg_Vector2_##name(*a, *b); \
+    sg_Vector##d* b = (sg_Vector##d*)il_Script_getPointer(L, 2, "vector" #d, NULL); \
+    res = sg_Vector##d##_##name(*a, *b); \
   } \
-  return vec2_wrap(L, res); \
+  return vec##d##_wrap(L, res); \
   \
 }
+
+#define simple_op(name, op) \
+  gen_fun(name, op, 2) \
+  gen_fun(name, op, 3) \
+  gen_fun(name, op, 4)
 
 simple_op(add, +)
 simple_op(sub, -)
 simple_op(mul, *)
 simple_op(div, /)
 
+#undef gen_fun
 #undef simple_op
 
 static int vec2_tostring(lua_State* L) {
   sg_Vector2* v = (sg_Vector2*)il_Script_getPointer(L, 1, "vector2", NULL);
-  
   lua_pushfstring(L, "%f, %f", (lua_Number)v->x, (lua_Number)v->y);
-  
   return 1;
 }
 
-static int vec2_index(lua_State* L) {
-  sg_Vector2* v = (sg_Vector2*)il_Script_getPointer(L, 1, "vector2", NULL);
-  const char * k = lua_tolstring(L, 2, NULL);
-  
-  if (k != NULL) {
-    if (strcmp(k, "x") == 0) {
-      lua_pushnumber(L, v->x);
-      return 1;
-    }
-    if (strcmp(k, "y") == 0) {
-      lua_pushnumber(L, v->y);
-      return 1;
-    }
-    if (strcmp(k, "len") == 0 || strcmp(k, "length") == 0) {
-      lua_pushnumber(L, sg_Vector2_len(*v));
-      return 1;
-    }
-  }
-  
-  lua_getglobal(L, "vector2");
-  lua_pushvalue(L, 2);
-  lua_gettable(L, -2);
-  
+static int vec3_tostring(lua_State* L) {
+  sg_Vector3* v = (sg_Vector3*)il_Script_getPointer(L, 1, "vector3", NULL);
+  lua_pushfstring(L, "%f, %f, %f", (lua_Number)v->x, (lua_Number)v->y, (lua_Number)v->z);
   return 1;
 }
 
-static int vec2_newindex(lua_State* L) {
-  sg_Vector2* t = (sg_Vector2*)il_Script_getPointer(L, 1, "vector2", NULL);
-  if (!lua_isstring(L, 2)) return luaL_error(L, "Expected string key");
-  const char * k = lua_tolstring(L, 2, NULL);
-  if (!lua_isnumber(L, 3)) return luaL_error(L, "Expected number value");
-  float v = lua_tonumber(L, 3);
-  
-  if (strcmp(k, "x") == 0) {
-    t->x = v;
-    return 0;
-  }
-  if (strcmp(k, "y") == 0) {
-    t->y = v;
-    return 0;
-  }
-  return luaL_error(L, "Invalid key");
+static int vec4_tostring(lua_State* L) {
+  sg_Vector4* v = (sg_Vector4*)il_Script_getPointer(L, 1, "vector4", NULL);
+  lua_pushfstring(L, "%f, %f, %f, %f", (lua_Number)v->x, (lua_Number)v->y, (lua_Number)v->z, (lua_Number)v->w);
+  return 1;
 }
 
-static int vec2_wrap(lua_State* L, sg_Vector2 v) {
-  int idx = il_Script_createMakeHeavy(L, sizeof(sg_Vector2), &v, "vector2");
-  
-  il_Script_printStack(L, "vec2_wrap");
-  
-  #define mt_fun(name) \
-    lua_pushcfunction(L, &vec2_##name); \
-    lua_setfield(L, idx, "__" #name);
-  
-  mt_fun(add);
-  mt_fun(sub);
-  mt_fun(mul);
-  mt_fun(div);
-  mt_fun(tostring);
-  mt_fun(index);
-  mt_fun(newindex);
-  
-  #undef mt_fun
-  
-  return il_Script_createEndMt(L);
+#define d 2
+#include "vecd_index.inc"
+#undef d
+#define d 3
+#include "vecd_index.inc"
+#undef d
+#define d 4
+#include "vecd_index.inc"
+#undef d
+
+#define mt_fun(name,d) \
+  lua_pushcfunction(L, &vec##d##_##name); \
+  lua_setfield(L, idx, "__" #name);
+
+#define vecd_wrap(d) \
+static int vec##d##_wrap(lua_State* L, sg_Vector##d v) { \
+  int idx = il_Script_createMakeHeavy(L, sizeof(sg_Vector##d), &v, "vector" #d); \
+  mt_fun(add, d); \
+  mt_fun(sub, d); \
+  mt_fun(mul, d); \
+  mt_fun(div, d); \
+  mt_fun(tostring, d); \
+  mt_fun(index, d); \
+  mt_fun(newindex, d); \
+  return il_Script_createEndMt(L); \
 }
 
-static int vec2_create(lua_State* L) {
-  int nargs = lua_gettop(L);
-  //il_Script_printStack(L, "vector2.create");
-  float x, y;
-  x = 0; y = 0;
-  
-  lua_getglobal(L, "vector2"); // special case for self parameter passed with : syntax and __call
-  if (nargs >= 1 && lua_equal(L, 1, -1)) {
-    nargs--;
-    lua_remove(L, 1);
-  }
-  lua_pop(L, 1);
-  
-  //printf("nargs: %i\n", nargs);
-  
-  switch (nargs) {
-    case 0:
-      break;
-    case 1: // either a table or a number
-      switch(lua_type(L, 1)) {
-        case LUA_TTABLE: {
-          // x = t[1]
-          lua_pushinteger(L, 1);
-          lua_gettable(L, 1);
-          if (lua_isnumber(L, -1))
-            x = lua_tonumber(L, -1);
-          lua_pop(L, 1);
-          
-          // y = t[2]
-          lua_pushinteger(L, 2);
-          lua_gettable(L, 1);
-          if (lua_isnumber(L, -1))
-            y = lua_tonumber(L, -1);
-          lua_pop(L, 1);
-          
-          // x = t.x
-          lua_getfield(L, 1, "x");
-          if (lua_isnumber(L, -1))
-            x = lua_tonumber(L, -1);
-          lua_pop(L, 1);
-          
-          // y = t.y
-          lua_getfield(L, 1, "y");
-          if (lua_isnumber(L, -1))
-            y = lua_tonumber(L, -1);
-          lua_pop(L, 1);
-          
-          break;
-        }
-        case LUA_TNUMBER:
-          x = lua_tonumber(L, 1);
-          y = lua_tonumber(L, 2);
-          break;
-        default:
-          goto error;
-      }
-      break;
-    case 2: // number
-      if (lua_type(L, 1) == LUA_TNUMBER && lua_type(L, 1) == LUA_TNUMBER) {
-        x = lua_tonumber(L, 1);
-        y = lua_tonumber(L, 2);
-      } else goto error;
-      break;
-    default:
-      goto error;
-  }
-  
-  sg_Vector2 v = (sg_Vector2){x,y};
-  return vec2_wrap(L, v);
-  
-  error:
-  luaL_argerror(L, 1, "Expected table, 2 numbers, or nothing");
-  return -1;
+vecd_wrap(2)
+vecd_wrap(3)
+vecd_wrap(4)
+
+#undef mt_fun
+
+#define vecd_dot(d) \
+static int vec##d##_dot(lua_State* L) { \
+  sg_Vector##d *a = (sg_Vector##d*)il_Script_getPointer(L, 1, "vector" #d, NULL); \
+  sg_Vector##d *b = (sg_Vector##d*)il_Script_getPointer(L, 2, "vector" #d, NULL); \
+  float res = sg_Vector##d##_dot(*a, *b); \
+  lua_pushnumber(L, res); \
+  return 1; \
 }
+
+vecd_dot(2)
+vecd_dot(3)
+vecd_dot(4)
+
+#define d 2
+#include "vecd_create.inc"
+#undef d
+#define d 3
+#include "vecd_create.inc"
+#undef d
+#define d 4
+#include "vecd_create.inc"
+#undef d
+
+#define vecd_globals(d) \
+  il_Script_startTable(self); \
+  il_Script_addFunc(self, "create", &vec##d##_create); \
+  il_Script_addTypeGetter(self, "vector" #d); \
+  il_Script_addIsA(self, "vector" #d); \
+  il_Script_addFunc(self, "dot", &vec##d##_dot); \
+  il_Script_startMetatable(self, "vector" #d, &vec##d##_create); \
+  il_Script_addFunc(self, "__add", &vec##d##_add); \
+  il_Script_addFunc(self, "__sub", &vec##d##_sub); \
+  il_Script_addFunc(self, "__mul", &vec##d##_mul); \
+  il_Script_addFunc(self, "__div", &vec##d##_div); \
+  il_Script_endMetatable(self);
 
 void sg_Vector_luaGlobals(il_Script_Script* self, void* ctx) {
-  // vector2
-  il_Script_startTable(self);
-  
-  il_Script_addFunc(self, "create", &vec2_create);
-  il_Script_addTypeGetter(self, "vector2");
-  il_Script_addIsA(self, "vector2");
-  
-  
-  
-  il_Script_startMetatable(self, "vector2", &vec2_create);
-  
-  il_Script_addFunc(self, "__add", &vec2_add);
-  il_Script_addFunc(self, "__sub", &vec2_sub);
-  il_Script_addFunc(self, "__mul", &vec2_mul);
-  il_Script_addFunc(self, "__div", &vec2_div);
-  
-  il_Script_endMetatable(self);
+  vecd_globals(2)
+  vecd_globals(3)
+  vecd_globals(4)
 }

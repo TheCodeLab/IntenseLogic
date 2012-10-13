@@ -125,3 +125,58 @@ sg_Vector3 sg_Vector3_rotate_q(sg_Vector3 v, sg_Quaternion q) {
     uuv
   ));
 }
+
+////////////////////////////////////////////////////////////////////////////////
+// Vector4
+
+#define simple_op(name, op) \
+sg_Vector4 sg_Vector4_##name(sg_Vector4 a, sg_Vector4 b) { \
+  return (sg_Vector4) {a.x op b.x, a.y op b.y, a.z op b.z, a.w op b.w}; \
+}\
+sg_Vector4 sg_Vector4_##name##_f(sg_Vector4 a, float b) { \
+  return (sg_Vector4) {a.x op b, a.y op b, a.z op b, a.w op b}; \
+}
+
+simple_op(add, +)
+simple_op(sub, -)
+simple_op(mul, *)
+simple_op(div, /)
+
+#undef simple_op
+
+float sg_Vector4_len(sg_Vector4 v) {
+  return sqrt(v.x*v.x + v.y*v.y + v.z*v.z + v.w*v.w);
+}
+
+sg_Vector4 sg_Vector4_normalise(sg_Vector4 v) {
+  float l = sg_Vector4_len(v);
+  return (sg_Vector4) {v.x/l, v.y/l, v.z/l, v.w/l};
+}
+
+float sg_Vector4_dot(sg_Vector4 a, sg_Vector4 b) {
+  return (a.x*b.x) + (a.y*b.y) + (a.z*b.z);
+}
+
+// u = (a,b,c) and v = (p,r,q)
+// u x v = (br-cq,cp-ar,aq-bp)
+sg_Vector4 sg_Vector4_cross(sg_Vector4 a, sg_Vector4 b) {
+  return (sg_Vector4) {a.y*b.z - a.z*b.y, a.z*b.x - a.x*b.z, a.x*b.y - a.y*b.x};
+}
+
+sg_Vector4 sg_Vector4_rotate_q(sg_Vector4 v, sg_Quaternion q) {
+
+  sg_Vector4 uv, uuv, q_vec;
+  q_vec = (sg_Vector4){q.x, q.y, q.z};
+  uv = sg_Vector4_cross(q_vec, v);
+  uuv = sg_Vector4_cross(q_vec, uv);
+  uv = sg_Vector4_mul_f(uv, 2 * q.w);
+  uuv = sg_Vector4_mul_f(uuv, 2);
+  
+  return sg_Vector4_add(
+    v,
+    sg_Vector4_add(
+    uv,
+    uuv
+  ));
+}
+
