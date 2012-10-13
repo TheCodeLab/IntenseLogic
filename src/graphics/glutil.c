@@ -48,7 +48,7 @@ GLuint il_Graphics_makeShader(GLenum type, il_Common_String source) {
   glGetShaderiv(shader, GL_COMPILE_STATUS, &status);
   glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &len);
   if (len > 1) {
-    char * str = malloc(len);
+    char * str = calloc(1, len);
     glGetShaderInfoLog(shader, len, NULL, str);
     il_Common_log(status == GL_TRUE? 4 : 1, 
     "Shader info log: \n"
@@ -69,7 +69,7 @@ void il_Graphics_linkProgram(GLuint program) {
   glGetProgramiv(program, GL_LINK_STATUS, &status);
   glGetProgramiv(program, GL_INFO_LOG_LENGTH, &len);
   if (len > 1) {
-    char * str = malloc(len);
+    char * str = calloc(1, len);
     glGetProgramInfoLog(program, len, NULL, str);
     il_Common_log(status == GL_TRUE? 4 : 1, "Program info log: \n"
     "---- BEGIN PROGRAM INFO LOG ----\n"
@@ -84,7 +84,7 @@ void il_Graphics_linkProgram(GLuint program) {
   glGetProgramiv(program, GL_LINK_STATUS, &status);
   glGetProgramiv(program, GL_INFO_LOG_LENGTH, &len);
   if (len > 1) {
-    char * str = malloc(len);
+    char * str = calloc(1, len);
     glGetProgramInfoLog(program, len, NULL, str);
     il_Common_log(status == GL_TRUE? 4 : 1, "Program info log: \n"
     "---- BEGIN PROGRAM INFO LOG ----\n"

@@ -16,13 +16,11 @@ CFLAGS += `pkg-config --cflags sdl`
 CFLAGS += `pkg-config --cflags libevent`
 CFLAGS += `pkg-config --cflags glew` 
 CFLAGS += `pkg-config --cflags lua`
-CFLAGS += `pkg-config --cflags gl`
 
 LDFLAGS += `pkg-config --libs sdl`
 LDFLAGS += `pkg-config --libs libevent`
 LDFLAGS += `pkg-config --libs glew`
 LDFLAGS += `pkg-config --libs lua`
-LDFLAGS += `pkg-config --libs gl` 
 LDFLAGS += -lm -g
 
 include @(TUP_PLATFORM).tup

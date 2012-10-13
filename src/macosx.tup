@@ -1,2 +1,3 @@
 LINKSUFFIX=.dylib
-LDFLAGS += -lc -framework
+LDFLAGS += -lc -framework OpenGL
+CC = gcc

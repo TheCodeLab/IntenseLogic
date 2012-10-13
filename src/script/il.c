@@ -108,7 +108,7 @@ int il_Script_createHelper(lua_State* L, void * ptr, const char * type) {
 }
 
 void* il_Script_getPointer(lua_State* L, int idx, const char * type) {
-  char * msg = malloc(strlen(type) + 10);
+  char * msg = calloc(1, strlen(type) + 10);
   strcpy(msg, "Expected ");
   strcat(msg, type);
   //printf("is table\n");

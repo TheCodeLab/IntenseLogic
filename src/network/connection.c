@@ -114,7 +114,7 @@ int il_Network_Connection_read(il_Network_Connection * con, ev_uint32_t * ptag, 
   int res = il_Network_Connection_read_buffer(con, ptag, buf);
   TEST_ERROR(con, res != 0, "Couldn't read from connection");
   size_t len = evbuffer_get_length(buf);
-  *data = malloc(len);
+  *data = calloc(1, len);
   TEST_ERROR(con, *data == NULL, "Couldn't allocate %u byte buffer", len);
   evbuffer_copyout(buf, *data, len);
   evbuffer_free(buf);

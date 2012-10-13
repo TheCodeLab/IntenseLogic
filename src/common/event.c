@@ -52,7 +52,7 @@ void il_Event_dispatch(evutil_socket_t fd, short events, il_Event_Event * ev) {
 }
 
 const il_Event_Event* il_Event_new(uint16_t eventid, uint8_t size, void * data) {
-  il_Event_Event * ev = malloc(sizeof(il_Event_Event) + size);
+  il_Event_Event * ev = calloc(1, sizeof(il_Event_Event) + size);
   ev->eventid = eventid;
   ev->size = size;
   if (data)
@@ -97,14 +97,14 @@ int il_Event_register(uint16_t eventid, il_Event_Callback callback, void * ctx) 
   }
   
   if (container == NULL) {
-    container = malloc(sizeof(struct il_Event_CallbackContainer));
+    container = calloc(1, sizeof(struct il_Event_CallbackContainer));
     container->eventid = eventid;
     container->length = 0;
     container->callbacks = NULL;
     append = 1;
   }
   
-  struct callback* temp = (struct callback*)malloc(sizeof(struct callback) * (container->length+1));
+  struct callback* temp = (struct callback*)calloc((container->length+1), sizeof(struct callback));
   memcpy(temp, container->callbacks, sizeof(struct callback) * container->length);
   free(container->callbacks);
   temp[container->length] = (struct callback){callback, ctx};
@@ -112,7 +112,7 @@ int il_Event_register(uint16_t eventid, il_Event_Callback callback, void * ctx) 
   container->callbacks = temp;
   
   if (append) {
-    il_Event_CallbackContainer *temp2 = (il_Event_CallbackContainer*)malloc(sizeof(il_Event_CallbackContainer) * (il_Event_Callbacks_len+1));
+    il_Event_CallbackContainer *temp2 = (il_Event_CallbackContainer*)calloc((il_Event_Callbacks_len+1), sizeof(il_Event_CallbackContainer));
     memcpy(temp2, il_Event_Callbacks, sizeof(il_Event_CallbackContainer) * il_Event_Callbacks_len);
     temp2[il_Event_Callbacks_len] = *container;
     free(il_Event_Callbacks);
@@ -127,7 +127,7 @@ void il_Event_init() {
   il_Event_base = event_base_new();
   
   const il_Event_Event * tick = il_Event_new(IL_BASE_TICK, 0, NULL);
-  struct timeval * tv = malloc(sizeof(struct timeval));
+  struct timeval * tv = calloc(1, sizeof(struct timeval));
   *tv = (struct timeval){0, IL_BASE_TICK_LENGTH};
   il_Event_timer(tick, tv);
 }

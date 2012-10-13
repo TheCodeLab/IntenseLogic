@@ -20,7 +20,7 @@ il_Graphics_World * il_Graphics_World_new_world(il_Common_World * world) {
   w->world = world;
   world->refs++;
   w->refs = 1;
-  struct hash_entry * ent = malloc(sizeof(struct hash_entry));
+  struct hash_entry * ent = calloc(1, sizeof(struct hash_entry));
   ent->world = w;
   HASH_ADD_PTR(hash_table, world, ent);
   return w;

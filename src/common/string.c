@@ -4,7 +4,7 @@
 #include <stdarg.h>
 
 char *il_Common_toC(const il_Common_String s) {
-  char *z = malloc(s.length+1);
+  char *z = calloc(1, s.length+1);
   strncpy(z, s.data, s.length);
   z[s.length] = (char)0;
   return z;
@@ -24,7 +24,7 @@ il_Common_String il_Common_concatfunc(const il_Common_String s, ...) {
   }
   va_end(va);
   
-  str.data = (char*)malloc(str.length);
+  str.data = (char*)calloc(1, str.length);
   
   va_start(va, s);
   char *p = str.data;

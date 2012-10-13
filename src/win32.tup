@@ -1,3 +1,5 @@
 EXTENSION=.exe
 LINKSUFFIX=.dll
 LDFLAGS += -lmingw32 -lws2_32
+CFLAGS += `pkg-config --cflags gl`
+LDFLAGS += `pkg-config --libs gl`

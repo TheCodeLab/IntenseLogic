@@ -89,7 +89,7 @@ il_Graphics_Terrain* il_Graphics_Terrain_new(il_Common_Terrain* parent, il_Commo
       if (status == GL_FALSE) {
         int maxLength;
         glGetShaderiv(vertex, GL_INFO_LOG_LENGTH, &maxLength);
-        char *vertexInfoLog = (char *)malloc(maxLength);
+        char *vertexInfoLog = (char *)calloc(1, maxLength);
    
         glGetShaderInfoLog(vertex, maxLength, &maxLength, vertexInfoLog);
         
@@ -102,7 +102,7 @@ il_Graphics_Terrain* il_Graphics_Terrain_new(il_Common_Terrain* parent, il_Commo
       if (status == GL_FALSE) {
         int maxLength;
         glGetShaderiv(fragment, GL_INFO_LOG_LENGTH, &maxLength);
-        char *fragmentInfoLog = (char *)malloc(maxLength);
+        char *fragmentInfoLog = (char *)calloc(1, maxLength);
    
         glGetShaderInfoLog(fragment, maxLength, &maxLength, fragmentInfoLog);
         
