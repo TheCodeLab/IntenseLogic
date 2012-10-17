@@ -118,6 +118,21 @@ int il_Script_createEndMt(lua_State* L) {
   return 1;
 }
 
+const char * il_Script_getType(lua_State* L, int idx) {
+  int type = lua_type(L, idx);
+  if (type == LUA_TUSERDATA) {
+    void * raw_ptr = lua_touserdata(L, idx);
+    if (*(int*)raw_ptr) { // is_pointer
+      il_Script_TypedPointer* ptr = (il_Script_TypedPointer*)raw_ptr;
+      return ptr->type;
+    } else {
+      il_Script_TypedBox* ptr = (il_Script_TypedBox*)raw_ptr;
+      return ptr->type;
+    }
+  }
+  return lua_typename(L, type);
+}
+
 void* il_Script_getPointer(lua_State* L, int idx, const char * type, size_t *size) {
   char * msg = calloc(1, strlen(type) + 10);
   strcpy(msg, "Expected ");

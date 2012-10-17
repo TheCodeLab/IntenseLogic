@@ -133,6 +133,7 @@
     <Compile Include="src\common\quaternion.c" />
     <Compile Include="src\script\il.c" />
     <Compile Include="src\script\il_vector.c" />
+    <Compile Include="src\script\il_positionable.c" />
   </ItemGroup>
   <ProjectExtensions>
     <MonoDevelop>
