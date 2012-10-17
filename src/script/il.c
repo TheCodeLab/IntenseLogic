@@ -177,6 +177,14 @@ il_Common_String il_Script_getString(lua_State* L, int idx) {
   return s;
 }
 
+double il_Script_getNumber(lua_State* L, int idx) {
+  if (!lua_isnumber(L, idx)) {
+    luaL_argerror(L, idx, "Expected number");
+    return 0.0;
+  }
+  return (double)lua_tonumber(L, idx);
+}
+
 void il_Script_printStack(lua_State *L, const char* Str) {
   int J, Top;
   printf("%-26s [", Str);
