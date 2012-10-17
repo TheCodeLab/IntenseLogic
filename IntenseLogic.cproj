@@ -134,6 +134,8 @@
     <Compile Include="src\script\il.c" />
     <Compile Include="src\script\il_vector.c" />
     <Compile Include="src\script\il_positionable.c" />
+    <Compile Include="src\script\il_world.c" />
+    <Compile Include="src\script\il_quaternion.c" />
   </ItemGroup>
   <ProjectExtensions>
     <MonoDevelop>

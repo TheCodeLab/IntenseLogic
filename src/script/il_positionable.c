@@ -3,8 +3,12 @@
 #include "script/script.h"
 #include "script/il.h"
 #include "common/string.h"
+#include "common/vector.h"
+#include "common/matrix.h"
 
 extern int sg_Vector3_wrap(lua_State* L, sg_Vector3 v);
+int sg_Quaternion_wrap(lua_State* L, sg_Quaternion q);
+
 
 static int pos_index(lua_State* L) {
   il_Common_Positionable* self = il_Script_getPointer(L, 1, "positionable", NULL);
@@ -18,6 +22,9 @@ static int pos_index(lua_State* L) {
   }
   if (il_strcmp(k, il_l("velocity"))) {
     return sg_Vector3_wrap(L, self->velocity);
+  }
+  if (il_strcmp(k, il_l("rotation"))) {
+    return sg_Quaternion_wrap(L, self->rotation);
   }
   if (il_strcmp(k, il_l("parent"))) {
     return 0; // TODO: add world wrapper here
@@ -50,6 +57,10 @@ static int pos_newindex(lua_State* L) {
       self->velocity = *v;
       return 0;
     }
+  }
+  if (il_strcmp(k, il_l("rotation"))) {
+    sg_Quaternion q = *(sg_Quaternion*)il_Script_getPointer(L, 3, "quaternion", NULL);
+    self->rotation = q;
   }
   if (il_strcmp(k, il_l("parent"))) {
     self->parent = il_Script_getPointer(L, 3, "world", NULL);

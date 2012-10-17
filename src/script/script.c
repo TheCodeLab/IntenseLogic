@@ -5,10 +5,14 @@
 
 void sg_Vector_luaGlobals(il_Script_Script* self, void* ctx);
 void il_Script_luaGlobals(il_Script_Script* self, void * ctx);
+void il_Common_Positionable_luaGlobals(il_Script_Script* self, void * ctx);
+void il_Common_World_luaGlobals(il_Script_Script* self, void * ctx);
 
 void il_Script_init(){
   il_Script_registerLuaRegister(&il_Script_luaGlobals, NULL);
   il_Script_registerLuaRegister(&sg_Vector_luaGlobals, NULL);
+  il_Script_registerLuaRegister(&il_Common_Positionable_luaGlobals, NULL);
+  il_Script_registerLuaRegister(&il_Common_World_luaGlobals, NULL);
 }
 
 il_Script_Script * il_Script_new() {
@@ -115,7 +119,7 @@ void il_Script_luaGlobals(il_Script_Script* self, void * ctx) {
   
   il_Script_addFunc(self, "create", &create);
   il_Script_addTypeGetter(self, "script");
-  il_Script_addIsA(self, "Script");
+  il_Script_addIsA(self, "script");
   
   il_Script_addFunc(self, "fromSource", &fromsource);
   il_Script_addFunc(self, "fromFile", &fromfile);
