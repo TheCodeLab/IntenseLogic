@@ -3,22 +3,25 @@
 
 #include <string.h>
 
-typedef struct il_Common_String {
-  unsigned length;
-  char *data;
-} il_Common_String;
+typedef struct il_String {
+  size_t length;
+  const char *data;
+} il_String;
+#define il_Common_String il_String
 
-typedef struct il_Common_OctetString {
-  unsigned length;
-  void *data;
-} il_Common_OctetString;
+il_String il_CtoS(const char * s, size_t len);
+#define il_Common_fromC(s) (il_CtoS(s, -1))
+#define il_l(s) (il_CtoS(s, -1))
 
-#define il_Common_fromC(s) ((il_Common_String){strlen(s), s})
+const char *il_StoC(il_String s);
+#define il_Common_toC il_StoC
 
-char *il_Common_toC(const il_Common_String s);
+#define il_concat(...) (il_concatfunc(__VA_ARGS__, (il_Common_String){0,NULL}))
+#define il_Common_concat il_concat
+il_String il_concatfunc(il_String s, ...);
 
-#define il_Common_concat(...) (il_Common_concatfunc(__VA_ARGS__, (il_Common_String){0,NULL}))
+int il_strcmp(il_String a, il_String b);
 
-il_Common_String il_Common_concatfunc(const il_Common_String s, ...);
+#define il_len(s) (strnlen(s.data, s.length))
 
 #endif

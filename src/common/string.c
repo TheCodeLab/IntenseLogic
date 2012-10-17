@@ -2,25 +2,33 @@
 
 #include <stdlib.h>
 #include <stdarg.h>
+#include <string.h>
 
-char *il_Common_toC(const il_Common_String s) {
-  char *z = calloc(1, s.length+1);
-  strncpy(z, s.data, s.length);
-  z[s.length] = (char)0;
+il_String il_CtoS(const char * s, size_t len) {
+  if (len < 0) return (il_String){s, strlen(s)};
+  return (il_String){s, strnlen(s, len)};
+}
+
+const char *il_StoC(il_String s) {
+  size_t len = strnlen(s.data, s.length);
+  if (len < s.length) return s.data; // s already has a null terminator
+  char * z = calloc(1, len+1);
+  memcpy(z, s.data, len);
+  z[len] = 0;
   return z;
 }
 
-il_Common_String il_Common_concatfunc(const il_Common_String s, ...) {
+il_String il_concatfunc(il_String s, ...) {
 
-  il_Common_String str = (il_Common_String){0, NULL};
+  il_String str = (il_String){0, NULL};
 
   va_list va;
   
-  il_Common_String arg = s;
+  il_String arg = s;
   va_start(va, s);
   while (arg.length) {
     str.length+=arg.length;
-    arg = va_arg(va, il_Common_String);
+    arg = va_arg(va, il_String);
   }
   va_end(va);
   
@@ -32,9 +40,14 @@ il_Common_String il_Common_concatfunc(const il_Common_String s, ...) {
   while (arg.length) {
     strncpy(p, arg.data, arg.length);
     p += arg.length;
-    arg = va_arg(va, il_Common_String);
+    arg = va_arg(va, il_String);
   }
   va_end(va);
   
   return str;
+}
+
+int il_strcmp(il_String a, il_String b) {
+  if (a.length < b.length) return -1;
+  return strncmp(a.data, b.data, b.length);
 }
