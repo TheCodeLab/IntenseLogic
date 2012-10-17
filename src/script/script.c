@@ -115,7 +115,7 @@ void il_Script_luaGlobals(il_Script_Script* self, void * ctx) {
   
   il_Script_addFunc(self, "create", &create);
   il_Script_addTypeGetter(self, "script");
-  il_Script_addIsA(self, "Script", "test");
+  il_Script_addIsA(self, "Script");
   
   il_Script_addFunc(self, "fromSource", &fromsource);
   il_Script_addFunc(self, "fromFile", &fromfile);

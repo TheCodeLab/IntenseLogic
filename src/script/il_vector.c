@@ -2,9 +2,12 @@
 #include "script/il.h"
 #include "script/script.h"
 
-static int vec2_wrap(lua_State* L, sg_Vector2 v);
-static int vec3_wrap(lua_State* L, sg_Vector3 v);
-static int vec4_wrap(lua_State* L, sg_Vector4 v);
+int sg_Vector2_wrap(lua_State* L, sg_Vector2 v);
+int sg_Vector3_wrap(lua_State* L, sg_Vector3 v);
+int sg_Vector4_wrap(lua_State* L, sg_Vector4 v);
+#define vec2_wrap sg_Vector2_wrap
+#define vec3_wrap sg_Vector3_wrap
+#define vec4_wrap sg_Vector4_wrap
 
 #define gen_fun(name, op, d) \
 static int vec##d##_##name(lua_State* L) { \
@@ -67,7 +70,7 @@ static int vec4_tostring(lua_State* L) {
   lua_setfield(L, idx, "__" #name);
 
 #define vecd_wrap(d) \
-static int vec##d##_wrap(lua_State* L, sg_Vector##d v) { \
+int vec##d##_wrap(lua_State* L, sg_Vector##d v) { \
   int idx = il_Script_createMakeHeavy(L, sizeof(sg_Vector##d), &v, "vector" #d); \
   mt_fun(add, d); \
   mt_fun(sub, d); \
