@@ -4,9 +4,11 @@
 #include <stdarg.h>
 #include <string.h>
 
-il_String il_CtoS(const char * s, size_t len) {
-  if (len < 0) return (il_String){s, strlen(s)};
-  return (il_String){s, strnlen(s, len)};
+size_t strnlen(const char *s, size_t maxlen);
+
+il_String il_CtoS(const char * s, int len) {
+  if (len < 0) return (il_String){strlen(s), s};
+  return (il_String){strnlen(s, len), s};
 }
 
 const char *il_StoC(il_String s) {
@@ -35,7 +37,7 @@ il_String il_concatfunc(il_String s, ...) {
   str.data = (char*)calloc(1, str.length);
   
   va_start(va, s);
-  char *p = str.data;
+  char *p = (char*)str.data;
   arg = s;
   while (arg.length) {
     strncpy(p, arg.data, arg.length);
