@@ -9,7 +9,7 @@ typedef struct il_String {
 } il_String;
 #define il_Common_String il_String
 
-il_String il_CtoS(const char * s, size_t len);
+il_String il_CtoS(const char * s, int len);
 #define il_Common_fromC(s) (il_CtoS(s, -1))
 #define il_l(s) (il_CtoS(s, -1))
 
