@@ -104,6 +104,7 @@
     <None Include="src\script\vecd_index.inc" />
     <None Include="src\script\vecd_create.inc" />
     <None Include="src\script\interface.h" />
+    <None Include="src\script\vecd_globals.inc" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="src\ini.c" />
