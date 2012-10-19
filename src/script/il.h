@@ -33,6 +33,7 @@ const char * il_Script_getType(lua_State* L, int idx);
 void* il_Script_getPointer(lua_State* L, int idx, const char * type, size_t *size);
 il_Common_String il_Script_getString(lua_State* L, int idx);
 double il_Script_getNumber(lua_State* L, int idx);
+il_Common_String il_Script_toString(lua_State* L, int idx);
 void il_Script_printStack(lua_State *L, const char* Str);
 
 void il_Script_registerLuaRegister(il_Script_LuaRegisterFunc func, void * ctx);
