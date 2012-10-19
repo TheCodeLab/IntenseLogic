@@ -2,17 +2,16 @@
 
 #include "script/il.h"
 #include "common/log.h"
+#include "script/interface.h"
 
-void sg_Vector_luaGlobals(il_Script_Script* self, void* ctx);
-void il_Script_luaGlobals(il_Script_Script* self, void * ctx);
-void il_Common_Positionable_luaGlobals(il_Script_Script* self, void * ctx);
-void il_Common_World_luaGlobals(il_Script_Script* self, void * ctx);
+int il_Script_Script_wrap(lua_State* L, il_Script_Script* s);
 
 void il_Script_init(){
   il_Script_registerLuaRegister(&il_Script_luaGlobals, NULL);
   il_Script_registerLuaRegister(&sg_Vector_luaGlobals, NULL);
   il_Script_registerLuaRegister(&il_Common_Positionable_luaGlobals, NULL);
   il_Script_registerLuaRegister(&il_Common_World_luaGlobals, NULL);
+  il_Script_registerLuaRegister(&sg_Quaternion_luaGlobals, NULL);
 }
 
 il_Script_Script * il_Script_new() {
@@ -53,7 +52,11 @@ int il_Script_fromSource(il_Script_Script* self, il_Common_String source) {
   
   il_Script_openLibs(self);
   
+  #if LUA_VERSION_NUM == 502
+  int res = lua_load(self->L, &reader, &data, chunkname, NULL);
+  #else
   int res = lua_load(self->L, &reader, &data, chunkname);
+  #endif
   if (res) {
     self->err = lua_tolstring(self->L, -1, &self->errlen);
     self->running = -1;
@@ -108,10 +111,14 @@ static int run(lua_State* L) {
   return 0;
 }
 
+int il_Script_Script_wrap(lua_State* L, il_Script_Script* s) {
+  il_Script_createMakeLight(L, s, "script");
+  return il_Script_createEndMt(L);
+}
+
 static int create(lua_State* L) {
   il_Script_Script* self = il_Script_new();
-  il_Script_createMakeLight(L, self, "script");
-  return il_Script_createEndMt(L);
+  return il_Script_Script_wrap(L, self);
 }
 
 void il_Script_luaGlobals(il_Script_Script* self, void * ctx) {
