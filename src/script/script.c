@@ -30,7 +30,7 @@ struct reader_ctx {
   int loaded;
   il_Common_String source;
 };
-const char * reader(lua_State* L, void * data, size_t * size) {
+static const char * reader(lua_State* L, void * data, size_t * size) {
   struct reader_ctx * ctx = (struct reader_ctx*)data;
   if (ctx->loaded) return NULL;
   *size = ctx->source.length;

@@ -37,16 +37,16 @@ struct il_Graphics_Terrain {
   void (*draw)(il_Graphics_Terrain*, void*, const il_Graphics_Camera*, const struct timeval*);
 };
 
-const char * read_file(const char *name) {
+static const char * read_file(const char *name) {
   return il_Common_toC(il_Asset_readContents(il_Asset_open(il_Common_fromC((char*)name))));
 }
 
-void terrain_draw(const il_Graphics_Camera* cam, struct il_Graphics_Drawable3d* drawable, const struct timeval* tv) {
+static void terrain_draw(const il_Graphics_Camera* cam, struct il_Graphics_Drawable3d* drawable, const struct timeval* tv) {
   il_Graphics_Terrain* ter = (il_Graphics_Terrain*)drawable;
   ter->draw(ter, ter->draw_ctx, cam, tv);
 }
 
-void heightmap_draw(il_Graphics_Terrain* ter, void* ctx, const il_Graphics_Camera* cam, const struct timeval* tv) {
+static void heightmap_draw(il_Graphics_Terrain* ter, void* ctx, const il_Graphics_Camera* cam, const struct timeval* tv) {
   glUseProgram(ter->program);
   
   //activate the heightmap texture

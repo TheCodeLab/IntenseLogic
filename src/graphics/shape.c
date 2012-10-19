@@ -27,7 +27,7 @@ f 3 7 8 4
 f 5 1 4 8
 */
 
-float cube[] = {
+static float cube[] = {
   // front
   -1.0, -1.0,  1.0,
    1.0, -1.0,  1.0,
@@ -61,7 +61,7 @@ float cube[] = {
 };
 
 
-short cube_index[] = {
+static short cube_index[] = {
   // front
    0,  1,  2,
    2,  3,  0,
