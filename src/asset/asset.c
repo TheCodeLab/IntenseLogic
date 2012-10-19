@@ -138,7 +138,7 @@ il_Common_String il_Asset_readContents(il_Asset_Asset* asset) {
   str.length = ftell(handle); /* Find out how many bytes into the file we are */
   str.data = (char*)calloc(1, str.length); /* Allocate a buffer for the entire length of the file */
   fseek(handle, 0, SEEK_SET); /* Go back to the beginning of the file */
-  fread(str.data, str.length, 1, handle); /* Read the contents of the file in to the buffer */
+  fread((char*)str.data, str.length, 1, handle); /* Read the contents of the file in to the buffer */
   fclose(handle); /* Close the file */
   
   return str;
