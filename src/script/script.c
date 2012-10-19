@@ -14,6 +14,41 @@ void il_Script_init(){
   il_Script_registerLuaRegister(&sg_Quaternion_luaGlobals, NULL);
 }
 
+static int print(lua_State* L) {
+  int nargs = lua_gettop(L);
+  il_Common_String strs[nargs];
+  il_Common_String str;
+  int i;
+  
+  if (nargs < 1) {
+    printf("\n");
+    return 0;
+  }
+  
+  for (i = 1; i <= nargs; i++) {
+    strs[i-1] = il_Script_toString(L, i);
+  }
+  str = strs[0];
+  for (i = 2; i <= nargs; i++) {
+    if (!strs[i].length) continue;
+    str = il_concat(str, il_l("\t"), strs[i-1]);
+  }
+  lua_Debug ar;
+  int res = lua_getstack(L, 1, &ar);
+  if (res != 1) return -1;
+  res = lua_getinfo(L, "nSl", &ar);
+  if (!res) return -1;
+  
+  printf( "%s:%i (%s) %s: %s\n",
+    ar.short_src,
+    ar.currentline,
+    ar.name,
+    "NOTICE",
+    il_StoC(str)
+  );
+  return 0;
+}
+
 il_Script_Script * il_Script_new() {
   il_Script_Script* s = calloc(sizeof(il_Script_Script), 1);
   
@@ -44,11 +79,18 @@ int il_Script_fromSource(il_Script_Script* self, il_Common_String source) {
   struct reader_ctx data;
   data.loaded = 0;
   data.source = source;
-  const char * chunkname = self->filename;
+  char * chunkname;
+  if (self->filename) {
+    chunkname = malloc(strlen(self->filename) + 2);
+    sprintf(chunkname, "@%s", self->filename);
+  }
   
   if (!self->L)
     self->L = luaL_newstate();
   luaL_openlibs(self->L);
+  
+  lua_pushcfunction(self->L, &print);
+  lua_setglobal(self->L, "print");
   
   il_Script_openLibs(self);
   

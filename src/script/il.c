@@ -2,6 +2,7 @@
 
 #include <stdarg.h>
 #include <stdio.h>
+#include <string.h>
 
 int il_Script_startTable(il_Script_Script* self) {
   lua_newtable(self->L);
@@ -191,37 +192,46 @@ double il_Script_getNumber(lua_State* L, int idx) {
   return (double)lua_tonumber(L, idx);
 }
 
+il_Common_String il_Script_toString(lua_State* L, int idx) {
+  il_Common_String res;
+  switch (lua_type(L, idx)) {
+    case LUA_TNIL:
+      return il_l("nil");
+    case LUA_TNUMBER:
+    case LUA_TSTRING:
+      res.data = lua_tolstring(L, idx, &res.length);
+      return res;
+    case LUA_TBOOLEAN:
+      if (lua_toboolean(L, idx))
+        return il_l("true");
+      else
+        return il_l("false");
+    case LUA_TTHREAD:
+    case LUA_TLIGHTUSERDATA:
+    case LUA_TTABLE:
+    case LUA_TUSERDATA:
+    case LUA_TFUNCTION: {
+      char * str = malloc(sizeof(void*)*2 + 3);
+      sprintf(str, "%p", lua_topointer(L, idx));
+      const char * t = lua_typename(L, lua_type(L, idx));
+      return il_concat(
+        il_CtoS(t, -1), 
+        il_l(": "), 
+        il_CtoS(str, -1)
+      );
+    }
+    case LUA_TNONE:
+    default:
+      return (il_Common_String){0, NULL};
+  }
+}
+
 void il_Script_printStack(lua_State *L, const char* Str) {
   int J, Top;
   printf("%-26s [", Str);
   Top = lua_gettop(L);
   for (J = 1; J <= Top; J++){
-    switch (lua_type(L, J)) {
-      case LUA_TNONE:
-        printf("???, ");
-        break;
-      case LUA_TNIL:
-        printf("nil, ");
-        break;
-      case LUA_TNUMBER:
-        printf("%f, ", lua_tonumber(L, J));
-        break;
-      case LUA_TSTRING:
-        printf("\"%s\", ", lua_tolstring(L, J, NULL));
-      case LUA_TBOOLEAN:
-        if (lua_toboolean(L, J))
-          printf("true, ");
-        else
-          printf("false, ");
-        break;
-      case LUA_TTHREAD:
-      case LUA_TLIGHTUSERDATA:
-      case LUA_TTABLE:
-      case LUA_TUSERDATA:
-      case LUA_TFUNCTION:
-        printf("%s: %p, ", lua_typename(L, lua_type(L, J)), lua_topointer(L, J));
-        break;
-    }
+    printf("%s, ", il_StoC(il_Script_toString(L, J)));
   }
   printf("]\n");
 }
