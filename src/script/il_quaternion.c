@@ -65,6 +65,12 @@ static int quat_mul(lua_State* L) {
   return sg_Quaternion_wrap(L, res);
 }
 
+static int quat_tostring(lua_State* L) {
+  sg_Quaternion* q = (sg_Quaternion*)il_Script_getPointer(L, 1, "quaternion", NULL);
+  lua_pushfstring(L, "(%f, %f, %f), %f", (lua_Number)q->x, (lua_Number)q->y, (lua_Number)q->z, (lua_Number)q->w);
+  return 1;
+}
+
 static int quat_fromAxisAngle(lua_State* L) {
   int nargs = lua_gettop(L);
   sg_Vector3 v;
@@ -102,6 +108,8 @@ int sg_Quaternion_wrap(lua_State* L, sg_Quaternion q) {
   lua_setfield(L, -2, "__newindex");
   lua_pushcfunction(L, &quat_mul);
   lua_setfield(L, -2, "__mul");
+  lua_pushcfunction(L, &quat_tostring);
+  lua_setfield(L, -2, "__tostring");
   
   return il_Script_createEndMt(L);
 }
