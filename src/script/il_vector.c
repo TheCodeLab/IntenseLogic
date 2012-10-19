@@ -1,10 +1,9 @@
 #include "common/vector.h"
+
 #include "script/il.h"
 #include "script/script.h"
+#include "script/interface.h"
 
-int sg_Vector2_wrap(lua_State* L, sg_Vector2 v);
-int sg_Vector3_wrap(lua_State* L, sg_Vector3 v);
-int sg_Vector4_wrap(lua_State* L, sg_Vector4 v);
 #define vec2_wrap sg_Vector2_wrap
 #define vec3_wrap sg_Vector3_wrap
 #define vec4_wrap sg_Vector4_wrap

@@ -9,6 +9,7 @@
 extern int sg_Vector3_wrap(lua_State* L, sg_Vector3 v);
 int sg_Quaternion_wrap(lua_State* L, sg_Quaternion q);
 
+int il_Common_Positionable_wrap(lua_State* L, il_Common_Positionable* p);
 
 static int pos_index(lua_State* L) {
   il_Common_Positionable* self = il_Script_getPointer(L, 1, "positionable", NULL);
@@ -69,16 +70,20 @@ static int pos_newindex(lua_State* L) {
   return 0;
 }
 
+int il_Common_Positionable_wrap(lua_State* L, il_Common_Positionable* p) {
+  il_Script_createMakeLight(L, p, "positionable");
+  
+  il_Script_createAddFunc(L, "__index", &pos_index);
+  il_Script_createAddFunc(L, "__newindex", &pos_newindex);
+  
+  return il_Script_createEndMt(L);
+}
+
 static int pos_create(lua_State* L) {
   void * world = il_Script_getPointer(L, 1, "world", NULL);
   il_Common_Positionable* p = il_Common_Positionable_new(world);
   
-  il_Script_createMakeLight(L, p, "positionable");
-  lua_pushcfunction(L, &pos_index);
-  lua_setfield(L, -2, "__index");
-  lua_pushcfunction(L, &pos_newindex);
-  lua_setfield(L, -2, "__newindex");
-  return il_Script_createEndMt(L);
+  return il_Common_Positionable_wrap(L, p);
 }
 
 void il_Common_Positionable_luaGlobals(il_Script_Script* self, void * ctx) {

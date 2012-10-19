@@ -118,6 +118,12 @@ int il_Script_createEndMt(lua_State* L) {
   return 1;
 }
 
+int il_Script_createAddFunc(lua_State* L, const char * name, lua_CFunction func) {
+  lua_pushcfunction(L, func);
+  lua_setfield(L, -2, name);
+  return 0;
+}
+
 const char * il_Script_getType(lua_State* L, int idx) {
   int type = lua_type(L, idx);
   if (type == LUA_TUSERDATA) {
