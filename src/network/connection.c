@@ -159,7 +159,7 @@ void server_accept(struct evconnlistener * listener, evutil_socket_t fd, struct 
 }
 
 int il_Network_Connection_bind(il_Network_Connection * con, const char * host, unsigned short port) {
-  int res;
+  /*int res;
   
   con->type = SERVER;
   con->state = CONNECTING;
@@ -170,10 +170,9 @@ int il_Network_Connection_bind(il_Network_Connection * con, const char * host, u
   struct evutil_addrinfo hints;
   struct evutil_addrinfo *answer = NULL;
   memset(&hints, 0, sizeof(hints));
-  hints.ai_family = AF_UNSPEC; /* v4 or v6 is fine. */
+  hints.ai_family = AF_UNSPEC; 
   hints.ai_socktype = SOCK_STREAM;
-  hints.ai_protocol = IPPROTO_TCP; /* We want a TCP socket */
-  /* Only return addresses we can use. */
+  hints.ai_protocol = IPPROTO_TCP;
   hints.ai_flags = EVUTIL_AI_ADDRCONFIG;
   
   res = evutil_getaddrinfo(host, port_str, &hints, &answer);
@@ -181,6 +180,6 @@ int il_Network_Connection_bind(il_Network_Connection * con, const char * host, u
   
   con->listener = evconnlistener_new_bind(con->base, &server_accept, con, LEV_OPT_CLOSE_ON_FREE, -1, answer->ai_addr, answer->ai_addrlen);
   
-  con->state = CONNECTED;
+  con->state = CONNECTED;*/
   return 0;
 }
