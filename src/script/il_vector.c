@@ -100,6 +100,17 @@ vecd_dot(2)
 vecd_dot(3)
 vecd_dot(4)
 
+#define vecd_cross(d) \
+static int vec##d##_cross(lua_State* L) { \
+  sg_Vector##d *a = (sg_Vector##d*)il_Script_getPointer(L, 1, "vector" #d, NULL); \
+  sg_Vector##d *b = (sg_Vector##d*)il_Script_getPointer(L, 2, "vector" #d, NULL); \
+  sg_Vector##d res = sg_Vector##d##_cross(*a, *b); \
+  return vec##d##_wrap(L, res); \
+}
+
+vecd_cross(3)
+vecd_cross(4)
+
 #define d 2
 #include "vecd_create.inc"
 #undef d
@@ -110,21 +121,14 @@ vecd_dot(4)
 #include "vecd_create.inc"
 #undef d
 
-#define vecd_globals(d) \
-  il_Script_startTable(self); \
-  il_Script_addFunc(self, "create", &vec##d##_create); \
-  il_Script_addTypeGetter(self, "vector" #d); \
-  il_Script_addIsA(self, "vector" #d); \
-  il_Script_addFunc(self, "dot", &vec##d##_dot); \
-  il_Script_startMetatable(self, "vector" #d, &vec##d##_create); \
-  il_Script_addFunc(self, "__add", &vec##d##_add); \
-  il_Script_addFunc(self, "__sub", &vec##d##_sub); \
-  il_Script_addFunc(self, "__mul", &vec##d##_mul); \
-  il_Script_addFunc(self, "__div", &vec##d##_div); \
-  il_Script_endMetatable(self);
-
 void sg_Vector_luaGlobals(il_Script_Script* self, void* ctx) {
-  vecd_globals(2)
-  vecd_globals(3)
-  vecd_globals(4)
+  #define d 2
+  #include "vecd_globals.inc"
+  #undef d
+  #define d 3
+  #include "vecd_globals.inc"
+  #undef d
+  #define d 4
+  #include "vecd_globals.inc"
+  #undef d
 }
