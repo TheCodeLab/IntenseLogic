@@ -19,7 +19,7 @@ echo "LDFLAGS: $LDFLAGS";
 if $(test "$1" = "mingw"); then
 	EXTENSION=.exe
 	LINKSUFFIX=.dll
-	LDFLAGS="-lmingw32 $LDFLAGS -lws2_32 -static-libgcc -static"
+	LDFLAGS="-lmingw32 $LDFLAGS -lws2_32 -static"
 	echo "Target: mingw";
 else
 	LINKSUFFIX=.so
@@ -37,12 +37,18 @@ SOURCES="*.c common/*.c graphics/*.c network/*.c script/*.c asset/*.c" # physics
 echo "SOURCES: $SOURCES";
 
 for f in $SOURCES; do
-	echo "$CC $CFLAGS -c $f -o ../obj/$(basename $f .c).o";
-	$CC $CFLAGS -c $f -o ../obj/$(basename $f .c).o;
+	obj="../obj/$(basename $f .c).o";
+	echo "$f -> $obj";
+	fmod=$(stat --format=%Y $f);
+	omod=$(stat --format=%Y $obj);
+	if $(test $fmod -gt $omod); then
+		echo "$CC $CFLAGS -c $f -o $obj";
+		$CC $CFLAGS -c $f -o $obj;
 
-	if $(test $? -ne 0); then # test to see if it failed
-		echo "Compilation terminated";
-		exit 1;
+		if $(test $? -ne 0); then # test to see if it failed
+			echo "Compilation terminated";
+			exit 1;
+		fi;
 	fi;
 done;
 
