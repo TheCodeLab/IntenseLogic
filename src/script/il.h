@@ -27,6 +27,7 @@ int il_Script_endMetatable(il_Script_Script* self);
 
 int il_Script_createMakeLight(lua_State* L, void * ptr, const char * type);
 int il_Script_createMakeHeavy(lua_State* L, size_t size, const void * ptr, const char * type);
+int il_Script_createAddFunc(lua_State* L, const char * name, lua_CFunction func);
 int il_Script_createEndMt(lua_State* L);
 const char * il_Script_getType(lua_State* L, int idx);
 void* il_Script_getPointer(lua_State* L, int idx, const char * type, size_t *size);

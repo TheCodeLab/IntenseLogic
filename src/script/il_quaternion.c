@@ -130,5 +130,7 @@ void sg_Quaternion_luaGlobals(il_Script_Script* self, void * ctx) {
   
   il_Script_startMetatable(self, "quaternion", &quat_create);
   
+  il_Script_addFunc(self, "__mul", &quat_mul);
+  
   il_Script_endMetatable(self);
 }
