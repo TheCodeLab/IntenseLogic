@@ -226,7 +226,7 @@ void il_Script_printStack(lua_State *L, const char* Str) {
   printf("]\n");
 }
 
-struct lua_node {
+static struct lua_node {
   il_Script_LuaRegisterFunc func;
   void * ctx;
   struct lua_node *next;

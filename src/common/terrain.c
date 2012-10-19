@@ -50,17 +50,17 @@ sg_Vector3 il_Common_Terrain_getNormal(il_Common_Terrain* ter, unsigned x, unsig
 ////////////////////////////////////////////////////////////////////////////////
 // Heightmaps
 
-void destruct(il_Common_Terrain* ter, void * ctx) {
+static void destruct(il_Common_Terrain* ter, void * ctx) {
   free(ter->data);
 }
 
-double heightmap_getPoint(il_Common_Terrain* ter, void * ctx, unsigned x, unsigned y, double height) {
+static double heightmap_getPoint(il_Common_Terrain* ter, void * ctx, unsigned x, unsigned y, double height) {
   if (x >= ter->width || y >= ter->height) return NAN;
   return ((float*)(ter->data))[y * ter->width + x];
 }
 
 // http://www.flipcode.com/archives/Calculating_Vertex_Normals_for_Height_Maps.shtml
-sg_Vector3 heightmap_getNormal(il_Common_Terrain* ter, void * ctx, unsigned x, unsigned y, double z) {
+static sg_Vector3 heightmap_getNormal(il_Common_Terrain* ter, void * ctx, unsigned x, unsigned y, double z) {
   #define h(x,y) (((float*)ter->data)[y * ter->width + x])
   
   float sx = h(x<ter->width-1 ? x+1 : x, y) - h(x == 0 ? x-1 : x, y);

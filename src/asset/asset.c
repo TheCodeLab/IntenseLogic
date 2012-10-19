@@ -63,7 +63,7 @@ void il_Asset_registerReadDir(il_Common_String path, int priority) {
   ins->next = cur;
 }
 
-il_Common_String search_paths(il_Common_String path) {
+static il_Common_String search_paths(il_Common_String path) {
   struct SearchPath *cur = first;
   while (cur) {
     // dir ~ '/' ~ path ~ 0
