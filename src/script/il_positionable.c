@@ -71,12 +71,7 @@ static int pos_newindex(lua_State* L) {
 }
 
 int il_Common_Positionable_wrap(lua_State* L, il_Common_Positionable* p) {
-  il_Script_createMakeLight(L, p, "positionable");
-  
-  il_Script_createAddFunc(L, "__index", &pos_index);
-  il_Script_createAddFunc(L, "__newindex", &pos_newindex);
-  
-  return il_Script_createEndMt(L);
+  return il_Script_createMakeLight(L, p, "positionable");
 }
 
 static int pos_create(lua_State* L) {
@@ -87,16 +82,22 @@ static int pos_create(lua_State* L) {
 }
 
 void il_Common_Positionable_luaGlobals(il_Script_Script* self, void * ctx) {
-  il_Script_startTable(self);
+
+  const luaL_Reg l[] = {
+    {"create",    &pos_create},
+    {"getType",   &il_Script_typeGetter},
+    {"isA",       &il_Script_isA},
+    
+    {NULL,        NULL}
+  };
+
+  il_Script_startTable(self, l);
   
-  il_Script_addFunc(self, "create", &pos_create);
-  il_Script_addTypeGetter(self, "positionable");
-  il_Script_addIsA(self, "positionable");
+  il_Script_startMetatable(self, "positionable");
+  il_Script_pushFunc(self->L, "__index", &pos_index);
+  il_Script_pushFunc(self->L, "__newindex", &pos_newindex);
   
-  il_Script_startMetatable(self, "positionable", &pos_create);
+  il_Script_typeTable(self->L, "positionable");
   
-  il_Script_addFunc(self, "__index", &pos_index);
-  il_Script_addFunc(self, "__newindex", &pos_newindex);
-  
-  il_Script_endMetatable(self);
+  il_Script_endTable(self, l, "positionable");
 }

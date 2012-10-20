@@ -91,6 +91,10 @@ int il_Script_fromSource(il_Script_Script* self, il_Common_String source) {
   
   lua_pushcfunction(self->L, &print);
   lua_setglobal(self->L, "print");
+  lua_pushnil(self->L);
+  lua_setglobal(self->L, "debug"); // disable debug library
+  lua_pushnil(self->L);
+  lua_setgobal(self->L, "require"); // disable require
   
   il_Script_openLibs(self);
   
@@ -154,8 +158,7 @@ static int run(lua_State* L) {
 }
 
 int il_Script_Script_wrap(lua_State* L, il_Script_Script* s) {
-  il_Script_createMakeLight(L, s, "script");
-  return il_Script_createEndMt(L);
+  return il_Script_createMakeLight(L, s, "script");
 }
 
 static int create(lua_State* L) {
@@ -164,16 +167,24 @@ static int create(lua_State* L) {
 }
 
 void il_Script_luaGlobals(il_Script_Script* self, void * ctx) {
-  il_Script_startTable(self);
+
+  const luaL_Reg l[] = {
+    {"create",      &create     },
+    {"getType",     &il_Script_typeGetter},
+    {"isA",         &il_Script_isA},
+    {"fromSource",  &fromsource },
+    {"fromFile",    &fromfile   },
+    {"run",         &run        },
+    {NULL,          NULL        }
+  };
   
-  il_Script_addFunc(self, "create", &create);
-  il_Script_addTypeGetter(self, "script");
-  il_Script_addIsA(self, "script");
+  il_Script_startTable(self, l);
   
-  il_Script_addFunc(self, "fromSource", &fromsource);
-  il_Script_addFunc(self, "fromFile", &fromfile);
-  il_Script_addFunc(self, "run", &run);
+  il_Script_startMetatable(self, "script");
+  lua_pushvalue(self->L, -2);
+  lua_setfield(self->L, -2, "__index");
   
-  il_Script_startMetatable(self, "script", &create);
-  il_Script_endMetatable(self);
+  il_Script_typeTable(self->L, "script");
+  
+  il_Script_endTable(self, l, "script");
 }

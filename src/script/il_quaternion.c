@@ -100,18 +100,7 @@ static int quat_fromYPR(lua_State* L) {
 }
 
 int sg_Quaternion_wrap(lua_State* L, sg_Quaternion q) {
-  il_Script_createMakeHeavy(L, sizeof(sg_Quaternion), &q, "quaternion");
-  
-  lua_pushcfunction(L, &quat_index);
-  lua_setfield(L, -2, "__index");
-  lua_pushcfunction(L, &quat_newindex);
-  lua_setfield(L, -2, "__newindex");
-  lua_pushcfunction(L, &quat_mul);
-  lua_setfield(L, -2, "__mul");
-  lua_pushcfunction(L, &quat_tostring);
-  lua_setfield(L, -2, "__tostring");
-  
-  return il_Script_createEndMt(L);
+  return il_Script_createMakeHeavy(L, sizeof(sg_Quaternion), &q, "quaternion");
 }
 
 static int quat_create(lua_State* L) {
@@ -127,18 +116,27 @@ static int quat_create(lua_State* L) {
 }
 
 void sg_Quaternion_luaGlobals(il_Script_Script* self, void * ctx) {
-  il_Script_startTable(self);
+
+  const luaL_Reg l[] = {
+    {"create",        &quat_create          },
+    {"getType",       &il_Script_typeGetter },
+    {"isA",           &il_Script_isA        },
+    
+    {"fromAxisAngle", &quat_fromAxisAngle   },
+    {"fromYPR",       &quat_fromYPR         },
+    
+    {NULL,            NULL                  }
+  };
   
-  il_Script_addFunc(self, "create", &quat_create);
-  il_Script_addTypeGetter(self, "quaternion");
-  il_Script_addIsA(self, "quaternion");
+  il_Script_startTable(self, l);
+
+  il_Script_startMetatable(self, "quaternion");
+  il_Script_pushFunc(self->L, "__index", &quat_index);
+  il_Script_pushFunc(self->L, "__newindex", &quat_newindex);
+  il_Script_pushFunc(self->L, "__mul", &quat_mul);
+  il_Script_pushFunc(self->L, "__tostring", &quat_tostring);
   
-  il_Script_addFunc(self, "fromAxisAngle", &quat_fromAxisAngle);
-  il_Script_addFunc(self, "fromYPR", &quat_fromYPR);
+  il_Script_typeTable(self->L, "quaternion");
   
-  il_Script_startMetatable(self, "quaternion", &quat_create);
-  
-  il_Script_addFunc(self, "__mul", &quat_mul);
-  
-  il_Script_endMetatable(self);
+  il_Script_endTable(self, l, "quaternion");
 }

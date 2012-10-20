@@ -17,10 +17,10 @@ static int c(vec,c(d,_create))(lua_State* L) {
   float w = 0;
   #endif
   
-  il_Script_printStack(L, "vec"s(d)"_create");
+  //il_Script_printStack(L, "vec"s(d)"_create");
   
   lua_getglobal(L, "vector" s(d)); // special case for self parameter passed with : syntax and __call
-  if (nargs >= 1 && lua_equal(L, 1, -1)) {
+  if (nargs >= 1 && lua_compare(L, 1, -1, LUA_OPEQ)) {
     nargs--;
     lua_remove(L, 1);
   }
