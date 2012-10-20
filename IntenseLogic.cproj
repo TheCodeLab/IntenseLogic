@@ -138,6 +138,7 @@
     <Compile Include="src\script\il_positionable.c" />
     <Compile Include="src\script\il_world.c" />
     <Compile Include="src\script\il_quaternion.c" />
+    <Compile Include="src\script\il_event.c" />
   </ItemGroup>
   <ProjectExtensions>
     <MonoDevelop>

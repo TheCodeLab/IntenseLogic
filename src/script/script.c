@@ -12,6 +12,7 @@ void il_Script_init(){
   il_Script_registerLuaRegister(&il_Common_Positionable_luaGlobals, NULL);
   il_Script_registerLuaRegister(&il_Common_World_luaGlobals, NULL);
   il_Script_registerLuaRegister(&sg_Quaternion_luaGlobals, NULL);
+  il_Script_registerLuaRegister(&il_Event_luaGlobals, NULL);
 }
 
 static int print(lua_State* L) {
@@ -94,7 +95,7 @@ int il_Script_fromSource(il_Script_Script* self, il_Common_String source) {
   lua_pushnil(self->L);
   lua_setglobal(self->L, "debug"); // disable debug library
   lua_pushnil(self->L);
-  lua_setgobal(self->L, "require"); // disable require
+  lua_setglobal(self->L, "require"); // disable require
   
   il_Script_openLibs(self);
   
