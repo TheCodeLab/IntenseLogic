@@ -148,7 +148,16 @@ void* il_Script_getPointer(lua_State* L, int idx, const char * type, size_t *siz
   if (!lua_isuserdata(L, idx) && !lua_isuserdata(L, idx))
     goto error;
   
+  #if LUA_VERSION_NUM >= 502
+  #define lua_objlen lua_rawlen
+  #endif
+  
   void *raw_ptr = lua_touserdata(L, idx);
+  size_t rawsize = lua_objlen(L, idx);
+  
+  if (rawsize < sizeof(il_Script_TypedBox) && rawsize < sizeof(il_Script_TypedPointer))
+    goto error;
+  
   if (*(int*)raw_ptr) { // is_pointer
     il_Script_TypedPointer* ptr = (il_Script_TypedPointer*)raw_ptr;
     if (strcmp(ptr->type, type) != 0)
