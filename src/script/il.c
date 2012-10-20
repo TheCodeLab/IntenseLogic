@@ -4,83 +4,41 @@
 #include <stdio.h>
 #include <string.h>
 
-int il_Script_startTable(il_Script_Script* self) {
-  lua_newtable(self->L);
+int il_Script_startMetatable(il_Script_Script* self, const char * name) {
+  luaL_newmetatable(self->L, name);
   return 0;
 }
 
-int il_Script_addFunc(il_Script_Script* self, const char * name, lua_CFunction func) {
-  lua_pushcfunction(self->L, func);
-  lua_setfield(self->L, -2, name);
+int il_Script_endTable(il_Script_Script* self, const luaL_Reg* l, const char * name) {
+  luaL_setfuncs(self->L, l, 2);
+  lua_setglobal(self->L, name);
   return 0;
 }
 
-int il_Script_addClosure(il_Script_Script* self, const char * name, lua_CFunction func, int n) {
-  lua_pushcclosure(self->L, func, n);
-  lua_setfield(self->L, -2, name);
-  return 0;
-}
-
-static int getter(lua_State* L) {
-  size_t len;
-  const char * str = lua_tolstring(L, lua_upvalueindex(1), &len);
-  lua_pushlstring(L, str, len);
-  
+int il_Script_typeGetter(lua_State* L) {
+  lua_pushinteger(L, 1);
+  lua_gettable(L, lua_upvalueindex(2));
   return 1;
 }
-int il_Script_addTypeGetter(il_Script_Script* self, const char * name) {
-  lua_pushlstring(self->L, name, strlen(name));
-  return il_Script_addClosure(self, "getType", &getter, 1);
-}
 
-static int isa(lua_State* L) {
-  int nargs = lua_tointeger(L, lua_upvalueindex(1));
-      
+int il_Script_isA(lua_State* L) {
+  //int nargs = lua_tointeger(L, lua_upvalueindex(1));
+  int nargs = lua_rawlen(L, lua_upvalueindex(2));
+  
   if (!lua_isstring(L, 1))
     return luaL_argerror(L, 1, "String exptected");
   
   int i;
   for (i = 1; i <= nargs; i++) {
-    if (lua_equal(L, 1, lua_upvalueindex(i + 1))) {
+    lua_pushinteger(L, i);
+    lua_gettable(L, 2);
+    if (lua_compare(L, 1, -1, LUA_OPEQ)) {
       lua_pushboolean(L, 1);
       return 1;
     }
   }
   lua_pushboolean(L,0);
   return 1;
-}
-int il_Script_addIsAfunc(il_Script_Script* self, const char * arg1, ...) {
-  int nargs = 0;
-  va_list ap;
-  
-  lua_pushnil(self->L);
-  int pos = lua_gettop(self->L);
-  va_start(ap, arg1);
-  const char * cur = arg1;
-  for (cur = arg1; cur; cur = va_arg(ap, const char*)) {
-    lua_pushlstring(self->L, cur, strlen(cur));
-    nargs++;
-  }
-  va_end(ap);
-  lua_pushinteger(self->L, nargs);
-  lua_replace(self->L, pos);
-  
-  return il_Script_addClosure(self, "isA", &isa, nargs+1);
-}
-
-int il_Script_startMetatable(il_Script_Script* self, const char * name, lua_CFunction call) {
-  lua_pushvalue(self->L, -1);
-  lua_setglobal(self->L, name);
-  
-  lua_newtable(self->L);
-  lua_pushcfunction(self->L, call);
-  lua_setfield(self->L, -2, "__call");
-  return 0;
-}
-
-int il_Script_endMetatable(il_Script_Script* self) {
-  lua_setmetatable(self->L, -2);
-  return 0;
 }
 
 int il_Script_createMakeLight(lua_State* L, void * ptr, const char * type) {
@@ -91,9 +49,8 @@ int il_Script_createMakeLight(lua_State* L, void * ptr, const char * type) {
   udata->type = type;
   
   // create metatable
-  lua_newtable(L);
-  lua_getglobal(L, type);
-  lua_setfield(L, -2, "__index");
+  luaL_newmetatable(L, type);
+  lua_setmetatable(L, -2);
   
   return 1;
 }
@@ -106,22 +63,34 @@ int il_Script_createMakeHeavy(lua_State* L, size_t size, const void * ptr, const
   memcpy(&udata->data, ptr, size);
   
   // create metatable
-  lua_newtable(L);
-  int idx = lua_gettop(L);
-  lua_getglobal(L, type);
-  lua_setfield(L, -2, "__index");
-  
-  return idx;
-}
-
-int il_Script_createEndMt(lua_State* L) {
+  luaL_newmetatable(L, type);
   lua_setmetatable(L, -2);
+  
   return 1;
 }
 
-int il_Script_createAddFunc(lua_State* L, const char * name, lua_CFunction func) {
+int il_Script_pushFunc(lua_State* L, const char * name, lua_CFunction func) {
   lua_pushcfunction(L, func);
   lua_setfield(L, -2, name);
+  return 0;
+}
+
+int il_Script_typeTable(lua_State* L, const char * str, ...) {
+  const char * arg = str;
+  va_list va;
+  int i = 0;
+    
+  lua_newtable(L);
+  va_start(va, str);
+  while (arg) {
+    i++;
+    lua_pushinteger(L, i);
+    lua_pushlstring(L, str, strlen(str));
+    lua_settable(L, -3);
+    arg = va_arg(va, const char*);
+  }
+  va_end(va);
+  
   return 0;
 }
 
@@ -160,6 +129,7 @@ void* il_Script_getPointer(lua_State* L, int idx, const char * type, size_t *siz
   
   if (*(int*)raw_ptr) { // is_pointer
     il_Script_TypedPointer* ptr = (il_Script_TypedPointer*)raw_ptr;
+    if (ptr->is_pointer != 1) goto error; // garbage
     if (strcmp(ptr->type, type) != 0)
       goto error;
     

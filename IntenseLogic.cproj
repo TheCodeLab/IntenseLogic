@@ -29,11 +29,11 @@
         <Lib>event_core</Lib>
         <Lib>event_extra</Lib>
         <Lib>GL</Lib>
-        <Lib>lua</Lib>
         <Lib>SDL</Lib>
         <Lib>GLEW</Lib>
         <Lib>m</Lib>
         <Lib>c</Lib>
+        <Lib>lua5.2</Lib>
       </Libs>
     </Libs>
     <Commandlineparameters>-v5</Commandlineparameters>

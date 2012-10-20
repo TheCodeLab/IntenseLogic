@@ -64,21 +64,9 @@ static int vec4_tostring(lua_State* L) {
 #include "vecd_index.inc"
 #undef d
 
-#define mt_fun(name,d) \
-  lua_pushcfunction(L, &vec##d##_##name); \
-  lua_setfield(L, idx, "__" #name);
-
 #define vecd_wrap(d) \
 int vec##d##_wrap(lua_State* L, sg_Vector##d v) { \
-  int idx = il_Script_createMakeHeavy(L, sizeof(sg_Vector##d), &v, "vector" #d); \
-  mt_fun(add, d); \
-  mt_fun(sub, d); \
-  mt_fun(mul, d); \
-  mt_fun(div, d); \
-  mt_fun(tostring, d); \
-  mt_fun(index, d); \
-  mt_fun(newindex, d); \
-  return il_Script_createEndMt(L); \
+  return il_Script_createMakeHeavy(L, sizeof(sg_Vector##d), &v, "vector" #d); \
 }
 
 vecd_wrap(2)
