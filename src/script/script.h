@@ -18,6 +18,7 @@ typedef struct il_Script_Script {
   const char * filename;
   int running;
   lua_State * L;
+  int ehandler;
   size_t errlen;
   const char * err;
 } il_Script_Script;
@@ -28,7 +29,6 @@ typedef struct il_Script_Script {
   il_Script_fromFile(script, f);  \
   int res = il_Script_run(script);\
   if (res != 0) {                 \
-    printf("%s\n", script->err);  \
     abort();                      \
   }                               \
 }

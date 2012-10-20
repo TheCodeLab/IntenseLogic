@@ -1,5 +1,7 @@
 #include "script.h"
 
+#include <string.h>
+
 #include "script/il.h"
 #include "common/log.h"
 #include "script/interface.h"
@@ -15,7 +17,7 @@ void il_Script_init(){
   il_Script_registerLuaRegister(&il_Event_luaGlobals, NULL);
 }
 
-static int print(lua_State* L) {
+static int lualog(lua_State* L, int level, int fun) {
   int nargs = lua_gettop(L);
   il_Common_String strs[nargs];
   il_Common_String str;
@@ -23,7 +25,7 @@ static int print(lua_State* L) {
   
   if (nargs < 1) {
     printf("\n");
-    return 0;
+    return 1;
   }
   
   for (i = 1; i <= nargs; i++) {
@@ -35,19 +37,48 @@ static int print(lua_State* L) {
     str = il_concat(str, il_l("\t"), strs[i-1]);
   }
   lua_Debug ar;
-  int res = lua_getstack(L, 1, &ar);
+  int res = lua_getstack(L, fun, &ar);
   if (res != 1) return -1;
   res = lua_getinfo(L, "nSl", &ar);
   if (!res) return -1;
   
-  printf( "%s:%i (%s) %s: %s\n",
+  lua_pushfstring(L, "%s:%d (%s) %s: %s\n",
     ar.short_src,
     ar.currentline,
     ar.name,
-    "NOTICE",
+    il_Common_loglevel_tostring(level),
     il_StoC(str)
   );
-  return 0;
+  
+  if (level <= il_Common_loglevel)
+    printf("%s", lua_tostring(L, -1));
+  
+  return 1;
+}
+
+static int print(lua_State* L) {
+  return lualog(L, 3, 1);
+}
+
+static int luaerror(lua_State* L) {
+  int i;
+  lua_Debug ar;
+  
+  lua_getstack(L, 2, &ar);
+  lua_getinfo(L, "S", &ar);
+  
+  const char * s = lua_tostring(L, 1);
+  if (strstr(s, ar.short_src)) {
+    lua_pop(L, 1);
+    lua_pushlstring(L, strchr(s, ' ')+1, strlen(s));
+  }
+  lua_pushliteral(L, "\nStack trace:");
+  
+  for (i = 1; lua_getstack(L, i, &ar); i++) {
+    lua_getinfo(L, "nSl", &ar);
+    lua_pushfstring(L, "\n\t#%d in %s at %s:%d", i, ar.name, ar.short_src, ar.currentline);
+  }
+  return lualog(L, 1, 2);
 }
 
 il_Script_Script * il_Script_new() {
@@ -99,6 +130,9 @@ int il_Script_fromSource(il_Script_Script* self, il_Common_String source) {
   
   il_Script_openLibs(self);
   
+  lua_pushcfunction(self->L, &luaerror);
+  self->ehandler = lua_gettop(self->L);
+  
   #if LUA_VERSION_NUM == 502
   int res = lua_load(self->L, &reader, &data, chunkname, NULL);
   #else
@@ -140,7 +174,7 @@ static int fromfile(lua_State* L) {
 int il_Script_run(il_Script_Script* self) {
   self->running = 1;
   il_Common_log(3, "Running script %s", self->filename);
-  int res = lua_pcall(self->L, 0, 0, 0);
+  int res = lua_pcall(self->L, 0, 0, self->ehandler);
   if (res) {
     self->err = lua_tolstring(self->L, -1, &self->errlen);
     self->running = -1;
@@ -153,9 +187,12 @@ static int run(lua_State* L) {
   
   int res = il_Script_run(self);
   if (res != 0) {
-    return luaL_error(L, "Error running script");
+    lua_pushnil(L);
+    lua_pushlstring(L, self->err, self->errlen);
+    return 2;
   }
-  return 0;
+  lua_pushboolean(L, 1);
+  return 1;
 }
 
 int il_Script_Script_wrap(lua_State* L, il_Script_Script* s) {
