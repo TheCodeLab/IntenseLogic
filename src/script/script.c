@@ -70,7 +70,8 @@ static int luaerror(lua_State* L) {
   const char * s = lua_tostring(L, 1);
   if (strstr(s, ar.short_src)) {
     lua_pop(L, 1);
-    lua_pushlstring(L, strchr(s, ' ')+1, strlen(s));
+    s = strchr(s, ' ')+1;
+    lua_pushlstring(L, s, strlen(s));
   }
   lua_pushliteral(L, "\nStack trace:");
   
