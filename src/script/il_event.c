@@ -5,9 +5,51 @@
 
 #include "script/script.h"
 #include "script/il.h"
+#include "common/input.h"
+#include "common/base.h"
 
 int il_Event_wrap(lua_State* L, const il_Event_Event* e) {
   return il_Script_createMakeHeavy(L, sizeof(il_Event_Event) + e->size, e, "event");
+}
+
+static const char* idtostring(unsigned short num) {
+  switch(num) {
+    #define add_id(id, name) if (id == num) return name
+    add_id( IL_INPUT_KEYDOWN,    "keydown"   );
+    add_id( IL_INPUT_KEYUP,      "keyup"     );
+    add_id( IL_INPUT_MOUSEDOWN,  "mousedown" );
+    add_id( IL_INPUT_MOUSEUP,    "mouseup"   );
+    add_id( IL_INPUT_MOUSEMOVE,  "mousemove" );
+    add_id( IL_INPUT_MOUSEWHEEL, "mousewheel");
+    add_id( IL_BASE_TICK,        "tick"      );
+    add_id( IL_BASE_STARTUP,     "startup"   );
+    add_id( IL_BASE_SHUTDOWN,    "shutdown"  );
+    #undef add_id
+    default:                  return NULL;
+  }
+}
+static int getidstring(lua_State* L) {
+  double n = il_Script_getNumber(L, 1);
+  if (n < 0 || n > 65535) return luaL_argerror(L, 1, "Expected number between 0 and 65535");
+  const char * s = idtostring((unsigned short)n);
+  if (s) lua_pushlstring(L, s, strlen(s));
+  else lua_pushnil(L);
+  return 1;
+}
+
+static unsigned short stringtoid(const char* s) {
+  #define add_id(id, name) if (strcmp(s, name) == 0) return id
+  add_id( IL_INPUT_KEYDOWN,    "keydown"   );
+  add_id( IL_INPUT_KEYUP,      "keyup"     );
+  add_id( IL_INPUT_MOUSEDOWN,  "mousedown" );
+  add_id( IL_INPUT_MOUSEUP,    "mouseup"   );
+  add_id( IL_INPUT_MOUSEMOVE,  "mousemove" );
+  add_id( IL_INPUT_MOUSEWHEEL, "mousewheel");
+  add_id( IL_BASE_TICK,        "tick"      );
+  add_id( IL_BASE_STARTUP,     "startup"   );
+  add_id( IL_BASE_SHUTDOWN,    "shutdown"  );
+  #undef add_id
+  return -1;
 }
 
 struct ctx {
@@ -24,7 +66,8 @@ static void cb(il_Event_Event* self, void * rawctx) {
   lua_pcall(L, 1, 0, 0);
 }
 static int register_cb(lua_State* L) {
-  if (!lua_isnumber(L, 1)) return luaL_argerror(L, 1, "Expected number between 0 and 65536");
+  if (!lua_isnumber(L, 1) && !lua_isstring(L, 1)) 
+    return luaL_argerror(L, 1, "Expected string or number between 0 and 65536");
   if (!lua_isfunction(L, 2)) return luaL_argerror(L, 2, "Expected function");
   if (lua_gettop(L) > 2) return luaL_argerror(L, 3, "Extraneous argument");
   
@@ -35,7 +78,12 @@ static int register_cb(lua_State* L) {
   ptr->L = L;
   
   unsigned short id;
-  id = (unsigned short)il_Script_getNumber(L, 1);
+  if (lua_isnumber(L, 1)) {
+    double n = il_Script_getNumber(L, 1);
+    if (n < 0 || n > 65535) return luaL_argerror(L, 1, "Expected number between 0 and 65535");
+    id = (unsigned short)n;
+  } else
+    id = stringtoid(lua_tostring(L, 1));
   
   il_Event_register(id, &cb, ptr);
   
@@ -58,11 +106,48 @@ static int timer(lua_State* L) {
   return 0;
 }
 
+static int getdata(lua_State* L) {
+  il_Event_Event* self = il_Script_getPointer(L, 1, "event", NULL);
+  void * data = &self->data;
+  switch (self->eventid) {
+    case IL_INPUT_KEYDOWN:
+    case IL_INPUT_KEYUP:
+    case IL_INPUT_MOUSEDOWN:
+    case IL_INPUT_MOUSEUP:
+      if (self->size < sizeof(int)) luaL_argerror(L, 1, "Malformed event");
+      lua_pushinteger(L, *(int*)data);
+      return 1;
+    case IL_INPUT_MOUSEMOVE:
+      if (self->size < sizeof(il_Input_MouseMove)) luaL_argerror(L, 1, "Malformed event");
+      lua_pushinteger(L, ((il_Input_MouseMove*)data)->x);
+      lua_pushinteger(L, ((il_Input_MouseMove*)data)->y);
+      return 2;
+    case IL_INPUT_MOUSEWHEEL:
+      if (self->size < sizeof(il_Input_MouseWheel)) luaL_argerror(L, 1, "Malformed event");
+      lua_pushinteger(L, ((il_Input_MouseWheel*)data)->y);
+      lua_pushinteger(L, ((il_Input_MouseWheel*)data)->x);
+      return 2;
+    case IL_BASE_TICK:
+    case IL_BASE_STARTUP:
+    case IL_BASE_SHUTDOWN:
+      lua_pushnil(L);
+      return 1;
+    default:
+      return luaL_argerror(L, 1, "Unrecognised event type");
+  }
+}
+
+static int getid(lua_State* L) {
+  il_Event_Event* self = il_Script_getPointer(L, 1, "event", NULL);
+  lua_pushinteger(L, self->eventid);
+  return 1;
+}
+
 static int create(lua_State* L) {
   il_Event_Event e;
   memset(&e, 0, sizeof(il_Event_Event));
   double n = il_Script_getNumber(L, 1);
-  if (n < 0 || n > 65536) return luaL_argerror(L, 1, "Expected number between 0 and 65536");
+  if (n < 0 || n > 65535) return luaL_argerror(L, 1, "Expected number between 0 and 65535");
   e.eventid = (unsigned short)n;
   
   return il_Event_wrap(L, &e);
@@ -78,6 +163,9 @@ void il_Event_luaGlobals(il_Script_Script* self, void * ctx) {
     {"register",  &register_cb          },
     {"push",      &push                 },
     {"timer",     &timer                },
+    {"getData",   &getdata              },
+    {"getId",     &getid                },
+    {"getIdName", &getidstring          },
     
     {NULL,        NULL                  }
   };
