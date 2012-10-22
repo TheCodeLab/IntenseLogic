@@ -13,6 +13,7 @@ void il_Common_Positionable_luaGlobals(il_Script_Script* self, void * ctx);
 void il_Common_World_luaGlobals(il_Script_Script* self, void * ctx);
 void sg_Quaternion_luaGlobals(il_Script_Script* self, void * ctx);
 void il_Event_luaGlobals(il_Script_Script* self, void * ctx);
+void il_Input_luaGlobals(il_Script_Script* self, void * ctx);
 
 int sg_Vector2_wrap(lua_State* L, sg_Vector2 v);
 int sg_Vector3_wrap(lua_State* L, sg_Vector3 v);
