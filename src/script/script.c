@@ -16,6 +16,7 @@ void il_Script_init(){
   il_Script_registerLuaRegister(&sg_Quaternion_luaGlobals, NULL);
   il_Script_registerLuaRegister(&il_Event_luaGlobals, NULL);
   il_Script_registerLuaRegister(&il_Input_luaGlobals, NULL);
+  il_Script_registerLuaRegister(&il_Common_Terrain_luaGlobals, NULL);
 }
 
 static int lualog(lua_State* L, int level, int fun) {
