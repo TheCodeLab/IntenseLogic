@@ -140,6 +140,7 @@
     <Compile Include="src\script\il_quaternion.c" />
     <Compile Include="src\script\il_event.c" />
     <Compile Include="src\script\il_input.c" />
+    <Compile Include="src\script\il_terrain.c" />
   </ItemGroup>
   <ProjectExtensions>
     <MonoDevelop>
