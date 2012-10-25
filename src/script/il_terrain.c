@@ -37,24 +37,20 @@ static int index(lua_State* L) {
 }
 
 static int getpoint(lua_State* L) {
-  int nargs = lua_gettop(L);
   il_Common_Terrain* ter = (il_Common_Terrain*)il_Script_getPointer(L, 1, "terrain", NULL);
-  unsigned x = (unsigned)il_Script_getNumber(L, 2);
-  unsigned y = (unsigned)il_Script_getNumber(L, 3);
-  double z = NAN;
-  if (nargs > 3) z = il_Script_getNumber(L, 4);
+  unsigned x = luaL_checkunsigned(L, 2);
+  unsigned y = luaL_checkunsigned(L, 3);
+  double z = luaL_optnumber(L, 4, NAN);
   double ret = il_Common_Terrain_getPoint(ter, x, y, z);
   lua_pushnumber(L, ret);
   return 1;
 }
 
 static int getnormal(lua_State* L) {
-  int nargs = lua_gettop(L);
   il_Common_Terrain* ter = (il_Common_Terrain*)il_Script_getPointer(L, 1, "terrain", NULL);
-  unsigned x = (unsigned)il_Script_getNumber(L, 2);
-  unsigned y = (unsigned)il_Script_getNumber(L, 3);
-  double z = NAN;
-  if (nargs > 3) z = il_Script_getNumber(L, 4);
+  unsigned x = luaL_checkunsigned(L, 2);
+  unsigned y = luaL_checkunsigned(L, 3);
+  double z = luaL_optnumber(L, 4, NAN);
   sg_Vector3 ret = il_Common_Terrain_getNormal(ter, x, y, z);
   sg_Vector3_wrap(L, ret);
   return 1;
@@ -62,8 +58,8 @@ static int getnormal(lua_State* L) {
 
 static int heightmap(lua_State* L) {
   il_Common_Terrain* ter = (il_Common_Terrain*)il_Script_getPointer(L, 1, "terrain", NULL);
-  int w = (int)il_Script_getNumber(L, 2);
-  int h = (int)il_Script_getNumber(L, 3);
+  int w = luaL_checkinteger(L, 2);
+  int h = luaL_checkinteger(L, 3);
   if (!lua_istable(L, 4)) luaL_argerror(L, 4, "Expected table");
   if (lua_rawlen(L, 4) < w*h) 
     luaL_argerror(L, 4, "Expected table with at least W x H elements");

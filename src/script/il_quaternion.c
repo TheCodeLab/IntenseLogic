@@ -36,7 +36,7 @@ static int quat_index(lua_State* L) {
 static int quat_newindex(lua_State* L) {
   sg_Quaternion* q = il_Script_getPointer(L, 1, "quaternion", NULL);
   il_String k = il_Script_getString(L, 2);
-  double v = il_Script_getNumber(L, 3);
+  double v = luaL_checknumber(L, 3);
   
   if (il_strcmp(k, il_l("x"))) {
     q->x = v;
@@ -67,34 +67,32 @@ static int quat_mul(lua_State* L) {
 
 static int quat_tostring(lua_State* L) {
   sg_Quaternion* q = (sg_Quaternion*)il_Script_getPointer(L, 1, "quaternion", NULL);
-  lua_pushfstring(L, "(%f, %f, %f), %f", (lua_Number)q->x, (lua_Number)q->y, (lua_Number)q->z, (lua_Number)q->w);
+  lua_pushfstring(L, "(%f, %f, %f), %f", 
+    (lua_Number)q->x, (lua_Number)q->y, (lua_Number)q->z, (lua_Number)q->w);
   return 1;
 }
 
 static int quat_fromAxisAngle(lua_State* L) {
-  int nargs = lua_gettop(L);
   sg_Vector3 v;
   float a;
-  if (nargs == 4) {
-    v.x = il_Script_getNumber(L, 1);
-    v.y = il_Script_getNumber(L, 2);
-    v.z = il_Script_getNumber(L, 3);
-    a = il_Script_getNumber(L, 4);
-  } else if (nargs == 2) {
+  if (luaL_testudata(L, 1, "vector3")) {
     v = *(sg_Vector3*)il_Script_getPointer(L, 1, "vector3", NULL);
-    a = il_Script_getNumber(L, 2);
-  } else luaL_argerror(L, 1, "Expected 4 numbers or a vector and a number");
+    a = luaL_checkinteger(L, 2);
+  } else {
+    v.x = luaL_checkinteger(L, 1);
+    v.y = luaL_checkinteger(L, 2);
+    v.z = luaL_checkinteger(L, 3);
+    a = luaL_checkinteger(L, 4);
+  }
   sg_Quaternion q = sg_Quaternion_fromAxisAngle(v, a);
   return sg_Quaternion_wrap(L, q);
 }
 
 static int quat_fromYPR(lua_State* L) {
   float y, p, r;
-  int nargs = lua_gettop(L);
-  if (nargs != 3) luaL_argerror(L, 1, "Expected 3 numbers");
-  y = il_Script_getNumber(L, 1);
-  p = il_Script_getNumber(L, 2);
-  r = il_Script_getNumber(L, 3);
+  y = luaL_checknumber(L, 1);
+  p = luaL_checknumber(L, 2);
+  r = luaL_checknumber(L, 3);
   sg_Quaternion q = sg_Quaternion_fromYPR(y, p, r);
   return sg_Quaternion_wrap(L, q);
 }
@@ -104,14 +102,11 @@ int sg_Quaternion_wrap(lua_State* L, sg_Quaternion q) {
 }
 
 static int quat_create(lua_State* L) {
-  sg_Quaternion q = (sg_Quaternion){0, 0, 0, 1};
-  int nargs = lua_gettop(L);
-  if (nargs == 4) {
-    q.x = il_Script_getNumber(L, 1);
-    q.y = il_Script_getNumber(L, 2);
-    q.z = il_Script_getNumber(L, 3);
-    q.w = il_Script_getNumber(L, 4);
-  } else if (nargs != 0) luaL_argerror(L, 1, "Expected 4 numbers or nothing");
+  sg_Quaternion q;
+  q.x = luaL_optnumber(L, 1, 0.0);
+  q.y = luaL_optnumber(L, 2, 0.0);
+  q.z = luaL_optnumber(L, 3, 0.0);
+  q.w = luaL_optnumber(L, 4, 1.0);
   return sg_Quaternion_wrap(L, q);
 }
 

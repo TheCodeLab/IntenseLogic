@@ -43,13 +43,14 @@ int il_Script_isA(lua_State* L) {
 
 int il_Script_createMakeLight(lua_State* L, void * ptr, const char * type) {
   // create userdata
-  il_Script_TypedPointer * udata = (il_Script_TypedPointer*)lua_newuserdata(L, sizeof(il_Script_TypedPointer));
-  udata->is_pointer = 1;
-  udata->ptr = ptr;
-  udata->type = type;
+  void * block = lua_newuserdata(L, sizeof(void*) + sizeof(int));
+  int* is_ptr = block;
+  *is_ptr = 1;
+  block = is_ptr+1;
+  *(void**)block = ptr;
   
   // create metatable
-  luaL_newmetatable(L, type);
+  luaL_getmetatable(L, type);
   lua_setmetatable(L, -2);
   
   return 1;
@@ -57,13 +58,14 @@ int il_Script_createMakeLight(lua_State* L, void * ptr, const char * type) {
 
 int il_Script_createMakeHeavy(lua_State* L, size_t size, const void * ptr, const char * type) {
   // create userdata
-  il_Script_TypedBox * udata = (il_Script_TypedBox*)lua_newuserdata(L, sizeof(il_Script_TypedBox) + size);
-  udata->is_pointer = 0;
-  udata->type = type;
-  memcpy(&udata->data, ptr, size);
+  void * block = lua_newuserdata(L, size + sizeof(int));
+  int* is_ptr = block;
+  *is_ptr = 0;
+  block = is_ptr+1;
+  memcpy(&block, ptr, size);
   
   // create metatable
-  luaL_newmetatable(L, type);
+  luaL_getmetatable(L, type);
   lua_setmetatable(L, -2);
   
   return 1;
@@ -97,78 +99,34 @@ int il_Script_typeTable(lua_State* L, const char * str, ...) {
 const char * il_Script_getType(lua_State* L, int idx) {
   int type = lua_type(L, idx);
   if (type == LUA_TUSERDATA) {
-    void * raw_ptr = lua_touserdata(L, idx);
-    if (*(int*)raw_ptr) { // is_pointer
-      il_Script_TypedPointer* ptr = (il_Script_TypedPointer*)raw_ptr;
-      return ptr->type;
-    } else {
-      il_Script_TypedBox* ptr = (il_Script_TypedBox*)raw_ptr;
-      return ptr->type;
-    }
+    // TODO: somehow retrieve metatable name
   }
   return lua_typename(L, type);
 }
 
 void* il_Script_getPointer(lua_State* L, int idx, const char * type, size_t *size) {
-  char * msg = calloc(1, strlen(type) + 10);
-  strcpy(msg, "Expected ");
-  strcat(msg, type);
-  
-  if (!lua_isuserdata(L, idx))
-    goto error;
-  
-  #if LUA_VERSION_NUM >= 502
-  #define lua_objlen lua_rawlen
+  #if LUA_VERSION_NUM < 502
+  #define lua_rawlen lua_objlen
   #endif
   
-  void *raw_ptr = lua_touserdata(L, idx);
-  size_t rawsize = lua_objlen(L, idx);
+  int * is_ptr = luaL_checkudata(L, idx, type);
+  if (size) *size = lua_rawlen(L, idx);
   
-  if (rawsize < sizeof(il_Script_TypedBox) && rawsize < sizeof(il_Script_TypedPointer))
-    goto error;
-  
-  if (*(int*)raw_ptr) { // is_pointer
-    il_Script_TypedPointer* ptr = (il_Script_TypedPointer*)raw_ptr;
-    if (ptr->is_pointer != 1) goto error; // garbage
-    if (strcmp(ptr->type, type) != 0)
-      goto error;
-    
-    if (size)
-      *size = 0;
-    
-    return ptr->ptr;
-  } else {
-    il_Script_TypedBox* ptr = (il_Script_TypedBox*)raw_ptr;
-    if (strcmp(ptr->type, type) != 0)
-      goto error;
-    
-    if (size)
-      *size = ptr->size;
-    
-    return &ptr->data;
-  }
-  
-  error:
-  luaL_argerror(L, idx, msg);
-  return NULL;
+  if (*is_ptr) return *(void**)(is_ptr+1);
+  return is_ptr+1;
 }
+
+char *strndup(const char *s, size_t n);
 
 il_Common_String il_Script_getString(lua_State* L, int idx) {
   il_Common_String s;
-  if (!lua_isstring(L, idx)) {
-    luaL_argerror(L, idx, "Expected string");
-    return (il_Common_String){0, NULL};
-  }
-  s.data = (char*)lua_tolstring(L, idx, (size_t*)&s.length);
+  s.data = (char*)luaL_checklstring(L, idx, (size_t*)&s.length);
+  s.data = strndup(s.data, s.length);
   return s;
 }
 
 double il_Script_getNumber(lua_State* L, int idx) {
-  if (!lua_isnumber(L, idx)) {
-    luaL_argerror(L, idx, "Expected number");
-    return 0.0;
-  }
-  return (double)lua_tonumber(L, idx);
+  return luaL_checknumber(L, idx);
 }
 
 il_Common_String il_Script_toString(lua_State* L, int idx) {

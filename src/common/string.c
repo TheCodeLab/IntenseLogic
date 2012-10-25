@@ -8,7 +8,7 @@ size_t strnlen(const char *s, size_t maxlen);
 
 il_String il_CtoS(const char * s, int len) {
   if (len < 0) return (il_String){strlen(s), s};
-  return (il_String){strnlen(s, len), s};
+  return (il_String){strnlen(s, len)+1, s};
 }
 
 const char *il_StoC(il_String s) {
@@ -29,7 +29,7 @@ il_String il_concatfunc(il_String s, ...) {
   il_String arg = s;
   va_start(va, s);
   while (arg.length) {
-    str.length+=arg.length;
+    str.length+=strnlen(arg.data,arg.length);
     arg = va_arg(va, il_String);
   }
   va_end(va);
@@ -40,8 +40,8 @@ il_String il_concatfunc(il_String s, ...) {
   char *p = (char*)str.data;
   arg = s;
   while (arg.length) {
-    strncpy(p, arg.data, arg.length);
-    p += arg.length;
+    strncpy(p, arg.data, strnlen(arg.data,arg.length));
+    p += strnlen(arg.data,arg.length);
     arg = va_arg(va, il_String);
   }
   va_end(va);
@@ -50,6 +50,8 @@ il_String il_concatfunc(il_String s, ...) {
 }
 
 int il_strcmp(il_String a, il_String b) {
-  if (a.length < b.length) return -1;
-  return strncmp(a.data, b.data, b.length);
+  size_t alen = strnlen(a.data,a.length);
+  size_t blen = strnlen(b.data,b.length);
+  if (alen < blen) return -1;
+  return strncmp(a.data, b.data, blen);
 }

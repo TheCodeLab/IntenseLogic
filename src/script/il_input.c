@@ -9,7 +9,8 @@ static int keydown(lua_State* L) {
   if (lua_isstring(L, 1))
     key = il_Common_Keymap_getkey(lua_tostring(L, 1));
   else if (lua_isnumber(L, 1))
-    key = (int)lua_tonumber(L, 1);
+    key = (int)luaL_checkinteger(L, 1);
+  else luaL_argerror(L, 1, "Expected string or number");
   
   int res = il_Input_isKeySet(key);
   lua_pushboolean(L, res);
@@ -21,7 +22,8 @@ static int mousedown(lua_State* L) {
   if (lua_isstring(L, 1))
     key = il_Common_Keymap_getkey(lua_tostring(L, 1));
   else if (lua_isnumber(L, 1))
-    key = (int)lua_tonumber(L, 1);
+    key = (int)luaL_checkinteger(L, 1);
+  else luaL_argerror(L, 1, "Expected string or number");
   
   int res = il_Input_isButtonSet(key);
   lua_pushboolean(L, res);

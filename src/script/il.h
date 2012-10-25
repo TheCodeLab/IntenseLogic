@@ -3,19 +3,6 @@
 
 typedef void (*il_Script_LuaRegisterFunc)(il_Script_Script*, void * ctx);
 
-typedef struct il_Script_TypedPointer {
-  int is_pointer;
-  const char * type;
-  void * ptr;
-} il_Script_TypedPointer;
-
-typedef struct il_Script_TypedBox {
-  int is_pointer;
-  const char * type;
-  size_t size;
-  uint8_t data[];
-} il_Script_TypedBox;
-
 #define il_Script_startTable(self, l) luaL_newlibtable(self->L, l)
 int il_Script_startMetatable(il_Script_Script* self, const char * name);
 int il_Script_pushFunc(lua_State* L, const char * name, lua_CFunction func);

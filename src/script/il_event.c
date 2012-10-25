@@ -29,8 +29,8 @@ static const char* idtostring(unsigned short num) {
   }
 }
 static int getidstring(lua_State* L) {
-  double n = il_Script_getNumber(L, 1);
-  if (n < 0 || n > 65535) return luaL_argerror(L, 1, "Expected number between 0 and 65535");
+  unsigned n = luaL_checkunsigned(L, 1);
+  if (n > 65535) return luaL_argerror(L, 1, "Expected number under 65535");
   const char * s = idtostring((unsigned short)n);
   if (s) lua_pushlstring(L, s, strlen(s));
   else lua_pushnil(L);
@@ -99,7 +99,7 @@ static int push(lua_State* L) {
 static int timer(lua_State* L) {
   il_Event_Event* self = il_Script_getPointer(L, 1, "event", NULL);
   struct timeval* interval = malloc(sizeof(struct timeval));
-  double n = il_Script_getNumber(L, 2);
+  double n = luaL_checknumber(L, 2);
   interval->tv_sec = (long long)floor(n/1000000.0);
   interval->tv_usec = n;
   il_Event_timer(self, interval);
@@ -146,8 +146,8 @@ static int getid(lua_State* L) {
 static int create(lua_State* L) {
   il_Event_Event e;
   memset(&e, 0, sizeof(il_Event_Event));
-  double n = il_Script_getNumber(L, 1);
-  if (n < 0 || n > 65535) return luaL_argerror(L, 1, "Expected number between 0 and 65535");
+  unsigned n = luaL_checkunsigned(L, 1);
+  if (n > 65535) return luaL_argerror(L, 1, "Expected number between 0 and 65535");
   e.eventid = (unsigned short)n;
   
   return il_Event_wrap(L, &e);
