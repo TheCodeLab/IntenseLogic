@@ -39,9 +39,9 @@ echo "SOURCES: $SOURCES";
 for f in $SOURCES; do
 	obj="../obj/$(basename $f .c).o";
 	echo "$f -> $obj";
-	fmod=$(stat --format=%Y $f);
-	omod=$(stat --format=%Y $obj);
-	if $(test $fmod -gt $omod); then
+	#fmod=$(stat --format=%Y $f);
+	#omod=$(stat --format=%Y $obj);
+        if $(test -e $obj -o $f -nt $obj); then
 		echo "$CC $CFLAGS -c $f -o $obj";
 		$CC $CFLAGS -c $f -o $obj;
 
