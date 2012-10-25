@@ -42,9 +42,7 @@ static int pos_newindex(lua_State* L) {
   il_Common_Positionable* self = il_Script_getPointer(L, 1, "positionable", NULL);
   il_Common_String k = il_Script_getString(L, 2);
   
-  const char * type = il_Script_getType(L, 3);
-  
-  if (strcmp(type, "vector3") == 0) {
+  if (luaL_testudata(L, 3, "vector3")){
     sg_Vector3* v = il_Script_getPointer(L, 3, "vector3", NULL);
     if (il_strcmp(k, il_l("position"))) {
       self->position = *v;
@@ -58,12 +56,14 @@ static int pos_newindex(lua_State* L) {
       self->velocity = *v;
       return 0;
     }
+    return 0;
   }
-  if (il_strcmp(k, il_l("rotation"))) {
+  if (luaL_testudata(L, 3, "quaternion")) {
     sg_Quaternion q = *(sg_Quaternion*)il_Script_getPointer(L, 3, "quaternion", NULL);
     self->rotation = q;
+    return 0;
   }
-  if (il_strcmp(k, il_l("parent"))) {
+  if (luaL_testudata(L, 3, "world")) {
     self->parent = il_Script_getPointer(L, 3, "world", NULL);
     return 0;
   }

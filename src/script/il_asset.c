@@ -1,5 +1,7 @@
 #include "asset/asset.h"
 
+#include <string.h>
+
 #include "script/script.h"
 #include "script/il.h"
 
@@ -11,12 +13,12 @@ static int asset_index(lua_State* L) {
   il_Asset_Asset* self = il_Script_getPointer(L, 1, "asset", NULL);
   il_String key = il_Script_getString(L, 2);
   
-  if (il_strcmp(key, il_l("path"))) {
+  if (il_strcmp(key, il_l("path")) == 0) {
     il_String res = il_Asset_getPath(self);
     lua_pushlstring(L, res.data, res.length);
     return 1;
   }
-  if (il_strcmp(key, il_l("data"))) {
+  if (il_strcmp(key, il_l("data")) == 0) {
     il_String res = il_Asset_readContents(self);
     lua_pushlstring(L, res.data, res.length);
     return 1;
@@ -33,9 +35,7 @@ static int setwritedir(lua_State* L) {
 
 static int registerreaddir(lua_State* L) {
   il_String path = il_Script_getString(L, 1);
-  int priority = 0;
-  if (lua_isnumber(L, 2))
-    priority = luaL_checkinteger(L, 2);
+  int priority = luaL_optinteger(L, 2, 0);
   il_Asset_registerReadDir(path, priority);
   return 0;
 }
