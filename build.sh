@@ -19,7 +19,7 @@ echo "LDFLAGS: $LDFLAGS";
 if $(test "$1" = "mingw"); then
 	EXTENSION=.exe
 	LINKSUFFIX=.dll
-	LDFLAGS="-lmingw32 $LDFLAGS -lws2_32 -static"
+	LDFLAGS="-lmingw32 $LDFLAGS -lws2_32"
 	echo "Target: mingw";
 else
 	LINKSUFFIX=.so

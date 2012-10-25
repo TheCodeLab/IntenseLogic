@@ -16,6 +16,7 @@ void sg_Quaternion_luaGlobals(il_Script_Script* self, void * ctx);
 void il_Event_luaGlobals(il_Script_Script* self, void * ctx);
 void il_Input_luaGlobals(il_Script_Script* self, void * ctx);
 void il_Common_Terrain_luaGlobals(il_Script_Script* self, void * ctx);
+void il_Asset_luaGlobals(il_Script_Script* self, void * ctx);
 
 int sg_Vector2_wrap(lua_State* L, sg_Vector2 v);
 int sg_Vector3_wrap(lua_State* L, sg_Vector3 v);
@@ -26,5 +27,6 @@ int il_Script_Script_wrap(lua_State* L, il_Script_Script* s);
 int il_Common_World_wrap(lua_State* L, il_Common_World * w);
 int il_Event_wrap(lua_State* L, const il_Event_Event* e);
 int il_Common_Terrain_wrap(lua_State* L, il_Common_Terrain* ter);
+int il_Asset_wrap(lua_State* L, il_Asset_Asset* asset);
 
 #endif

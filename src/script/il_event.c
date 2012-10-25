@@ -101,7 +101,7 @@ static int timer(lua_State* L) {
   struct timeval* interval = malloc(sizeof(struct timeval));
   double n = il_Script_getNumber(L, 2);
   interval->tv_sec = (long long)floor(n/1000000.0);
-  interval->tv_usec = (suseconds_t)n;
+  interval->tv_usec = n;
   il_Event_timer(self, interval);
   return 0;
 }
