@@ -114,7 +114,7 @@ void* il_Script_getPointer(lua_State* L, int idx, const char * type, size_t *siz
   strcpy(msg, "Expected ");
   strcat(msg, type);
   
-  if (!lua_isuserdata(L, idx) && !lua_isuserdata(L, idx))
+  if (!lua_isuserdata(L, idx))
     goto error;
   
   #if LUA_VERSION_NUM >= 502

@@ -141,6 +141,7 @@
     <Compile Include="src\script\il_event.c" />
     <Compile Include="src\script\il_input.c" />
     <Compile Include="src\script\il_terrain.c" />
+    <Compile Include="src\script\il_asset.c" />
   </ItemGroup>
   <ProjectExtensions>
     <MonoDevelop>
