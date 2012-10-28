@@ -110,6 +110,7 @@ vecd_cross(4)
 #undef d
 
 void sg_Vector_luaGlobals(il_Script_Script* self, void* ctx) {
+  (void)ctx;
   #define d 2
   #include "vecd_globals.inc"
   #undef d

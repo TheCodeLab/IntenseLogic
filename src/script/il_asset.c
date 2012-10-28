@@ -59,6 +59,7 @@ static int create(lua_State* L) {
 }
 
 void il_Asset_luaGlobals(il_Script_Script* self, void * ctx) {
+  (void)ctx;
   
   luaL_Reg l[] = {
     {"create",          &create               },

@@ -95,6 +95,7 @@ struct il_Graphics_Shape {
 };
 
 static void shape_draw(const il_Graphics_Camera* cam, struct il_Graphics_Drawable3d* drawable, const struct timeval* tv) {
+  (void)tv;
   il_Graphics_Shape * shape = (il_Graphics_Shape*)drawable;
   
   glUseProgram(shape->program);
@@ -122,6 +123,7 @@ static void shape_draw(const il_Graphics_Camera* cam, struct il_Graphics_Drawabl
 il_Graphics_Shape * il_Graphics_Shape_new(il_Common_Positionable * parent, int type) {
   il_Graphics_Shape * shape = calloc(1, sizeof(il_Graphics_Shape));
   shape->type = type;
+  shape->drawable.type = ('P'<<24) + ('R'<<16) + ('I'<<8) + ('M'<<0);
   shape->drawable.positionable = parent;
   shape->drawable.draw = (il_Graphics_Drawable3d_cb)&shape_draw;
   

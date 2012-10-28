@@ -42,10 +42,10 @@ struct il_Network_Connection {
   } state;
 };
 
-#define TEST_ERROR(con, cmp, err, ...) \
+#define TEST_ERROR(con, cmp, ...) \
   if (cmp) { \
     char *str; \
-    asprintf(&str, (err), ##__VA_ARGS__); \
+    asprintf(&str, __VA_ARGS__); \
     (con)->error = str;\
     (con)->state = FAILED;\
     return -1;\
@@ -115,7 +115,7 @@ int il_Network_Connection_read(il_Network_Connection * con, ev_uint32_t * ptag, 
   TEST_ERROR(con, res != 0, "Couldn't read from connection");
   size_t len = evbuffer_get_length(buf);
   *data = calloc(1, len);
-  TEST_ERROR(con, *data == NULL, "Couldn't allocate %u byte buffer", len);
+  TEST_ERROR(con, *data == NULL, "Couldn't allocate %u byte buffer", (unsigned)len);
   evbuffer_copyout(buf, *data, len);
   evbuffer_free(buf);
   return len;
@@ -153,12 +153,19 @@ int il_Network_Connection_setSocket(il_Network_Connection * con, evutil_socket_t
 }
 
 void server_accept(struct evconnlistener * listener, evutil_socket_t fd, struct sockaddr * addr, int socklen, void * ptr) {
+  (void)listener;
+  (void)addr;
+  (void)socklen;
+  (void)ptr;
   il_Network_Connection * con = il_Network_Connection_new();
   if (!con) return;
   il_Network_Connection_setSocket(con, fd, BEV_OPT_CLOSE_ON_FREE);
 }
 
 int il_Network_Connection_bind(il_Network_Connection * con, const char * host, unsigned short port) {
+  (void)con;
+  (void)port;
+  (void)host;
   /*int res;
   
   con->type = SERVER;

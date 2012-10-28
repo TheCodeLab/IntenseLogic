@@ -18,6 +18,7 @@ void il_Script_init(){
   il_Script_registerLuaRegister(&il_Input_luaGlobals, NULL);
   il_Script_registerLuaRegister(&il_Common_Terrain_luaGlobals, NULL);
   il_Script_registerLuaRegister(&il_Asset_luaGlobals, NULL);
+  //il_Script_registerLuaRegister(&il_Graphics_Drawable3d_luaGlobals, NULL);
 }
 
 static int lualog(lua_State* L, int level, int fun) {
@@ -53,7 +54,7 @@ static int lualog(lua_State* L, int level, int fun) {
     il_StoC(str)
   );
   
-  if (level <= il_Common_loglevel)
+  if (level <= (int)il_Common_loglevel)
     printf("%s", lua_tostring(L, -1));
   
   return 1;
@@ -102,6 +103,7 @@ struct reader_ctx {
   il_Common_String source;
 };
 static const char * reader(lua_State* L, void * data, size_t * size) {
+  (void)L;
   struct reader_ctx * ctx = (struct reader_ctx*)data;
   if (ctx->loaded) return NULL;
   *size = ctx->source.length;
@@ -209,6 +211,7 @@ static int create(lua_State* L) {
 }
 
 void il_Script_luaGlobals(il_Script_Script* self, void * ctx) {
+  (void)ctx;
 
   const luaL_Reg l[] = {
     {"create",      &create     },

@@ -27,9 +27,11 @@ il_Event_CallbackContainer *il_Event_Callbacks;
 size_t il_Event_Callbacks_len;
 
 void il_Event_dispatch(evutil_socket_t fd, short events, il_Event_Event * ev) {
+  (void)fd;
+  (void)events;
   /*il_Common_log(5, "Event %i dispatched, %i bytes of data\n", (int)ev->eventid,
     (int)ev->size);*/
-  int i;
+  unsigned i;
   struct il_Event_CallbackContainer* container = NULL;
   for (i = 0; i < il_Event_Callbacks_len; i++) {
     if (il_Event_Callbacks[i].eventid == ev->eventid) {
@@ -86,7 +88,7 @@ int il_Event_timer(const il_Event_Event* event, struct timeval * interval) {
 }
 
 int il_Event_register(uint16_t eventid, il_Event_Callback callback, void * ctx) {
-  int i;
+  unsigned i;
   struct il_Event_CallbackContainer* container = NULL;
   int append = 0;
   for (i = 0; i < il_Event_Callbacks_len; i++) {

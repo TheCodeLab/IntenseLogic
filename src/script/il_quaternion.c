@@ -111,6 +111,7 @@ static int quat_create(lua_State* L) {
 }
 
 void sg_Quaternion_luaGlobals(il_Script_Script* self, void * ctx) {
+  (void)ctx;
 
   const luaL_Reg l[] = {
     {"create",        &quat_create          },

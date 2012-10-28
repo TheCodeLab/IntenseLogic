@@ -38,6 +38,7 @@ static int grabmouse(lua_State* L) {
 }
 
 void il_Input_luaGlobals(il_Script_Script* self, void * ctx) {
+  (void)ctx;
 
   const luaL_Reg l[] = {
     // this is not a typical object, as it does not have instances.

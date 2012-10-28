@@ -7,7 +7,7 @@ echo "Compiler: $CC";
 echo "Linker: $LD";
 
 INCLUDES="$INCLUDES -I."
-CFLAGS="$CFLAGS -Wall -Wextra -g -DDEBUG $INCLUDES"
+CFLAGS="$CFLAGS -Wall -Wextra -pedantic -g -DDEBUG $INCLUDES"
 CFLAGS="$CFLAGS $(pkg-config --cflags sdl) $(pkg-config --cflags libevent) $(pkg-config --cflags glew) $(pkg-config --cflags lua) $(pkg-config --cflags gl)"
 LDFLAGS="$LDFLAGS $(pkg-config --libs sdl) $(pkg-config --libs libevent) $(pkg-config --libs glew) $(pkg-config --libs lua) $(pkg-config --libs gl) -lm -g"
 #LDFLAGS="$LDFLAGS `sdl-config --libs`"

@@ -47,6 +47,9 @@ static void terrain_draw(const il_Graphics_Camera* cam, struct il_Graphics_Drawa
 }
 
 static void heightmap_draw(il_Graphics_Terrain* ter, void* ctx, const il_Graphics_Camera* cam, const struct timeval* tv) {
+  (void)ctx;
+  (void)cam;
+  (void)tv;
   glUseProgram(ter->program);
   
   //activate the heightmap texture

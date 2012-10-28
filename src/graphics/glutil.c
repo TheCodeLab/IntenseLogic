@@ -22,6 +22,29 @@ const char * il_Graphics_strerror(GLenum err) {
   return res;
 }
 
+void il_Graphics_testError_(const char *file, int line, const char *func, 
+  const char* fmt, ...) {
+  GLenum err;
+  if ((err = glGetError()) != GL_NO_ERROR) {
+    fprintf(il_Common_logfile, "%s:%i (%s) %s: ",
+      il_Common_prettifyFile(file),
+      line,
+      func,
+      il_Common_loglevel_tostring(1)
+    );
+  
+    va_list ap;
+    va_start(ap, fmt);
+    vfprintf(il_Common_logfile, fmt, ap);
+    va_end(ap);
+    
+    fprintf(il_Common_logfile, ": %s (%i)",
+      il_Graphics_strerror(err),
+      err
+    );
+  }
+}
+
 GLuint il_Graphics_makeShader(GLenum type, il_Common_String source) {
   GLuint shader = glCreateShader(type);
   IL_GRAPHICS_TESTERROR("Unable to create shader");

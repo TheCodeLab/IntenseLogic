@@ -167,6 +167,7 @@ int il_Asset_delete(il_Asset_Asset* asset) {
 }
 
 unsigned int il_Asset_assetToTexture(il_Asset_Asset *asset) {
+  (void)asset;
   /* return SOIL_load_OGL_texture(il_Common_toC(asset->fullpath), 0, 0, 0); */
   return 1;
 }
