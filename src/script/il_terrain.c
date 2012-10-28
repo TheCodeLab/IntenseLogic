@@ -16,7 +16,7 @@ static int create(lua_State* L) {
   return il_Common_Terrain_wrap(L, il_Common_Terrain_new());
 }
 
-static int index(lua_State* L) {
+static int ter_index(lua_State* L) {
   il_Common_Terrain* ter = (il_Common_Terrain*)il_Script_getPointer(L, 1, "terrain", NULL);
   il_Common_String k = il_Script_getString(L, 2);
   
@@ -61,7 +61,7 @@ static int heightmap(lua_State* L) {
   int w = luaL_checkinteger(L, 2);
   int h = luaL_checkinteger(L, 3);
   if (!lua_istable(L, 4)) luaL_argerror(L, 4, "Expected table");
-  if (lua_rawlen(L, 4) < w*h) 
+  if (lua_rawlen(L, 4) < (size_t)w*(size_t)h) 
     luaL_argerror(L, 4, "Expected table with at least W x H elements");
   
   float* map = calloc(sizeof(float), w*h);
@@ -83,6 +83,7 @@ static int heightmap(lua_State* L) {
 }
 
 void il_Common_Terrain_luaGlobals(il_Script_Script* self, void * ctx) {
+  (void)ctx;
 
   luaL_Reg l[] = {
     {"create",        &create         },
@@ -99,7 +100,7 @@ void il_Common_Terrain_luaGlobals(il_Script_Script* self, void * ctx) {
   il_Script_startTable(self, l);
 
   il_Script_startMetatable(self, "terrain");
-  il_Script_pushFunc(self->L, "__index", &index);
+  il_Script_pushFunc(self->L, "__index", &ter_index);
   
   il_Script_typeTable(self->L, "terrain");
   

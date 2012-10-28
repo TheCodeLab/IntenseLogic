@@ -38,7 +38,7 @@
     </Libs>
     <Commandlineparameters>-v5</Commandlineparameters>
     <WarningLevel>All</WarningLevel>
-    <ExtraCompilerArguments>-std=c99</ExtraCompilerArguments>
+    <ExtraCompilerArguments>-std=c99 -Wextra -pedantic</ExtraCompilerArguments>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <OutputPath>bin\Release</OutputPath>
@@ -142,6 +142,8 @@
     <Compile Include="src\script\il_input.c" />
     <Compile Include="src\script\il_terrain.c" />
     <Compile Include="src\script\il_asset.c" />
+    <Compile Include="src\script\il_drawable.c" />
+    <Compile Include="src\script\il_camera.c" />
   </ItemGroup>
   <ProjectExtensions>
     <MonoDevelop>

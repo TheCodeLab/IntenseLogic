@@ -82,6 +82,7 @@ static int pos_create(lua_State* L) {
 }
 
 void il_Common_Positionable_luaGlobals(il_Script_Script* self, void * ctx) {
+  (void)ctx;
 
   const luaL_Reg l[] = {
     {"create",    &pos_create},

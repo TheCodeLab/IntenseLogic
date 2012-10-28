@@ -23,17 +23,10 @@ const char* il_Common_loglevel_str[6];
 #define il_Common_prettifyFile(name) \
   (strstr(name, "src/")?strstr(name, "src/"):name)
 
-#define il_Common_log(level, format, ...)   \
-  do {                                      \
-    if ((level) <= il_Common_loglevel) {    \
-      fprintf ( il_Common_logfile,          \
-                ("%s:%i (%s) %s: " format "\n"), \
-                il_Common_prettifyFile(__FILE__), \
-                __LINE__,                   \
-                __func__,                   \
-                il_Common_loglevel_tostring(level), \
-                ##__VA_ARGS__ );            \
-    }                                       \
-  } while (0)
+void il_Common_log_(const char* file, int line, const char *func, int level, 
+  const char *fmt, ...);
+
+#define il_Common_log(...) il_Common_log_(__FILE__, __LINE__, __func__, \
+  __VA_ARGS__)
 
 #endif

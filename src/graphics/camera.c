@@ -52,6 +52,8 @@ static void handleMouseMove(il_Event_Event* ev, struct ctx * ctx) {
 }
 
 static void handleTick(il_Event_Event* ev, struct ctx * ctx) {
+  (void)ctx;
+  (void)ev;
   int forward   = il_Input_isKeySet(il_Common_Keymap_getkey(ctx->keymap->camera_backward)) 
                 - il_Input_isKeySet(il_Common_Keymap_getkey(ctx->keymap->camera_forward));
   int leftward  = il_Input_isKeySet(il_Common_Keymap_getkey(ctx->keymap->camera_right)) 
@@ -74,10 +76,14 @@ static void handleTick(il_Event_Event* ev, struct ctx * ctx) {
 
 
 static void mousedown(il_Event_Event* ev, int ctx){
+  (void)ev;
+  (void)ctx;
 	il_Input_GrabMouse(1);	// Grab input and hide cursor
 }
 
 static void mouseup(il_Event_Event* ev, int ctx){
+  (void)ev;
+  (void)ctx;
 	il_Input_GrabMouse(0);	// Release input and show mouse again
 }
 

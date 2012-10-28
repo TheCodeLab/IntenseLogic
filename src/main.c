@@ -53,6 +53,8 @@ const char *help[] = {
 };
 
 void update(il_Event_Event * ev, void * ctx) {
+  (void)ev;
+  (void)ctx;
   SDL_Event sdlEvent;
   while (SDL_PollEvent(&sdlEvent)) {
     switch (sdlEvent.type) {
@@ -100,6 +102,7 @@ void update(il_Event_Event * ev, void * ctx) {
 int running = 1;
 
 void shutdown_callback(il_Event_Event* ev) {
+  (void)ev;
   il_Common_log(3, "Shutting down.");
   event_base_loopbreak(il_Event_base);
 }

@@ -7,6 +7,9 @@ sg_Vector3 move_default ( void **movedata,
                           const struct il_Common_Entity *ent, 
                           sg_Vector3 position, 
                           sg_Vector3 target ) {
+  (void)movedata;
+  (void)ent;
+  (void)position;
   return target;
 }
 
@@ -14,6 +17,9 @@ sg_Vector3 pathfind_default ( void **pathdata,
                               const struct il_Common_Entity *ent, 
                               sg_Vector3 position, 
                               il_Common_EntFocus target ) {
+  (void)pathdata;
+  (void)ent;
+  (void)position;
   switch(target.type) {
     case IL_COMMON_FOCUSPOSITION:
       return *target.target.vector;

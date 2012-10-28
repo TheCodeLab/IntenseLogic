@@ -51,24 +51,31 @@ sg_Vector3 il_Common_Terrain_getNormal(il_Common_Terrain* ter, unsigned x, unsig
 // Heightmaps
 
 static void destruct(il_Common_Terrain* ter, void * ctx) {
+  (void)ctx;
   free(ter->data);
 }
 
 static double heightmap_getPoint(il_Common_Terrain* ter, void * ctx, unsigned x, unsigned y, double height) {
-  if (x >= ter->width || y >= ter->height) return NAN;
+  (void)ctx;
+  (void)height;
+  if ((int)x >= ter->width || (int)y >= ter->height) return NAN;
   return ((float*)(ter->data))[y * ter->width + x];
 }
 
 // http://www.flipcode.com/archives/Calculating_Vertex_Normals_for_Height_Maps.shtml
 static sg_Vector3 heightmap_getNormal(il_Common_Terrain* ter, void * ctx, unsigned x, unsigned y, double z) {
+  (void)ctx;
+  (void)z;
+  
   #define h(x,y) (((float*)ter->data)[y * ter->width + x])
   
-  float sx = h(x<ter->width-1 ? x+1 : x, y) - h(x == 0 ? x-1 : x, y);
-  if (x == 0 || x == ter->width-1)
+  float sx = h((int)x<ter->width-1 ? (int)x+1 : (int)x, (int)y) 
+    - h((int)x == 0 ? (int)x-1 : (int)x, (int)y);
+  if (x == 0 || (int)x == ter->width-1)
     sx *= 2;
 
-  float sy = h(x, y<ter->height-1 ? y+1 : y) - h(x, y == 0 ?  y-1 : y);
-  if (y == 0 || y == ter->height -1)
+  float sy = h((int)x, (int)y<ter->height-1 ? y+1 : y) - h(x, y == 0 ?  y-1 : y);
+  if (y == 0 || (int)y == ter->height -1)
     sy *= 2;
   
   sg_Vector3 v = (sg_Vector3){-sx, 2, sy};

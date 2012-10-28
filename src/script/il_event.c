@@ -154,6 +154,7 @@ static int create(lua_State* L) {
 }
 
 void il_Event_luaGlobals(il_Script_Script* self, void * ctx) {
+  (void)ctx;
 
   const luaL_Reg l[] = {
     {"create",    &create               },

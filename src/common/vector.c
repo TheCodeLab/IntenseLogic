@@ -147,13 +147,13 @@ float sg_Vector4_dot(sg_Vector4 a, sg_Vector4 b) {
 // u = (a,b,c) and v = (p,r,q)
 // u x v = (br-cq,cp-ar,aq-bp)
 sg_Vector4 sg_Vector4_cross(sg_Vector4 a, sg_Vector4 b) {
-  return (sg_Vector4) {a.y*b.z - a.z*b.y, a.z*b.x - a.x*b.z, a.x*b.y - a.y*b.x};
+  return (sg_Vector4) {a.y*b.z - a.z*b.y, a.z*b.x - a.x*b.z, a.x*b.y - a.y*b.x, 1};
 }
 
 sg_Vector4 sg_Vector4_rotate_q(sg_Vector4 v, sg_Quaternion q) {
 
   sg_Vector4 uv, uuv, q_vec;
-  q_vec = (sg_Vector4){q.x, q.y, q.z};
+  q_vec = (sg_Vector4){q.x, q.y, q.z, 1};
   uv = sg_Vector4_cross(q_vec, v);
   uuv = sg_Vector4_cross(q_vec, uv);
   uv = sg_Vector4_mul_f(uv, 2 * q.w);

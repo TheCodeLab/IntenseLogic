@@ -10,12 +10,12 @@
 
 const char * il_Graphics_strerror(GLenum err);
 
-#define IL_GRAPHICS_TESTERROR(str, ...)             \
-  {                                                 \
-    GLenum err;                                     \
-    if ((err = glGetError()) != GL_NO_ERROR)        \
-      il_Common_log(1, str ": %s (%i)", ##__VA_ARGS__, il_Graphics_strerror(err), err); \
-  }
+void il_Graphics_testError_(const char *file, int line, const char *func, 
+  const char* fmt, ...);
+
+#define il_Graphics_testError(...) il_Graphics_testError_(__FILE__, __LINE__, \
+  __func__, __VA_ARGS__);
+#define IL_GRAPHICS_TESTERROR il_Graphics_testError
 
 GLuint il_Graphics_makeShader(GLenum type, il_Common_String source);
 void il_Graphics_linkProgram(GLuint program);

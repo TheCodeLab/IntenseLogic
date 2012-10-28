@@ -12,6 +12,7 @@ typedef void (*il_Graphics_Drawable3d_cb)(const il_Graphics_Camera*,
 struct il_Graphics_Drawable3d*, const struct timeval*);
 
 typedef struct il_Graphics_Drawable3d {
+  int type;
   il_Common_Positionable* positionable;
   //GLuint shader;
   void *drawcontext;
