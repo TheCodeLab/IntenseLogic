@@ -1,5 +1,7 @@
 #include "log.h"
 
+#include <stdarg.h>
+
 const char* il_Common_loglevel_str[] = {"FATAL", "ERROR", "WARNING", "NOTICE", "DEBUG", "FLOOD"};
 
 void il_Common_log_(const char* file, int line, const char *func, int level, 

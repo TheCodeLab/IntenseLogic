@@ -2,6 +2,7 @@
 
 #include <stdlib.h>
 #include <GL/glew.h>
+#include <stdarg.h>
 
 #include "common/matrix.h"
 #include "graphics/camera.h"
