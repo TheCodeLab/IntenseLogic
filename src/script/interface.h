@@ -19,6 +19,7 @@ void il_Input_luaGlobals(il_Script_Script* self, void * ctx);
 void il_Common_Terrain_luaGlobals(il_Script_Script* self, void * ctx);
 void il_Asset_luaGlobals(il_Script_Script* self, void * ctx);
 void il_Graphics_Drawable3d_luaGlobals(il_Script_Script* self, void * ctx);
+void il_Graphics_Camera_luaGlobals(il_Script_Script* self, void * ctx);
 
 int sg_Vector2_wrap(lua_State* L, sg_Vector2 v);
 int sg_Vector3_wrap(lua_State* L, sg_Vector3 v);
@@ -31,5 +32,6 @@ int il_Event_wrap(lua_State* L, const il_Event_Event* e);
 int il_Common_Terrain_wrap(lua_State* L, il_Common_Terrain* ter);
 int il_Asset_wrap(lua_State* L, il_Asset_Asset* asset);
 int il_Graphics_Drawable3d_wrap(lua_State* L, il_Graphics_Drawable3d*);
+int il_Graphics_Camera_wrap(lua_State* L, il_Graphics_Camera* self);
 
 #endif

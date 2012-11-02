@@ -18,7 +18,8 @@ void il_Script_init(){
   il_Script_registerLuaRegister(&il_Input_luaGlobals, NULL);
   il_Script_registerLuaRegister(&il_Common_Terrain_luaGlobals, NULL);
   il_Script_registerLuaRegister(&il_Asset_luaGlobals, NULL);
-  //il_Script_registerLuaRegister(&il_Graphics_Drawable3d_luaGlobals, NULL);
+  il_Script_registerLuaRegister(&il_Graphics_Drawable3d_luaGlobals, NULL);
+  il_Script_registerLuaRegister(&il_Graphics_Camera_luaGlobals, NULL);
 }
 
 static int lualog(lua_State* L, int level, int fun) {

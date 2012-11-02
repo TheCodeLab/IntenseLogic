@@ -122,7 +122,6 @@
     <Compile Include="src\common\terrain.c" />
     <Compile Include="src\common\world.c" />
     <Compile Include="src\graphics\camera.c" />
-    <Compile Include="src\graphics\drawable3d.c" />
     <Compile Include="src\graphics\graphics.c" />
     <Compile Include="src\graphics\graphicsterrain.c" />
     <Compile Include="src\graphics\graphicsworld.c" />

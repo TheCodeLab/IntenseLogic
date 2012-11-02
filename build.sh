@@ -54,6 +54,6 @@ done;
 
 cd ..
 
-echo "$CC obj/*.o $LDFLAGS -o bin/il$EXTENSION"
+echo "$LD obj/*.o $LDFLAGS -o bin/il$EXTENSION"
 $LD obj/*.o $LDFLAGS -o bin/il$EXTENSION
 
