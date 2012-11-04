@@ -5,6 +5,8 @@
 #include "common/string.h"
 #include "common/vector.h"
 #include "common/matrix.h"
+#include "graphics/world.h"
+#include "interface.h"
 
 extern int sg_Vector3_wrap(lua_State* L, sg_Vector3 v);
 int sg_Quaternion_wrap(lua_State* L, sg_Quaternion q);
@@ -28,7 +30,7 @@ static int pos_index(lua_State* L) {
     return sg_Quaternion_wrap(L, self->rotation);
   }
   if (il_strcmp(k, il_l("parent"))) {
-    return 0; // TODO: add world wrapper here
+    return il_Common_World_wrap(L, self->parent);
   }
   
   lua_getglobal(L, "positionable");
@@ -75,8 +77,8 @@ int il_Common_Positionable_wrap(lua_State* L, il_Common_Positionable* p) {
 }
 
 static int pos_create(lua_State* L) {
-  void * world = il_Script_getPointer(L, 1, "world", NULL);
-  il_Common_Positionable* p = il_Common_Positionable_new(world);
+  il_Graphics_World * world = il_Script_getPointer(L, 1, "world", NULL);
+  il_Common_Positionable* p = il_Common_Positionable_new(world->world);
   
   return il_Common_Positionable_wrap(L, p);
 }

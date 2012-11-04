@@ -116,6 +116,52 @@ void* il_Script_getPointer(lua_State* L, int idx, const char * type, size_t *siz
   return is_ptr+1;
 }
 
+void* il_Script_getChild(lua_State* L, int idx, size_t *size, const char * type, ...) {
+  const char pref[] = "Expected ";
+  char * msg = calloc(1, sizeof(pref) + strlen(type));
+  strcpy(msg, pref);
+  strcat(msg, type);
+  luaL_argcheck(L, lua_isuserdata(L, idx), idx, msg);
+  void * ptr = NULL;
+  unsigned i;
+  const char * arg;
+  va_list ap;
+  va_start(ap, type);
+  for (i = 0; arg; i++) {
+    ptr = luaL_testudata(L, idx, arg);
+    if (ptr) break;
+    arg = va_arg(ap, const char*);
+  }
+  if (!ptr) luaL_argerror(L, idx, msg);
+  if (size)
+    *size = lua_rawlen(L, idx);  
+  if (*(int*)ptr) return *(void**)((int*)ptr+1);
+  return (int*)ptr+1;
+}
+
+void* il_Script_getChildT(lua_State* L, int idx, size_t *size, int tidx) {
+  const char pref[] = "Expected ";
+  lua_rawgeti(L, tidx, 1);
+  const char * type = lua_tostring(L, -1);
+  char * msg = calloc(1, sizeof(pref) + strlen(type));
+  strcpy(msg, pref);
+  strcat(msg, type);
+  luaL_argcheck(L, lua_isuserdata(L, idx), idx, msg);
+  void * ptr = NULL;
+  unsigned i;
+  for (i = 0; i < lua_rawlen(L, tidx); i++) {
+    lua_rawgeti(L, tidx, i);
+    ptr = luaL_testudata(L, idx, lua_tostring(L, -1));
+    lua_pop(L, 1);
+    if (ptr) break;
+  }
+  if (!ptr) luaL_argerror(L, idx, msg);
+  if (size)
+    *size = lua_rawlen(L, idx);
+  if (*(int*)ptr) return *(void**)((int*)ptr+1);
+  return (int*)ptr+1;
+}
+
 char *strndup(const char *s, size_t n);
 
 il_Common_String il_Script_getString(lua_State* L, int idx) {
