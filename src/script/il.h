@@ -17,6 +17,8 @@ int il_Script_createMakeHeavy(lua_State* L, size_t size, const void * ptr, const
 
 const char * il_Script_getType(lua_State* L, int idx);
 void* il_Script_getPointer(lua_State* L, int idx, const char * type, size_t *size);
+void* il_Script_getChild(lua_State* L, int idx, size_t *size, const char * type, ...);
+void* il_Script_getChildT(lua_State* L, int idx, size_t *size, int tidx);
 il_Common_String il_Script_getString(lua_State* L, int idx);
 double il_Script_getNumber(lua_State* L, int idx);
 il_Common_String il_Script_toString(lua_State* L, int idx);

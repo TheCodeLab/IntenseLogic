@@ -9,7 +9,7 @@
 #include "script/interface.h"
 
 int il_Common_Terrain_wrap(lua_State* L, il_Common_Terrain* ter) {
-  return il_Script_createMakeLight(L, ter, "terrain");
+  return il_Script_createMakeLight(L, ter, "terraindata");
 }
 
 static int create(lua_State* L) {
@@ -17,7 +17,7 @@ static int create(lua_State* L) {
 }
 
 static int ter_index(lua_State* L) {
-  il_Common_Terrain* ter = (il_Common_Terrain*)il_Script_getPointer(L, 1, "terrain", NULL);
+  il_Common_Terrain* ter = il_Script_getPointer(L, 1, "terraindata", NULL);
   il_Common_String k = il_Script_getString(L, 2);
   
   if (il_strcmp(k, il_l("width"))) {
@@ -37,7 +37,7 @@ static int ter_index(lua_State* L) {
 }
 
 static int getpoint(lua_State* L) {
-  il_Common_Terrain* ter = (il_Common_Terrain*)il_Script_getPointer(L, 1, "terrain", NULL);
+  il_Common_Terrain* ter = il_Script_getPointer(L, 1, "terraindata", NULL);
   unsigned x = luaL_checkunsigned(L, 2);
   unsigned y = luaL_checkunsigned(L, 3);
   double z = luaL_optnumber(L, 4, NAN);
@@ -47,7 +47,7 @@ static int getpoint(lua_State* L) {
 }
 
 static int getnormal(lua_State* L) {
-  il_Common_Terrain* ter = (il_Common_Terrain*)il_Script_getPointer(L, 1, "terrain", NULL);
+  il_Common_Terrain* ter = il_Script_getPointer(L, 1, "terraindata", NULL);
   unsigned x = luaL_checkunsigned(L, 2);
   unsigned y = luaL_checkunsigned(L, 3);
   double z = luaL_optnumber(L, 4, NAN);
@@ -57,7 +57,7 @@ static int getnormal(lua_State* L) {
 }
 
 static int heightmap(lua_State* L) {
-  il_Common_Terrain* ter = (il_Common_Terrain*)il_Script_getPointer(L, 1, "terrain", NULL);
+  il_Common_Terrain* ter = il_Script_getPointer(L, 1, "terraindata", NULL);
   int w = luaL_checkinteger(L, 2);
   int h = luaL_checkinteger(L, 3);
   if (!lua_istable(L, 4)) luaL_argerror(L, 4, "Expected table");
@@ -99,11 +99,11 @@ void il_Common_Terrain_luaGlobals(il_Script_Script* self, void * ctx) {
   
   il_Script_startTable(self, l);
 
-  il_Script_startMetatable(self, "terrain");
+  il_Script_startMetatable(self, "terraindata");
   il_Script_pushFunc(self->L, "__index", &ter_index);
   
-  il_Script_typeTable(self->L, "terrain");
+  il_Script_typeTable(self->L, "terraindata");
   
-  il_Script_endTable(self, l, "terrain");
+  il_Script_endTable(self, l, "terraindata");
 
 }
