@@ -143,6 +143,7 @@
     <Compile Include="src\script\il_asset.c" />
     <Compile Include="src\script\il_drawable.c" />
     <Compile Include="src\script\il_camera.c" />
+    <Compile Include="src\graphics\drawable3d.c" />
   </ItemGroup>
   <ProjectExtensions>
     <MonoDevelop>

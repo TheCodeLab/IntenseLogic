@@ -119,6 +119,9 @@ il_Graphics_Terrain* il_Graphics_Terrain_new(il_Common_Terrain* parent, il_Commo
       break;
     }
   }
+  
+  il_Graphics_Drawable3d_setPositionable(&ter->drawable, positionable);
+  
   return ter;
 }
 

@@ -10,7 +10,7 @@
 
 //#include "graphics/heightmap.h"
 //#include "common/heightmap.h"
-#include "camera.h"
+#include "graphics/camera.h"
 #include "common/event.h"
 #include "common/input.h"
 #include "common/matrix.h"
@@ -20,6 +20,7 @@
 #include "common/log.h"
 #include "graphics/shape.h"
 #include "asset/asset.h"
+#include "common/world.h"
 
 extern unsigned time(unsigned*);
 
@@ -135,25 +136,29 @@ void il_Graphics_init() {
 
 }
 
-void il_Graphics_draw() {
-  /*GLfloat lightPosition[] = {0, 0.5, 0.5, 0.0};
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  glLoadIdentity();
-  glLightfv(GL_LIGHT0, GL_POSITION, lightPosition);
-  //il_Graphics_Camera_translate(il_Graphics_active_world->camera, speed);
-  il_Graphics_Camera_render(il_Graphics_active_world->camera);
-  theta += 0.1;
-  glLightfv(GL_LIGHT0, GL_POSITION, lightPosition);*/
+void il_Graphics_draw()
+{  
+  struct timeval * tv = calloc(1, sizeof(struct timeval));
+  il_Common_Positionable* pos;
+  il_Graphics_Drawable3d* dr;
+  il_Common_WorldIterator* witer = NULL;
+  il_Graphics_Drawable3dIterator* diter;
   
   glClearColor(0,0,0,1);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-  struct timeval * tv = calloc(1, sizeof(struct timeval));
   gettimeofday(tv, NULL);
-
-  //h->drawable.draw(il_Graphics_active_world->camera, &h->drawable, tv);
-  ((il_Graphics_Drawable3d*)shape)->draw(il_Graphics_active_world->camera, (il_Graphics_Drawable3d*)shape, tv);
-
+  
+  while ((pos = il_Common_World_iterate(il_Graphics_active_world->world, 
+    &witer))) {
+  
+    diter = NULL;
+    while ((dr = il_Graphics_Drawable3d_iterate(pos, &diter))) {
+      if (dr->draw) {
+        dr->draw(il_Graphics_active_world->camera, dr, tv);
+      }
+    }
+  }
+  
   SDL_GL_SwapBuffers();
 }
 

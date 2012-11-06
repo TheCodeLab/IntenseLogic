@@ -12,6 +12,7 @@ il_Common_Positionable * il_Common_Positionable_new(il_Common_World * parent) {
   p->rotation = (sg_Quaternion){0,0,0,1};
   parent->refs++;
   p->refs = 1;
+  il_Common_World_add(parent, p);
   return p;
 }
 
