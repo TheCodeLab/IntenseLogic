@@ -19,6 +19,14 @@ typedef struct il_Graphics_Drawable3d {
   il_Graphics_Drawable3d_cb draw;
 } il_Graphics_Drawable3d;
 
+typedef struct il_Graphics_Drawable3dIterator il_Graphics_Drawable3dIterator;
+
+void il_Graphics_Drawable3d_setPositionable(il_Graphics_Drawable3d*, 
+  il_Common_Positionable*);
+
+il_Graphics_Drawable3d* il_Graphics_Drawable3d_iterate(il_Common_Positionable*,
+  il_Graphics_Drawable3dIterator**);
+
 //il_Graphics_Drawable3d * il_Graphics_Drawable3d_new(il_Common_Positionable * parent);
 
 #endif
