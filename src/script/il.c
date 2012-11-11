@@ -164,6 +164,16 @@ void* il_Script_getChildT(lua_State* L, int idx, size_t *size, int tidx) {
 
 char *strndup(const char *s, size_t n);
 
+#ifdef WIN32
+char *strndup(const char *s, size_t n)
+{
+  size_t l = strnlen(s,n);
+  char *buf = calloc(1, l);
+  memcpy(buf, s, l);
+  return buf;
+}
+#endif
+
 il_Common_String il_Script_getString(lua_State* L, int idx) {
   il_Common_String s;
   s.data = (char*)luaL_checklstring(L, idx, (size_t*)&s.length);

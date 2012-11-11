@@ -7,9 +7,16 @@ echo "Compiler: $CC";
 echo "Linker: $LD";
 
 INCLUDES="$INCLUDES -I."
-CFLAGS="$CFLAGS -Wall -Wextra -pedantic -g -DDEBUG $INCLUDES"
-CFLAGS="$CFLAGS $(pkg-config --cflags sdl) $(pkg-config --cflags libevent) $(pkg-config --cflags glew) $(pkg-config --cflags lua) $(pkg-config --cflags gl)"
-LDFLAGS="$LDFLAGS $(pkg-config --libs sdl) $(pkg-config --libs libevent) $(pkg-config --libs glew) $(pkg-config --libs lua) $(pkg-config --libs gl) -lm -g"
+CFLAGS="$CFLAGS -Wall -g -DDEBUG $INCLUDES" #-Wextra -pedantic
+CFLAGS="$CFLAGS $(pkg-config --cflags sdl)"
+CFLAGS="$CFLAGS $(pkg-config --cflags libevent)"
+CFLAGS="$CFLAGS $(pkg-config --cflags glew)"
+CFLAGS="$CFLAGS $(pkg-config --cflags lua)"
+LDFLAGS="$LDFLAGS $(pkg-config --libs sdl)"
+LDFLAGS="$LDFLAGS $(pkg-config --libs libevent)"
+LDFLAGS="$LDFLAGS $(pkg-config --libs glew)"
+LDFLAGS="$LDFLAGS $(pkg-config --libs lua)"
+LDFLAGS="$LDFLAGS -lm -g";
 #LDFLAGS="$LDFLAGS `sdl-config --libs`"
 
 echo "INCLUDES: $INCLUDES";
@@ -19,11 +26,12 @@ echo "LDFLAGS: $LDFLAGS";
 if $(test "$1" = "mingw"); then
 	EXTENSION=.exe
 	LINKSUFFIX=.dll
-	LDFLAGS="-lmingw32 $LDFLAGS -lws2_32"
+	LDFLAGS="-lmingw32 $LDFLAGS -lws2_32 -lopengl32"
 	echo "Target: mingw";
 else
 	LINKSUFFIX=.so
-	LDFLAGS="$LDFLAGS -lc"
+	LDFLAGS="$LDFLAGS -lc $(pkg-config --cflags gl)"
+  CFLAGS="$CFLAGS $(pkg-config --libs gl)"
 	echo "Target: linux";
 fi;
 
