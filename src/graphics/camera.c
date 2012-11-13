@@ -1,8 +1,8 @@
 #include "camera.h"
 
 #include <stdlib.h>
-#include <SDL/SDL.h>
 #include <GL/glew.h>
+#include <GL/glfw.h>
 
 #include "common/keymap.h"
 #include "common/event.h"
@@ -30,7 +30,7 @@ static void handleMouseMove(il_Event_Event* ev, struct ctx * ctx)
 {
   il_Input_MouseMove * mousemove = (il_Input_MouseMove*)ev->data;
   
-  if (!il_Input_isButtonSet(SDL_BUTTON_LEFT)) {
+  if (!il_Input_isButtonSet(GLFW_MOUSE_BUTTON_1)) {
     ctx->first_mouse = 1;
     return;
   }
@@ -70,6 +70,8 @@ static void handleTick(il_Event_Event* ev, struct ctx * ctx) {
                 - il_Input_isKeySet(il_Common_Keymap_getkey(ctx->keymap->camera_left));
   int upward    = il_Input_isKeySet(il_Common_Keymap_getkey(ctx->keymap->camera_up)) 
                 - il_Input_isKeySet(il_Common_Keymap_getkey(ctx->keymap->camera_down));
+  
+  il_Common_log(5, "Camera moving for=%i lef=%i upw=%i", forward, leftward, upward);
   
   if (forward == 0 && leftward == 0 && upward == 0) return;
   il_Common_log(5, "Moving camera.");

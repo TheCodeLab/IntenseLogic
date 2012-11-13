@@ -4,8 +4,7 @@
 #include <time.h>
 #include <sys/time.h>
 #include <GL/glew.h>
-
-#include <SDL/SDL.h>
+#include <GL/glfw.h>
 #include <sys/time.h>
 
 //#include "graphics/heightmap.h"
@@ -26,7 +25,6 @@
 
 extern unsigned time(unsigned*);
 
-SDL_Surface* canvas;
 int width = 800;
 int height = 600;
 il_Common_World* world;
@@ -38,6 +36,38 @@ void il_Graphics_quit();
 static GLvoid error_cb(GLenum source, GLenum type, GLuint id, GLenum severity, 
   GLsizei length, const GLchar* message, GLvoid* userParam);
 
+static void GLFWCALL key_cb(int key, int action)
+{
+  il_Common_log(4, "Key %c", key);
+  if (action == GLFW_PRESS)
+    il_Event_pushnew(IL_INPUT_KEYDOWN, sizeof(int), &key);
+  else
+    il_Event_pushnew(IL_INPUT_KEYUP, sizeof(int), &key);
+}
+
+static void GLFWCALL mouse_cb(int button, int action)
+{
+  //il_Common_log(4, "Mouse %i", button);
+  if (action == GLFW_PRESS)
+    il_Event_pushnew(IL_INPUT_MOUSEDOWN, sizeof(int), &button);
+  else
+    il_Event_pushnew(IL_INPUT_MOUSEUP, sizeof(int), &button);
+}
+
+static void GLFWCALL mousemove_cb(int x, int y)
+{
+  il_Input_MouseMove mousemove = 
+    (il_Input_MouseMove){x, y};
+  il_Event_pushnew(IL_INPUT_MOUSEMOVE, sizeof(il_Input_MouseMove), &mousemove);
+}
+
+static void GLFWCALL mousewheel_cb(int pos)
+{
+  il_Input_MouseWheel mousewheel = 
+    (il_Input_MouseWheel){0, pos};
+  il_Event_pushnew(IL_INPUT_MOUSEWHEEL, sizeof(il_Input_MouseWheel), &mousewheel);
+}
+
 void il_Graphics_init() 
 {
   srand((unsigned)time(NULL)); //temp
@@ -45,16 +75,37 @@ void il_Graphics_init()
   keymap = calloc(sizeof(il_Common_Keymap), 1);
   il_Common_Keymap_defaults(keymap);
   il_Common_Keymap_parse("keymap.ini", keymap);
-  il_Common_log(3, "camera: %s %s %s %s %s %s", keymap->camera_up, keymap->camera_down, keymap->camera_left, keymap->camera_right, keymap->camera_forward, keymap->camera_backward);
+  il_Common_log(3, "camera: %s %s %s %s %s %s", keymap->camera_up, 
+    keymap->camera_down, keymap->camera_left, keymap->camera_right, 
+    keymap->camera_forward, keymap->camera_backward);
   
-  // initialise SDL and create a window
-  SDL_Init(SDL_INIT_EVERYTHING);
-  canvas = SDL_SetVideoMode(width, height, 32, SDL_OPENGL| SDL_HWSURFACE);
-
-  SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
-  SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
-  SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8); 
-  SDL_GL_SetAttribute(SDL_GL_BUFFER_SIZE, 32);
+  if (!glfwInit()) {
+    il_Common_log(0, "glfwInit() failed");
+    abort();
+  }
+  
+  {
+    int major, minor, rev;
+    glfwGetVersion(&major, &minor, &rev);
+    il_Common_log(3, "Using GLFW version %i.%i.%i", major, minor, rev);
+  }
+  
+  glfwOpenWindowHint(GLFW_OPENGL_VERSION_MAJOR, 3);
+  glfwOpenWindowHint(GLFW_OPENGL_VERSION_MINOR, 1);
+  #ifdef DEBUG
+  glfwOpenWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
+  #endif
+  
+  if (!glfwOpenWindow(width, height, 8, 8, 8, 8, 32, 8, GLFW_WINDOW)) {
+    il_Common_log(0, "glfwOpenWindow() failed");
+    abort();
+  }
+  
+  // register glfw stuff
+  glfwSetCharCallback(&key_cb);
+  glfwSetMouseButtonCallback(&mouse_cb);
+  glfwSetMousePosCallback(&mousemove_cb);
+  glfwSetMouseWheelCallback(&mousewheel_cb);
   
   // GLEW
   GLenum err = glewInit();
@@ -73,10 +124,10 @@ void il_Graphics_init()
 #endif
   
   if (GLEW_ARB_debug_output) {
-    glDebugMessageCallbackARB(&error_cb, NULL);
+    glDebugMessageCallbackARB((GLDEBUGPROCARB)&error_cb, NULL);
     il_Common_log(3, "ARB_debug_output present, enabling advanced errors");
   } else
-    il_Common_log(2, "ARB_debug_output missing");
+    il_Common_log(3, "ARB_debug_output missing");
   
   // setup our shader directory
   il_Asset_registerReadDir(il_Common_fromC("shaders"),0);
@@ -126,15 +177,17 @@ void il_Graphics_init()
   il_Graphics_Terrain_new(ter, il_Common_Positionable_new(world));
   */
   
-  // start the frame timer
-  struct timeval * frame = calloc(1, sizeof(struct timeval));
-  *frame = (struct timeval){0, IL_GRAPHICS_TICK_LENGTH};
-  il_Event_timer(il_Event_new(IL_GRAPHICS_TICK, 0, NULL), frame);
-
+  glfwSwapInterval(1); // 1:1 ratio of frames to vsyncs
+  il_Event_pushnew(IL_GRAPHICS_TICK, 0, NULL); // kick off the draw loop
 }
 
 void il_Graphics_draw()
 {  
+  if (!glfwGetWindowParam(GLFW_OPENED)) {
+    il_Event_pushnew(IL_BASE_SHUTDOWN, 0, NULL);
+    return;
+  }
+  il_Common_log(5, "Rendering frame");
   struct timeval * tv = calloc(1, sizeof(struct timeval));
   il_Common_Positionable* pos;
   il_Graphics_Drawable3d* dr;
@@ -156,7 +209,8 @@ void il_Graphics_draw()
     }
   }
   
-  SDL_GL_SwapBuffers();
+  glfwSwapBuffers(); // locks until the next vsync, hopefully
+  il_Event_pushnew(IL_GRAPHICS_TICK, 0, NULL); // render another frame
 }
 
 static GLvoid error_cb(GLenum source, GLenum type, GLuint id, GLenum severity, 
@@ -170,7 +224,7 @@ static GLvoid error_cb(GLenum source, GLenum type, GLuint id, GLenum severity,
   switch(source) {
     case GL_DEBUG_SOURCE_API_ARB: ssource="API"; break;
     case GL_DEBUG_SOURCE_WINDOW_SYSTEM_ARB: ssource="Window System"; break;
-    case GL_DEBUG_SOURCE_SHADER_COMPILER_ARB: ssource="Shader Compile"; break;
+    case GL_DEBUG_SOURCE_SHADER_COMPILER_ARB: ssource="Shader Compiler"; break;
     case GL_DEBUG_SOURCE_THIRD_PARTY_ARB: ssource="Third Party"; break;
     case GL_DEBUG_SOURCE_APPLICATION_ARB: ssource="Application"; break;
     case GL_DEBUG_SOURCE_OTHER_ARB: ssource="Other"; break;
@@ -201,5 +255,5 @@ static GLvoid error_cb(GLenum source, GLenum type, GLuint id, GLenum severity,
 
 void il_Graphics_quit() 
 {
-  SDL_Quit();
+  glfwTerminate();
 }
