@@ -178,7 +178,11 @@ void il_Graphics_init()
   */
   
   glfwSwapInterval(1); // 1:1 ratio of frames to vsyncs
-  il_Event_pushnew(IL_GRAPHICS_TICK, 0, NULL); // kick off the draw loop
+  
+  int hz = glfwGetWindowParam(GLFW_REFRESH_RATE);
+  struct timeval *tv = calloc(1, sizeof(struct timeval));
+  tv->tv_usec = hz>0? 1000000.0/hz : 1000000.0/60;
+  il_Event_timer(il_Event_new(IL_GRAPHICS_TICK, 0, NULL), tv); // kick off the draw loop
 }
 
 void il_Graphics_draw()
@@ -187,7 +191,7 @@ void il_Graphics_draw()
     il_Event_pushnew(IL_BASE_SHUTDOWN, 0, NULL);
     return;
   }
-  il_Common_log(5, "Rendering frame");
+  //il_Common_log(5, "Rendering frame");
   struct timeval * tv = calloc(1, sizeof(struct timeval));
   il_Common_Positionable* pos;
   il_Graphics_Drawable3d* dr;
@@ -209,8 +213,7 @@ void il_Graphics_draw()
     }
   }
   
-  glfwSwapBuffers(); // locks until the next vsync, hopefully
-  il_Event_pushnew(IL_GRAPHICS_TICK, 0, NULL); // render another frame
+  glfwSwapBuffers();
 }
 
 static GLvoid error_cb(GLenum source, GLenum type, GLuint id, GLenum severity, 
