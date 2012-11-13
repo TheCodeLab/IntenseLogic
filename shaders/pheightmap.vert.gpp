@@ -1,0 +1,13 @@
+VERSION
+
+#include "noise2D.glsl"
+
+uniform mat4 transform;
+uniform ivec2 center;
+in      ivec2 in_Position;
+
+void main() 
+{
+    gl_Position = transform * vec4(in_Position.x, snoise(center + in_Position), in_Position.y, 1.0);
+}
+

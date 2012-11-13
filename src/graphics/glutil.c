@@ -14,7 +14,9 @@ const char * il_Graphics_strerror(GLenum err) {
     case GL_NO_ERROR:           res = "GL_NO_ERROR"; break;
     case GL_INVALID_ENUM:       res = "GL_INVALID_ENUM"; break;
     case GL_INVALID_VALUE:      res = "GL_INVALID_VALUE"; break;
-    case GL_INVALID_OPERATION:  res = "GL_INVALID_FRAMEBUFFER_OPERATION"; break;
+    case GL_INVALID_OPERATION:  res = "GL_INVALID_OPERATION"; break;
+    case GL_INVALID_FRAMEBUFFER_OPERATION:  
+      res = "GL_INVALID_FRAMEBUFFER_OPERATION"; break;
     case GL_OUT_OF_MEMORY:      res = "GL_OUT_OF_MEMORY"; break;
     case GL_STACK_OVERFLOW:     res = "GL_STACK_OVERFLOW"; break;
     case GL_STACK_UNDERFLOW:    res = "GL_STACK_UNDERFLOW"; break;
@@ -43,6 +45,8 @@ void il_Graphics_testError_(const char *file, int line, const char *func,
       il_Graphics_strerror(err),
       err
     );
+    
+    fputc('\n', il_Common_logfile);
   }
 }
 
@@ -109,6 +113,7 @@ void il_Graphics_linkProgram(GLuint program) {
 void il_Graphics_bindUniforms(GLuint program, const il_Graphics_Camera * camera, const il_Common_Positionable * object) {
   GLint utransform;
   utransform = glGetUniformLocation(program, "transform");
+  il_Graphics_testError("glGetUniformLocation failed");
   
   sg_Matrix cam = sg_Matrix_mul(
     sg_Matrix_translate(camera->positionable->position),
@@ -136,4 +141,5 @@ void il_Graphics_bindUniforms(GLuint program, const il_Graphics_Camera * camera,
   ));
   
   glUniformMatrix4fv(utransform, 1, GL_TRUE, (const GLfloat*)&mat.data);
+  il_Graphics_testError("glUniformMatrix4fv failed");
 }

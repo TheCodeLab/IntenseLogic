@@ -21,26 +21,25 @@
 #include "graphics/shape.h"
 #include "asset/asset.h"
 #include "common/world.h"
+#include "graphics/terrain.h"
+#include "common/terrain.h"
 
 extern unsigned time(unsigned*);
 
 SDL_Surface* canvas;
 int width = 800;
 int height = 600;
-float heights[4] = {100, 0,0,0}; //temp
-//il_Graphics_Heightmap* h;
-float theta;
-sg_Vector3 speed;
 il_Common_World* world;
 il_Common_Keymap * keymap;
 il_Graphics_Shape* shape;
 
-/*static void handleKeyDown(il_Event_Event* ev);
-static void handleKeyUp(il_Event_Event* ev);*/
 void il_Graphics_draw();
 void il_Graphics_quit();
+static GLvoid error_cb(GLenum source, GLenum type, GLuint id, GLenum severity, 
+  GLsizei length, const GLchar* message, GLvoid* userParam);
 
-void il_Graphics_init() {
+void il_Graphics_init() 
+{
   srand((unsigned)time(NULL)); //temp
   
   keymap = calloc(sizeof(il_Common_Keymap), 1);
@@ -58,19 +57,26 @@ void il_Graphics_init() {
   SDL_GL_SetAttribute(SDL_GL_BUFFER_SIZE, 32);
   
   // GLEW
-      GLenum err = glewInit();
-#ifndef __APPLE__
-      if (GLEW_OK != err) {
-        il_Common_log(0, "glewInit() failed: %s", glewGetErrorString(err));
-        abort();
-      }
-      il_Common_log(3, "Using GLEW %s", glewGetString(GLEW_VERSION));
+  GLenum err = glewInit();
 
-      if (!GLEW_VERSION_3_1) {
-        il_Common_log(0, "GL version 3.1 is required.");
-        abort();
-      }
+  if (GLEW_OK != err) {
+    il_Common_log(0, "glewInit() failed: %s", glewGetErrorString(err));
+    abort();
+  }
+  il_Common_log(3, "Using GLEW %s", glewGetString(GLEW_VERSION));
+
+#ifndef __APPLE__
+  if (!GLEW_VERSION_3_1) {
+    il_Common_log(1, "GL version 3.1 is required, trying anyway");
+    //abort();
+  }
 #endif
+  
+  if (GLEW_ARB_debug_output) {
+    glDebugMessageCallbackARB(&error_cb, NULL);
+    il_Common_log(3, "ARB_debug_output present, enabling advanced errors");
+  } else
+    il_Common_log(2, "ARB_debug_output missing");
   
   // setup our shader directory
   il_Asset_registerReadDir(il_Common_fromC("shaders"),0);
@@ -81,44 +87,25 @@ void il_Graphics_init() {
   glDepthFunc(GL_LESS);
   glEnable(GL_DEPTH_TEST);
   
-  // immediate mode stuff
-  /*glFrontFace(GL_CW);
-  glClearColor(0, 0, 0, 0);
-  glClearDepth(1.0);
-  glDepthFunc(GL_LESS);
-  glEnable(GL_DEPTH_TEST);
-  glShadeModel(GL_FLAT);
-  glViewport(0, 0, width, height);
-  glMatrixMode(GL_PROJECTION);
-  glLoadIdentity();
-  glFrustum(-2, 2, -1, 1, 1.0f, 1000.0f);
-  glMatrixMode(GL_MODELVIEW);
-  glEnable(GL_TEXTURE_2D);
-  glLoadIdentity();
-  GLfloat diffuse[] = { 1.0, 1.0, 1.0};
-  GLfloat lightPosition[] = {0, 0.5, 0.5, 0.0};
-  glLightfv(GL_LIGHT0, GL_DIFFUSE, diffuse);
-  glLightfv(GL_LIGHT0, GL_SPECULAR, diffuse);
-  glLightfv(GL_LIGHT0, GL_POSITION, lightPosition);
-  glEnable(GL_LIGHTING);
-  glEnable(GL_LIGHT0);*/
-
-  // demo code that needs to go away someday
-  speed = (sg_Vector3){0, 0, 0};
-  
   // register events
-  il_Event_register(IL_GRAPHICS_TICK, (il_Event_Callback)&il_Graphics_draw, NULL);
-  il_Event_register(IL_BASE_SHUTDOWN, (il_Event_Callback)&il_Graphics_quit, NULL);
+  il_Event_register(IL_GRAPHICS_TICK, (il_Event_Callback)&il_Graphics_draw, 
+    NULL);
+  il_Event_register(IL_BASE_SHUTDOWN, (il_Event_Callback)&il_Graphics_quit, 
+    NULL);
   
   // create the world
   world = il_Common_World_new();
   il_Graphics_active_world = il_Graphics_World_new_world(world);
-  il_Graphics_active_world->camera = il_Graphics_Camera_new(il_Common_Positionable_new(world));
+  il_Graphics_active_world->camera = il_Graphics_Camera_new(
+    il_Common_Positionable_new(world));
   il_Graphics_active_world->camera->movespeed = (sg_Vector3){1,1,1};
-  il_Graphics_active_world->camera->projection_matrix = sg_Matrix_perspective(75, (float)width/(float)height, 0.25, 100);
-  il_Graphics_Camera_setEgoCamKeyHandlers(il_Graphics_active_world->camera, keymap);
+  il_Graphics_active_world->camera->projection_matrix = sg_Matrix_perspective(
+    75, (float)width/(float)height, 0.25, 100);
+  il_Graphics_Camera_setEgoCamKeyHandlers(il_Graphics_active_world->camera, 
+    keymap);
   
-  il_Common_Positionable * shape_positionable = il_Common_Positionable_new(world);
+  il_Common_Positionable * shape_positionable = il_Common_Positionable_new(
+    world);
   shape_positionable->position = (sg_Vector3){1,0,0};
   shape = il_Graphics_Shape_new(
     shape_positionable,
@@ -128,6 +115,16 @@ void il_Graphics_init() {
     il_Common_log(0, "Failed to create demo shape");
     abort();
   }
+  
+  /*il_Common_Terrain *ter = il_Common_Terrain_new();
+  il_Common_Terrain_heightmapFromSeed(
+    ter,
+    0xD34DB33F, // seed, does nothing atm
+    1.0, // resolution
+    100 //viewdistance
+  );
+  il_Graphics_Terrain_new(ter, il_Common_Positionable_new(world));
+  */
   
   // start the frame timer
   struct timeval * frame = calloc(1, sizeof(struct timeval));
@@ -162,36 +159,47 @@ void il_Graphics_draw()
   SDL_GL_SwapBuffers();
 }
 
-/*static void handleKeyDown(il_Event_Event* ev) {
-  int keyCode = *(int*)&ev->data;
-  if (keyCode == SDLK_LEFT || keyCode == SDLK_a) {
-    speed.x = -0.1f;
-  } else if (keyCode == SDLK_RIGHT || keyCode == SDLK_d) {
-    speed.x = 0.1f;
+static GLvoid error_cb(GLenum source, GLenum type, GLuint id, GLenum severity, 
+  GLsizei length, const GLchar* message, GLvoid* user)
+{
+  /* severity is one of:
+  DEBUG_SEVERITY_HIGH_ARB, DEBUG_SEVERITY_MEDIUM_ARB, DEBUG_SEVERITY_LOW_ARB
+  */
+  (void)id, (void)severity, (void)length, (void)user;
+  const char *ssource;
+  switch(source) {
+    case GL_DEBUG_SOURCE_API_ARB: ssource="API"; break;
+    case GL_DEBUG_SOURCE_WINDOW_SYSTEM_ARB: ssource="Window System"; break;
+    case GL_DEBUG_SOURCE_SHADER_COMPILER_ARB: ssource="Shader Compile"; break;
+    case GL_DEBUG_SOURCE_THIRD_PARTY_ARB: ssource="Third Party"; break;
+    case GL_DEBUG_SOURCE_APPLICATION_ARB: ssource="Application"; break;
+    case GL_DEBUG_SOURCE_OTHER_ARB: ssource="Other"; break;
+    default: ssource="???";
   }
-  if (keyCode == SDLK_r) {
-    speed.y = 0.1f;
-  } else if (keyCode == SDLK_f) {
-    speed.y = -0.1f;
+  const char *stype;
+  switch(type) {
+    case GL_DEBUG_TYPE_ERROR_ARB: stype="Error"; break;
+    case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR_ARB: 
+      stype="Deprecated Behaviour"; break;
+    case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR_ARB: 
+      stype="Undefined Behaviour"; break;
+    case GL_DEBUG_TYPE_PORTABILITY_ARB: stype="Portability"; break;
+    case GL_DEBUG_TYPE_PERFORMANCE_ARB: stype="Performance"; break;
+    case GL_DEBUG_TYPE_OTHER_ARB: stype="Other"; break;
+    default: stype="???";
   }
-  if (keyCode == SDLK_DOWN || keyCode == SDLK_s) {
-    speed.z = 0.1f;
-  } else if (keyCode == SDLK_UP || keyCode == SDLK_w) {
-    speed.z = -0.1f;
+  const char *sseverity;
+  switch(severity) {
+    case GL_DEBUG_SEVERITY_HIGH_ARB: sseverity="HIGH"; break;
+    case GL_DEBUG_SEVERITY_MEDIUM_ARB: sseverity="MEDIUM"; break;
+    case GL_DEBUG_SEVERITY_LOW_ARB: sseverity="LOW"; break;
+    default: sseverity="???";
   }
+  fprintf(il_Common_logfile, "OpenGL %s (%s) %s: %s\n", ssource, stype, 
+    sseverity, message);
 }
 
-static void handleKeyUp(il_Event_Event* ev) {
-  int keyCode = *(int*)&ev->data;
-  if (keyCode == SDLK_LEFT || keyCode == SDLK_RIGHT || keyCode == SDLK_a || keyCode == SDLK_d) {
-    speed.x = 0;
-  } else if (keyCode == SDLK_r || keyCode == SDLK_f) {
-    speed.y = 0;
-  } else if (keyCode == SDLK_DOWN || keyCode == SDLK_UP || keyCode == SDLK_w || keyCode == SDLK_s) {
-    speed.z = 0;
-  }
-}*/
-
-void il_Graphics_quit() {
+void il_Graphics_quit() 
+{
   SDL_Quit();
 }

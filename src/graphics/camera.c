@@ -23,12 +23,22 @@ il_Graphics_Camera* il_Graphics_Camera_new(il_Common_Positionable * parent) {
 struct ctx {
   il_Graphics_Camera* camera;
   il_Common_Keymap* keymap;
+  int first_mouse;
 };
 
-static void handleMouseMove(il_Event_Event* ev, struct ctx * ctx) {
+static void handleMouseMove(il_Event_Event* ev, struct ctx * ctx) 
+{
   il_Input_MouseMove * mousemove = (il_Input_MouseMove*)ev->data;
   
-  if (!il_Input_isButtonSet(SDL_BUTTON_LEFT)) return;
+  if (!il_Input_isButtonSet(SDL_BUTTON_LEFT)) {
+    ctx->first_mouse = 1;
+    return;
+  }
+  // ignore the first mouse move because of weird behaviour on windows
+  if (ctx->first_mouse) {
+    ctx->first_mouse = 0;
+    return;
+  }
   
   il_Common_log(5, "MouseMove: %i %i", mousemove->x, mousemove->y);
   
