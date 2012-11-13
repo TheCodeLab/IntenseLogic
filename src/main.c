@@ -88,6 +88,7 @@ static void update(il_Event_Event * ev, void * ctx)
   (void)ev;
   (void)ctx;
   glfwPollEvents();
+  //il_Common_log(5, "tick");
 }
 
 int running = 1;

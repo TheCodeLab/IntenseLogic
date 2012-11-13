@@ -71,7 +71,7 @@ static void handleTick(il_Event_Event* ev, struct ctx * ctx) {
   int upward    = il_Input_isKeySet(il_Common_Keymap_getkey(ctx->keymap->camera_up)) 
                 - il_Input_isKeySet(il_Common_Keymap_getkey(ctx->keymap->camera_down));
   
-  il_Common_log(5, "Camera moving for=%i lef=%i upw=%i", forward, leftward, upward);
+  //il_Common_log(5, "Camera moving for=%i lef=%i upw=%i", forward, leftward, upward);
   
   if (forward == 0 && leftward == 0 && upward == 0) return;
   il_Common_log(5, "Moving camera.");
