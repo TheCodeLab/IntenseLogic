@@ -8,7 +8,7 @@
 #define IL_INPUT_MOUSEUP    ((IL_INPUT_RANGE << 8) + 3) // int
 #define IL_INPUT_MOUSEMOVE  ((IL_INPUT_RANGE << 8) + 4) // il_Input_MouseMove
 #define IL_INPUT_MOUSEWHEEL ((IL_INPUT_RANGE << 8) + 5) // il_Input_MouseWheel
-// note: the UP/DOWN functions use the SDL return values.
+// note: the UP/DOWN functions use the glfw values.
 
 typedef struct il_Input_MouseMove {
   int x, y;

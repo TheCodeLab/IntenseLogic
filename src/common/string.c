@@ -10,8 +10,6 @@ size_t strnlen(const char *s, size_t maxlen);
 size_t strnlen(const char *str, size_t maxlen)
 {
   const char *char_ptr, *end_ptr = str + maxlen;
-  const unsigned long int *longword_ptr;
-  unsigned long int longword, himagic, lomagic;
 
   if (maxlen == 0)
     return 0;

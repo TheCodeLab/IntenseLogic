@@ -165,6 +165,7 @@ void* il_Script_getChildT(lua_State* L, int idx, size_t *size, int tidx) {
 char *strndup(const char *s, size_t n);
 
 #ifdef WIN32
+size_t strnlen(const char *s, size_t maxlen);
 char *strndup(const char *s, size_t n)
 {
   size_t l = strnlen(s,n);

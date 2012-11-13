@@ -6,8 +6,9 @@
 #include "time.h"
 #include <event2/event.h>
 #include <string.h>
+#include <GL/glew.h>
+#include <GL/glfw.h>
 
-#include "SDL/SDL.h"
 #include "common/base.h"
 #include "common/input.h"
 #include "common/event.h"
@@ -52,51 +53,41 @@ const char *help[] = {
   NULL
 };
 
-void update(il_Event_Event * ev, void * ctx) {
+static void GLFWCALL key_cb(int key, int action)
+{
+  if (action == GLFW_PRESS)
+    il_Event_pushnew(IL_INPUT_KEYDOWN, sizeof(int), &key);
+  else
+    il_Event_pushnew(IL_INPUT_KEYUP, sizeof(int), &key);
+}
+
+static void GLFWCALL mouse_cb(int button, int action)
+{
+  if (action == GLFW_PRESS)
+    il_Event_pushnew(IL_INPUT_MOUSEDOWN, sizeof(int), &button);
+  else
+    il_Event_pushnew(IL_INPUT_MOUSEUP, sizeof(int), &button);
+}
+
+static void GLFWCALL mousemove_cb(int x, int y)
+{
+  il_Input_MouseMove mousemove = 
+    (il_Input_MouseMove){x, y};
+  il_Event_pushnew(IL_INPUT_MOUSEMOVE, sizeof(il_Input_MouseMove), &mousemove);
+}
+
+static void GLFWCALL mousewheel_cb(int pos)
+{
+  il_Input_MouseWheel mousewheel = 
+    (il_Input_MouseWheel){0, pos};
+  il_Event_pushnew(IL_INPUT_MOUSEWHEEL, sizeof(il_Input_MouseWheel), &mousewheel);
+}
+
+static void update(il_Event_Event * ev, void * ctx) 
+{
   (void)ev;
   (void)ctx;
-  SDL_Event sdlEvent;
-  while (SDL_PollEvent(&sdlEvent)) {
-    switch (sdlEvent.type) {
-      case (SDL_QUIT): {
-        il_Event_pushnew(IL_BASE_SHUTDOWN, 0, NULL);
-        break;
-      }
-      case (SDL_KEYDOWN): {
-        il_Event_pushnew(IL_INPUT_KEYDOWN, sizeof(int), &sdlEvent.key.keysym.sym);
-        break;
-      }
-      case (SDL_KEYUP): {
-        il_Event_pushnew(IL_INPUT_KEYUP, sizeof(int), &sdlEvent.key.keysym.sym);
-        break;
-      }
-      case (SDL_MOUSEMOTION): {
-        il_Input_MouseMove mousemove = 
-          (il_Input_MouseMove){sdlEvent.motion.xrel, sdlEvent.motion.yrel};
-        // the provided data pointer is memcpy'd and not preserved after its 
-        // stack frame exits, so this is fine
-        il_Event_pushnew(IL_INPUT_MOUSEMOVE, sizeof(il_Input_MouseMove), &mousemove);
-        break;
-      }
-      /*case (SDL_MOUSEWHEEL): {
-        il_Input_MouseWheel mousewheel = 
-          (il_Input_MouseWheel){sdlEvent.wheel.x, sdlEvent.wheel.y};
-        il_Event_pushnew(IL_INPUT_MOUSEWHEEL, sizeof(il_Input_MouseWheel), &mousewheel);
-        break;
-      }*/
-      case (SDL_MOUSEBUTTONDOWN): {
-        int button = sdlEvent.button.button;
-        il_Event_pushnew(IL_INPUT_MOUSEDOWN, sizeof(int), &button);
-        break;
-      }
-      case (SDL_MOUSEBUTTONUP): {
-        int button = sdlEvent.button.button;
-        il_Event_pushnew(IL_INPUT_MOUSEUP, sizeof(int), &button);
-        break;
-      }
-      default: break;
-    }
-  }
+  glfwPollEvents();
 }
 
 int running = 1;
@@ -142,8 +133,8 @@ char *strtok_r(char *str, const char *delim, char **nextp)
 }
 #endif
 
-int main(int argc, char **argv) {
-  
+int main(int argc, char **argv) 
+{  
   #if defined(WIN32) && !defined(DEBUG)
   il_Common_logfile = fopen("nul", "w");
   #else
@@ -224,6 +215,12 @@ int main(int argc, char **argv) {
   WSADATA WSAData;
   WSAStartup(0x101, &WSAData);
   #endif
+  
+  // register glfw stuff
+  glfwSetKeyCallback(&key_cb);
+  glfwSetMouseButtonCallback(&mouse_cb);
+  glfwSetMousePosCallback(&mousemove_cb);
+  glfwSetMouseWheelCallback(&mousewheel_cb);
   
   // initialise engine
   il_Common_init();
