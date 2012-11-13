@@ -30,8 +30,7 @@ void il_Graphics_Drawable3d_setPositionable(il_Graphics_Drawable3d* self,
   if (entry != NULL) {
     for (i = 0; i < entry->len; i++) {
       if (entry->data[i] == self) {
-        memmove(entry->data + i, entry->data + i + 1, 
-          sizeof(il_Graphics_Drawable3d) * (--entry->len - i));
+        entry->data[i] = entry->data[--entry->len];
         entry->data = realloc(entry->data, 
           sizeof(il_Graphics_Drawable3d*) * entry->len);
       }

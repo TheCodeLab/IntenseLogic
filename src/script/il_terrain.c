@@ -82,6 +82,36 @@ static int heightmap(lua_State* L) {
   return 0;
 }
 
+long long hash_seed(const char *s) 
+{
+  long long ret = 0;
+  size_t i;
+  
+  for (i = 0; i < strlen(s); i+=sizeof(long long)) {
+    ret ^= *(long long*)(s+i);
+  }
+  long long b = 0;
+  size_t l = strlen(s);
+  memcpy(&b, s+l-(l%8), l%8);
+  ret ^= b;
+  return ret;
+}
+
+static int from_seed(lua_State* L) 
+{
+  il_Common_Terrain* ter = il_Script_getPointer(L, 1, "terraindata", NULL);
+
+  if (!lua_isnumber(L,2) && !lua_isstring(L,2)) return luaL_argerror(L, 2, "Expected number or string");
+  long long seed = lua_isnumber(L,2)? luaL_optlong(L, 2, 0) : hash_seed(luaL_checkstring(L, 2));
+  
+  float resolution = luaL_optnumber(L, 2, 1.0);
+  float viewdistance = luaL_optnumber(L, 2, 100.0);
+  
+  il_Common_Terrain_heightmapFromSeed(ter, seed, resolution, viewdistance);
+  
+  return 0;
+}
+
 void il_Common_Terrain_luaGlobals(il_Script_Script* self, void * ctx) {
   (void)ctx;
 
@@ -93,6 +123,7 @@ void il_Common_Terrain_luaGlobals(il_Script_Script* self, void * ctx) {
     {"getPoint",      &getpoint       },
     {"getNormal",     &getnormal      },
     {"fromHeightmap", &heightmap      },
+    {"fromSeed",      &from_seed      },
     
     {NULL,            NULL            }
   };

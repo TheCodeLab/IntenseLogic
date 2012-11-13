@@ -13,5 +13,7 @@ sg_Vector3 il_Common_Terrain_getNormal(il_Common_Terrain*, unsigned x, unsigned 
 
 int il_Common_Terrain_heightmapFromMemory(il_Common_Terrain*, 
   int width, int height, const float * points);
+int il_Common_Terrain_heightmapFromSeed(il_Common_Terrain*, long long seed,
+  float resolution, float viewdistance);
 
 #endif

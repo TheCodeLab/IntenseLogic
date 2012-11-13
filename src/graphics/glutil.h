@@ -19,6 +19,7 @@ void il_Graphics_testError_(const char *file, int line, const char *func,
 
 GLuint il_Graphics_makeShader(GLenum type, il_Common_String source);
 void il_Graphics_linkProgram(GLuint program);
-void il_Graphics_bindUniforms(GLuint program, const il_Graphics_Camera * camera, const il_Common_Positionable * object);
+void il_Graphics_bindUniforms(GLuint program, const il_Graphics_Camera *camera,
+  const il_Common_Positionable * object);
 
 #endif

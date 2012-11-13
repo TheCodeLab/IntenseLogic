@@ -6,7 +6,8 @@
 
 void il_Asset_init();
 
-#define IL_ASSET_READFILE(name) (il_Asset_readContents(il_Asset_open(il_Common_fromC(name))))
+#define IL_ASSET_READFILE(name) \
+  (il_Asset_readContents(il_Asset_open(il_Common_fromC(name))))
 
 typedef struct il_Asset_Asset il_Asset_Asset;
 
