@@ -14,11 +14,13 @@ INCLUDES += -I.
 CFLAGS += -Wall -Wextra -g -DDEBUG $(INCLUDES)
 CFLAGS += `pkg-config --cflags sdl`
 CFLAGS += `pkg-config --cflags libevent`
+CFLAGS += `pkg-config --cflags libglfw`
 CFLAGS += `pkg-config --cflags glew` 
 CFLAGS += `pkg-config --cflags lua`
 
 LDFLAGS += `pkg-config --libs sdl`
 LDFLAGS += `pkg-config --libs libevent`
+LDFLAGS += `pkg-config --libs libglfw`
 LDFLAGS += `pkg-config --libs glew`
 LDFLAGS += `pkg-config --libs lua`
 LDFLAGS += -lm -g
