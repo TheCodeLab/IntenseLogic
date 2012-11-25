@@ -126,8 +126,9 @@ il_Graphics_Shape * il_Graphics_Shape_new(il_Common_Positionable * parent, int t
   shape->drawable.type = ('P'<<24) + ('R'<<16) + ('I'<<8) + ('M'<<0);
   //shape->drawable.positionable = parent;
   shape->drawable.draw = (il_Graphics_Drawable3d_cb)&shape_draw;
-  
+
   glGenVertexArrays(1, &shape->vao);
+
   IL_GRAPHICS_TESTERROR("Unable to generate vertex array");
   glBindVertexArray(shape->vao);
   IL_GRAPHICS_TESTERROR("Unable to bind vertex array");
