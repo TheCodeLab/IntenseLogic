@@ -91,7 +91,12 @@ void il_Graphics_init()
   }
   
   glfwOpenWindowHint(GLFW_OPENGL_VERSION_MAJOR, 3);
-  glfwOpenWindowHint(GLFW_OPENGL_VERSION_MINOR, 1);
+  #ifdef __APPLE__
+      glfwOpenWindowHint(GLFW_OPENGL_VERSION_MINOR, 2);
+  #else
+      glfwOpenWindowHint(GLFW_OPENGL_VERSION_MINOR, 1);
+  #endif
+
   #ifdef DEBUG
   glfwOpenWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
   #endif
