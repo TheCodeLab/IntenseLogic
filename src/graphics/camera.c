@@ -12,7 +12,7 @@
 #include "common/log.h"
 
 il_Graphics_Camera* il_Graphics_Camera_new(il_Common_Positionable * parent) {
-  il_Graphics_Camera* camera = calloc(sizeof(il_Graphics_Camera),1);
+  il_Graphics_Camera* camera = calloc(1, sizeof(il_Graphics_Camera));
   camera->positionable = parent;
   camera->projection_matrix = sg_Matrix_identity;
   camera->sensitivity = 0.002;

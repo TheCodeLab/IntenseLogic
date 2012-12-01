@@ -52,7 +52,7 @@ struct il_Network_Connection {
   }
 
 il_Network_Connection * il_Network_Connection_new() {
-  il_Network_Connection * con = calloc(sizeof(il_Network_Connection), 1);
+  il_Network_Connection * con = calloc(1, sizeof(il_Network_Connection));
   if (!con) return NULL;
   
   con->type = NONE;

@@ -64,7 +64,7 @@ static int heightmap(lua_State* L) {
   if (lua_rawlen(L, 4) < (size_t)w*(size_t)h) 
     luaL_argerror(L, 4, "Expected table with at least W x H elements");
   
-  float* map = calloc(sizeof(float), w*h);
+  float* map = calloc(w*h, sizeof(float));
   int x, y;
   for (y = 0; y < h; y++) {
     for (x = 0; x < w; x++) {
