@@ -11,10 +11,11 @@
 
 #include <stdlib.h>
 
-int il_Common_Keymap_getkey(const char* key) {
-  if (strlen(key) == 1)
-    return (int)key[0];
-  return atoi(key);
+int il_Common_Keymap_getkey(const char* key)
+{
+    if (strlen(key) == 1)
+        return (int)key[0];
+    return atoi(key);
 }
 
 #endif
