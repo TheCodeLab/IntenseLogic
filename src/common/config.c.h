@@ -7,15 +7,15 @@
 #define FN(prefix,name) FN_(prefix,name)
 
 int FN(IL_CONFIG_TYPE,handle)(void *user, const char *section, const char *name, const char *value) {
-  
+
   struct IL_CONFIG_TYPE *cfg = (struct IL_CONFIG_TYPE*)user;
-  
+
   if (0) ;
   #define CFG(s, n, default) else if (strcmp(section, #s)==0 && \
       strcmp(name, #n)==0) cfg->s##_##n = strdup(value);
   #include IL_CONFIG_DEFS
   #undef CFG
-  
+
   return 1;
 }
 

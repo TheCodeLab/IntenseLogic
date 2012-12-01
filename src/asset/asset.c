@@ -10,38 +10,38 @@
 /* #include "SOIL.h" */
 #include "common/log.h"
 
-struct il_Asset_Asset {
-    il_Common_String path;
-    il_Common_String searchdir;
-    il_Common_String fullpath;
+struct ilA_asset {
+    il_string path;
+    il_string searchdir;
+    il_string fullpath;
     unsigned refs;
     FILE* handle;
     unsigned handlerefs;
     UT_hash_handle hh;
 };
 
-il_Asset_Asset* assets = NULL;
+ilA_asset* assets = NULL;
 
 struct SearchPath {
-    il_Common_String path;
+    il_string path;
     int priority;
     struct SearchPath *next;
 };
 
 struct SearchPath *first;
-il_Common_String writedir;
+il_string writedir;
 
-void il_Asset_init()
+void ilA_init()
 {
 
 }
 
-void il_Asset_setWriteDir(il_Common_String path)
+void ilA_setWriteDir(il_string path)
 {
     writedir = path;
 }
 
-void il_Asset_registerReadDir(il_Common_String path, int priority)
+void ilA_registerReadDir(il_string path, int priority)
 {
     struct SearchPath *cur = first;
     if (!cur) {
@@ -66,7 +66,7 @@ void il_Asset_registerReadDir(il_Common_String path, int priority)
     ins->next = cur;
 }
 
-static il_Common_String search_paths(il_Common_String path)
+static il_string search_paths(il_string path)
 {
     struct SearchPath *cur = first;
     while (cur) {
@@ -92,14 +92,14 @@ static il_Common_String search_paths(il_Common_String path)
         // try again
         cur = cur->next;
     }
-    return (il_Common_String) {
+    return (il_string) {
         0, NULL
     };
 }
 
-il_Asset_Asset* il_Asset_open(il_Common_String path)
+ilA_asset* ilA_open(il_string path)
 {
-    il_Asset_Asset *asset;
+    ilA_asset *asset;
 
     HASH_FIND(hh, assets, path.data, path.length, asset);
 
@@ -108,43 +108,43 @@ il_Asset_Asset* il_Asset_open(il_Common_String path)
         return asset;
     }
 
-    il_Common_String res = search_paths(path);
+    il_string res = search_paths(path);
 
     if (!res.length) {
         res = writedir;
     }
 
-    asset = calloc(1, sizeof(il_Asset_Asset));
+    asset = calloc(1, sizeof(ilA_asset));
     asset->path = path;
     asset->searchdir = res;
     asset->handle = NULL;
 
-    asset->fullpath = il_Common_concat(res, il_Common_fromC("/"), path);
+    asset->fullpath = il_concat(res, il_fromC("/"), path);
 
     HASH_ADD_KEYPTR(hh, assets, path.data, path.length, asset);
     return asset;
 }
 
-il_Common_String il_Asset_getPath(il_Asset_Asset* self)
+il_string ilA_getPath(ilA_asset* self)
 {
     return self->fullpath;
 }
 
-FILE* il_Asset_getHandle(il_Asset_Asset* asset, const char *flags)
+FILE* ilA_getHandle(ilA_asset* asset, const char *flags)
 {
-    return fopen(il_Common_toC(asset->fullpath), flags);
+    return fopen(il_toC(asset->fullpath), flags);
 }
 
-il_Common_String il_Asset_readContents(il_Asset_Asset* asset)
+il_string ilA_readContents(ilA_asset* asset)
 {
-    FILE* handle = il_Asset_getHandle(asset, "r");
+    FILE* handle = ilA_getHandle(asset, "r");
     if (!handle) {
-        il_Common_log(2, "Could not open file \"%s\": %s (%i)", il_Common_toC(asset->path), strerror(errno), errno);
-        return (il_Common_String) {
+        il_log(2, "Could not open file \"%s\": %s (%i)", il_toC(asset->path), strerror(errno), errno);
+        return (il_string) {
             0,NULL
         };
     }
-    il_Common_String str;
+    il_string str;
 
     fseek(handle, 0, SEEK_END); /* Seek to the end of the file */
     str.length = ftell(handle); /* Find out how many bytes into the file we are */
@@ -156,7 +156,7 @@ il_Common_String il_Asset_readContents(il_Asset_Asset* asset)
     return str;
 }
 
-void il_Asset_close(il_Asset_Asset* asset)
+void ilA_close(ilA_asset* asset)
 {
 
     asset->handlerefs--;
@@ -170,19 +170,19 @@ void il_Asset_close(il_Asset_Asset* asset)
     }
 }
 
-int il_Asset_delete(il_Asset_Asset* asset)
+int ilA_delete(ilA_asset* asset)
 {
     if (asset->refs > 1)
         return -1;
 
-    remove(il_Common_toC(asset->fullpath));
-    il_Asset_close(asset);
+    remove(il_toC(asset->fullpath));
+    ilA_close(asset);
     return 0;
 }
 
-unsigned int il_Asset_assetToTexture(il_Asset_Asset *asset)
+unsigned int ilA_assetToTexture(ilA_asset *asset)
 {
     (void)asset;
-    /* return SOIL_load_OGL_texture(il_Common_toC(asset->fullpath), 0, 0, 0); */
+    /* return SOIL_load_OGL_texture(il_toC(asset->fullpath), 0, 0, 0); */
     return 1;
 }

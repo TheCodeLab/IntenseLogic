@@ -5,12 +5,12 @@
 
 #include "common/positionable.h"
 
-typedef struct il_Physics_Rigid {
+typedef struct ilP_rigid {
   unsigned refs;
-  il_Common_Positionable *positionable;
+  il_positionable *positionable;
   float mass;
   dBodyID bodyid;
   dGeomID geomid;
-} il_Physics_Rigid;
+} ilP_rigid;
 
 #endif

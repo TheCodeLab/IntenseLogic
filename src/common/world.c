@@ -3,21 +3,21 @@
 #include <stdlib.h>
 #include <string.h>
 
-struct il_Common_WorldIterator {
+struct il_worldIterator {
     size_t n;
 };
 
-il_Common_World* il_Common_World_new()
+il_world* il_world_new()
 {
-    il_Common_World * w = calloc(1, sizeof(il_Common_World));
+    il_world * w = calloc(1, sizeof(il_world));
     w->refs = 1;
     return w;
 }
 
-void il_Common_World_add(il_Common_World* self, il_Common_Positionable* pos)
+void il_world_add(il_world* self, il_positionable* pos)
 {
-    il_Common_Positionable** temp = calloc(self->nobjects, sizeof(il_Common_Positionable*));
-    memcpy(temp, self->objects, sizeof(il_Common_Positionable*) * self->nobjects);
+    il_positionable** temp = calloc(self->nobjects, sizeof(il_positionable*));
+    memcpy(temp, self->objects, sizeof(il_positionable*) * self->nobjects);
     temp[self->nobjects] = pos;
     free(self->objects);
     self->objects = temp;
@@ -25,11 +25,11 @@ void il_Common_World_add(il_Common_World* self, il_Common_Positionable* pos)
     pos->refs++;
 }
 
-il_Common_Positionable * il_Common_World_iterate(il_Common_World* self,
-        il_Common_WorldIterator** iter)
+il_positionable * il_world_iterate(il_world* self,
+        il_worldIterator** iter)
 {
     if (*iter == NULL)
-        *iter = calloc(1, sizeof(il_Common_WorldIterator));
+        *iter = calloc(1, sizeof(il_worldIterator));
 
     if ((*iter)->n > self->nobjects)
         return NULL;

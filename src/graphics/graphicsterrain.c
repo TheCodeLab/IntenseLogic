@@ -17,29 +17,29 @@ enum terrain_type {
     PHEIGHTMAP,
 };
 
-struct il_Common_Terrain {
+struct il_terrain {
     int type;
     int width, height;
     size_t size;
     void * data;
     int refs;
     void *destruct_ctx;
-    void (*destruct)(il_Common_Terrain*, void*);
+    void (*destruct)(il_terrain*, void*);
     void *point_ctx;
-    double (*getPoint)(il_Common_Terrain*, void*, unsigned x, unsigned y,
+    double (*getPoint)(il_terrain*, void*, unsigned x, unsigned y,
                        double height);
     void *normal_ctx;
-    sg_Vector3 (*getNormal)(il_Common_Terrain*, void*, unsigned x, unsigned y,
+    sg_Vector3 (*getNormal)(il_terrain*, void*, unsigned x, unsigned y,
                             double z);
 };
 
-struct il_Graphics_Terrain {
-    il_Graphics_Drawable3d drawable;
-    il_Common_Terrain * terrain;
+struct ilG_terrain {
+    ilG_drawable3d drawable;
+    il_terrain * terrain;
     GLuint *buf;
     GLuint program;
     void *draw_ctx;
-    void (*draw)(il_Graphics_Terrain*, void*, const il_Graphics_Camera*,
+    void (*draw)(ilG_terrain*, void*, const ilG_camera*,
                  const struct timeval*);
 };
 
@@ -49,15 +49,15 @@ struct pheightmap {
     float viewdistance;
 };
 
-static void terrain_draw(const il_Graphics_Camera* cam,
-                         struct il_Graphics_Drawable3d* drawable, const struct timeval* tv)
+static void terrain_draw(const ilG_camera* cam,
+                         struct ilG_drawable3d* drawable, const struct timeval* tv)
 {
-    il_Graphics_Terrain* ter = (il_Graphics_Terrain*)drawable;
+    ilG_terrain* ter = (ilG_terrain*)drawable;
     ter->draw(ter, ter->draw_ctx, cam, tv);
 }
 
-static void heightmap_draw(il_Graphics_Terrain* ter, void* ctx,
-                           const il_Graphics_Camera* cam, const struct timeval* tv)
+static void heightmap_draw(ilG_terrain* ter, void* ctx,
+                           const ilG_camera* cam, const struct timeval* tv)
 {
     (void)ctx, (void)cam, (void)tv;
     glUseProgram(ter->program);
@@ -69,59 +69,59 @@ static void heightmap_draw(il_Graphics_Terrain* ter, void* ctx,
     glDrawArrays(GL_TRIANGLE_FAN, 0, ter->terrain->width * ter->terrain->height);
 }
 
-static void pheightmap_draw(il_Graphics_Terrain* ter, void* ctx,
-                            const il_Graphics_Camera* cam, const struct timeval* tv)
+static void pheightmap_draw(ilG_terrain* ter, void* ctx,
+                            const ilG_camera* cam, const struct timeval* tv)
 {
     (void)tv;
     struct pheightmap* pheightmap = ctx;
 
     glUseProgram(ter->program);
-    il_Graphics_testError("glUseProgram");
+    ilG_testError("glUseProgram");
 
-    il_Graphics_bindUniforms(ter->program, cam, ter->drawable.positionable);
-    il_Graphics_testError("il_Graphics_bindUniforms");
+    ilG_bindUniforms(ter->program, cam, ter->drawable.positionable);
+    ilG_testError("ilG_bindUniforms");
 
     GLint center = glGetUniformLocation(ter->program, "center");
-    il_Graphics_testError("glGetUniformLocation");
+    ilG_testError("glGetUniformLocation");
     glUniform2i(center,
                 (int)floor(ter->drawable.positionable->position.x / pheightmap->resolution),
                 (int)floor(ter->drawable.positionable->position.z / pheightmap->resolution)
                );
-    il_Graphics_testError("glUniform2i");
+    ilG_testError("glUniform2i");
 
     glBindBuffer(GL_ARRAY_BUFFER, ter->buf[0]);
-    il_Graphics_testError("glBindBuffer");
+    ilG_testError("glBindBuffer");
     glBindVertexArray(ter->buf[2]);
-    il_Graphics_testError("glBindVertexArray");
+    ilG_testError("glBindVertexArray");
 
     int width = pheightmap->viewdistance / pheightmap->resolution,
         size = width * width;
 
     glPrimitiveRestartIndex(-1);
-    il_Graphics_testError("glPrimitiveRestartIndex");
+    ilG_testError("glPrimitiveRestartIndex");
 
     glEnable(GL_PRIMITIVE_RESTART);
-    il_Graphics_testError("glEnable");
+    ilG_testError("glEnable");
 
     glEnableVertexAttribArray(0);
-    il_Graphics_testError("glEnableVertexAttribArray");
+    ilG_testError("glEnableVertexAttribArray");
 
     glDrawArrays(GL_TRIANGLE_STRIP, 0, size*2);
-    il_Graphics_testError("glDrawArrays");
+    ilG_testError("glDrawArrays");
 
     glDisableVertexAttribArray(0);
-    il_Graphics_testError("glDisableVertexAttribArray");
+    ilG_testError("glDisableVertexAttribArray");
 
     glDisable(GL_PRIMITIVE_RESTART);
-    il_Graphics_testError("glDisable");
+    ilG_testError("glDisable");
 }
 
-il_Graphics_Terrain* il_Graphics_Terrain_new(il_Common_Terrain* parent,
-        il_Common_Positionable* positionable)
+ilG_terrain* ilG_terrain_new(il_terrain* parent,
+        il_positionable* positionable)
 {
-    il_Graphics_Terrain * ter = calloc(1, sizeof(il_Graphics_Terrain));
+    ilG_terrain * ter = calloc(1, sizeof(ilG_terrain));
     ter->terrain = parent;
-    ter->drawable.draw = (il_Graphics_Drawable3d_cb)&terrain_draw;
+    ter->drawable.draw = (ilG_drawable3d_cb)&terrain_draw;
     switch(parent->type) {
     case HEIGHTMAP: {
         ter->buf = calloc(1, sizeof(GLuint));
@@ -130,16 +130,16 @@ il_Graphics_Terrain* il_Graphics_Terrain_new(il_Common_Terrain* parent,
         glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, parent->width, parent->height, 0,
                      GL_RED, GL_FLOAT, parent->data);
 
-        GLuint  vertex = il_Graphics_makeShader(GL_VERTEX_SHADER,
+        GLuint  vertex = ilG_makeShader(GL_VERTEX_SHADER,
                                                 IL_ASSET_READFILE("heightmap.vert")),
-                         fragment = il_Graphics_makeShader(GL_FRAGMENT_SHADER,
+                         fragment = ilG_makeShader(GL_FRAGMENT_SHADER,
                                     IL_ASSET_READFILE("heightmap.frag")),
                                     program = glCreateProgram();
 
         glAttachShader(program, vertex);
         glAttachShader(program, fragment);
 
-        il_Graphics_linkProgram(program);
+        ilG_linkProgram(program);
 
         ter->program = program;
         ter->draw = &heightmap_draw;
@@ -151,7 +151,7 @@ il_Graphics_Terrain* il_Graphics_Terrain_new(il_Common_Terrain* parent,
 
         glGenVertexArrays(1, &ter->buf[2]);
         glBindVertexArray(ter->buf[2]);
-        il_Graphics_testError("Failed to create VAO");
+        ilG_testError("Failed to create VAO");
 
         glGenBuffers(2, ter->buf);
         glBindBuffer(GL_ARRAY_BUFFER, ter->buf[0]);
@@ -168,7 +168,7 @@ il_Graphics_Terrain* il_Graphics_Terrain_new(il_Common_Terrain* parent,
         glBufferData(GL_ARRAY_BUFFER, size * sizeof(int) * 2, buf,
                      GL_STATIC_DRAW);
         free(buf);
-        il_Graphics_testError("Failed to create VBO");
+        ilG_testError("Failed to create VBO");
 
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ter->buf[1]);
         int rowsize = width*2 + 1; // width*2 indices, 1 end restart index
@@ -184,29 +184,29 @@ il_Graphics_Terrain* il_Graphics_Terrain_new(il_Common_Terrain* parent,
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, (width-1) * rowsize * sizeof(int),
                      buf, GL_STATIC_DRAW);
         free(buf);
-        il_Graphics_testError("Failed to create IBO");
+        ilG_testError("Failed to create IBO");
 
-        GLuint  vertex = il_Graphics_makeShader(GL_VERTEX_SHADER,
+        GLuint  vertex = ilG_makeShader(GL_VERTEX_SHADER,
                                                 IL_ASSET_READFILE("pheightmap.vert")),
-                         fragment = il_Graphics_makeShader(GL_FRAGMENT_SHADER,
+                         fragment = ilG_makeShader(GL_FRAGMENT_SHADER,
                                     IL_ASSET_READFILE("pheightmap.frag")),
                                     program = glCreateProgram();
 
         glAttachShader(program, vertex);
         glAttachShader(program, fragment);
 
-        il_Graphics_linkProgram(program);
+        ilG_linkProgram(program);
 
         glBindBuffer(GL_ARRAY_BUFFER, ter->buf[0]);
-        il_Graphics_testError("glBindBuffer");
+        ilG_testError("glBindBuffer");
         GLint in_pos = glGetAttribLocation(program, "in_Position");
-        il_Graphics_testError("glGetAttribLocation");
+        ilG_testError("glGetAttribLocation");
         // index 0, 2 components, integer, non-normalized, tightly packed,
         // no offset
         glVertexAttribPointer(0, 2, GL_INT, GL_FALSE, 0, (GLvoid*)0);
-        il_Graphics_testError("glVertexAttribPointer");
+        ilG_testError("glVertexAttribPointer");
         glEnableVertexAttribArray(in_pos);
-        il_Graphics_testError("Failed to bind vertex attributes");
+        ilG_testError("Failed to bind vertex attributes");
 
         ter->program = program;
         ter->draw = &pheightmap_draw;
@@ -219,7 +219,7 @@ il_Graphics_Terrain* il_Graphics_Terrain_new(il_Common_Terrain* parent,
         break;
     }
 
-    il_Graphics_Drawable3d_setPositionable(&ter->drawable, positionable);
+    ilG_drawable3d_setPositionable(&ter->drawable, positionable);
 
     return ter;
 }

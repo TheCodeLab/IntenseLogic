@@ -7,18 +7,18 @@
 #include "common/world.h"
 
 struct hash_entry {
-    il_Graphics_World * world;
+    ilG_world * world;
     UT_hash_handle hh;
 } *hash_table = NULL;
 
-il_Graphics_World * il_Graphics_World_new()
+ilG_world * ilG_world_new()
 {
-    return il_Graphics_World_new_world(il_Common_World_new());
+    return ilG_world_new_world(il_world_new());
 }
 
-il_Graphics_World * il_Graphics_World_new_world(il_Common_World * world)
+ilG_world * ilG_world_new_world(il_world * world)
 {
-    il_Graphics_World * w = calloc(1, sizeof(il_Graphics_World));
+    ilG_world * w = calloc(1, sizeof(ilG_world));
     w->world = world;
     world->refs++;
     w->refs = 1;
@@ -28,7 +28,7 @@ il_Graphics_World * il_Graphics_World_new_world(il_Common_World * world)
     return w;
 }
 
-il_Graphics_World * il_Common_World_getGraphicsWorld(il_Common_World * world)
+ilG_world * il_world_getGraphicsWorld(il_world * world)
 {
     struct hash_entry * out = NULL;
     HASH_FIND_PTR(hash_table, world, out);

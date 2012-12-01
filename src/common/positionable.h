@@ -7,19 +7,19 @@
 #include "common/vector.h"
 #include "common/world.h"
 
-typedef struct il_Common_Positionable {
+typedef struct il_positionable {
   sg_Vector3 position;
   sg_Quaternion rotation;
   sg_Vector3 size;
   sg_Vector3 velocity;
-  struct il_Common_World *parent;
+  struct il_world *parent;
   unsigned refs;
   struct timeval last_update;
-} il_Common_Positionable;
+} il_positionable;
 
-il_Common_Positionable * il_Common_Positionable_new(
-  struct il_Common_World * parent);
+il_positionable * il_positionable_new(
+  struct il_world * parent);
 
-void il_Common_Positionable_translate(il_Common_Positionable*, sg_Vector3 vec);
+void il_positionable_translate(il_positionable*, sg_Vector3 vec);
 
 #endif

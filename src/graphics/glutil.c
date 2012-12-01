@@ -8,7 +8,7 @@
 #include "graphics/camera.h"
 #include "common/positionable.h"
 
-const char * il_Graphics_strerror(GLenum err)
+const char * ilG_strerror(GLenum err)
 {
     char * res;
     switch(err) {
@@ -43,33 +43,33 @@ const char * il_Graphics_strerror(GLenum err)
     return res;
 }
 
-void il_Graphics_testError_(const char *file, int line, const char *func,
+void ilG_testError_(const char *file, int line, const char *func,
                             const char* fmt, ...)
 {
     GLenum err;
     if ((err = glGetError()) != GL_NO_ERROR) {
-        fprintf(il_Common_logfile, "%s:%i (%s) %s: ",
-                il_Common_prettifyFile(file),
+        fprintf(il_logfile, "%s:%i (%s) %s: ",
+                il_prettifyFile(file),
                 line,
                 func,
-                il_Common_loglevel_tostring(1)
+                il_loglevel_tostring(1)
                );
 
         va_list ap;
         va_start(ap, fmt);
-        vfprintf(il_Common_logfile, fmt, ap);
+        vfprintf(il_logfile, fmt, ap);
         va_end(ap);
 
-        fprintf(il_Common_logfile, ": %s (%i)",
-                il_Graphics_strerror(err),
+        fprintf(il_logfile, ": %s (%i)",
+                ilG_strerror(err),
                 err
                );
 
-        fputc('\n', il_Common_logfile);
+        fputc('\n', il_logfile);
     }
 }
 
-GLuint il_Graphics_makeShader(GLenum type, il_Common_String source)
+GLuint ilG_makeShader(GLenum type, il_string source)
 {
     GLuint shader = glCreateShader(type);
     IL_GRAPHICS_TESTERROR("Unable to create shader");
@@ -86,7 +86,7 @@ GLuint il_Graphics_makeShader(GLenum type, il_Common_String source)
     if (len > 1) {
         char * str = calloc(1, len);
         glGetShaderInfoLog(shader, len, NULL, str);
-        il_Common_log(status == GL_TRUE? 4 : 1,
+        il_log(status == GL_TRUE? 4 : 1,
                       "Shader info log: \n"
                       "---- BEGIN SHADER INFO LOG ----\n"
                       "%s\n"
@@ -97,7 +97,7 @@ GLuint il_Graphics_makeShader(GLenum type, il_Common_String source)
     return shader;
 }
 
-void il_Graphics_linkProgram(GLuint program)
+void ilG_linkProgram(GLuint program)
 {
     glLinkProgram(program);
     IL_GRAPHICS_TESTERROR("Unable to link program");
@@ -108,7 +108,7 @@ void il_Graphics_linkProgram(GLuint program)
     if (len > 1) {
         char * str = calloc(1, len);
         glGetProgramInfoLog(program, len, NULL, str);
-        il_Common_log(status == GL_TRUE? 4 : 1, "Program info log: \n"
+        il_log(status == GL_TRUE? 4 : 1, "Program info log: \n"
                       "---- BEGIN PROGRAM INFO LOG ----\n"
                       "%s\n"
                       "---- END PROGRAM INFO LOG ----\n", str);
@@ -123,7 +123,7 @@ void il_Graphics_linkProgram(GLuint program)
     if (len > 1) {
         char * str = calloc(1, len);
         glGetProgramInfoLog(program, len, NULL, str);
-        il_Common_log(status == GL_TRUE? 4 : 1, "Program info log: \n"
+        il_log(status == GL_TRUE? 4 : 1, "Program info log: \n"
                       "---- BEGIN PROGRAM INFO LOG ----\n"
                       "%s\n"
                       "---- END PROGRAM INFO LOG ----\n", str);
@@ -131,11 +131,11 @@ void il_Graphics_linkProgram(GLuint program)
     }
 }
 
-void il_Graphics_bindUniforms(GLuint program, const il_Graphics_Camera * camera, const il_Common_Positionable * object)
+void ilG_bindUniforms(GLuint program, const ilG_camera * camera, const il_positionable * object)
 {
     GLint utransform;
     utransform = glGetUniformLocation(program, "transform");
-    il_Graphics_testError("glGetUniformLocation failed");
+    ilG_testError("glGetUniformLocation failed");
 
     sg_Matrix cam = sg_Matrix_mul(
                         sg_Matrix_translate(camera->positionable->position),
@@ -146,7 +146,7 @@ void il_Graphics_bindUniforms(GLuint program, const il_Graphics_Camera * camera,
 
     int res = sg_Matrix_invert(cam, &view);
     if (res!=0)
-        il_Common_log(2, "Couldn't invert view matrix?");
+        il_log(2, "Couldn't invert view matrix?");
 
     sg_Matrix model = sg_Matrix_mul(
                           sg_Matrix_rotate_q(object->rotation),
@@ -163,5 +163,5 @@ void il_Graphics_bindUniforms(GLuint program, const il_Graphics_Camera * camera,
                         ));
 
     glUniformMatrix4fv(utransform, 1, GL_TRUE, (const GLfloat*)&mat.data);
-    il_Graphics_testError("glUniformMatrix4fv failed");
+    ilG_testError("glUniformMatrix4fv failed");
 }

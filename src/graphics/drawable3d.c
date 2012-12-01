@@ -6,24 +6,24 @@
 #include "uthash.h"
 
 struct hash_entry {
-    il_Common_Positionable* ptr;
+    il_positionable* ptr;
     size_t len;
-    il_Graphics_Drawable3d** data;
+    ilG_drawable3d** data;
     UT_hash_handle hh;
 };
 
 static struct hash_entry *head = NULL;
 
-struct il_Graphics_Drawable3dIterator {
+struct ilG_drawable3dIterator {
     size_t n;
 };
 
-void il_Graphics_Drawable3d_setPositionable(il_Graphics_Drawable3d* self,
-        il_Common_Positionable* pos)
+void ilG_drawable3d_setPositionable(ilG_drawable3d* self,
+        il_positionable* pos)
 {
     struct hash_entry * entry = NULL;
     size_t i;
-    il_Graphics_Drawable3d** temp;
+    ilG_drawable3d** temp;
 
     // Step 1: Remove the old reference
     HASH_FIND_PTR(head, &self->positionable, entry);
@@ -32,7 +32,7 @@ void il_Graphics_Drawable3d_setPositionable(il_Graphics_Drawable3d* self,
             if (entry->data[i] == self) {
                 entry->data[i] = entry->data[--entry->len];
                 entry->data = realloc(entry->data,
-                                      sizeof(il_Graphics_Drawable3d*) * entry->len);
+                                      sizeof(ilG_drawable3d*) * entry->len);
             }
         }
     }
@@ -45,7 +45,7 @@ void il_Graphics_Drawable3d_setPositionable(il_Graphics_Drawable3d* self,
         entry->data = malloc(0);
         HASH_ADD_PTR(head, ptr, entry);
     }
-    temp = calloc(++entry->len, sizeof(il_Graphics_Drawable3d));
+    temp = calloc(++entry->len, sizeof(ilG_drawable3d));
     memcpy(temp, entry->data, entry->len);
     free(entry->data);
     entry->data = temp;
@@ -54,8 +54,8 @@ void il_Graphics_Drawable3d_setPositionable(il_Graphics_Drawable3d* self,
     self->positionable = pos;
 }
 
-il_Graphics_Drawable3d* il_Graphics_Drawable3d_iterate(il_Common_Positionable*
-        pos, il_Graphics_Drawable3dIterator** iter)
+ilG_drawable3d* ilG_drawable3d_iterate(il_positionable*
+        pos, ilG_drawable3dIterator** iter)
 {
     struct hash_entry * entry;
 
@@ -64,7 +64,7 @@ il_Graphics_Drawable3d* il_Graphics_Drawable3d_iterate(il_Common_Positionable*
         return NULL;
 
     if (*iter == NULL)
-        *iter = calloc(1, sizeof(il_Graphics_Drawable3dIterator));
+        *iter = calloc(1, sizeof(ilG_drawable3dIterator));
 
     if ((*iter)->n > entry->len) return NULL;
 

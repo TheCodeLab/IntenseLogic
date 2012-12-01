@@ -4,27 +4,27 @@
 #include <stdio.h>
 #include <string.h>
 
-int il_Script_startMetatable(il_Script_Script* self, const char * name)
+int ilS_startMetatable(ilS_script* self, const char * name)
 {
     luaL_newmetatable(self->L, name);
     return 0;
 }
 
-int il_Script_endTable(il_Script_Script* self, const luaL_Reg* l, const char * name)
+int ilS_endTable(ilS_script* self, const luaL_Reg* l, const char * name)
 {
     luaL_setfuncs(self->L, l, 2);
     lua_setglobal(self->L, name);
     return 0;
 }
 
-int il_Script_typeGetter(lua_State* L)
+int ilS_typeGetter(lua_State* L)
 {
     lua_pushinteger(L, 1);
     lua_gettable(L, lua_upvalueindex(2));
     return 1;
 }
 
-int il_Script_isA(lua_State* L)
+int ilS_isA(lua_State* L)
 {
     //int nargs = lua_tointeger(L, lua_upvalueindex(1));
     int nargs = lua_rawlen(L, lua_upvalueindex(2));
@@ -45,7 +45,7 @@ int il_Script_isA(lua_State* L)
     return 1;
 }
 
-int il_Script_createMakeLight(lua_State* L, void * ptr, const char * type)
+int ilS_createMakeLight(lua_State* L, void * ptr, const char * type)
 {
     // create userdata
     void * block = lua_newuserdata(L, sizeof(void*) + sizeof(int));
@@ -61,7 +61,7 @@ int il_Script_createMakeLight(lua_State* L, void * ptr, const char * type)
     return 1;
 }
 
-int il_Script_createMakeHeavy(lua_State* L, size_t size, const void * ptr, const char * type)
+int ilS_createMakeHeavy(lua_State* L, size_t size, const void * ptr, const char * type)
 {
     // create userdata
     void * block = lua_newuserdata(L, size + sizeof(int));
@@ -77,14 +77,14 @@ int il_Script_createMakeHeavy(lua_State* L, size_t size, const void * ptr, const
     return 1;
 }
 
-int il_Script_pushFunc(lua_State* L, const char * name, lua_CFunction func)
+int ilS_pushFunc(lua_State* L, const char * name, lua_CFunction func)
 {
     lua_pushcfunction(L, func);
     lua_setfield(L, -2, name);
     return 0;
 }
 
-int il_Script_typeTable(lua_State* L, const char * str, ...)
+int ilS_typeTable(lua_State* L, const char * str, ...)
 {
     const char * arg = str;
     va_list va;
@@ -104,7 +104,7 @@ int il_Script_typeTable(lua_State* L, const char * str, ...)
     return 0;
 }
 
-const char * il_Script_getType(lua_State* L, int idx)
+const char * ilS_getType(lua_State* L, int idx)
 {
     int type = lua_type(L, idx);
     if (type == LUA_TUSERDATA) {
@@ -113,7 +113,7 @@ const char * il_Script_getType(lua_State* L, int idx)
     return lua_typename(L, type);
 }
 
-void* il_Script_getPointer(lua_State* L, int idx, const char * type, size_t *size)
+void* ilS_getPointer(lua_State* L, int idx, const char * type, size_t *size)
 {
 #if LUA_VERSION_NUM < 502
 #define lua_rawlen lua_objlen
@@ -126,7 +126,7 @@ void* il_Script_getPointer(lua_State* L, int idx, const char * type, size_t *siz
     return is_ptr+1;
 }
 
-void* il_Script_getChild(lua_State* L, int idx, size_t *size, const char * type, ...)
+void* ilS_getChild(lua_State* L, int idx, size_t *size, const char * type, ...)
 {
     const char pref[] = "Expected ";
     char * msg = calloc(1, sizeof(pref) + strlen(type));
@@ -150,7 +150,7 @@ void* il_Script_getChild(lua_State* L, int idx, size_t *size, const char * type,
     return (int*)ptr+1;
 }
 
-void* il_Script_getChildT(lua_State* L, int idx, size_t *size, int tidx)
+void* ilS_getChildT(lua_State* L, int idx, size_t *size, int tidx)
 {
     const char pref[] = "Expected ";
     lua_rawgeti(L, tidx, 1);
@@ -187,22 +187,22 @@ char *strndup(const char *s, size_t n)
 }
 #endif
 
-il_Common_String il_Script_getString(lua_State* L, int idx)
+il_string ilS_getString(lua_State* L, int idx)
 {
-    il_Common_String s;
+    il_string s;
     s.data = (char*)luaL_checklstring(L, idx, (size_t*)&s.length);
     s.data = strndup(s.data, s.length);
     return s;
 }
 
-double il_Script_getNumber(lua_State* L, int idx)
+double ilS_getNumber(lua_State* L, int idx)
 {
     return luaL_checknumber(L, idx);
 }
 
-il_Common_String il_Script_toString(lua_State* L, int idx)
+il_string ilS_toString(lua_State* L, int idx)
 {
-    il_Common_String res;
+    il_string res;
     switch (lua_type(L, idx)) {
     case LUA_TNIL:
         return il_l("nil");
@@ -231,30 +231,30 @@ il_Common_String il_Script_toString(lua_State* L, int idx)
     }
     case LUA_TNONE:
     default:
-        return (il_Common_String) {
+        return (il_string) {
             0, NULL
         };
     }
 }
 
-void il_Script_printStack(lua_State *L, const char* Str)
+void ilS_printStack(lua_State *L, const char* Str)
 {
     int J, Top;
     printf("%-26s [", Str);
     Top = lua_gettop(L);
     for (J = 1; J <= Top; J++) {
-        printf("%s, ", il_StoC(il_Script_toString(L, J)));
+        printf("%s, ", il_StoC(ilS_toString(L, J)));
     }
     printf("]\n");
 }
 
 static struct lua_node {
-    il_Script_LuaRegisterFunc func;
+    ilS_luaRegisterFunc func;
     void * ctx;
     struct lua_node *next;
 } *lua_first = NULL;
 
-void il_Script_registerLuaRegister(il_Script_LuaRegisterFunc func, void * ctx)
+void ilS_registerLuaRegister(ilS_luaRegisterFunc func, void * ctx)
 {
     struct lua_node* n = calloc(1, sizeof(struct lua_node));
     n->func = func;
@@ -272,7 +272,7 @@ void il_Script_registerLuaRegister(il_Script_LuaRegisterFunc func, void * ctx)
     last->next = n;
 }
 
-void il_Script_openLibs(il_Script_Script* self)
+void ilS_openLibs(ilS_script* self)
 {
     struct lua_node * cur = lua_first;
     while (cur) {

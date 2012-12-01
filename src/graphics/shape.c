@@ -82,8 +82,8 @@ static short cube_index[] = {
     22, 23, 20,
 };
 
-struct il_Graphics_Shape {
-    il_Graphics_Drawable3d drawable;
+struct ilG_shape {
+    ilG_drawable3d drawable;
     int type;
     GLuint vbo;
     GLuint ibo;
@@ -94,15 +94,15 @@ struct il_Graphics_Shape {
     GLsizei count;
 };
 
-static void shape_draw(const il_Graphics_Camera* cam, struct il_Graphics_Drawable3d* drawable, const struct timeval* tv)
+static void shape_draw(const ilG_camera* cam, struct ilG_drawable3d* drawable, const struct timeval* tv)
 {
     (void)tv;
-    il_Graphics_Shape * shape = (il_Graphics_Shape*)drawable;
+    ilG_shape * shape = (ilG_shape*)drawable;
 
     glUseProgram(shape->program);
     IL_GRAPHICS_TESTERROR("Could not use program");
 
-    il_Graphics_bindUniforms(shape->program, cam, drawable->positionable);
+    ilG_bindUniforms(shape->program, cam, drawable->positionable);
 
     glBindBuffer(GL_ARRAY_BUFFER, shape->vbo);
     IL_GRAPHICS_TESTERROR("Could not bind vbo");
@@ -121,13 +121,13 @@ static void shape_draw(const il_Graphics_Camera* cam, struct il_Graphics_Drawabl
     IL_GRAPHICS_TESTERROR("Could not draw ibo");
 }
 
-il_Graphics_Shape * il_Graphics_Shape_new(il_Common_Positionable * parent, int type)
+ilG_shape * ilG_shape_new(il_positionable * parent, int type)
 {
-    il_Graphics_Shape * shape = calloc(1, sizeof(il_Graphics_Shape));
+    ilG_shape * shape = calloc(1, sizeof(ilG_shape));
     shape->type = type;
     shape->drawable.type = ('P'<<24) + ('R'<<16) + ('I'<<8) + ('M'<<0);
     //shape->drawable.positionable = parent;
-    shape->drawable.draw = (il_Graphics_Drawable3d_cb)&shape_draw;
+    shape->drawable.draw = (ilG_drawable3d_cb)&shape_draw;
 
     glGenVertexArrays(1, &shape->vao);
 
@@ -140,7 +140,7 @@ il_Graphics_Shape * il_Graphics_Shape_new(il_Common_Positionable * parent, int t
     glBindBuffer(GL_ARRAY_BUFFER, shape->vbo);
     IL_GRAPHICS_TESTERROR("Unable to bind vertex buffer");
     switch(type) {
-    case il_Graphics_Box: {
+    case ilG_box: {
         glBufferData(GL_ARRAY_BUFFER, sizeof(cube), cube, GL_STATIC_DRAW);
         IL_GRAPHICS_TESTERROR("Unable to upload cube data");
         break;
@@ -156,7 +156,7 @@ il_Graphics_Shape * il_Graphics_Shape_new(il_Common_Positionable * parent, int t
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, shape->ibo);
     IL_GRAPHICS_TESTERROR("Unable to bind index buffer object");
     switch(type) {
-    case il_Graphics_Box: {
+    case ilG_box: {
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(cube_index), cube_index, GL_STATIC_DRAW);
         IL_GRAPHICS_TESTERROR("Unable to upload index buffer data");
     }
@@ -169,31 +169,31 @@ il_Graphics_Shape * il_Graphics_Shape_new(il_Common_Positionable * parent, int t
     IL_GRAPHICS_TESTERROR("Unable to create program");
 
     GLuint vertex, fragment;
-    il_Common_String vertex_source, fragment_source;
+    il_string vertex_source, fragment_source;
 
     vertex_source = IL_ASSET_READFILE("cube.vert");
     fragment_source = IL_ASSET_READFILE("cube.frag");
 
     if (!vertex_source.length) {
-        il_Common_log(1, "Unable to open cube vertex shader");
+        il_log(1, "Unable to open cube vertex shader");
         return NULL;
     }
     if (!fragment_source.length) {
-        il_Common_log(1, "Unable to open cube fragment shader");
+        il_log(1, "Unable to open cube fragment shader");
         return NULL;
     }
 
-    vertex = il_Graphics_makeShader(GL_VERTEX_SHADER, vertex_source);
-    fragment = il_Graphics_makeShader(GL_FRAGMENT_SHADER, fragment_source);
+    vertex = ilG_makeShader(GL_VERTEX_SHADER, vertex_source);
+    fragment = ilG_makeShader(GL_FRAGMENT_SHADER, fragment_source);
 
     glAttachShader(shape->program, vertex);
     IL_GRAPHICS_TESTERROR("Unable to attach shader");
     glAttachShader(shape->program, fragment);
     IL_GRAPHICS_TESTERROR("Unable to attach shader");
 
-    il_Graphics_linkProgram(shape->program);
+    ilG_linkProgram(shape->program);
 
-    il_Graphics_Drawable3d_setPositionable(&shape->drawable, parent);
+    ilG_drawable3d_setPositionable(&shape->drawable, parent);
 
     return shape;
 }

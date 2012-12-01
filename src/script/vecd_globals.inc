@@ -12,8 +12,8 @@
 
 const luaL_Reg c(l,d)[] = {
   {"create",    &c(vec, c(d, _create))},
-  {"getType",   &il_Script_typeGetter},
-  {"isA",       &il_Script_isA},
+  {"getType",   &ilS_typeGetter},
+  {"isA",       &ilS_isA},
   
   {"dot",       &c(vec, c(d, _dot))},
   #if d > 2
@@ -23,9 +23,9 @@ const luaL_Reg c(l,d)[] = {
   {NULL,        NULL},
 };
 
-il_Script_startTable(self, c(l,d));
+ilS_startTable(self, c(l,d));
 
-il_Script_startMetatable(self, "vector" s(d));
+ilS_startMetatable(self, "vector" s(d));
 mt_fun(add, d); 
 mt_fun(sub, d); 
 mt_fun(mul, d); 
@@ -34,6 +34,6 @@ mt_fun(tostring, d);
 mt_fun(index, d); 
 mt_fun(newindex, d);
 
-il_Script_typeTable(self->L, "vector" s(d));
+ilS_typeTable(self->L, "vector" s(d));
 
-il_Script_endTable(self, c(l,d), "vector" s(d));
+ilS_endTable(self, c(l,d), "vector" s(d));

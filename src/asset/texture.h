@@ -3,6 +3,6 @@
 
 #include "asset.h"
 
-unsigned int il_Asset_assetToTexture(il_Asset_Asset *asset);
+unsigned int ilA_assetToTexture(ilA_asset *asset);
 
 #endif

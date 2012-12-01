@@ -7,17 +7,17 @@
 #include "common/quaternion.h"
 #include "common/keymap.h"
 
-typedef struct il_Graphics_Camera {
-  il_Common_Positionable* positionable;
+typedef struct ilG_camera {
+  il_positionable* positionable;
   sg_Vector3 movespeed;
   sg_Matrix projection_matrix;
   float sensitivity;
   unsigned refs;
-} il_Graphics_Camera;
+} ilG_camera;
 
-il_Graphics_Camera* il_Graphics_Camera_new(il_Common_Positionable * parent);
+ilG_camera* ilG_camera_new(il_positionable * parent);
 
-void il_Graphics_Camera_setEgoCamKeyHandlers(il_Graphics_Camera* camera, il_Common_Keymap * keymap);
-void il_Graphics_Camera_setMovespeed(il_Graphics_Camera* camera, sg_Vector3 movespeed, float radians_per_pixel);
+void ilG_camera_setEgoCamKeyHandlers(ilG_camera* camera, il_keymap * keymap);
+void ilG_camera_setMovespeed(ilG_camera* camera, sg_Vector3 movespeed, float radians_per_pixel);
 
 #endif

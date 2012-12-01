@@ -8,30 +8,30 @@
 #include "common/vector.h"
 #include "script/interface.h"
 
-int il_Common_Terrain_wrap(lua_State* L, il_Common_Terrain* ter)
+int il_terrain_wrap(lua_State* L, il_terrain* ter)
 {
-    return il_Script_createMakeLight(L, ter, "terraindata");
+    return ilS_createMakeLight(L, ter, "terraindata");
 }
 
 static int create(lua_State* L)
 {
-    return il_Common_Terrain_wrap(L, il_Common_Terrain_new());
+    return il_terrain_wrap(L, il_terrain_new());
 }
 
 static int ter_index(lua_State* L)
 {
-    il_Common_Terrain* ter = il_Script_getPointer(L, 1, "terraindata", NULL);
-    il_Common_String k = il_Script_getString(L, 2);
+    il_terrain* ter = ilS_getPointer(L, 1, "terraindata", NULL);
+    il_string k = ilS_getString(L, 2);
 
     if (il_strcmp(k, il_l("width"))) {
         int w;
-        il_Common_Terrain_getSize(ter, &w, NULL);
+        il_terrain_getSize(ter, &w, NULL);
         lua_pushinteger(L, w);
         return 1;
     }
     if (il_strcmp(k, il_l("height"))) {
         int h;
-        il_Common_Terrain_getSize(ter, &h, NULL);
+        il_terrain_getSize(ter, &h, NULL);
         lua_pushinteger(L, h);
         return 1;
     }
@@ -41,29 +41,29 @@ static int ter_index(lua_State* L)
 
 static int getpoint(lua_State* L)
 {
-    il_Common_Terrain* ter = il_Script_getPointer(L, 1, "terraindata", NULL);
+    il_terrain* ter = ilS_getPointer(L, 1, "terraindata", NULL);
     unsigned x = luaL_checkunsigned(L, 2);
     unsigned y = luaL_checkunsigned(L, 3);
     double z = luaL_optnumber(L, 4, NAN);
-    double ret = il_Common_Terrain_getPoint(ter, x, y, z);
+    double ret = il_terrain_getPoint(ter, x, y, z);
     lua_pushnumber(L, ret);
     return 1;
 }
 
 static int getnormal(lua_State* L)
 {
-    il_Common_Terrain* ter = il_Script_getPointer(L, 1, "terraindata", NULL);
+    il_terrain* ter = ilS_getPointer(L, 1, "terraindata", NULL);
     unsigned x = luaL_checkunsigned(L, 2);
     unsigned y = luaL_checkunsigned(L, 3);
     double z = luaL_optnumber(L, 4, NAN);
-    sg_Vector3 ret = il_Common_Terrain_getNormal(ter, x, y, z);
+    sg_Vector3 ret = il_terrain_getNormal(ter, x, y, z);
     sg_Vector3_wrap(L, ret);
     return 1;
 }
 
 static int heightmap(lua_State* L)
 {
-    il_Common_Terrain* ter = il_Script_getPointer(L, 1, "terraindata", NULL);
+    il_terrain* ter = ilS_getPointer(L, 1, "terraindata", NULL);
     int w = luaL_checkinteger(L, 2);
     int h = luaL_checkinteger(L, 3);
     if (!lua_istable(L, 4)) luaL_argerror(L, 4, "Expected table");
@@ -83,7 +83,7 @@ static int heightmap(lua_State* L)
             map[y*w + x] = (float)n;
         }
     }
-    il_Common_Terrain_heightmapFromMemory(ter, w, h, map);
+    il_terrain_heightmapFromMemory(ter, w, h, map);
 
     return 0;
 }
@@ -105,7 +105,7 @@ long long hash_seed(const char *s)
 
 static int from_seed(lua_State* L)
 {
-    il_Common_Terrain* ter = il_Script_getPointer(L, 1, "terraindata", NULL);
+    il_terrain* ter = ilS_getPointer(L, 1, "terraindata", NULL);
 
     if (!lua_isnumber(L,2) && !lua_isstring(L,2)) return luaL_argerror(L, 2, "Expected number or string");
     long long seed = lua_isnumber(L,2)? luaL_optlong(L, 2, 0) : hash_seed(luaL_checkstring(L, 2));
@@ -113,19 +113,19 @@ static int from_seed(lua_State* L)
     float resolution = luaL_optnumber(L, 2, 1.0);
     float viewdistance = luaL_optnumber(L, 2, 100.0);
 
-    il_Common_Terrain_heightmapFromSeed(ter, seed, resolution, viewdistance);
+    il_terrain_heightmapFromSeed(ter, seed, resolution, viewdistance);
 
     return 0;
 }
 
-void il_Common_Terrain_luaGlobals(il_Script_Script* self, void * ctx)
+void il_terrain_luaGlobals(ilS_script* self, void * ctx)
 {
     (void)ctx;
 
     luaL_Reg l[] = {
         {"create",        &create         },
-        {"getType",       &il_Script_typeGetter},
-        {"isA",           &il_Script_isA  },
+        {"getType",       &ilS_typeGetter},
+        {"isA",           &ilS_isA  },
 
         {"getPoint",      &getpoint       },
         {"getNormal",     &getnormal      },
@@ -135,13 +135,13 @@ void il_Common_Terrain_luaGlobals(il_Script_Script* self, void * ctx)
         {NULL,            NULL            }
     };
 
-    il_Script_startTable(self, l);
+    ilS_startTable(self, l);
 
-    il_Script_startMetatable(self, "terraindata");
-    il_Script_pushFunc(self->L, "__index", &ter_index);
+    ilS_startMetatable(self, "terraindata");
+    ilS_pushFunc(self->L, "__index", &ter_index);
 
-    il_Script_typeTable(self->L, "terraindata");
+    ilS_typeTable(self->L, "terraindata");
 
-    il_Script_endTable(self, l, "terraindata");
+    ilS_endTable(self, l, "terraindata");
 
 }

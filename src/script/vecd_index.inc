@@ -8,7 +8,7 @@
 #define vecd c(sg_Vector, d)
 
 static int c(vec,c(d,_index))(lua_State* L) {
-  vecd* v = (vecd*)il_Script_getPointer(L, 1, "vector" s(d), NULL);
+  vecd* v = (vecd*)ilS_getPointer(L, 1, "vector" s(d), NULL);
   const char * k = lua_tolstring(L, 2, NULL);
   
   if (k != NULL) {
@@ -50,7 +50,7 @@ static int c(vec,c(d,_index))(lua_State* L) {
 }
 
 static int c(vec, c(d,_newindex))(lua_State* L) {
-  vecd* t = (vecd*)il_Script_getPointer(L, 1, "vector" s(d), NULL);
+  vecd* t = (vecd*)ilS_getPointer(L, 1, "vector" s(d), NULL);
   if (!lua_isstring(L, 2)) return luaL_error(L, "Expected string key");
   const char * k = lua_tolstring(L, 2, NULL);
   if (!lua_isnumber(L, 3)) return luaL_error(L, "Expected number value");

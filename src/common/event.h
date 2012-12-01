@@ -6,22 +6,22 @@
 
 struct timeval;
 
-typedef struct il_Event_Event {
+typedef struct ilE_event {
   uint16_t eventid;
   uint8_t size;
   uint8_t data[];
-} il_Event_Event;
+} ilE_event;
 
-typedef void(*il_Event_Callback)(il_Event_Event*, void * ctx);
+typedef void(*ilE_callback)(ilE_event*, void * ctx);
 
-const il_Event_Event* il_Event_new(uint16_t eventid, uint8_t size, void * data);
+const ilE_event* ilE_new(uint16_t eventid, uint8_t size, void * data);
 
-int il_Event_push(const il_Event_Event* event);
+int ilE_push(const ilE_event* event);
 
-int il_Event_pushnew(uint16_t eventid, uint8_t size, void * data);
+int ilE_pushnew(uint16_t eventid, uint8_t size, void * data);
 
-int il_Event_timer(const il_Event_Event* event, struct timeval * interval);
+int ilE_timer(const ilE_event* event, struct timeval * interval);
 
-int il_Event_register(uint16_t eventid, il_Event_Callback callback, void * ctx);
+int ilE_register(uint16_t eventid, ilE_callback callback, void * ctx);
 
 #endif

@@ -5,10 +5,10 @@
 
 #include "world.h"
 
-typedef struct il_Physics_Joint {
+typedef struct ilP_joint {
   unsigned refs;
   dJointID jointid;
-  il_Physics_World *world;
-} il_Physics_Joint;
+  ilP_world *world;
+} ilP_joint;
 
 #endif

@@ -8,6 +8,6 @@
 
 #define IL_GRAPHICS_TICK_LENGTH (16666)
 
-void il_Graphics_init();
+void ilG_init();
 
 #endif

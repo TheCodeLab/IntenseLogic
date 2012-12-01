@@ -8,18 +8,18 @@
 #include "common/positionable.h"
 #include "graphics/camera.h"
 
-const char * il_Graphics_strerror(GLenum err);
+const char * ilG_strerror(GLenum err);
 
-void il_Graphics_testError_(const char *file, int line, const char *func, 
+void ilG_testError_(const char *file, int line, const char *func,
   const char* fmt, ...);
 
-#define il_Graphics_testError(...) il_Graphics_testError_(__FILE__, __LINE__, \
+#define ilG_testError(...) ilG_testError_(__FILE__, __LINE__, \
   __func__, __VA_ARGS__);
-#define IL_GRAPHICS_TESTERROR il_Graphics_testError
+#define IL_GRAPHICS_TESTERROR ilG_testError
 
-GLuint il_Graphics_makeShader(GLenum type, il_Common_String source);
-void il_Graphics_linkProgram(GLuint program);
-void il_Graphics_bindUniforms(GLuint program, const il_Graphics_Camera *camera,
-  const il_Common_Positionable * object);
+GLuint ilG_makeShader(GLenum type, il_string source);
+void ilG_linkProgram(GLuint program);
+void ilG_bindUniforms(GLuint program, const ilG_camera *camera,
+  const il_positionable * object);
 
 #endif
