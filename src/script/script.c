@@ -88,7 +88,7 @@ static int luaerror(lua_State* L) {
 }
 
 il_Script_Script * il_Script_new() {
-  il_Script_Script* s = calloc(sizeof(il_Script_Script), 1);
+  il_Script_Script* s = calloc(1, sizeof(il_Script_Script));
   
   return s;
 }

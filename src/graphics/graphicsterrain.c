@@ -119,7 +119,7 @@ static void pheightmap_draw(il_Graphics_Terrain* ter, void* ctx,
 il_Graphics_Terrain* il_Graphics_Terrain_new(il_Common_Terrain* parent, 
   il_Common_Positionable* positionable) 
 {
-  il_Graphics_Terrain * ter = calloc(sizeof(il_Graphics_Terrain),1);
+  il_Graphics_Terrain * ter = calloc(1, sizeof(il_Graphics_Terrain));
   ter->terrain = parent;
   ter->drawable.draw = (il_Graphics_Drawable3d_cb)&terrain_draw;
   switch(parent->type) {

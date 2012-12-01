@@ -8,14 +8,13 @@ struct il_Common_WorldIterator {
 };
 
 il_Common_World* il_Common_World_new() {
-  il_Common_World * w = calloc(sizeof(il_Common_World),1);
+  il_Common_World * w = calloc(1, sizeof(il_Common_World));
   w->refs = 1;
   return w;
 }
 
 void il_Common_World_add(il_Common_World* self, il_Common_Positionable* pos) {
-  il_Common_Positionable** temp = calloc(sizeof(il_Common_Positionable*), 
-    self->nobjects);
+  il_Common_Positionable** temp = calloc(self->nobjects, sizeof(il_Common_Positionable*));
   memcpy(temp, self->objects, sizeof(il_Common_Positionable*) * self->nobjects);
   temp[self->nobjects] = pos;
   free(self->objects);

@@ -26,7 +26,7 @@ struct il_Common_Terrain {
 
 il_Common_Terrain * il_Common_Terrain_new() 
 {
-  il_Common_Terrain * ter = calloc(sizeof(il_Common_Terrain), 1);
+  il_Common_Terrain * ter = calloc(1, sizeof(il_Common_Terrain));
   ter->refs = 1;
   return ter;
 }

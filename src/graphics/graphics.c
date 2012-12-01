@@ -72,7 +72,7 @@ void il_Graphics_init()
 {
   srand((unsigned)time(NULL)); //temp
   
-  keymap = calloc(sizeof(il_Common_Keymap), 1);
+  keymap = calloc(1, sizeof(il_Common_Keymap));
   il_Common_Keymap_defaults(keymap);
   il_Common_Keymap_parse("keymap.ini", keymap);
   il_Common_log(3, "camera: %s %s %s %s %s %s", keymap->camera_up, 
@@ -113,6 +113,7 @@ void il_Graphics_init()
   glfwSetMouseWheelCallback(&mousewheel_cb);
   
   // GLEW
+  glewExperimental = GL_TRUE;
   GLenum err = glewInit();
 
   if (GLEW_OK != err) {

@@ -16,7 +16,7 @@ il_Graphics_World * il_Graphics_World_new() {
 }
 
 il_Graphics_World * il_Graphics_World_new_world(il_Common_World * world) {
-  il_Graphics_World * w = calloc(sizeof(il_Graphics_World),1);
+  il_Graphics_World * w = calloc(1, sizeof(il_Graphics_World));
   w->world = world;
   world->refs++;
   w->refs = 1;
