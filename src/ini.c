@@ -1,7 +1,7 @@
 /* inih -- simple .INI file parser
 
-inih is released under the New BSD license (see LICENSE.txt). Go to the project
-home page for more info:
+   inih is released under the New BSD license (see LICENSE.txt). Go to the project
+   home page for more info:
 
 http://code.google.com/p/inih/
 
@@ -80,8 +80,8 @@ int ini_parse_file(FILE* file,
         start = line;
 #if INI_ALLOW_BOM
         if (lineno == 1 && (unsigned char)start[0] == 0xEF &&
-                           (unsigned char)start[1] == 0xBB &&
-                           (unsigned char)start[2] == 0xBF) {
+                (unsigned char)start[1] == 0xBB &&
+                (unsigned char)start[2] == 0xBF) {
             start += 3;
         }
 #endif
@@ -105,13 +105,11 @@ int ini_parse_file(FILE* file,
                 *end = '\0';
                 strncpy0(section, start + 1, sizeof(section));
                 *prev_name = '\0';
-            }
-            else if (!error) {
+            } else if (!error) {
                 /* No ']' found on section line */
                 error = lineno;
             }
-        }
-        else if (*start && *start != ';') {
+        } else if (*start && *start != ';') {
             /* Not a comment, must be a name[=:]value pair */
             end = find_char_or_comment(start, '=');
             if (*end != '=') {
@@ -130,8 +128,7 @@ int ini_parse_file(FILE* file,
                 strncpy0(prev_name, name, sizeof(prev_name));
                 if (!handler(user, section, name, value) && !error)
                     error = lineno;
-            }
-            else if (!error) {
+            } else if (!error) {
                 /* No '=' or ':' found on name[=:]value line */
                 error = lineno;
             }
