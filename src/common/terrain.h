@@ -3,17 +3,17 @@
 
 #include "common/matrix.h"
 
-typedef struct il_Common_Terrain il_Common_Terrain;
+typedef struct il_terrain il_terrain;
 
-il_Common_Terrain * il_Common_Terrain_new();
+il_terrain * il_terrain_new();
 
-void il_Common_Terrain_getSize(il_Common_Terrain*, int *width, int *height);
-double il_Common_Terrain_getPoint(il_Common_Terrain*, unsigned x, unsigned y, double height);
-sg_Vector3 il_Common_Terrain_getNormal(il_Common_Terrain*, unsigned x, unsigned y, double z);
+void il_terrain_getSize(il_terrain*, int *width, int *height);
+double il_terrain_getPoint(il_terrain*, unsigned x, unsigned y, double height);
+sg_Vector3 il_terrain_getNormal(il_terrain*, unsigned x, unsigned y, double z);
 
-int il_Common_Terrain_heightmapFromMemory(il_Common_Terrain*, 
+int il_terrain_heightmapFromMemory(il_terrain*,
   int width, int height, const float * points);
-int il_Common_Terrain_heightmapFromSeed(il_Common_Terrain*, long long seed,
+int il_terrain_heightmapFromSeed(il_terrain*, long long seed,
   float resolution, float viewdistance);
 
 #endif

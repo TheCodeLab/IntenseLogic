@@ -1,11 +1,11 @@
 #include "world.h"
 
-il_Physics_World* il_Physics_World_create(const il_Common_World* parent)
+ilP_world* ilP_world_create(const il_world* parent)
 {
-    il_Physics_World *world = (il_Physics_World*)calloc(1, sizeof(il_Physics_World));
+    ilP_world *world = (ilP_world*)calloc(1, sizeof(ilP_world));
 
-    *world = (il_Physics_World) {
-        (il_Common_World*)parent,
+    *world = (ilP_world) {
+        (il_world*)parent,
         9.81,
         0,
         dWorldCreate(),

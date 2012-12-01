@@ -13,15 +13,15 @@
 ////////////////////////////////////////////////////////////////////////////////
 // Drawable
 
-int il_Graphics_Drawable3d_wrap(lua_State* L, il_Graphics_Drawable3d* self)
+int ilG_drawable3d_wrap(lua_State* L, ilG_drawable3d* self)
 {
-    return il_Script_createMakeLight(L, self, "drawable");
+    return ilS_createMakeLight(L, self, "drawable");
 }
 
 static int drawable_index(lua_State* L)
 {
-    il_Graphics_Drawable3d* self =
-        il_Script_getChildT(L, 1, NULL, lua_upvalueindex(2));
+    ilG_drawable3d* self =
+        ilS_getChildT(L, 1, NULL, lua_upvalueindex(2));
 
     const char* k = luaL_checkstring(L, 2);
 
@@ -30,7 +30,7 @@ static int drawable_index(lua_State* L)
         return 1;
     }
     if (strcmp(k, "positionable")) {
-        il_Common_Positionable_wrap(L, self->positionable);
+        il_positionable_wrap(L, self->positionable);
         return 1;
     }
     return 0;
@@ -39,39 +39,39 @@ static int drawable_index(lua_State* L)
 ////////////////////////////////////////////////////////////////////////////////
 // Terrain
 
-struct il_Graphics_Terrain {
-    il_Graphics_Drawable3d drawable;
-    il_Common_Terrain * terrain;
+struct ilG_terrain {
+    ilG_drawable3d drawable;
+    il_terrain * terrain;
     GLuint *buf;
     GLuint program;
     void *draw_ctx;
-    void (*draw)(il_Graphics_Terrain*, void*, const il_Graphics_Camera*,
+    void (*draw)(ilG_terrain*, void*, const ilG_camera*,
                  const struct timeval*);
 };
 
-int il_Graphics_Terrain_wrap(lua_State* L, il_Graphics_Terrain* self)
+int ilG_terrain_wrap(lua_State* L, ilG_terrain* self)
 {
-    return il_Script_createMakeLight(L, self, "terrain");
+    return ilS_createMakeLight(L, self, "terrain");
 }
 
 static int terrain_create(lua_State* L)
 {
-    il_Common_Terrain* ter = il_Script_getPointer(L, 1, "terraindata", NULL);
-    il_Common_Positionable* pos = il_Script_getPointer(L, 2, "positionable", NULL);
+    il_terrain* ter = ilS_getPointer(L, 1, "terraindata", NULL);
+    il_positionable* pos = ilS_getPointer(L, 2, "positionable", NULL);
 
-    il_Graphics_Terrain* self = il_Graphics_Terrain_new(ter, pos);
+    ilG_terrain* self = ilG_terrain_new(ter, pos);
 
-    return il_Graphics_Terrain_wrap(L, self);
+    return ilG_terrain_wrap(L, self);
 }
 
 static int terrain_index(lua_State* L)
 {
-    il_Graphics_Terrain* self =
-        il_Script_getChildT(L, 1, NULL, lua_upvalueindex(2));
+    ilG_terrain* self =
+        ilS_getChildT(L, 1, NULL, lua_upvalueindex(2));
     const char * k = luaL_checkstring(L, 2);
 
     if (strcmp(k, "data")) {
-        return il_Common_Terrain_wrap(L, self->terrain);
+        return il_terrain_wrap(L, self->terrain);
     }
 
     return drawable_index(L);
@@ -80,8 +80,8 @@ static int terrain_index(lua_State* L)
 ////////////////////////////////////////////////////////////////////////////////
 // Shape
 
-struct il_Graphics_Shape {
-    il_Graphics_Drawable3d drawable;
+struct ilG_shape {
+    ilG_drawable3d drawable;
     int type;
     GLuint vbo;
     GLuint ibo;
@@ -92,9 +92,9 @@ struct il_Graphics_Shape {
     GLsizei count;
 };
 
-int il_Graphics_Shape_wrap(lua_State* L, il_Graphics_Shape* self)
+int ilG_shape_wrap(lua_State* L, ilG_shape* self)
 {
-    return il_Script_createMakeLight(L, self, "shape");
+    return ilS_createMakeLight(L, self, "shape");
 }
 
 static const char * const shape_lst[] = {"box", "cylinder", "sphere", "plane"};
@@ -102,20 +102,20 @@ static const char * const shape_lst[] = {"box", "cylinder", "sphere", "plane"};
 static int shape_create(lua_State* L)
 {
     int type = luaL_checkoption(L, 1, "box", shape_lst);
-    il_Common_Positionable* pos;
+    il_positionable* pos;
     if (!lua_isnone(L, 2))
-        pos = il_Script_getPointer(L, 1, "positionable", NULL);
+        pos = ilS_getPointer(L, 1, "positionable", NULL);
     else
-        pos = il_Common_Positionable_new(il_Script_getPointer(L, 1, "world", NULL));
+        pos = il_positionable_new(ilS_getPointer(L, 1, "world", NULL));
 
-    il_Graphics_Shape* self = il_Graphics_Shape_new(pos, type);
+    ilG_shape* self = ilG_shape_new(pos, type);
 
-    return il_Graphics_Shape_wrap(L, self);
+    return ilG_shape_wrap(L, self);
 }
 
 static int shape_index(lua_State* L)
 {
-    il_Graphics_Shape* self = il_Script_getPointer(L, 1, "shape", NULL);
+    ilG_shape* self = ilS_getPointer(L, 1, "shape", NULL);
     const char * k = luaL_checkstring(L, 2);
 
     if (strcmp(k, "type")) {
@@ -129,7 +129,7 @@ static int shape_index(lua_State* L)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void il_Graphics_Drawable3d_luaGlobals(il_Script_Script* self, void * ctx)
+void ilG_drawable3d_luaGlobals(ilS_script* self, void * ctx)
 {
     (void)ctx;
 
@@ -137,20 +137,20 @@ void il_Graphics_Drawable3d_luaGlobals(il_Script_Script* self, void * ctx)
     // Drawable
 
     const luaL_Reg l[] = {
-        {"getType", &il_Script_typeGetter},
-        {"isA", &il_Script_isA},
+        {"getType", &ilS_typeGetter},
+        {"isA", &ilS_isA},
 
         {NULL, NULL}
     };
 
-    il_Script_startTable(self, l);
+    ilS_startTable(self, l);
 
-    il_Script_startMetatable(self, "drawable");
-    il_Script_pushFunc(self->L, "__index", &drawable_index);
+    ilS_startMetatable(self, "drawable");
+    ilS_pushFunc(self->L, "__index", &drawable_index);
 
-    il_Script_typeTable(self->L, "drawable");
+    ilS_typeTable(self->L, "drawable");
 
-    il_Script_endTable(self, l, "drawable");
+    ilS_endTable(self, l, "drawable");
 
     /////////////
     // Terrain
@@ -161,22 +161,22 @@ void il_Graphics_Drawable3d_luaGlobals(il_Script_Script* self, void * ctx)
         {NULL, NULL}
     };
 
-    il_Script_startTable(self, terrain);
+    ilS_startTable(self, terrain);
 
-    il_Script_startMetatable(self, "terrain");
-    il_Script_pushFunc(self->L, "__index", &terrain_index);
+    ilS_startMetatable(self, "terrain");
+    ilS_pushFunc(self->L, "__index", &terrain_index);
 
-    il_Script_typeTable(self->L, "terrain", "drawable");
+    ilS_typeTable(self->L, "terrain", "drawable");
 
     luaL_setfuncs(self->L, l, 2); // put the "parent" functions into this table
 
     // continue as usual
 
-    il_Script_startMetatable(self, "terrain");
+    ilS_startMetatable(self, "terrain");
 
-    il_Script_typeTable(self->L, "terrain", "drawable");
+    ilS_typeTable(self->L, "terrain", "drawable");
 
-    il_Script_endTable(self, l, "terrain");
+    ilS_endTable(self, l, "terrain");
 
     ///////////
     // Shape
@@ -187,21 +187,21 @@ void il_Graphics_Drawable3d_luaGlobals(il_Script_Script* self, void * ctx)
         {NULL, NULL}
     };
 
-    il_Script_startTable(self, shape);
+    ilS_startTable(self, shape);
 
-    il_Script_startMetatable(self, "shape");
-    il_Script_pushFunc(self->L, "__index", &shape_index);
+    ilS_startMetatable(self, "shape");
+    ilS_pushFunc(self->L, "__index", &shape_index);
 
-    il_Script_typeTable(self->L, "shape", "drawable");
+    ilS_typeTable(self->L, "shape", "drawable");
 
     luaL_setfuncs(self->L, l, 2); // put the "parent" functions into this table
 
     // continue as usual
 
-    il_Script_startMetatable(self, "shape");
+    ilS_startMetatable(self, "shape");
 
-    il_Script_typeTable(self->L, "shape", "drawable");
+    ilS_typeTable(self->L, "shape", "drawable");
 
-    il_Script_endTable(self, l, "shape");
+    ilS_endTable(self, l, "shape");
 
 }

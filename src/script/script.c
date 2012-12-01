@@ -6,28 +6,28 @@
 #include "common/log.h"
 #include "script/interface.h"
 
-int il_Script_Script_wrap(lua_State* L, il_Script_Script* s);
+int ilS_script_wrap(lua_State* L, ilS_script* s);
 
-void il_Script_init()
+void ilS_init()
 {
-    il_Script_registerLuaRegister(&il_Script_luaGlobals, NULL);
-    il_Script_registerLuaRegister(&sg_Vector_luaGlobals, NULL);
-    il_Script_registerLuaRegister(&il_Common_Positionable_luaGlobals, NULL);
-    il_Script_registerLuaRegister(&il_Graphics_World_luaGlobals, NULL);
-    il_Script_registerLuaRegister(&sg_Quaternion_luaGlobals, NULL);
-    il_Script_registerLuaRegister(&il_Event_luaGlobals, NULL);
-    il_Script_registerLuaRegister(&il_Input_luaGlobals, NULL);
-    il_Script_registerLuaRegister(&il_Common_Terrain_luaGlobals, NULL);
-    il_Script_registerLuaRegister(&il_Asset_luaGlobals, NULL);
-    il_Script_registerLuaRegister(&il_Graphics_Drawable3d_luaGlobals, NULL);
-    il_Script_registerLuaRegister(&il_Graphics_Camera_luaGlobals, NULL);
+    ilS_registerLuaRegister(&ilS_luaGlobals, NULL);
+    ilS_registerLuaRegister(&sg_Vector_luaGlobals, NULL);
+    ilS_registerLuaRegister(&il_positionable_luaGlobals, NULL);
+    ilS_registerLuaRegister(&ilG_world_luaGlobals, NULL);
+    ilS_registerLuaRegister(&sg_Quaternion_luaGlobals, NULL);
+    ilS_registerLuaRegister(&ilE_luaGlobals, NULL);
+    ilS_registerLuaRegister(&ilI_luaGlobals, NULL);
+    ilS_registerLuaRegister(&il_terrain_luaGlobals, NULL);
+    ilS_registerLuaRegister(&ilA_luaGlobals, NULL);
+    ilS_registerLuaRegister(&ilG_drawable3d_luaGlobals, NULL);
+    ilS_registerLuaRegister(&ilG_camera_luaGlobals, NULL);
 }
 
 static int lualog(lua_State* L, int level, int fun)
 {
     int nargs = lua_gettop(L);
-    il_Common_String strs[nargs];
-    il_Common_String str;
+    il_string strs[nargs];
+    il_string str;
     int i;
 
     if (nargs < 1) {
@@ -36,7 +36,7 @@ static int lualog(lua_State* L, int level, int fun)
     }
 
     for (i = 1; i <= nargs; i++) {
-        strs[i-1] = il_Script_toString(L, i);
+        strs[i-1] = ilS_toString(L, i);
     }
     str = strs[0];
     for (i = 2; i <= nargs; i++) {
@@ -53,11 +53,11 @@ static int lualog(lua_State* L, int level, int fun)
                     ar.short_src,
                     ar.currentline,
                     ar.name,
-                    il_Common_loglevel_tostring(level),
+                    il_loglevel_tostring(level),
                     il_StoC(str)
                    );
 
-    if (level <= (int)il_Common_loglevel)
+    if (level <= (int)il_loglevel)
         printf("%s", lua_tostring(L, -1));
 
     return 1;
@@ -91,23 +91,23 @@ static int luaerror(lua_State* L)
     return lualog(L, 1, 2);
 }
 
-il_Script_Script * il_Script_new()
+ilS_script * ilS_new()
 {
-    il_Script_Script* s = calloc(1, sizeof(il_Script_Script));
+    ilS_script* s = calloc(1, sizeof(ilS_script));
 
     return s;
 }
 
-int il_Script_fromAsset(il_Script_Script* self, il_Asset_Asset * asset)
+int ilS_fromAsset(ilS_script* self, ilA_asset * asset)
 {
     if (!self || !asset) return -1;
-    self->filename = il_Common_toC(il_Asset_getPath(asset));
-    return il_Script_fromSource(self, il_Asset_readContents(asset));
+    self->filename = il_toC(ilA_getPath(asset));
+    return ilS_fromSource(self, ilA_readContents(asset));
 }
 
 struct reader_ctx {
     int loaded;
-    il_Common_String source;
+    il_string source;
 };
 static const char * reader(lua_State* L, void * data, size_t * size)
 {
@@ -119,7 +119,7 @@ static const char * reader(lua_State* L, void * data, size_t * size)
     return ctx->source.data;
 }
 
-int il_Script_fromSource(il_Script_Script* self, il_Common_String source)
+int ilS_fromSource(ilS_script* self, il_string source)
 {
     if (!self || !source.length) return -1;
     self->source = source;
@@ -143,7 +143,7 @@ int il_Script_fromSource(il_Script_Script* self, il_Common_String source)
     lua_pushnil(self->L);
     lua_setglobal(self->L, "require"); // disable require
 
-    il_Script_openLibs(self);
+    ilS_openLibs(self);
 
     lua_pushcfunction(self->L, &luaerror);
     self->ehandler = lua_gettop(self->L);
@@ -163,36 +163,36 @@ int il_Script_fromSource(il_Script_Script* self, il_Common_String source)
 static int fromsource(lua_State* L)
 {
 
-    il_Script_Script* self = (il_Script_Script*)il_Script_getPointer(L, 1, "script", NULL);
-    il_Common_String source = il_Script_getString(L, 2);
+    ilS_script* self = (ilS_script*)ilS_getPointer(L, 1, "script", NULL);
+    il_string source = ilS_getString(L, 2);
 
-    int res = il_Script_fromSource(self, source);
+    int res = ilS_fromSource(self, source);
     if (res != 0) {
         return luaL_error(L, self->err);
     }
     return 0;
 }
 
-int il_Script_fromFile(il_Script_Script* self, const char * filename)
+int ilS_fromFile(ilS_script* self, const char * filename)
 {
-    return il_Script_fromAsset(self, il_Asset_open(il_Common_fromC((char*)filename)));
+    return ilS_fromAsset(self, ilA_open(il_fromC((char*)filename)));
 }
 static int fromfile(lua_State* L)
 {
-    il_Script_Script* self = (il_Script_Script*)il_Script_getPointer(L, 1, "script", NULL);
-    il_Common_String filename = il_Script_getString(L, 2);
+    ilS_script* self = (ilS_script*)ilS_getPointer(L, 1, "script", NULL);
+    il_string filename = ilS_getString(L, 2);
 
-    int res = il_Script_fromFile(self, filename.data);
+    int res = ilS_fromFile(self, filename.data);
     if (res != 0) {
         return luaL_error(L, self->err);
     }
     return 0;
 }
 
-int il_Script_run(il_Script_Script* self)
+int ilS_run(ilS_script* self)
 {
     self->running = 1;
-    il_Common_log(3, "Running script %s", self->filename);
+    il_log(3, "Running script %s", self->filename);
     int res = lua_pcall(self->L, 0, 0, self->ehandler);
     if (res) {
         self->err = lua_tolstring(self->L, -1, &self->errlen);
@@ -203,9 +203,9 @@ int il_Script_run(il_Script_Script* self)
 }
 static int run(lua_State* L)
 {
-    il_Script_Script* self = (il_Script_Script*)il_Script_getPointer(L, 1, "script", NULL);
+    ilS_script* self = (ilS_script*)ilS_getPointer(L, 1, "script", NULL);
 
-    int res = il_Script_run(self);
+    int res = ilS_run(self);
     if (res != 0) {
         lua_pushnil(L);
         lua_pushlstring(L, self->err, self->errlen);
@@ -215,38 +215,38 @@ static int run(lua_State* L)
     return 1;
 }
 
-int il_Script_Script_wrap(lua_State* L, il_Script_Script* s)
+int ilS_script_wrap(lua_State* L, ilS_script* s)
 {
-    return il_Script_createMakeLight(L, s, "script");
+    return ilS_createMakeLight(L, s, "script");
 }
 
 static int create(lua_State* L)
 {
-    il_Script_Script* self = il_Script_new();
-    return il_Script_Script_wrap(L, self);
+    ilS_script* self = ilS_new();
+    return ilS_script_wrap(L, self);
 }
 
-void il_Script_luaGlobals(il_Script_Script* self, void * ctx)
+void ilS_luaGlobals(ilS_script* self, void * ctx)
 {
     (void)ctx;
 
     const luaL_Reg l[] = {
         {"create",      &create     },
-        {"getType",     &il_Script_typeGetter},
-        {"isA",         &il_Script_isA},
+        {"getType",     &ilS_typeGetter},
+        {"isA",         &ilS_isA},
         {"fromSource",  &fromsource },
         {"fromFile",    &fromfile   },
         {"run",         &run        },
         {NULL,          NULL        }
     };
 
-    il_Script_startTable(self, l);
+    ilS_startTable(self, l);
 
-    il_Script_startMetatable(self, "script");
+    ilS_startMetatable(self, "script");
     lua_pushvalue(self->L, -2);
     lua_setfield(self->L, -2, "__index");
 
-    il_Script_typeTable(self->L, "script");
+    ilS_typeTable(self->L, "script");
 
-    il_Script_endTable(self, l, "script");
+    ilS_endTable(self, l, "script");
 }

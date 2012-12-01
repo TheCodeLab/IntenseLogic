@@ -1,9 +1,9 @@
 
-extern void il_Event_init();
-extern void il_Input_init();
+extern void ilE_init();
+extern void ilI_init();
 
-void il_Common_init()
+void il_init()
 {
-    il_Event_init();
-    il_Input_init();
+    ilE_init();
+    ilI_init();
 }

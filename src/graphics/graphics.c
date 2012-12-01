@@ -27,71 +27,71 @@ extern unsigned time(unsigned*);
 
 int width = 800;
 int height = 600;
-il_Common_World* world;
-il_Common_Keymap * keymap;
-il_Graphics_Shape* shape;
+il_world* world;
+il_keymap * keymap;
+ilG_shape* shape;
 
-void il_Graphics_draw();
-void il_Graphics_quit();
+void ilG_draw();
+void ilG_quit();
 static GLvoid error_cb(GLenum source, GLenum type, GLuint id, GLenum severity,
                        GLsizei length, const GLchar* message, GLvoid* userParam);
 
 static void GLFWCALL key_cb(int key, int action)
 {
-    il_Common_log(4, "Key %c", key);
+    il_log(4, "Key %c", key);
     if (action == GLFW_PRESS)
-        il_Event_pushnew(IL_INPUT_KEYDOWN, sizeof(int), &key);
+        ilE_pushnew(IL_INPUT_KEYDOWN, sizeof(int), &key);
     else
-        il_Event_pushnew(IL_INPUT_KEYUP, sizeof(int), &key);
+        ilE_pushnew(IL_INPUT_KEYUP, sizeof(int), &key);
 }
 
 static void GLFWCALL mouse_cb(int button, int action)
 {
-    //il_Common_log(4, "Mouse %i", button);
+    //il_log(4, "Mouse %i", button);
     if (action == GLFW_PRESS)
-        il_Event_pushnew(IL_INPUT_MOUSEDOWN, sizeof(int), &button);
+        ilE_pushnew(IL_INPUT_MOUSEDOWN, sizeof(int), &button);
     else
-        il_Event_pushnew(IL_INPUT_MOUSEUP, sizeof(int), &button);
+        ilE_pushnew(IL_INPUT_MOUSEUP, sizeof(int), &button);
 }
 
 static void GLFWCALL mousemove_cb(int x, int y)
 {
-    il_Input_MouseMove mousemove =
-    (il_Input_MouseMove) {
+    ilI_mouseMove mousemove =
+    (ilI_mouseMove) {
         x, y
     };
-    il_Event_pushnew(IL_INPUT_MOUSEMOVE, sizeof(il_Input_MouseMove), &mousemove);
+    ilE_pushnew(IL_INPUT_MOUSEMOVE, sizeof(ilI_mouseMove), &mousemove);
 }
 
 static void GLFWCALL mousewheel_cb(int pos)
 {
-    il_Input_MouseWheel mousewheel =
-    (il_Input_MouseWheel) {
+    ilI_mouseWheel mousewheel =
+    (ilI_mouseWheel) {
         0, pos
     };
-    il_Event_pushnew(IL_INPUT_MOUSEWHEEL, sizeof(il_Input_MouseWheel), &mousewheel);
+    ilE_pushnew(IL_INPUT_MOUSEWHEEL, sizeof(ilI_mouseWheel), &mousewheel);
 }
 
-void il_Graphics_init()
+void ilG_init()
 {
     srand((unsigned)time(NULL)); //temp
 
-    keymap = calloc(1, sizeof(il_Common_Keymap));
-    il_Common_Keymap_defaults(keymap);
-    il_Common_Keymap_parse("keymap.ini", keymap);
-    il_Common_log(3, "camera: %s %s %s %s %s %s", keymap->camera_up,
+    keymap = calloc(1, sizeof(il_keymap));
+    il_keymap_defaults(keymap);
+    il_keymap_parse("keymap.ini", keymap);
+    il_log(3, "camera: %s %s %s %s %s %s", keymap->camera_up,
                   keymap->camera_down, keymap->camera_left, keymap->camera_right,
                   keymap->camera_forward, keymap->camera_backward);
 
     if (!glfwInit()) {
-        il_Common_log(0, "glfwInit() failed");
+        il_log(0, "glfwInit() failed");
         abort();
     }
 
     {
         int major, minor, rev;
         glfwGetVersion(&major, &minor, &rev);
-        il_Common_log(3, "Using GLFW version %i.%i.%i", major, minor, rev);
+        il_log(3, "Using GLFW version %i.%i.%i", major, minor, rev);
     }
 
     glfwOpenWindowHint(GLFW_OPENGL_VERSION_MAJOR, 3);
@@ -106,7 +106,7 @@ void il_Graphics_init()
 #endif
 
     if (!glfwOpenWindow(width, height, 8, 8, 8, 8, 32, 8, GLFW_WINDOW)) {
-        il_Common_log(0, "glfwOpenWindow() failed");
+        il_log(0, "glfwOpenWindow() failed");
         abort();
     }
 
@@ -121,26 +121,26 @@ void il_Graphics_init()
     GLenum err = glewInit();
 
     if (GLEW_OK != err) {
-        il_Common_log(0, "glewInit() failed: %s", glewGetErrorString(err));
+        il_log(0, "glewInit() failed: %s", glewGetErrorString(err));
         abort();
     }
-    il_Common_log(3, "Using GLEW %s", glewGetString(GLEW_VERSION));
+    il_log(3, "Using GLEW %s", glewGetString(GLEW_VERSION));
 
 #ifndef __APPLE__
     if (!GLEW_VERSION_3_1) {
-        il_Common_log(1, "GL version 3.1 is required, trying anyway");
+        il_log(1, "GL version 3.1 is required, trying anyway");
         //abort();
     }
 #endif
 
     if (GLEW_ARB_debug_output) {
         glDebugMessageCallbackARB((GLDEBUGPROCARB)&error_cb, NULL);
-        il_Common_log(3, "ARB_debug_output present, enabling advanced errors");
+        il_log(3, "ARB_debug_output present, enabling advanced errors");
     } else
-        il_Common_log(3, "ARB_debug_output missing");
+        il_log(3, "ARB_debug_output missing");
 
     // setup our shader directory
-    il_Asset_registerReadDir(il_Common_fromC("shaders"),0);
+    ilA_registerReadDir(il_fromC("shaders"),0);
 
     // GL setup
     glClearColor(0,0,0,1);
@@ -149,46 +149,46 @@ void il_Graphics_init()
     glEnable(GL_DEPTH_TEST);
 
     // register events
-    il_Event_register(IL_GRAPHICS_TICK, (il_Event_Callback)&il_Graphics_draw,
+    ilE_register(IL_GRAPHICS_TICK, (ilE_callback)&ilG_draw,
                       NULL);
-    il_Event_register(IL_BASE_SHUTDOWN, (il_Event_Callback)&il_Graphics_quit,
+    ilE_register(IL_BASE_SHUTDOWN, (ilE_callback)&ilG_quit,
                       NULL);
 
     // create the world
-    world = il_Common_World_new();
-    il_Graphics_active_world = il_Graphics_World_new_world(world);
-    il_Graphics_active_world->camera = il_Graphics_Camera_new(
-                                           il_Common_Positionable_new(world));
-    il_Graphics_active_world->camera->movespeed = (sg_Vector3) {
+    world = il_world_new();
+    ilG_active_world = ilG_world_new_world(world);
+    ilG_active_world->camera = ilG_camera_new(
+                                           il_positionable_new(world));
+    ilG_active_world->camera->movespeed = (sg_Vector3) {
         1,1,1
     };
-    il_Graphics_active_world->camera->projection_matrix = sg_Matrix_perspective(
+    ilG_active_world->camera->projection_matrix = sg_Matrix_perspective(
                 75, (float)width/(float)height, 0.25, 100);
-    il_Graphics_Camera_setEgoCamKeyHandlers(il_Graphics_active_world->camera,
+    ilG_camera_setEgoCamKeyHandlers(ilG_active_world->camera,
                                             keymap);
 
-    il_Common_Positionable * shape_positionable = il_Common_Positionable_new(
+    il_positionable * shape_positionable = il_positionable_new(
                 world);
     shape_positionable->position = (sg_Vector3) {
         1,0,0
     };
-    shape = il_Graphics_Shape_new(
+    shape = ilG_shape_new(
                 shape_positionable,
-                il_Graphics_Box
+                ilG_box
             );
     if (!shape) {
-        il_Common_log(0, "Failed to create demo shape");
+        il_log(0, "Failed to create demo shape");
         abort();
     }
 
-    /*il_Common_Terrain *ter = il_Common_Terrain_new();
-      il_Common_Terrain_heightmapFromSeed(
+    /*il_terrain *ter = il_terrain_new();
+      il_terrain_heightmapFromSeed(
       ter,
       0xD34DB33F, // seed, does nothing atm
       1.0, // resolution
       100 //viewdistance
       );
-      il_Graphics_Terrain_new(ter, il_Common_Positionable_new(world));
+      ilG_terrain_new(ter, il_positionable_new(world));
       */
 
     glfwSwapInterval(1); // 1:1 ratio of frames to vsyncs
@@ -196,33 +196,33 @@ void il_Graphics_init()
     int hz = glfwGetWindowParam(GLFW_REFRESH_RATE);
     struct timeval *tv = calloc(1, sizeof(struct timeval));
     tv->tv_usec = hz>0? 1000000.0/hz : 1000000.0/60;
-    il_Event_timer(il_Event_new(IL_GRAPHICS_TICK, 0, NULL), tv); // kick off the draw loop
+    ilE_timer(ilE_new(IL_GRAPHICS_TICK, 0, NULL), tv); // kick off the draw loop
 }
 
-void il_Graphics_draw()
+void ilG_draw()
 {
     if (!glfwGetWindowParam(GLFW_OPENED)) {
-        il_Event_pushnew(IL_BASE_SHUTDOWN, 0, NULL);
+        ilE_pushnew(IL_BASE_SHUTDOWN, 0, NULL);
         return;
     }
-    //il_Common_log(5, "Rendering frame");
+    //il_log(5, "Rendering frame");
     struct timeval * tv = calloc(1, sizeof(struct timeval));
-    il_Common_Positionable* pos;
-    il_Graphics_Drawable3d* dr;
-    il_Common_WorldIterator* witer = NULL;
-    il_Graphics_Drawable3dIterator* diter;
+    il_positionable* pos;
+    ilG_drawable3d* dr;
+    il_worldIterator* witer = NULL;
+    ilG_drawable3dIterator* diter;
 
     glClearColor(0,0,0,1);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     gettimeofday(tv, NULL);
 
-    while ((pos = il_Common_World_iterate(il_Graphics_active_world->world,
+    while ((pos = il_world_iterate(ilG_active_world->world,
                                           &witer))) {
 
         diter = NULL;
-        while ((dr = il_Graphics_Drawable3d_iterate(pos, &diter))) {
+        while ((dr = ilG_drawable3d_iterate(pos, &diter))) {
             if (dr->draw) {
-                dr->draw(il_Graphics_active_world->camera, dr, tv);
+                dr->draw(ilG_active_world->camera, dr, tv);
             }
         }
     }
@@ -297,11 +297,11 @@ static GLvoid error_cb(GLenum source, GLenum type, GLuint id, GLenum severity,
     default:
         sseverity="???";
     }
-    fprintf(il_Common_logfile, "OpenGL %s (%s) %s: %s\n", ssource, stype,
+    fprintf(il_logfile, "OpenGL %s (%s) %s: %s\n", ssource, stype,
             sseverity, message);
 }
 
-void il_Graphics_quit()
+void ilG_quit()
 {
     glfwTerminate();
 }

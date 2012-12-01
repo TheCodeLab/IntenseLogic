@@ -4,27 +4,27 @@
 #include <stdio.h>
 #include "common/string.h"
 
-void il_Asset_init();
+void ilA_init();
 
 #define IL_ASSET_READFILE(name) \
-  (il_Asset_readContents(il_Asset_open(il_Common_fromC(name))))
+  (ilA_readContents(ilA_open(il_fromC(name))))
 
-typedef struct il_Asset_Asset il_Asset_Asset;
+typedef struct ilA_asset ilA_asset;
 
-void il_Asset_setWriteDir(il_Common_String path);
+void ilA_setWriteDir(il_string path);
 
-void il_Asset_registerReadDir(il_Common_String path, int priority);
+void ilA_registerReadDir(il_string path, int priority);
 
-il_Asset_Asset* il_Asset_open(il_Common_String path);
+ilA_asset* ilA_open(il_string path);
 
-il_Common_String il_Asset_getPath(il_Asset_Asset*);
+il_string ilA_getPath(ilA_asset*);
 
-FILE* il_Asset_getHandle(il_Asset_Asset* asset, const char *flags);
+FILE* ilA_getHandle(ilA_asset* asset, const char *flags);
 
-il_Common_String il_Asset_readContents(il_Asset_Asset* asset);
+il_string ilA_readContents(ilA_asset* asset);
 
-void il_Asset_close(il_Asset_Asset* asset);
+void ilA_close(ilA_asset* asset);
 
-int il_Asset_delete(il_Asset_Asset* asset);
+int ilA_delete(ilA_asset* asset);
 
 #endif

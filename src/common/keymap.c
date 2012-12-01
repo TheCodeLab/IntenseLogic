@@ -1,7 +1,7 @@
 #ifndef IL_COMMON_KEYMAP_H
 #define IL_COMMON_KEYMAP_H
 
-#define IL_CONFIG_TYPE il_Common_Keymap
+#define IL_CONFIG_TYPE il_keymap
 #define IL_CONFIG_DEFS "common/keymap.defs"
 
 #include "common/config.c.h"
@@ -11,7 +11,7 @@
 
 #include <stdlib.h>
 
-int il_Common_Keymap_getkey(const char* key)
+int il_keymap_getkey(const char* key)
 {
     if (strlen(key) == 1)
         return (int)key[0];

@@ -11,32 +11,32 @@
 #include "common/string.h"
 #include "asset/asset.h"
 
-void il_Script_init();
+void ilS_init();
 
-typedef struct il_Script_Script {
-  il_Common_String source;
+typedef struct ilS_script {
+  il_string source;
   const char * filename;
   int running;
   lua_State * L;
   int ehandler;
   size_t errlen;
   const char * err;
-} il_Script_Script;
+} ilS_script;
 
-#define il_Script_loadfile(f) {   \
-  il_Script_Script* script;       \
-  script = il_Script_new();       \
-  il_Script_fromFile(script, f);  \
-  int res = il_Script_run(script);\
+#define ilS_loadfile(f) {   \
+  ilS_script* script;       \
+  script = ilS_new();       \
+  ilS_fromFile(script, f);  \
+  int res = ilS_run(script);\
   if (res != 0) {                 \
     abort();                      \
   }                               \
 }
 
-il_Script_Script * il_Script_new();
-int il_Script_fromAsset(il_Script_Script*, il_Asset_Asset * asset);
-int il_Script_fromSource(il_Script_Script*, il_Common_String source);
-int il_Script_fromFile(il_Script_Script*, const char * filename);
-int il_Script_run(il_Script_Script*);
+ilS_script * ilS_new();
+int ilS_fromAsset(ilS_script*, ilA_asset * asset);
+int ilS_fromSource(ilS_script*, il_string source);
+int ilS_fromFile(ilS_script*, const char * filename);
+int ilS_run(ilS_script*);
 
 #endif

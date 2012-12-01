@@ -5,14 +5,14 @@
 
 #include "common/world.h"
 
-typedef struct il_Physics_World {
-  il_Common_World *world;
+typedef struct ilP_world {
+  il_world *world;
   float gravity;
   unsigned refs;
   dWorldID worldid;
   int active;
-} il_Physics_World;
+} ilP_world;
 
-il_Physics_World* il_Physics_World_create(const il_Common_World* parent);
+ilP_world* ilP_world_create(const il_world* parent);
 
 #endif

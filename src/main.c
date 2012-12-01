@@ -22,8 +22,8 @@
 #include "common/log.h"
 #include "common/entity.h"
 
-extern struct event_base * il_Event_base;
-extern void il_Common_init();
+extern struct event_base * ilE_base;
+extern void il_init();
 
 const char *optstring = "hl:v::r:p:";
 
@@ -56,52 +56,52 @@ const char *help[] = {
 static void GLFWCALL key_cb(int key, int action)
 {
     if (action == GLFW_PRESS)
-        il_Event_pushnew(IL_INPUT_KEYDOWN, sizeof(int), &key);
+        ilE_pushnew(IL_INPUT_KEYDOWN, sizeof(int), &key);
     else
-        il_Event_pushnew(IL_INPUT_KEYUP, sizeof(int), &key);
+        ilE_pushnew(IL_INPUT_KEYUP, sizeof(int), &key);
 }
 
 static void GLFWCALL mouse_cb(int button, int action)
 {
     if (action == GLFW_PRESS)
-        il_Event_pushnew(IL_INPUT_MOUSEDOWN, sizeof(int), &button);
+        ilE_pushnew(IL_INPUT_MOUSEDOWN, sizeof(int), &button);
     else
-        il_Event_pushnew(IL_INPUT_MOUSEUP, sizeof(int), &button);
+        ilE_pushnew(IL_INPUT_MOUSEUP, sizeof(int), &button);
 }
 
 static void GLFWCALL mousemove_cb(int x, int y)
 {
-    il_Input_MouseMove mousemove =
-    (il_Input_MouseMove) {
+    ilI_mouseMove mousemove =
+    (ilI_mouseMove) {
         x, y
     };
-    il_Event_pushnew(IL_INPUT_MOUSEMOVE, sizeof(il_Input_MouseMove), &mousemove);
+    ilE_pushnew(IL_INPUT_MOUSEMOVE, sizeof(ilI_mouseMove), &mousemove);
 }
 
 static void GLFWCALL mousewheel_cb(int pos)
 {
-    il_Input_MouseWheel mousewheel =
-    (il_Input_MouseWheel) {
+    ilI_mouseWheel mousewheel =
+    (ilI_mouseWheel) {
         0, pos
     };
-    il_Event_pushnew(IL_INPUT_MOUSEWHEEL, sizeof(il_Input_MouseWheel), &mousewheel);
+    ilE_pushnew(IL_INPUT_MOUSEWHEEL, sizeof(ilI_mouseWheel), &mousewheel);
 }
 
-static void update(il_Event_Event * ev, void * ctx)
+static void update(ilE_event * ev, void * ctx)
 {
     (void)ev;
     (void)ctx;
     glfwPollEvents();
-    //il_Common_log(5, "tick");
+    //il_log(5, "tick");
 }
 
 int running = 1;
 
-void shutdown_callback(il_Event_Event* ev)
+void shutdown_callback(ilE_event* ev)
 {
     (void)ev;
-    il_Common_log(3, "Shutting down.");
-    event_base_loopbreak(il_Event_base);
+    il_log(3, "Shutting down.");
+    event_base_loopbreak(ilE_base);
 }
 
 char *strtok_r(char *str, const char *delim, char **saveptr);
@@ -137,17 +137,17 @@ char *strtok_r(char *str, const char *delim, char **nextp)
 int main(int argc, char **argv)
 {
 #if defined(WIN32) && !defined(DEBUG)
-    il_Common_logfile = fopen("nul", "w");
+    il_logfile = fopen("nul", "w");
 #else
-    il_Common_logfile = fopen("/dev/null", "w");
+    il_logfile = fopen("/dev/null", "w");
 #endif
 
 #ifdef DEBUG
-    il_Common_logfile = stdout;
-    il_Common_loglevel = IL_COMMON_LOGNOTICE;
+    il_logfile = stdout;
+    il_loglevel = IL_COMMON_LOGNOTICE;
 #endif
 
-    il_Common_log(3, "Initialising engine.");
+    il_log(3, "Initialising engine.");
 
     // search path priority (lower to highest):
     // defaults, config files, environment variables, command line options
@@ -161,14 +161,14 @@ int main(int argc, char **argv)
 
         token = strtok_r(str, ":", &saveptr);
         while(token) {
-            il_Asset_registerReadDir(il_Common_fromC(token), 3);
+            ilA_registerReadDir(il_fromC(token), 3);
             token = strtok_r(NULL, ":", &saveptr);
         }
     } else {
         // reasonable defaults
-        il_Asset_registerReadDir(il_Common_fromC((char*)"."), 4);
-        il_Asset_registerReadDir(il_Common_fromC((char*)"config"), 4);
-        il_Asset_registerReadDir(il_Common_fromC((char*)"shaders"), 4);
+        ilA_registerReadDir(il_fromC((char*)"."), 4);
+        ilA_registerReadDir(il_fromC((char*)"config"), 4);
+        ilA_registerReadDir(il_fromC((char*)"shaders"), 4);
     }
 
     // build command line overrides
@@ -180,7 +180,7 @@ int main(int argc, char **argv)
     while( (c = getopt_long(argc, argv, optstring, long_options, &option_index)) != -1 ) {
         switch(c) {
         case '?':
-            il_Common_log(2, "Unrecognised option, ignoring.");
+            il_log(2, "Unrecognised option, ignoring.");
             break;
         case HELP:
             printf("IntenseLogic - Game engine\n\tUsage: %s [options]\n\n", argv[0]);
@@ -190,17 +190,17 @@ int main(int argc, char **argv)
             }
             exit(0);
         case LOGFILE:
-            il_Common_logfile = fopen(optarg, "a");
+            il_logfile = fopen(optarg, "a");
             break;
         case VERBOSE:
-            il_Common_loglevel = atoi(optarg)?atoi(optarg):4;
+            il_loglevel = atoi(optarg)?atoi(optarg):4;
             break;
         case RUN:
             scripts[n_scripts] = optarg;
             n_scripts++;
             break;
         case PATH:
-            il_Asset_registerReadDir(il_Common_fromC(optarg), 1);
+            ilA_registerReadDir(il_fromC(optarg), 1);
             break;
         }
         //printf ("asdf");
@@ -209,7 +209,7 @@ int main(int argc, char **argv)
     // build config file
 
 
-    il_Common_log(3, "Asset paths loaded");
+    il_log(3, "Asset paths loaded");
 
     // I have no idea why I have to use this piece of code
 #ifdef WIN32
@@ -224,30 +224,30 @@ int main(int argc, char **argv)
     glfwSetMouseWheelCallback(&mousewheel_cb);
 
     // initialise engine
-    il_Common_init();
+    il_init();
 
     // register the updater first so it gets called first (no prioritisation
     // system needed yet, or really important)
-    il_Event_register(IL_BASE_TICK, (il_Event_Callback)&update, NULL);
+    ilE_register(IL_BASE_TICK, (ilE_callback)&update, NULL);
 
-    il_Network_init();
-    il_Graphics_init();
-    //il_Physics_init();
-    il_Script_init();
-    //il_Asset_init();
-    il_Event_register(IL_BASE_SHUTDOWN, (il_Event_Callback)&shutdown_callback, NULL);
+    ilN_init();
+    ilG_init();
+    //ilP_init();
+    ilS_init();
+    //ilA_init();
+    ilE_register(IL_BASE_SHUTDOWN, (ilE_callback)&shutdown_callback, NULL);
 
     // finished initialising, send startup event
-    il_Event_pushnew(IL_BASE_STARTUP, 0, NULL);
+    ilE_pushnew(IL_BASE_STARTUP, 0, NULL);
 
     // Run startup scripts
     for (i = 0; i < n_scripts; i++) {
-        il_Script_loadfile(scripts[i]);
+        ilS_loadfile(scripts[i]);
     }
 
     // main loop
-    il_Common_log(3, "Starting main loop");
-    event_base_loop(il_Event_base, 0);
+    il_log(3, "Starting main loop");
+    event_base_loop(ilE_base, 0);
 
     // shutdown code (only reached after receiving a IL_BASE_SHUTDOWN event)
 

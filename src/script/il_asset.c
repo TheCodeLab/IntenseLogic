@@ -5,23 +5,23 @@
 #include "script/script.h"
 #include "script/il.h"
 
-int il_Asset_wrap(lua_State* L, il_Asset_Asset* asset)
+int ilA_wrap(lua_State* L, ilA_asset* asset)
 {
-    return il_Script_createMakeLight(L, asset, "asset");
+    return ilS_createMakeLight(L, asset, "asset");
 }
 
 static int asset_index(lua_State* L)
 {
-    il_Asset_Asset* self = il_Script_getPointer(L, 1, "asset", NULL);
-    il_String key = il_Script_getString(L, 2);
+    ilA_asset* self = ilS_getPointer(L, 1, "asset", NULL);
+    il_String key = ilS_getString(L, 2);
 
     if (il_strcmp(key, il_l("path")) == 0) {
-        il_String res = il_Asset_getPath(self);
+        il_String res = ilA_getPath(self);
         lua_pushlstring(L, res.data, res.length);
         return 1;
     }
     if (il_strcmp(key, il_l("data")) == 0) {
-        il_String res = il_Asset_readContents(self);
+        il_String res = ilA_readContents(self);
         lua_pushlstring(L, res.data, res.length);
         return 1;
     }
@@ -31,48 +31,48 @@ static int asset_index(lua_State* L)
 
 static int setwritedir(lua_State* L)
 {
-    il_String path = il_Script_getString(L, 1);
-    il_Asset_setWriteDir(path);
+    il_String path = ilS_getString(L, 1);
+    ilA_setWriteDir(path);
     return 0;
 }
 
 static int registerreaddir(lua_State* L)
 {
-    il_String path = il_Script_getString(L, 1);
+    il_String path = ilS_getString(L, 1);
     int priority = luaL_optinteger(L, 2, 0);
-    il_Asset_registerReadDir(path, priority);
+    ilA_registerReadDir(path, priority);
     return 0;
 }
 
 static int asset_close(lua_State* L)
 {
-    il_Asset_Asset* self = il_Script_getPointer(L, 1, "asset", NULL);
-    il_Asset_close(self);
+    ilA_asset* self = ilS_getPointer(L, 1, "asset", NULL);
+    ilA_close(self);
     return 0;
 }
 
 static int asset_delete(lua_State* L)
 {
-    il_Asset_Asset* self = il_Script_getPointer(L, 1, "asset", NULL);
-    il_Asset_delete(self);
+    ilA_asset* self = ilS_getPointer(L, 1, "asset", NULL);
+    ilA_delete(self);
     return 0;
 }
 
 static int create(lua_State* L)
 {
-    il_String path = il_Script_getString(L, 1);
-    il_Asset_Asset* asset = il_Asset_open(path);
-    return il_Asset_wrap(L, asset);
+    il_String path = ilS_getString(L, 1);
+    ilA_asset* asset = ilA_open(path);
+    return ilA_wrap(L, asset);
 }
 
-void il_Asset_luaGlobals(il_Script_Script* self, void * ctx)
+void ilA_luaGlobals(ilS_script* self, void * ctx)
 {
     (void)ctx;
 
     luaL_Reg l[] = {
         {"create",          &create               },
-        {"getType",         &il_Script_typeGetter },
-        {"isA",             &il_Script_isA        },
+        {"getType",         &ilS_typeGetter },
+        {"isA",             &ilS_isA        },
 
         {"setWriteDir",     &setwritedir          },
         {"registerReadDir", &registerreaddir      },
@@ -82,12 +82,12 @@ void il_Asset_luaGlobals(il_Script_Script* self, void * ctx)
         {NULL,              NULL                  }
     };
 
-    il_Script_startTable(self, l);
+    ilS_startTable(self, l);
 
-    il_Script_startMetatable(self, "asset");
-    il_Script_pushFunc(self->L, "__index", &asset_index);
+    ilS_startMetatable(self, "asset");
+    ilS_pushFunc(self->L, "__index", &asset_index);
 
-    il_Script_typeTable(self->L, "asset");
+    ilS_typeTable(self->L, "asset");
 
-    il_Script_endTable(self, l, "asset");
+    ilS_endTable(self, l, "asset");
 }

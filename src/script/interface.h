@@ -11,33 +11,33 @@
 #include "graphics/terrain.h"
 #include "graphics/world.h"
 
-void sg_Vector_luaGlobals(il_Script_Script* self, void* ctx);
-void il_Script_luaGlobals(il_Script_Script* self, void * ctx);
-void il_Common_Positionable_luaGlobals(il_Script_Script* self, void * ctx);
-void il_Graphics_World_luaGlobals(il_Script_Script* self, void * ctx);
-void sg_Quaternion_luaGlobals(il_Script_Script* self, void * ctx);
-void il_Event_luaGlobals(il_Script_Script* self, void * ctx);
-void il_Input_luaGlobals(il_Script_Script* self, void * ctx);
-void il_Common_Terrain_luaGlobals(il_Script_Script* self, void * ctx);
-void il_Asset_luaGlobals(il_Script_Script* self, void * ctx);
-void il_Graphics_Drawable3d_luaGlobals(il_Script_Script* self, void * ctx);
-void il_Graphics_Camera_luaGlobals(il_Script_Script* self, void * ctx);
-void il_Graphics_Drawable3d_luaGlobals(il_Script_Script* self, void * ctx);
+void sg_Vector_luaGlobals(ilS_script* self, void* ctx);
+void ilS_luaGlobals(ilS_script* self, void * ctx);
+void il_positionable_luaGlobals(ilS_script* self, void * ctx);
+void ilG_world_luaGlobals(ilS_script* self, void * ctx);
+void sg_Quaternion_luaGlobals(ilS_script* self, void * ctx);
+void ilE_luaGlobals(ilS_script* self, void * ctx);
+void ilI_luaGlobals(ilS_script* self, void * ctx);
+void il_terrain_luaGlobals(ilS_script* self, void * ctx);
+void ilA_luaGlobals(ilS_script* self, void * ctx);
+void ilG_drawable3d_luaGlobals(ilS_script* self, void * ctx);
+void ilG_camera_luaGlobals(ilS_script* self, void * ctx);
+void ilG_drawable3d_luaGlobals(ilS_script* self, void * ctx);
 
 int sg_Vector2_wrap(lua_State* L, sg_Vector2 v);
 int sg_Vector3_wrap(lua_State* L, sg_Vector3 v);
 int sg_Vector4_wrap(lua_State* L, sg_Vector4 v);
 int sg_Quaternion_wrap(lua_State* L, sg_Quaternion q);
-int il_Common_Positionable_wrap(lua_State* L, il_Common_Positionable* p);
-int il_Script_Script_wrap(lua_State* L, il_Script_Script* s);
-int il_Graphics_World_wrap(lua_State* L, il_Graphics_World * w);
-int il_Event_wrap(lua_State* L, const il_Event_Event* e);
-int il_Common_Terrain_wrap(lua_State* L, il_Common_Terrain* ter);
-int il_Asset_wrap(lua_State* L, il_Asset_Asset* asset);
-int il_Graphics_Drawable3d_wrap(lua_State* L, il_Graphics_Drawable3d*);
-int il_Graphics_Camera_wrap(lua_State* L, il_Graphics_Camera* self);
-int il_Graphics_Terrain_wrap(lua_State* L, il_Graphics_Terrain* self);
-int il_Common_World_wrap(lua_State* L, il_Common_World * self);
+int il_positionable_wrap(lua_State* L, il_positionable* p);
+int ilS_script_wrap(lua_State* L, ilS_script* s);
+int ilG_world_wrap(lua_State* L, ilG_world * w);
+int ilE_wrap(lua_State* L, const ilE_event* e);
+int il_terrain_wrap(lua_State* L, il_terrain* ter);
+int ilA_wrap(lua_State* L, ilA_asset* asset);
+int ilG_drawable3d_wrap(lua_State* L, ilG_drawable3d*);
+int ilG_camera_wrap(lua_State* L, ilG_camera* self);
+int ilG_terrain_wrap(lua_State* L, ilG_terrain* self);
+int il_world_wrap(lua_State* L, il_world * self);
 
 
 #endif

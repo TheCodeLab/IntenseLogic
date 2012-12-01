@@ -5,21 +5,21 @@
 
 #include "common/positionable.h"
 
-struct il_Common_Positionable;
+struct il_positionable;
 
-typedef struct il_Common_World {
+typedef struct il_world {
   unsigned refs;
   size_t nobjects;
-  struct il_Common_Positionable** objects;
-} il_Common_World;
+  struct il_positionable** objects;
+} il_world;
 
-typedef struct il_Common_WorldIterator il_Common_WorldIterator;
+typedef struct il_worldIterator il_worldIterator;
 
-il_Common_World* il_Common_World_new();
+il_world* il_world_new();
 
-void il_Common_World_add(il_Common_World*, struct il_Common_Positionable*);
+void il_world_add(il_world*, struct il_positionable*);
 
-struct il_Common_Positionable * il_Common_World_iterate(il_Common_World*, 
-  il_Common_WorldIterator**);
+struct il_positionable * il_world_iterate(il_world*,
+  il_worldIterator**);
 
 #endif

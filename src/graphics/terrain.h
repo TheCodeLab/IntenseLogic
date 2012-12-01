@@ -4,8 +4,8 @@
 #include "common/terrain.h"
 #include "common/positionable.h"
 
-typedef struct il_Graphics_Terrain il_Graphics_Terrain;
+typedef struct ilG_terrain ilG_terrain;
 
-il_Graphics_Terrain* il_Graphics_Terrain_new(il_Common_Terrain*, il_Common_Positionable*);
+ilG_terrain* ilG_terrain_new(il_terrain*, il_positionable*);
 
 #endif

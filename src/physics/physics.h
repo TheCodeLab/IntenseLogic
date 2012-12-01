@@ -7,8 +7,8 @@
 
 #define IL_PHYSICS_STEPSPERTICK (1)
 
-void il_Physics_init();
+void ilP_init();
 
-void il_Physics_registerWorld(il_Physics_World *world);
+void ilP_registerWorld(ilP_world *world);
 
 #endif

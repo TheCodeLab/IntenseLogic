@@ -27,7 +27,7 @@ sg_Matrix sg_Matrix_translate(sg_Vector3 t);
 
 sg_Matrix sg_Matrix_rotate_v(float a, sg_Vector3 n);
 
-sg_Matrix sg_Matrix_scale(sg_Vector3 v); 
+sg_Matrix sg_Matrix_scale(sg_Vector3 v);
 
 sg_Matrix sg_Matrix_perspective(double fovy, double aspect, double znear, double zfar);
 

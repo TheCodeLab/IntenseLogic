@@ -62,7 +62,7 @@ float sg_Vector2_dot(sg_Vector2 a, sg_Vector2 b);
 
 
 /* Typedef: sg_Vector3
-A type used for representing 3-dimensional vectors. 
+A type used for representing 3-dimensional vectors.
 
 Variables:
   x, y, z - The coordinates
@@ -102,7 +102,7 @@ sg_Vector3 sg_Vector3_cross(sg_Vector3 a, sg_Vector3 b);
 sg_Vector3 sg_Vector3_rotate_q(sg_Vector3 p, sg_Quaternion q);
 
 /* Typedef: sg_Vector4
-A type used for representing 4-dimensional vectors. 
+A type used for representing 4-dimensional vectors.
 
 Variables:
   x, y, z - The coordinates

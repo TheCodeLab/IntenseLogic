@@ -4,15 +4,15 @@
 #include "common/positionable.h"
 #include "graphics/drawable3d.h"
 
-enum il_Graphics_ShapeType {
-  il_Graphics_Box,
-  il_Graphics_Cylinder,
-  il_Graphics_Sphere,
-  il_Graphics_Plane
+enum ilG_shapeType {
+  ilG_box,
+  ilG_cylinder,
+  ilG_sphere,
+  ilG_plane
 };
 
-typedef struct il_Graphics_Shape il_Graphics_Shape;
+typedef struct ilG_shape ilG_shape;
 
-il_Graphics_Shape * il_Graphics_Shape_new(il_Common_Positionable * parent, int type);
+ilG_shape * ilG_shape_new(il_positionable * parent, int type);
 
 #endif

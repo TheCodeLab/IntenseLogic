@@ -4,7 +4,7 @@
 #include "log.h"
 
 sg_Vector3 move_default ( void **movedata,
-                          const struct il_Common_Entity *ent,
+                          const struct il_entity *ent,
                           sg_Vector3 position,
                           sg_Vector3 target )
 {
@@ -15,9 +15,9 @@ sg_Vector3 move_default ( void **movedata,
 }
 
 sg_Vector3 pathfind_default ( void **pathdata,
-                              const struct il_Common_Entity *ent,
+                              const struct il_entity *ent,
                               sg_Vector3 position,
-                              il_Common_EntFocus target )
+                              il_entFocus target )
 {
     (void)pathdata;
     (void)ent;
@@ -28,17 +28,17 @@ sg_Vector3 pathfind_default ( void **pathdata,
     case IL_COMMON_FOCUSDIR:
     case IL_COMMON_FOCUSENTITY:
     default:
-        il_Common_log(1, "Invalid value for EntFocus.type %u", target.type);
+        il_log(1, "Invalid value for EntFocus.type %u", target.type);
         return (sg_Vector3) {
             0,0,0
         };
     }
 }
 
-il_Common_Entity* il_Common_Entity_new(il_Common_Positionable* parent)
+il_entity* il_entity_new(il_positionable* parent)
 {
     parent->refs++;
-    il_Common_Entity *ent = calloc(1, sizeof(il_Common_Entity));
+    il_entity *ent = calloc(1, sizeof(il_entity));
     ent->positionable = parent;
     ent->living = 1;
     ent->walkspeed = 1.0f;

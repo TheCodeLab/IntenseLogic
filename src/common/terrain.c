@@ -10,42 +10,42 @@ enum terrain_type {
     PHEIGHTMAP,
 };
 
-struct il_Common_Terrain {
+struct il_terrain {
     int type;
     int width, height;
     size_t size;
     void * data;
     int refs;
     void *destruct_ctx;
-    void (*destruct)(il_Common_Terrain*, void*);
+    void (*destruct)(il_terrain*, void*);
     void *point_ctx;
-    double (*getPoint)(il_Common_Terrain*, void*, unsigned x, unsigned y, double height);
+    double (*getPoint)(il_terrain*, void*, unsigned x, unsigned y, double height);
     void *normal_ctx;
-    sg_Vector3 (*getNormal)(il_Common_Terrain*, void*, unsigned x, unsigned y, double z);
+    sg_Vector3 (*getNormal)(il_terrain*, void*, unsigned x, unsigned y, double z);
 };
 
-il_Common_Terrain * il_Common_Terrain_new()
+il_terrain * il_terrain_new()
 {
-    il_Common_Terrain * ter = calloc(1, sizeof(il_Common_Terrain));
+    il_terrain * ter = calloc(1, sizeof(il_terrain));
     ter->refs = 1;
     return ter;
 }
 
-void il_Common_Terrain_getSize(il_Common_Terrain* ter, int *width, int *height)
+void il_terrain_getSize(il_terrain* ter, int *width, int *height)
 {
     if (!ter) return;
     *width = ter->width;
     *height = ter->height;
 }
 
-double il_Common_Terrain_getPoint(il_Common_Terrain* ter, unsigned x, unsigned y, double height)
+double il_terrain_getPoint(il_terrain* ter, unsigned x, unsigned y, double height)
 {
     if (!ter) return NAN;
     if (!ter->getPoint) return NAN;
     return ter->getPoint(ter, ter->point_ctx, x, y, height);
 }
 
-sg_Vector3 il_Common_Terrain_getNormal(il_Common_Terrain* ter, unsigned x,
+sg_Vector3 il_terrain_getNormal(il_terrain* ter, unsigned x,
                                        unsigned y, double z)
 {
     if (!ter) return (sg_Vector3) {
@@ -60,13 +60,13 @@ sg_Vector3 il_Common_Terrain_getNormal(il_Common_Terrain* ter, unsigned x,
 ////////////////////////////////////////////////////////////////////////////////
 // Heightmaps
 
-static void destruct(il_Common_Terrain* ter, void * ctx)
+static void destruct(il_terrain* ter, void * ctx)
 {
     (void)ctx;
     free(ter->data);
 }
 
-static double heightmap_getPoint(il_Common_Terrain* ter, void * ctx, unsigned x,
+static double heightmap_getPoint(il_terrain* ter, void * ctx, unsigned x,
                                  unsigned y, double height)
 {
     (void)ctx;
@@ -76,7 +76,7 @@ static double heightmap_getPoint(il_Common_Terrain* ter, void * ctx, unsigned x,
 }
 
 // http://www.flipcode.com/archives/Calculating_Vertex_Normals_for_Height_Maps.shtml
-static sg_Vector3 heightmap_getNormal(il_Common_Terrain* ter, void * ctx,
+static sg_Vector3 heightmap_getNormal(il_terrain* ter, void * ctx,
                                       unsigned x, unsigned y, double z)
 {
     (void)ctx;
@@ -99,14 +99,14 @@ static sg_Vector3 heightmap_getNormal(il_Common_Terrain* ter, void * ctx,
     return sg_Vector3_normalise(v);
 }
 
-static double pheightmap_getPoint(il_Common_Terrain* ter, void * ctx,
+static double pheightmap_getPoint(il_terrain* ter, void * ctx,
                                   unsigned x, unsigned y, double height)
 {
     (void)ter, (void)ctx, (void)x, (void)y, (void)height;
     return NAN; // TODO: stub function
 }
 
-static sg_Vector3 pheightmap_getNormal(il_Common_Terrain* ter, void * ctx,
+static sg_Vector3 pheightmap_getNormal(il_terrain* ter, void * ctx,
                                        unsigned x, unsigned y, double z)
 {
     (void)ter, (void)ctx, (void)x, (void)y, (void)z;
@@ -115,7 +115,7 @@ static sg_Vector3 pheightmap_getNormal(il_Common_Terrain* ter, void * ctx,
     }; // TODO: stub function
 }
 
-int il_Common_Terrain_heightmapFromMemory(il_Common_Terrain* ter, int width,
+int il_terrain_heightmapFromMemory(il_terrain* ter, int width,
         int height, const float * points)
 {
     if (width < 1 || height < 1) return -1;
@@ -138,7 +138,7 @@ struct pheightmap {
     float viewdistance;
 };
 
-int il_Common_Terrain_heightmapFromSeed(il_Common_Terrain* ter, long long seed,
+int il_terrain_heightmapFromSeed(il_terrain* ter, long long seed,
                                         float resolution, float viewdistance)
 {
     ter->size = sizeof(struct pheightmap);

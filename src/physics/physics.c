@@ -7,10 +7,10 @@
 
 #include "world.h"
 
-il_Physics_World **worlds;
+ilP_world **worlds;
 unsigned numworlds;
 
-void tick (il_Event_Event e)
+void tick (ilE_event e)
 {
     int i;
     for (i=0; i < numworlds; i++) {
@@ -18,15 +18,15 @@ void tick (il_Event_Event e)
     }
 }
 
-void il_Physics_init()
+void ilP_init()
 {
-    il_Event_register(IL_BASE_TICK, (il_Event_Callback)&tick);
+    ilE_register(IL_BASE_TICK, (ilE_callback)&tick);
 }
 
-void il_Physics_registerWorld(il_Physics_World *world)
+void ilP_registerWorld(ilP_world *world)
 {
-    il_Physics_World **temp = (il_Physics_World**)calloc((numworlds+1), sizeof(il_Physics_World**));
-    memcpy(temp, worlds, sizeof(il_Physics_World) * numworlds);
+    ilP_world **temp = (ilP_world**)calloc((numworlds+1), sizeof(ilP_world**));
+    memcpy(temp, worlds, sizeof(ilP_world) * numworlds);
     temp[numworlds] = world;
     free(worlds);
     worlds = temp;

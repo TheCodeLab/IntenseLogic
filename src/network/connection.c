@@ -19,7 +19,7 @@ extern int asprintf(char **str, const char *fmt, ...);
 
 extern int evtag_decode_int(ev_uint32_t *pnumber, struct evbuffer *evbuf);
 
-struct il_Network_Connection {
+struct ilN_connection {
     struct event_base * base;
     enum {
         NONE,
@@ -29,7 +29,7 @@ struct il_Network_Connection {
     struct bufferevent * bufferevent;
     struct evconnlistener * listener;
     struct client {
-        il_Network_Connection * con;
+        ilN_connection * con;
         struct client* next;
     } *clients;
     const char *error;
@@ -51,9 +51,9 @@ struct il_Network_Connection {
         return -1;\
     }
 
-il_Network_Connection * il_Network_Connection_new()
+ilN_connection * ilN_connection_new()
 {
-    il_Network_Connection * con = calloc(1, sizeof(il_Network_Connection));
+    ilN_connection * con = calloc(1, sizeof(ilN_connection));
     if (!con) return NULL;
 
     con->type = NONE;
@@ -66,11 +66,11 @@ il_Network_Connection * il_Network_Connection_new()
     return con;
 }
 
-int il_Network_Connection_disconnect(il_Network_Connection * con, il_Common_String reason)
+int ilN_connection_disconnect(ilN_connection * con, il_string reason)
 {
     TEST_ERROR(con, con->state != CONNECTED, "Not connected");
     int res;
-    res = il_Network_Connection_write(con, IL_BASE_SHUTDOWN, reason.data, reason.length);
+    res = ilN_connection_write(con, IL_BASE_SHUTDOWN, reason.data, reason.length);
     TEST_ERROR(con, res != 0, "Failed to write shutdown event");
     con->state = CLOSED;
     bufferevent_free(con->bufferevent);
@@ -78,7 +78,7 @@ int il_Network_Connection_disconnect(il_Network_Connection * con, il_Common_Stri
     return 0;
 }
 
-const char * il_Network_Connection_getError(il_Network_Connection * con)
+const char * ilN_connection_getError(ilN_connection * con)
 {
     if (con->state != FAILED) return NULL; // no error
     const char *err = con->error;
@@ -86,7 +86,7 @@ const char * il_Network_Connection_getError(il_Network_Connection * con)
     return err;
 }
 
-int il_Network_Connection_write(il_Network_Connection * con, ev_uint32_t tag, const void * data, size_t n)
+int ilN_connection_write(ilN_connection * con, ev_uint32_t tag, const void * data, size_t n)
 {
     TEST_ERROR(con, con->state != CONNECTED, "Not connected.");
     int res;
@@ -99,7 +99,7 @@ int il_Network_Connection_write(il_Network_Connection * con, ev_uint32_t tag, co
     return 0;
 }
 
-int il_Network_Connection_write_buffer(il_Network_Connection * con, ev_uint32_t tag, struct evbuffer * in)
+int ilN_connection_write_buffer(ilN_connection * con, ev_uint32_t tag, struct evbuffer * in)
 {
     TEST_ERROR(con, con->state != CONNECTED, "Not connected");
     int res;
@@ -112,12 +112,12 @@ int il_Network_Connection_write_buffer(il_Network_Connection * con, ev_uint32_t 
     return 0;
 }
 
-int il_Network_Connection_read(il_Network_Connection * con, ev_uint32_t * ptag, void ** data)
+int ilN_connection_read(ilN_connection * con, ev_uint32_t * ptag, void ** data)
 {
     TEST_ERROR(con, con->state != CONNECTED, "Not connected");
     struct evbuffer * buf = evbuffer_new();
     TEST_ERROR(con, buf == NULL, "Couldn't allocate new evbuffer");
-    int res = il_Network_Connection_read_buffer(con, ptag, buf);
+    int res = ilN_connection_read_buffer(con, ptag, buf);
     TEST_ERROR(con, res != 0, "Couldn't read from connection");
     size_t len = evbuffer_get_length(buf);
     *data = calloc(1, len);
@@ -127,7 +127,7 @@ int il_Network_Connection_read(il_Network_Connection * con, ev_uint32_t * ptag, 
     return len;
 }
 
-int il_Network_Connection_read_buffer(il_Network_Connection * con, ev_uint32_t *ptag, struct evbuffer * data)
+int ilN_connection_read_buffer(ilN_connection * con, ev_uint32_t *ptag, struct evbuffer * data)
 {
     TEST_ERROR(con, con->state != CONNECTED, "Not connected");
     int res;
@@ -141,7 +141,7 @@ int il_Network_Connection_read_buffer(il_Network_Connection * con, ev_uint32_t *
     return 0;
 }
 
-int il_Network_Connection_connect(il_Network_Connection * con, const char * host, unsigned short port)
+int ilN_connection_connect(ilN_connection * con, const char * host, unsigned short port)
 {
     con->type = CLIENT;
     con->state = CONNECTING;
@@ -152,7 +152,7 @@ int il_Network_Connection_connect(il_Network_Connection * con, const char * host
     return 0;
 }
 
-int il_Network_Connection_setSocket(il_Network_Connection * con, evutil_socket_t fd, int flags)
+int ilN_connection_setSocket(ilN_connection * con, evutil_socket_t fd, int flags)
 {
     con->type = CLIENT;
     con->state = CONNECTING;
@@ -167,12 +167,12 @@ void server_accept(struct evconnlistener * listener, evutil_socket_t fd, struct 
     (void)addr;
     (void)socklen;
     (void)ptr;
-    il_Network_Connection * con = il_Network_Connection_new();
+    ilN_connection * con = ilN_connection_new();
     if (!con) return;
-    il_Network_Connection_setSocket(con, fd, BEV_OPT_CLOSE_ON_FREE);
+    ilN_connection_setSocket(con, fd, BEV_OPT_CLOSE_ON_FREE);
 }
 
-int il_Network_Connection_bind(il_Network_Connection * con, const char * host, unsigned short port)
+int ilN_connection_bind(ilN_connection * con, const char * host, unsigned short port)
 {
     (void)con;
     (void)port;

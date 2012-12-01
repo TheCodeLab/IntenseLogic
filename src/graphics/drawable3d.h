@@ -6,27 +6,27 @@
 #include "common/positionable.h"
 #include "camera.h"
 
-struct il_Graphics_Drawable3d;
+struct ilG_drawable3d;
 
-typedef void (*il_Graphics_Drawable3d_cb)(const il_Graphics_Camera*, 
-struct il_Graphics_Drawable3d*, const struct timeval*);
+typedef void (*ilG_drawable3d_cb)(const ilG_camera*,
+struct ilG_drawable3d*, const struct timeval*);
 
-typedef struct il_Graphics_Drawable3d {
+typedef struct ilG_drawable3d {
   int type;
-  il_Common_Positionable* positionable;
+  il_positionable* positionable;
   //GLuint shader;
   void *drawcontext;
-  il_Graphics_Drawable3d_cb draw;
-} il_Graphics_Drawable3d;
+  ilG_drawable3d_cb draw;
+} ilG_drawable3d;
 
-typedef struct il_Graphics_Drawable3dIterator il_Graphics_Drawable3dIterator;
+typedef struct ilG_drawable3dIterator ilG_drawable3dIterator;
 
-void il_Graphics_Drawable3d_setPositionable(il_Graphics_Drawable3d*, 
-  il_Common_Positionable*);
+void ilG_drawable3d_setPositionable(ilG_drawable3d*,
+  il_positionable*);
 
-il_Graphics_Drawable3d* il_Graphics_Drawable3d_iterate(il_Common_Positionable*,
-  il_Graphics_Drawable3dIterator**);
+ilG_drawable3d* ilG_drawable3d_iterate(il_positionable*,
+  ilG_drawable3dIterator**);
 
-//il_Graphics_Drawable3d * il_Graphics_Drawable3d_new(il_Common_Positionable * parent);
+//ilG_drawable3d * ilG_drawable3d_new(il_positionable * parent);
 
 #endif

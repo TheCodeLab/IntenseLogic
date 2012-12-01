@@ -8,9 +8,9 @@
 #include "common/input.h"
 #include "common/base.h"
 
-int il_Event_wrap(lua_State* L, const il_Event_Event* e)
+int ilE_wrap(lua_State* L, const ilE_event* e)
 {
-    return il_Script_createMakeHeavy(L, sizeof(il_Event_Event) + e->size, e, "event");
+    return ilS_createMakeHeavy(L, sizeof(ilE_event) + e->size, e, "event");
 }
 
 static const char* idtostring(unsigned short num)
@@ -61,14 +61,14 @@ struct ctx {
     int ref;
     lua_State* L;
 };
-static void cb(il_Event_Event* self, void * rawctx)
+static void cb(ilE_event* self, void * rawctx)
 {
     int ref = ((struct ctx*)rawctx)->ref;
     lua_State* L = ((struct ctx*)rawctx)->L;
 
     lua_rawgeti(L, LUA_REGISTRYINDEX, ref);
 
-    il_Event_wrap(L, self);
+    ilE_wrap(L, self);
     lua_pcall(L, 1, 0, 0);
 }
 static int register_cb(lua_State* L)
@@ -86,38 +86,38 @@ static int register_cb(lua_State* L)
 
     unsigned short id;
     if (lua_isnumber(L, 1)) {
-        double n = il_Script_getNumber(L, 1);
+        double n = ilS_getNumber(L, 1);
         if (n < 0 || n > 65535) return luaL_argerror(L, 1, "Expected number between 0 and 65535");
         id = (unsigned short)n;
     } else
         id = stringtoid(lua_tostring(L, 1));
 
-    il_Event_register(id, &cb, ptr);
+    ilE_register(id, &cb, ptr);
 
     return 0;
 }
 
 static int push(lua_State* L)
 {
-    il_Event_Event* self = il_Script_getPointer(L, 1, "event", NULL);
-    il_Event_push(self);
+    ilE_event* self = ilS_getPointer(L, 1, "event", NULL);
+    ilE_push(self);
     return 0;
 }
 
 static int timer(lua_State* L)
 {
-    il_Event_Event* self = il_Script_getPointer(L, 1, "event", NULL);
+    ilE_event* self = ilS_getPointer(L, 1, "event", NULL);
     struct timeval* interval = malloc(sizeof(struct timeval));
     double n = luaL_checknumber(L, 2);
     interval->tv_sec = (long long)floor(n/1000000.0);
     interval->tv_usec = n;
-    il_Event_timer(self, interval);
+    ilE_timer(self, interval);
     return 0;
 }
 
 static int getdata(lua_State* L)
 {
-    il_Event_Event* self = il_Script_getPointer(L, 1, "event", NULL);
+    ilE_event* self = ilS_getPointer(L, 1, "event", NULL);
     void * data = &self->data;
     switch (self->eventid) {
     case IL_INPUT_KEYDOWN:
@@ -128,14 +128,14 @@ static int getdata(lua_State* L)
         lua_pushinteger(L, *(int*)data);
         return 1;
     case IL_INPUT_MOUSEMOVE:
-        if (self->size < sizeof(il_Input_MouseMove)) luaL_argerror(L, 1, "Malformed event");
-        lua_pushinteger(L, ((il_Input_MouseMove*)data)->x);
-        lua_pushinteger(L, ((il_Input_MouseMove*)data)->y);
+        if (self->size < sizeof(ilI_mouseMove)) luaL_argerror(L, 1, "Malformed event");
+        lua_pushinteger(L, ((ilI_mouseMove*)data)->x);
+        lua_pushinteger(L, ((ilI_mouseMove*)data)->y);
         return 2;
     case IL_INPUT_MOUSEWHEEL:
-        if (self->size < sizeof(il_Input_MouseWheel)) luaL_argerror(L, 1, "Malformed event");
-        lua_pushinteger(L, ((il_Input_MouseWheel*)data)->y);
-        lua_pushinteger(L, ((il_Input_MouseWheel*)data)->x);
+        if (self->size < sizeof(ilI_mouseWheel)) luaL_argerror(L, 1, "Malformed event");
+        lua_pushinteger(L, ((ilI_mouseWheel*)data)->y);
+        lua_pushinteger(L, ((ilI_mouseWheel*)data)->x);
         return 2;
     case IL_BASE_TICK:
     case IL_BASE_STARTUP:
@@ -149,30 +149,30 @@ static int getdata(lua_State* L)
 
 static int getid(lua_State* L)
 {
-    il_Event_Event* self = il_Script_getPointer(L, 1, "event", NULL);
+    ilE_event* self = ilS_getPointer(L, 1, "event", NULL);
     lua_pushinteger(L, self->eventid);
     return 1;
 }
 
 static int create(lua_State* L)
 {
-    il_Event_Event e;
-    memset(&e, 0, sizeof(il_Event_Event));
+    ilE_event e;
+    memset(&e, 0, sizeof(ilE_event));
     unsigned n = luaL_checkunsigned(L, 1);
     if (n > 65535) return luaL_argerror(L, 1, "Expected number between 0 and 65535");
     e.eventid = (unsigned short)n;
 
-    return il_Event_wrap(L, &e);
+    return ilE_wrap(L, &e);
 }
 
-void il_Event_luaGlobals(il_Script_Script* self, void * ctx)
+void ilE_luaGlobals(ilS_script* self, void * ctx)
 {
     (void)ctx;
 
     const luaL_Reg l[] = {
         {"create",    &create               },
-        {"getType",   &il_Script_typeGetter },
-        {"isA",       &il_Script_isA        },
+        {"getType",   &ilS_typeGetter },
+        {"isA",       &ilS_isA        },
 
         {"register",  &register_cb          },
         {"push",      &push                 },
@@ -184,11 +184,11 @@ void il_Event_luaGlobals(il_Script_Script* self, void * ctx)
         {NULL,        NULL                  }
     };
 
-    il_Script_startTable(self, l);
+    ilS_startTable(self, l);
 
-    il_Script_startMetatable(self, "event");
+    ilS_startMetatable(self, "event");
 
-    il_Script_typeTable(self->L, "event");
+    ilS_typeTable(self->L, "event");
 
-    il_Script_endTable(self, l, "event");
+    ilS_endTable(self, l, "event");
 }
