@@ -17,6 +17,9 @@ echo "INCLUDES: $INCLUDES";
 echo "CFLAGS: $CFLAGS";
 echo "LDFLAGS: $LDFLAGS";
 
+# docopt CLI generator
+cat src/intense_logic.docopt | python -B src/docopt_c.py > src/docopt.h
+
 if $(test "$1" = "mingw"); then
     EXTENSION=.exe
     LINKSUFFIX=.dll

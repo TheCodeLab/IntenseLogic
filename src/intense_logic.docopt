@@ -1,0 +1,9 @@
+Usage:
+    il -h | --help | --version
+
+Options:
+  -h, --help             Show this screen.
+  -l, --logfile	         Sets the file to print output to
+  -v, --verbose	         Sets the verbosity level
+  -r, --run	         Runs script
+  -p, --path	         Adds an asset search path

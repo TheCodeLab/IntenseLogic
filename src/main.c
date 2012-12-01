@@ -1,13 +1,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <getopt.h>
 #include <sys/time.h>
 #include "time.h"
 #include <event2/event.h>
 #include <string.h>
 #include <GL/glew.h>
 #include <GL/glfw.h>
+#include "docopt.h"
 
 #include "common/base.h"
 #include "common/input.h"
@@ -24,34 +24,6 @@
 
 extern struct event_base * ilE_base;
 extern void il_init();
-
-const char *optstring = "hl:v::r:p:";
-
-enum {
-    HELP = 'h',
-    LOGFILE = 'l',
-    VERBOSE = 'v',
-    RUN = 'r',
-    PATH = 'p'
-};
-
-const struct option long_options[] = {
-    {"help",      no_argument,       0, HELP    },
-    {"logfile",   required_argument, 0, LOGFILE },
-    {"verbose",   optional_argument, 0, VERBOSE },
-    {"run",       required_argument, 0, RUN     },
-    {"path",      required_argument, 0, PATH    },
-    {0, 0, 0, 0}
-};
-
-const char *help[] = {
-    "Prints this page",                 // -h --help
-    "Sets the file to print output to", // -l --logfile
-    "Sets the verbosity level",         // -v --verbose
-    "Runs script",                      // -r --run
-    "Adds an asset search path",        // -p --path
-    NULL
-};
 
 static void GLFWCALL key_cb(int key, int action)
 {
@@ -136,6 +108,8 @@ char *strtok_r(char *str, const char *delim, char **nextp)
 
 int main(int argc, char **argv)
 {
+    DocoptArgs args = docopt(argc, argv, 1, "0.0pre-alpha");
+
 #if defined(WIN32) && !defined(DEBUG)
     il_logfile = fopen("nul", "w");
 #else
@@ -172,38 +146,25 @@ int main(int argc, char **argv)
     }
 
     // build command line overrides
-    int c;
     int i = 0;
-    int option_index = 0;
     const char * scripts[argc];
     int n_scripts = 0;
-    while( (c = getopt_long(argc, argv, optstring, long_options, &option_index)) != -1 ) {
-        switch(c) {
-        case '?':
-            il_log(2, "Unrecognised option, ignoring.");
-            break;
-        case HELP:
-            printf("IntenseLogic - Game engine\n\tUsage: %s [options]\n\n", argv[0]);
-            while (long_options[i].name != 0) {
-                printf("-%c\t--%s\t%s\n", (char)long_options[i].val, long_options[i].name, help[i]);
-                i++;
-            }
-            exit(0);
-        case LOGFILE:
-            il_logfile = fopen(optarg, "a");
-            break;
-        case VERBOSE:
-            il_loglevel = atoi(optarg)?atoi(optarg):4;
-            break;
-        case RUN:
-            scripts[n_scripts] = optarg;
-            n_scripts++;
-            break;
-        case PATH:
-            ilA_registerReadDir(il_fromC(optarg), 1);
-            break;
-        }
-        //printf ("asdf");
+
+    if (args.logfile){
+        il_logfile = fopen(optarg, "a");
+    }
+
+    if (args.verbose){
+        il_loglevel = atoi(optarg)?atoi(optarg):4;
+    }
+
+    if (args.run){
+        scripts[n_scripts] = optarg;
+        n_scripts++;
+    }
+
+    if (args.path){
+        ilA_registerReadDir(il_fromC(optarg), 1);
     }
 
     // build config file
