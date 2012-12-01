@@ -7,7 +7,7 @@
 #include <string.h>
 #include <GL/glew.h>
 #include <GL/glfw.h>
-#include "docopt.h"
+#include "docopt.inc"
 
 #include "common/base.h"
 #include "common/input.h"
