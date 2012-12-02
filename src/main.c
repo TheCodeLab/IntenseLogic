@@ -1,29 +1,9 @@
-#include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
-#include <sys/time.h>
-#include "time.h"
-#include <event2/event.h>
-#include <string.h>
-#include <GL/glew.h>
 #include <GL/glfw.h>
 #include "docopt.inc"
-
-#include "common/base.h"
-#include "common/input.h"
-#include "common/event.h"
-#include "graphics/graphics.h"
-#include "network/network.h"
-//#include "physics/physics.h"
-#include "script/script.h"
-#include "asset/asset.h"
-//#include "graphics/heightmap.h"
-#include "graphics/drawable3d.h"
-#include "common/log.h"
-#include "common/entity.h"
+#include "common/common.h"
 
 extern struct event_base * ilE_base;
-extern void il_init();
 
 static void GLFWCALL key_cb(int key, int action)
 {
@@ -144,33 +124,19 @@ int main(int argc, char **argv)
         ilA_registerReadDir(il_fromC((char*)"config"), 4);
         ilA_registerReadDir(il_fromC((char*)"shaders"), 4);
     }
-
-    // build command line overrides
-    int i = 0;
-    const char * scripts[argc];
-    int n_scripts = 0;
+    il_log(3, "Asset paths loaded");
 
     if (args.logfile){
-        il_logfile = fopen(optarg, "a");
+        il_logfile = fopen(args.logfile, "a");
     }
 
     if (args.verbose){
-        il_loglevel = atoi(optarg)?atoi(optarg):4;
-    }
-
-    if (args.run){
-        scripts[n_scripts] = optarg;
-        n_scripts++;
+        il_loglevel = IL_COMMON_LOGDEBUG;
     }
 
     if (args.path){
-        ilA_registerReadDir(il_fromC(optarg), 1);
+        ilA_registerReadDir(il_fromC(args.path), 1);
     }
-
-    // build config file
-
-
-    il_log(3, "Asset paths loaded");
 
     // I have no idea why I have to use this piece of code
 #ifdef WIN32
@@ -190,20 +156,13 @@ int main(int argc, char **argv)
     // register the updater first so it gets called first (no prioritisation
     // system needed yet, or really important)
     ilE_register(IL_BASE_TICK, (ilE_callback)&update, NULL);
-
-    ilN_init();
-    ilG_init();
-    //ilP_init();
-    ilS_init();
-    //ilA_init();
     ilE_register(IL_BASE_SHUTDOWN, (ilE_callback)&shutdown_callback, NULL);
 
     // finished initialising, send startup event
     ilE_pushnew(IL_BASE_STARTUP, 0, NULL);
 
-    // Run startup scripts
-    for (i = 0; i < n_scripts; i++) {
-        ilS_loadfile(scripts[i]);
+    if (args.run) {
+        ilS_loadfile(args.run)
     }
 
     // main loop

@@ -4,7 +4,7 @@
 #define IL_CONFIG_TYPE il_keymap
 #define IL_CONFIG_DEFS "common/keymap.defs"
 
-#include "common/config.c.h"
+#include "common/config.inc"
 
 #undef IL_CONFIG_TYPE
 #undef IL_CONFIG_DEFS
