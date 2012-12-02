@@ -162,7 +162,7 @@ int main(int argc, char **argv)
     ilE_pushnew(IL_BASE_STARTUP, 0, NULL);
 
     if (args.run) {
-        ilS_loadfile(args.run)
+        ilS_loadfile(args.run);
     }
 
     // main loop
