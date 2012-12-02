@@ -27,6 +27,7 @@ pkg_libs = {
 }
 
 # link libs
+VariantDir(build_dir, src_dir, duplicate = 0)
 platform = ARGUMENTS.get("platform", "linux")
 env      = Environment(CCFLAGS = cflags, LINKFLAGS = linkflags)
 
@@ -39,7 +40,7 @@ for lib in libs[platform] :
 # get sources
 sources = []
 for module in Split(inputs) :
-    sources.extend(Glob(src_dir + "/" + module))
+    sources.extend(Glob(build_dir + "/" + module))
 
 # generate docopt
 handle = open(src_dir + "/docopt.inc", "w")
@@ -50,8 +51,6 @@ handle.close()
 objects = env.Object(source = sources)
 
 # link program
-VariantDir(build_dir, src_dir)
-
 env.Program(target  = build_dir + "/" + output,
             source  = objects,
             LIBPATH = lib_dirs)
