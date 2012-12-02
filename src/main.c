@@ -1,7 +1,7 @@
 #include <stdlib.h>
-#include <GL/glfw.h>
 #include "docopt.inc"
 #include "common/common.h"
+#include <GL/glfw.h>
 
 static void GLFWCALL key_cb(int key, int action)
 {

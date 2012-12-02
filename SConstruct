@@ -24,7 +24,7 @@ libs = {
 
 pkg_libs = {
     "osx": ["libevent", "libglfw", "glew"],
-    "arch": ["libevent", "libglfw", "glew", "lua"],
+    "arch": ["libevent", "libglfw", "glew", "lua", "gl"],
     "linux": ["libevent", "gl", "glfw", "glew"]
 }
 
