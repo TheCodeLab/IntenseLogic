@@ -69,7 +69,6 @@ TokenStream TokenStream_move(TokenStream ts) {
 TokenStream parse_shorts(TokenStream ts, Element options[]) {
     char *raw = &ts.current[1];
     ts = TokenStream_move(ts);
-    Element *parsed = NULL;
     while (raw[0] != '\0') {
         int i = 0;
         Element *o = &options[i];
@@ -265,11 +264,13 @@ def c_if_not_flag(o):
                 c_name(o.long or o.short))
 
 
-if __name__ == '__main__':
-    help_message=sys.stdin.read()
+def output(filename):
+    handle = open(filename, "r")
+    help_message = handle.read()
     usage_pattern = printable_usage(help_message)
     options = parse_doc_options(help_message)
     formal_pattern = parse_pattern(formal_usage(usage_pattern), options=options)
+    handle.close()
     formal_pattern.fix()
 
     out = __doc__
@@ -290,4 +291,4 @@ if __name__ == '__main__':
             ''.join(c_if_flag(o) for o in options if o.argcount == 0))
     out = out.replace('<<<if_not_flag>>>',
             ''.join(c_if_not_flag(o) for o in options if o.argcount == 1))
-    print(out.strip())
+    return out.strip()

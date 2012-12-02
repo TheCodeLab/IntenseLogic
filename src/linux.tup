@@ -1,4 +1,0 @@
-LINKSUFFIX=.so
-LDFLAGS += -lc
-CFLAGS += `pkg-config --cflags gl`
-LDFLAGS += `pkg-config --libs gl`

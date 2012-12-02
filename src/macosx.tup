@@ -1,3 +1,0 @@
-LINKSUFFIX=.dylib
-LDFLAGS += -lc -framework OpenGL
-CC = clang
