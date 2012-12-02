@@ -6,14 +6,6 @@ output     = "il"
 src_dir    = "src"
 build_dir  = "build"
 cli_file   = "src/il.docopt"
-compiler   = "clang"
-
-libs       = ["m"]
-pkg_libs   = ["libevent", "glew", "lua", "libglfw"]
-lib_dirs   = ["/usr/lib", "/usr/local/lib"]
-
-mingw_libs = ["mingw32", "ws2_32", "opengl32"]
-
 inputs     = "*.c common/*.c graphics/*.c network/*.c script/*.c asset/*.c"
 
 # flags
@@ -21,17 +13,28 @@ cflags    = "-Wall -g -DDEBUG -I./" + src_dir
 linkflags = "-g"
 
 # libs
-env = Environment(CCFLAGS = cflags, LINKFLAGS = linkflags, CC = compiler)
+lib_dirs = ["/usr/lib", "/usr/local/lib"]
 
-for lib in pkg_libs :
+libs = {
+    "osx": ["m"],
+    "mingw": ["mingw32", "ws2_32", "glfw", "opengl32"],
+    "linux": ["m"]
+}
+
+pkg_libs = {
+    "osx": ["libevent", "libglfw", "glew", "lua"],
+    "linux": ["libevent", "gl", "glfw", "glew", "lua"]
+}
+
+# link libs
+platform = ARGUMENTS.get("platform", "linux")
+env      = Environment(CCFLAGS = cflags, LINKFLAGS = linkflags)
+
+for lib in pkg_libs[platform] :
     env.ParseConfig("pkg-config " + lib + " --cflags --libs")
 
-for lib in libs :
+for lib in libs[platform] :
     env.Append(LIBS = lib)
-
-if env["PLATFORM"] == "mingw" :
-    for lib in mingw_libs :
-        env.Append(LIBS = lib)
 
 # get sources
 sources = []
