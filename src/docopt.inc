@@ -188,6 +188,8 @@ typedef struct {
 } DocoptArgs;
 
 char *help_message =
+"IntenseLogic - game engine\n"
+"\n"
 "Usage:\n"
 "    il -h | --help | --version\n"
 "\n"
