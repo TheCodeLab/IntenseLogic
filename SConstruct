@@ -16,13 +16,13 @@ linkflags = "-g"
 lib_dirs = ["/usr/lib", "/usr/local/lib"]
 
 libs = {
-    "osx": ["m"],
+    "osx": ["m", "lua"],
     "mingw": ["mingw32", "ws2_32", "glfw", "opengl32"],
     "linux": ["m"]
 }
 
 pkg_libs = {
-    "osx": ["libevent", "libglfw", "glew", "lua"],
+    "osx": ["libevent", "libglfw", "glew"],
     "linux": ["libevent", "gl", "glfw", "glew", "lua"]
 }
 

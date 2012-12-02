@@ -4,12 +4,16 @@ Intense Logic is metagaming at its finest.
 ## Documentation
 Copious amounts of documentation can be found on the [Wiki](https://github.com/TheCodeLab/IntenseLogic/wiki).
 
-## Usage
-Compile using [tup](http://gittup.org/tup) or `build.sh`.
+## Building
+Compile using [scons](http://scons.org/).
 
-* mingw has not worked with tup as of this writing.
-* tup needs a little fiddling to get working on OSX, look it up on Google.
-* `git clone git@github.com:TheCodeLab/IntenseLogic.git && cd src && tup upd`
+List of Dependencies:
+* glfw stable
+* glew latest
+* libevent2
+* Lua 5.2
+
+See the Wiki for help building.
 
 ## Authors
 camoy, tiffany352, harutsedo, et al.
