@@ -5,7 +5,6 @@
 #include <time.h>
 #include <sys/time.h>
 
-#include <event2/event.h>
 
 #include "common/base.h"
 #include "common/log.h"

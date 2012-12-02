@@ -3,8 +3,6 @@
 #include "docopt.inc"
 #include "common/common.h"
 
-extern struct event_base * ilE_base;
-
 static void GLFWCALL key_cb(int key, int action)
 {
     if (action == GLFW_PRESS)

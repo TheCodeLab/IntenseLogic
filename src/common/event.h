@@ -3,6 +3,9 @@
 
 #include <stdint.h>
 #include <stddef.h>
+#include <event2/event.h>
+
+struct event_base * ilE_base;
 
 struct timeval;
 
