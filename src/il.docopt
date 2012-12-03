@@ -9,4 +9,4 @@ Options:
   -r, --run SCRIPT       Runs script
   -l, --logfile	FILE     Sets the file to print output to
   -p, --path PATH        Adds an asset search path
-  -v, --verbose	         Sets the verbosity level
+  -v, --verbose	LEVEL    Sets the verbosity level [default: 4]

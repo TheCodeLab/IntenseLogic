@@ -112,6 +112,7 @@ void ilG_camera_setEgoCamKeyHandlers(ilG_camera* camera, il_keymap * keymap)
     struct ctx * ctx = calloc(1, sizeof(struct ctx));
     ctx->camera = camera;
     ctx->keymap = keymap;
+    ctx->first_mouse = 1;
     ilE_register(IL_BASE_TICK, (ilE_callback)&handleTick, ctx);
     ilE_register(IL_INPUT_MOUSEMOVE, (ilE_callback)&handleMouseMove, ctx);
     ilE_register(IL_INPUT_MOUSEDOWN, (ilE_callback)&mousedown, NULL);
