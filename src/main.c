@@ -3,40 +3,6 @@
 #include "common/common.h"
 #include <GL/glfw.h>
 
-static void GLFWCALL key_cb(int key, int action)
-{
-    if (action == GLFW_PRESS)
-        ilE_pushnew(IL_INPUT_KEYDOWN, sizeof(int), &key);
-    else
-        ilE_pushnew(IL_INPUT_KEYUP, sizeof(int), &key);
-}
-
-static void GLFWCALL mouse_cb(int button, int action)
-{
-    if (action == GLFW_PRESS)
-        ilE_pushnew(IL_INPUT_MOUSEDOWN, sizeof(int), &button);
-    else
-        ilE_pushnew(IL_INPUT_MOUSEUP, sizeof(int), &button);
-}
-
-static void GLFWCALL mousemove_cb(int x, int y)
-{
-    ilI_mouseMove mousemove =
-    (ilI_mouseMove) {
-        x, y
-    };
-    ilE_pushnew(IL_INPUT_MOUSEMOVE, sizeof(ilI_mouseMove), &mousemove);
-}
-
-static void GLFWCALL mousewheel_cb(int pos)
-{
-    ilI_mouseWheel mousewheel =
-    (ilI_mouseWheel) {
-        0, pos
-    };
-    ilE_pushnew(IL_INPUT_MOUSEWHEEL, sizeof(ilI_mouseWheel), &mousewheel);
-}
-
 static void update(ilE_event * ev, void * ctx)
 {
     (void)ev;
@@ -129,7 +95,7 @@ int main(int argc, char **argv)
     }
 
     if (args.verbose){
-        il_loglevel = IL_COMMON_LOGDEBUG;
+        il_loglevel = atoi(args.verbose);
     }
 
     if (args.path){
@@ -141,13 +107,7 @@ int main(int argc, char **argv)
     WSADATA WSAData;
     WSAStartup(0x101, &WSAData);
 #endif
-
-    // register glfw stuff
-    glfwSetKeyCallback(&key_cb);
-    glfwSetMouseButtonCallback(&mouse_cb);
-    glfwSetMousePosCallback(&mousemove_cb);
-    glfwSetMouseWheelCallback(&mousewheel_cb);
-
+    
     // initialise engine
     il_init();
 

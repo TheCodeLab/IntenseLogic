@@ -129,6 +129,8 @@ ilG_shape * ilG_shape_new(il_positionable * parent, int type)
     //shape->drawable.positionable = parent;
     shape->drawable.draw = (ilG_drawable3d_cb)&shape_draw;
 
+    IL_GRAPHICS_TESTERROR("Unknown error before this function");
+
     glGenVertexArrays(1, &shape->vao);
 
     IL_GRAPHICS_TESTERROR("Unable to generate vertex array");
