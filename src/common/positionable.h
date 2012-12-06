@@ -8,10 +8,10 @@
 #include "common/world.h"
 
 typedef struct il_positionable {
-  sg_Vector3 position;
-  sg_Quaternion rotation;
-  sg_Vector3 size;
-  sg_Vector3 velocity;
+  il_Vector3 position;
+  il_Quaternion rotation;
+  il_Vector3 size;
+  il_Vector3 velocity;
   struct il_world *parent;
   unsigned refs;
   struct timeval last_update;
@@ -20,6 +20,6 @@ typedef struct il_positionable {
 il_positionable * il_positionable_new(
   struct il_world * parent);
 
-void il_positionable_translate(il_positionable*, sg_Vector3 vec);
+void il_positionable_translate(il_positionable*, il_Vector3 vec);
 
 #endif

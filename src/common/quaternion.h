@@ -1,9 +1,9 @@
 #ifndef SG_QUATERNION
 #define SG_QUATERNION
 
-typedef struct sg_Quaternion {
+typedef struct il_Quaternion {
   float x, y, z, w;
-} sg_Quaternion;
+} il_Quaternion;
 
 #endif
 
@@ -13,8 +13,8 @@ typedef struct sg_Quaternion {
 #include "matrix.h"
 #include "vector.h"
 
-sg_Quaternion sg_Quaternion_fromAxisAngle(sg_Vector3 v, float a);
-sg_Quaternion sg_Quaternion_fromYPR(float bank, float heading, float attitutde);
-sg_Quaternion sg_Quaternion_mul(sg_Quaternion a, sg_Quaternion b);
+il_Quaternion il_Quaternion_fromAxisAngle(il_Vector3 v, float a);
+il_Quaternion il_Quaternion_fromYPR(float bank, float heading, float attitutde);
+il_Quaternion il_Quaternion_mul(il_Quaternion a, il_Quaternion b);
 
 #endif

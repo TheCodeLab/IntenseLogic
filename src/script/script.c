@@ -11,10 +11,10 @@ int ilS_script_wrap(lua_State* L, ilS_script* s);
 void ilS_init()
 {
     ilS_registerLuaRegister(&ilS_luaGlobals, NULL);
-    ilS_registerLuaRegister(&sg_Vector_luaGlobals, NULL);
+    ilS_registerLuaRegister(&il_Vector_luaGlobals, NULL);
     ilS_registerLuaRegister(&il_positionable_luaGlobals, NULL);
     ilS_registerLuaRegister(&ilG_world_luaGlobals, NULL);
-    ilS_registerLuaRegister(&sg_Quaternion_luaGlobals, NULL);
+    ilS_registerLuaRegister(&il_Quaternion_luaGlobals, NULL);
     ilS_registerLuaRegister(&ilE_luaGlobals, NULL);
     ilS_registerLuaRegister(&ilI_luaGlobals, NULL);
     ilS_registerLuaRegister(&il_terrain_luaGlobals, NULL);

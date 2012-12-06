@@ -4,7 +4,7 @@
 #define _s(a) #a
 #define s(a) _s(a)
 
-#define vecd c(sg_Vector, d)
+#define vecd c(il_Vector, d)
 
 #define mt_fun(name,d) \
   lua_pushcfunction(self->L, &c(vec, c(d, c(_, name)))); \

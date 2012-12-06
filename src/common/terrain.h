@@ -9,7 +9,7 @@ il_terrain * il_terrain_new();
 
 void il_terrain_getSize(il_terrain*, int *width, int *height);
 double il_terrain_getPoint(il_terrain*, unsigned x, unsigned y, double height);
-sg_Vector3 il_terrain_getNormal(il_terrain*, unsigned x, unsigned y, double z);
+il_Vector3 il_terrain_getNormal(il_terrain*, unsigned x, unsigned y, double z);
 
 int il_terrain_heightmapFromMemory(il_terrain*,
   int width, int height, const float * points);

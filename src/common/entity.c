@@ -3,10 +3,10 @@
 #include <stdlib.h>
 #include "log.h"
 
-sg_Vector3 move_default ( void **movedata,
+il_Vector3 move_default ( void **movedata,
                           const struct il_entity *ent,
-                          sg_Vector3 position,
-                          sg_Vector3 target )
+                          il_Vector3 position,
+                          il_Vector3 target )
 {
     (void)movedata;
     (void)ent;
@@ -14,9 +14,9 @@ sg_Vector3 move_default ( void **movedata,
     return target;
 }
 
-sg_Vector3 pathfind_default ( void **pathdata,
+il_Vector3 pathfind_default ( void **pathdata,
                               const struct il_entity *ent,
-                              sg_Vector3 position,
+                              il_Vector3 position,
                               il_entFocus target )
 {
     (void)pathdata;
@@ -29,7 +29,7 @@ sg_Vector3 pathfind_default ( void **pathdata,
     case IL_COMMON_FOCUSENTITY:
     default:
         il_log(1, "Invalid value for EntFocus.type %u", target.type);
-        return (sg_Vector3) {
+        return (il_Vector3) {
             0,0,0
         };
     }

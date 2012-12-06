@@ -159,17 +159,17 @@ void ilG_init()
     ilG_active_world = ilG_world_new_world(world);
     ilG_active_world->camera = ilG_camera_new(
                                            il_positionable_new(world));
-    ilG_active_world->camera->movespeed = (sg_Vector3) {
+    ilG_active_world->camera->movespeed = (il_Vector3) {
         1,1,1
     };
-    ilG_active_world->camera->projection_matrix = sg_Matrix_perspective(
+    ilG_active_world->camera->projection_matrix = il_Matrix_perspective(
                 75, (float)width/(float)height, 0.25, 100);
     ilG_camera_setEgoCamKeyHandlers(ilG_active_world->camera,
                                             keymap);
 
     il_positionable * shape_positionable = il_positionable_new(
                 world);
-    shape_positionable->position = (sg_Vector3) {
+    shape_positionable->position = (il_Vector3) {
         1,0,0
     };
     shape = ilG_shape_new(

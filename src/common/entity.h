@@ -6,21 +6,21 @@
 
 typedef struct il_entFocus {
   enum {IL_COMMON_FOCUSPOSITION, IL_COMMON_FOCUSDIR, IL_COMMON_FOCUSENTITY} type;
-  union {sg_Vector3* vector; sg_Matrix* matrix; il_positionable* positionable;} target;
+  union {il_Vector3* vector; il_Matrix* matrix; il_positionable* positionable;} target;
 } il_entFocus;
 
 struct il_entity;
 
-typedef sg_Vector3 (*il_entityMoveFunc) (
+typedef il_Vector3 (*il_entityMoveFunc) (
   void **movedata,
   const struct il_entity *ent,
-  sg_Vector3 position,
-  sg_Vector3 target );
+  il_Vector3 position,
+  il_Vector3 target );
 
-typedef sg_Vector3 (*il_entityPathfindFunc) (
+typedef il_Vector3 (*il_entityPathfindFunc) (
   void **pathdata,
   const struct il_entity *ent,
-  sg_Vector3 position,
+  il_Vector3 position,
   il_entFocus target );
 
 typedef struct il_entity {
@@ -30,7 +30,7 @@ typedef struct il_entity {
   il_entFocus look;
   il_entFocus move;
   float movestride;
-  sg_Vector3 pathtarget;
+  il_Vector3 pathtarget;
   unsigned refs;
   float walkspeed;
   void *move_data;

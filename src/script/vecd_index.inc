@@ -5,7 +5,7 @@
 #define _s(a) #a
 #define s(a) _s(a)
 
-#define vecd c(sg_Vector, d)
+#define vecd c(il_Vector, d)
 
 static int c(vec,c(d,_index))(lua_State* L) {
   vecd* v = (vecd*)ilS_getPointer(L, 1, "vector" s(d), NULL);
