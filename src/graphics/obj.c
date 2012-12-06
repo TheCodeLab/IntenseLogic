@@ -1,9 +1,12 @@
-#include <stdio.h>
+#define _POSIX_SOURCE
+#include <time.h>
+#include <sys/types.h>
 #include <sys/stat.h>
 #include <stdlib.h>
 #include <string.h>
 #include "obj.h"
 #include <GL/glew.h>
+#include <stdio.h>
 
 enum ilG_obj_line_type {
   OBJ_ERROR,

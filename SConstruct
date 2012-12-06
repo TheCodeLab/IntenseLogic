@@ -9,8 +9,8 @@ cli_file   = "src/il.docopt"
 inputs     = "*.c common/*.c graphics/*.c network/*.c script/*.c asset/*.c"
 
 # flags
-cflags    = "-Wall -g -DDEBUG -I./" + src_dir
-linkflags = "-g"
+cflags    = "-Wall -std=c99 -g -DDEBUG -I./" + src_dir
+linkflags = "-g -L."
 
 # libs
 lib_dirs = ["/usr/lib", "/usr/local/lib"]
