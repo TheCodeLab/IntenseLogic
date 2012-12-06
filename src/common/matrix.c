@@ -6,7 +6,7 @@
 
 #include "quaternion.h"
 
-sg_Matrix sg_Matrix_identity = {
+il_Matrix il_Matrix_identity = {
     {
         1, 0, 0, 0,
         0, 1, 0, 0,
@@ -15,9 +15,9 @@ sg_Matrix sg_Matrix_identity = {
     }
 };
 
-sg_Matrix sg_Matrix_mul(sg_Matrix a, sg_Matrix b)
+il_Matrix il_Matrix_mul(il_Matrix a, il_Matrix b)
 {
-    sg_Matrix c;
+    il_Matrix c;
 
     int i,j,k;
     for(i=0; i<4; i++) {
@@ -32,7 +32,7 @@ sg_Matrix sg_Matrix_mul(sg_Matrix a, sg_Matrix b)
     return c;
 }
 
-sg_Vector4 sg_Vector4_mul_m(sg_Vector4 vec, sg_Matrix b)
+il_Vector4 il_Vector4_mul_m(il_Vector4 vec, il_Matrix b)
 {
     float c[4];
     float *a = (float*)&vec;
@@ -46,23 +46,23 @@ sg_Vector4 sg_Vector4_mul_m(sg_Vector4 vec, sg_Matrix b)
         }
     }
 
-    return (sg_Vector4) {
+    return (il_Vector4) {
         c[0],c[1],c[2],c[3]
     };
 }
 
-sg_Matrix sg_Matrix_translate(sg_Vector3 t)
+il_Matrix il_Matrix_translate(il_Vector3 t)
 {
-    sg_Matrix n = sg_Matrix_identity;
+    il_Matrix n = il_Matrix_identity;
     n.data[3] = t.x;
     n.data[7] = t.y;
     n.data[11] = t.z;
     return n;
 }
 
-sg_Matrix sg_Matrix_rotate_v(float a, sg_Vector3 n)
+il_Matrix il_Matrix_rotate_v(float a, il_Vector3 n)
 {
-    sg_Matrix b;
+    il_Matrix b = il_Matrix_identity;
     float c = cosf(a);
     float s = sinf(a);
     b.data[0] = n.x*n.x*(1-c)+c;
@@ -86,13 +86,13 @@ sg_Matrix sg_Matrix_rotate_v(float a, sg_Vector3 n)
    1 - Q.y*q.y - Q.z*q.z, Q.x*q.y + Q.z*q.w, Q.x*q.z - Q.y*q.w,
    Q.x*q.y - Q.z*q.w, 1 - Q.x*q.x - Q.z*q.z, Q.y*q.z + Q.x*q.w,
    Q.x*q.z + Q.y*q.w, Q.y*q.z - Q.x*q.w, 1 - Q.x*q.x - Q.y*q.y); */
-sg_Matrix sg_Matrix_rotate_q(sg_Quaternion q)
+il_Matrix il_Matrix_rotate_q(il_Quaternion q)
 {
-    sg_Vector3 Q = sg_Vector3_mul_f((sg_Vector3) {
+    il_Vector3 Q = il_Vector3_mul_f((il_Vector3) {
         q.x,q.y,q.z
     },2.0f);
-    sg_Matrix n;
-    memset(&n, 0, sizeof(sg_Matrix));
+    il_Matrix n;
+    memset(&n, 0, sizeof(il_Matrix));
 
     n.data[0] = 1 - (Q.y*q.y) - (Q.z*q.z);
     n.data[1] = (Q.x*q.y) + (Q.z*q.w);
@@ -111,10 +111,10 @@ sg_Matrix sg_Matrix_rotate_q(sg_Quaternion q)
     return n;
 }
 
-sg_Matrix sg_Matrix_scale(sg_Vector3 v)
+il_Matrix il_Matrix_scale(il_Vector3 v)
 {
-    sg_Matrix n;
-    memset(&n, 0, sizeof(sg_Matrix));
+    il_Matrix n;
+    memset(&n, 0, sizeof(il_Matrix));
     n.data[0] = v.x;
     n.data[5] = v.y;
     n.data[10] = v.z;
@@ -125,10 +125,10 @@ sg_Matrix sg_Matrix_scale(sg_Vector3 v)
 
 // blatantly ripped off from
 // http://www.opengl.org/sdk/docs/man/xhtml/gluPerspective.xml
-sg_Matrix sg_Matrix_perspective(double fovy, double aspect, double znear, double zfar)
+il_Matrix il_Matrix_perspective(double fovy, double aspect, double znear, double zfar)
 {
-    sg_Matrix res;
-    memset(&res, 0, sizeof(sg_Matrix));
+    il_Matrix res;
+    memset(&res, 0, sizeof(il_Matrix));
 
     double f = 1.0/tan(fovy/2);
 
@@ -141,7 +141,7 @@ sg_Matrix sg_Matrix_perspective(double fovy, double aspect, double znear, double
     return res;
 }
 
-int sg_Matrix_invert(sg_Matrix m, sg_Matrix* invOut)
+int il_Matrix_invert(il_Matrix m, il_Matrix* invOut)
 {
 
     double inv[16], det;

@@ -3,11 +3,11 @@
 #include "script/script.h"
 #include "script/il.h"
 
-int sg_Quaternion_wrap(lua_State* L, sg_Quaternion q);
+int il_Quaternion_wrap(lua_State* L, il_Quaternion q);
 
 static int quat_index(lua_State* L)
 {
-    sg_Quaternion* q = ilS_getPointer(L, 1, "quaternion", NULL);
+    il_Quaternion* q = ilS_getPointer(L, 1, "quaternion", NULL);
     il_String k = ilS_getString(L, 2);
 
     if (il_strcmp(k, il_l("x"))) {
@@ -36,7 +36,7 @@ static int quat_index(lua_State* L)
 
 static int quat_newindex(lua_State* L)
 {
-    sg_Quaternion* q = ilS_getPointer(L, 1, "quaternion", NULL);
+    il_Quaternion* q = ilS_getPointer(L, 1, "quaternion", NULL);
     il_String k = ilS_getString(L, 2);
     double v = luaL_checknumber(L, 3);
 
@@ -62,15 +62,15 @@ static int quat_newindex(lua_State* L)
 
 static int quat_mul(lua_State* L)
 {
-    sg_Quaternion* a = ilS_getPointer(L, 1, "quaternion", NULL);
-    sg_Quaternion* b = ilS_getPointer(L, 2, "quaternion", NULL);
-    sg_Quaternion res = sg_Quaternion_mul(*a, *b);
-    return sg_Quaternion_wrap(L, res);
+    il_Quaternion* a = ilS_getPointer(L, 1, "quaternion", NULL);
+    il_Quaternion* b = ilS_getPointer(L, 2, "quaternion", NULL);
+    il_Quaternion res = il_Quaternion_mul(*a, *b);
+    return il_Quaternion_wrap(L, res);
 }
 
 static int quat_tostring(lua_State* L)
 {
-    sg_Quaternion* q = (sg_Quaternion*)ilS_getPointer(L, 1, "quaternion", NULL);
+    il_Quaternion* q = (il_Quaternion*)ilS_getPointer(L, 1, "quaternion", NULL);
     lua_pushfstring(L, "(%f, %f, %f), %f",
                     (lua_Number)q->x, (lua_Number)q->y, (lua_Number)q->z, (lua_Number)q->w);
     return 1;
@@ -78,10 +78,10 @@ static int quat_tostring(lua_State* L)
 
 static int quat_fromAxisAngle(lua_State* L)
 {
-    sg_Vector3 v;
+    il_Vector3 v;
     float a;
     if (luaL_testudata(L, 1, "vector3")) {
-        v = *(sg_Vector3*)ilS_getPointer(L, 1, "vector3", NULL);
+        v = *(il_Vector3*)ilS_getPointer(L, 1, "vector3", NULL);
         a = luaL_checkinteger(L, 2);
     } else {
         v.x = luaL_checkinteger(L, 1);
@@ -89,8 +89,8 @@ static int quat_fromAxisAngle(lua_State* L)
         v.z = luaL_checkinteger(L, 3);
         a = luaL_checkinteger(L, 4);
     }
-    sg_Quaternion q = sg_Quaternion_fromAxisAngle(v, a);
-    return sg_Quaternion_wrap(L, q);
+    il_Quaternion q = il_Quaternion_fromAxisAngle(v, a);
+    return il_Quaternion_wrap(L, q);
 }
 
 static int quat_fromYPR(lua_State* L)
@@ -99,26 +99,26 @@ static int quat_fromYPR(lua_State* L)
     y = luaL_checknumber(L, 1);
     p = luaL_checknumber(L, 2);
     r = luaL_checknumber(L, 3);
-    sg_Quaternion q = sg_Quaternion_fromYPR(y, p, r);
-    return sg_Quaternion_wrap(L, q);
+    il_Quaternion q = il_Quaternion_fromYPR(y, p, r);
+    return il_Quaternion_wrap(L, q);
 }
 
-int sg_Quaternion_wrap(lua_State* L, sg_Quaternion q)
+int il_Quaternion_wrap(lua_State* L, il_Quaternion q)
 {
-    return ilS_createMakeHeavy(L, sizeof(sg_Quaternion), &q, "quaternion");
+    return ilS_createMakeHeavy(L, sizeof(il_Quaternion), &q, "quaternion");
 }
 
 static int quat_create(lua_State* L)
 {
-    sg_Quaternion q;
+    il_Quaternion q;
     q.x = luaL_optnumber(L, 1, 0.0);
     q.y = luaL_optnumber(L, 2, 0.0);
     q.z = luaL_optnumber(L, 3, 0.0);
     q.w = luaL_optnumber(L, 4, 1.0);
-    return sg_Quaternion_wrap(L, q);
+    return il_Quaternion_wrap(L, q);
 }
 
-void sg_Quaternion_luaGlobals(ilS_script* self, void * ctx)
+void il_Quaternion_luaGlobals(ilS_script* self, void * ctx)
 {
     (void)ctx;
 

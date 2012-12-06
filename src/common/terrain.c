@@ -21,7 +21,7 @@ struct il_terrain {
     void *point_ctx;
     double (*getPoint)(il_terrain*, void*, unsigned x, unsigned y, double height);
     void *normal_ctx;
-    sg_Vector3 (*getNormal)(il_terrain*, void*, unsigned x, unsigned y, double z);
+    il_Vector3 (*getNormal)(il_terrain*, void*, unsigned x, unsigned y, double z);
 };
 
 il_terrain * il_terrain_new()
@@ -45,13 +45,13 @@ double il_terrain_getPoint(il_terrain* ter, unsigned x, unsigned y, double heigh
     return ter->getPoint(ter, ter->point_ctx, x, y, height);
 }
 
-sg_Vector3 il_terrain_getNormal(il_terrain* ter, unsigned x,
+il_Vector3 il_terrain_getNormal(il_terrain* ter, unsigned x,
                                        unsigned y, double z)
 {
-    if (!ter) return (sg_Vector3) {
+    if (!ter) return (il_Vector3) {
         0,0,0
     };
-    if (!ter->getNormal) return (sg_Vector3) {
+    if (!ter->getNormal) return (il_Vector3) {
         0,0,0
     };
     return ter->getNormal(ter, ter->normal_ctx, x, y, z);
@@ -76,7 +76,7 @@ static double heightmap_getPoint(il_terrain* ter, void * ctx, unsigned x,
 }
 
 // http://www.flipcode.com/archives/Calculating_Vertex_Normals_for_Height_Maps.shtml
-static sg_Vector3 heightmap_getNormal(il_terrain* ter, void * ctx,
+static il_Vector3 heightmap_getNormal(il_terrain* ter, void * ctx,
                                       unsigned x, unsigned y, double z)
 {
     (void)ctx;
@@ -93,10 +93,10 @@ static sg_Vector3 heightmap_getNormal(il_terrain* ter, void * ctx,
     if (y == 0 || (int)y == ter->height -1)
         sy *= 2;
 
-    sg_Vector3 v = (sg_Vector3) {
+    il_Vector3 v = (il_Vector3) {
         -sx, 2, sy
     };
-    return sg_Vector3_normalise(v);
+    return il_Vector3_normalise(v);
 }
 
 static double pheightmap_getPoint(il_terrain* ter, void * ctx,
@@ -106,11 +106,11 @@ static double pheightmap_getPoint(il_terrain* ter, void * ctx,
     return NAN; // TODO: stub function
 }
 
-static sg_Vector3 pheightmap_getNormal(il_terrain* ter, void * ctx,
+static il_Vector3 pheightmap_getNormal(il_terrain* ter, void * ctx,
                                        unsigned x, unsigned y, double z)
 {
     (void)ter, (void)ctx, (void)x, (void)y, (void)z;
-    return (sg_Vector3) {
+    return (il_Vector3) {
         0,0,0
     }; // TODO: stub function
 }

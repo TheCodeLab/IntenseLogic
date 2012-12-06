@@ -29,7 +29,7 @@ struct il_terrain {
     double (*getPoint)(il_terrain*, void*, unsigned x, unsigned y,
                        double height);
     void *normal_ctx;
-    sg_Vector3 (*getNormal)(il_terrain*, void*, unsigned x, unsigned y,
+    il_Vector3 (*getNormal)(il_terrain*, void*, unsigned x, unsigned y,
                             double z);
 };
 

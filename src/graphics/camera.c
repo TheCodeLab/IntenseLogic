@@ -15,7 +15,7 @@ ilG_camera* ilG_camera_new(il_positionable * parent)
 {
     ilG_camera* camera = calloc(1, sizeof(ilG_camera));
     camera->positionable = parent;
-    camera->projection_matrix = sg_Matrix_identity;
+    camera->projection_matrix = il_Matrix_identity;
     camera->sensitivity = 0.002;
     camera->refs = 1;
     return camera;
@@ -43,24 +43,24 @@ static void handleMouseMove(ilE_event* ev, struct ctx * ctx)
 
     il_log(5, "MouseMove: %i %i", mousemove->x, mousemove->y);
 
-    sg_Quaternion yaw = sg_Quaternion_fromAxisAngle(
-    (sg_Vector3) {
+    il_Quaternion yaw = il_Quaternion_fromAxisAngle(
+    (il_Vector3) {
         0, 1, 0
     },
     -mousemove->x * ctx->camera->sensitivity
                         );
 
-    sg_Quaternion pitch = sg_Quaternion_fromAxisAngle(
-    (sg_Vector3) {
+    il_Quaternion pitch = il_Quaternion_fromAxisAngle(
+    (il_Vector3) {
         1, 0, 0
     },
     -mousemove->y * ctx->camera->sensitivity
                           );
 
-    sg_Quaternion quat;
+    il_Quaternion quat;
 
-    quat = sg_Quaternion_mul(ctx->camera->positionable->rotation, yaw);
-    quat = sg_Quaternion_mul(pitch, quat);
+    quat = il_Quaternion_mul(ctx->camera->positionable->rotation, yaw);
+    quat = il_Quaternion_mul(pitch, quat);
 
     ctx->camera->positionable->rotation = quat;
 
@@ -84,7 +84,7 @@ static void handleTick(ilE_event* ev, struct ctx * ctx)
 
     il_positionable_translate (
         ctx->camera->positionable,
-    (sg_Vector3) {
+    (il_Vector3) {
         ctx->camera->movespeed.x * -leftward,
             ctx->camera->movespeed.y * -upward,
             ctx->camera->movespeed.z * forward
@@ -120,7 +120,7 @@ void ilG_camera_setEgoCamKeyHandlers(ilG_camera* camera, il_keymap * keymap)
 
 }
 
-void ilG_camera_setMovespeed(ilG_camera* camera, sg_Vector3 movespeed, float pixels_per_radian)
+void ilG_camera_setMovespeed(ilG_camera* camera, il_Vector3 movespeed, float pixels_per_radian)
 {
     camera->movespeed = movespeed;
     camera->sensitivity = 1.0/pixels_per_radian;

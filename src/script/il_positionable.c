@@ -8,8 +8,8 @@
 #include "graphics/world.h"
 #include "interface.h"
 
-extern int sg_Vector3_wrap(lua_State* L, sg_Vector3 v);
-int sg_Quaternion_wrap(lua_State* L, sg_Quaternion q);
+extern int il_Vector3_wrap(lua_State* L, il_Vector3 v);
+int il_Quaternion_wrap(lua_State* L, il_Quaternion q);
 
 int il_positionable_wrap(lua_State* L, il_positionable* p);
 
@@ -19,16 +19,16 @@ static int pos_index(lua_State* L)
     il_string k = ilS_getString(L, 2);
 
     if (il_strcmp(k, il_l("position"))) {
-        return sg_Vector3_wrap(L, self->position);
+        return il_Vector3_wrap(L, self->position);
     }
     if (il_strcmp(k, il_l("size"))) {
-        return sg_Vector3_wrap(L, self->size);
+        return il_Vector3_wrap(L, self->size);
     }
     if (il_strcmp(k, il_l("velocity"))) {
-        return sg_Vector3_wrap(L, self->velocity);
+        return il_Vector3_wrap(L, self->velocity);
     }
     if (il_strcmp(k, il_l("rotation"))) {
-        return sg_Quaternion_wrap(L, self->rotation);
+        return il_Quaternion_wrap(L, self->rotation);
     }
     if (il_strcmp(k, il_l("parent"))) {
         return il_world_wrap(L, self->parent);
@@ -47,7 +47,7 @@ static int pos_newindex(lua_State* L)
     il_string k = ilS_getString(L, 2);
 
     if (luaL_testudata(L, 3, "vector3")) {
-        sg_Vector3* v = ilS_getPointer(L, 3, "vector3", NULL);
+        il_Vector3* v = ilS_getPointer(L, 3, "vector3", NULL);
         if (il_strcmp(k, il_l("position"))) {
             self->position = *v;
             return 0;
@@ -63,7 +63,7 @@ static int pos_newindex(lua_State* L)
         return 0;
     }
     if (luaL_testudata(L, 3, "quaternion")) {
-        sg_Quaternion q = *(sg_Quaternion*)ilS_getPointer(L, 3, "quaternion", NULL);
+        il_Quaternion q = *(il_Quaternion*)ilS_getPointer(L, 3, "quaternion", NULL);
         self->rotation = q;
         return 0;
     }

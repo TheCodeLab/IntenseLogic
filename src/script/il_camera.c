@@ -13,7 +13,7 @@ static int camera_index(lua_State* L)
         return il_positionable_wrap(L, self->positionable);
     }
     if (strcmp(key, "movespeed") == 0) {
-        return sg_Vector3_wrap(L, self->movespeed);
+        return il_Vector3_wrap(L, self->movespeed);
     }
     if (strcmp(key, "sensitivity") == 0) {
         lua_pushnumber(L, self->sensitivity);
@@ -33,7 +33,7 @@ static int newindex(lua_State* L)
         return 0;
     }
     if (strcmp(key, "movespeed") == 0) {
-        self->movespeed = *(sg_Vector3*)ilS_getPointer(L, 3, "vector3", NULL);
+        self->movespeed = *(il_Vector3*)ilS_getPointer(L, 3, "vector3", NULL);
         return 0;
     }
     if (strcmp(key, "sensitivity") == 0) {

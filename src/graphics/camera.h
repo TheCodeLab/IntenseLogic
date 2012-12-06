@@ -9,8 +9,8 @@
 
 typedef struct ilG_camera {
   il_positionable* positionable;
-  sg_Vector3 movespeed;
-  sg_Matrix projection_matrix;
+  il_Vector3 movespeed;
+  il_Matrix projection_matrix;
   float sensitivity;
   unsigned refs;
 } ilG_camera;
@@ -18,6 +18,6 @@ typedef struct ilG_camera {
 ilG_camera* ilG_camera_new(il_positionable * parent);
 
 void ilG_camera_setEgoCamKeyHandlers(ilG_camera* camera, il_keymap * keymap);
-void ilG_camera_setMovespeed(ilG_camera* camera, sg_Vector3 movespeed, float radians_per_pixel);
+void ilG_camera_setMovespeed(ilG_camera* camera, il_Vector3 movespeed, float radians_per_pixel);
 
 #endif

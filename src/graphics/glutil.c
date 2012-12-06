@@ -137,27 +137,27 @@ void ilG_bindUniforms(GLuint program, const ilG_camera * camera, const il_positi
     utransform = glGetUniformLocation(program, "transform");
     ilG_testError("glGetUniformLocation failed");
 
-    sg_Matrix cam = sg_Matrix_mul(
-                        sg_Matrix_translate(camera->positionable->position),
-                        sg_Matrix_rotate_q(camera->positionable->rotation)
+    il_Matrix cam = il_Matrix_mul(
+                        il_Matrix_translate(camera->positionable->position),
+                        il_Matrix_rotate_q(camera->positionable->rotation)
                     );
 
-    sg_Matrix view;
+    il_Matrix view;
 
-    int res = sg_Matrix_invert(cam, &view);
+    int res = il_Matrix_invert(cam, &view);
     if (res!=0)
         il_log(2, "Couldn't invert view matrix?");
 
-    sg_Matrix model = sg_Matrix_mul(
-                          sg_Matrix_rotate_q(object->rotation),
-                          sg_Matrix_mul(
-                              sg_Matrix_scale(object->size),
-                              sg_Matrix_translate(object->position)
+    il_Matrix model = il_Matrix_mul(
+                          il_Matrix_rotate_q(object->rotation),
+                          il_Matrix_mul(
+                              il_Matrix_scale(object->size),
+                              il_Matrix_translate(object->position)
                           ));
 
-    sg_Matrix mat = sg_Matrix_mul(
+    il_Matrix mat = il_Matrix_mul(
                         camera->projection_matrix,
-                        sg_Matrix_mul(
+                        il_Matrix_mul(
                             view,
                             model
                         ));

@@ -56,8 +56,8 @@ static int getnormal(lua_State* L)
     unsigned x = luaL_checkunsigned(L, 2);
     unsigned y = luaL_checkunsigned(L, 3);
     double z = luaL_optnumber(L, 4, NAN);
-    sg_Vector3 ret = il_terrain_getNormal(ter, x, y, z);
-    sg_Vector3_wrap(L, ret);
+    il_Vector3 ret = il_terrain_getNormal(ter, x, y, z);
+    il_Vector3_wrap(L, ret);
     return 1;
 }
 

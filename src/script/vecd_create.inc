@@ -4,7 +4,7 @@
 #define _s(a) #a
 #define s(a) _s(a)
 
-#define vecd c(sg_Vector, d)
+#define vecd c(il_Vector, d)
 
 static int c(vec,c(d,_create))(lua_State* L) {
   int nargs = lua_gettop(L);
