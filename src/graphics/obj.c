@@ -98,7 +98,7 @@ static struct ilG_obj_line *ilG_obj_readline(const struct ilG_obj_ctx* ctx, cons
           res->type = OBJ_VERTEX;
           float *p = &res->line.vertex[0];
           int len, matched;
-          matched = sscanf(line+2, "%f %f %f", p, p+1, p+2);
+          matched = sscanf(line+2, "%f %f %f%n", p, p+1, p+2, &len);
           if (matched < 3) {
             res->type = OBJ_ERROR;
             res->line.error = "Too few components in vertex";

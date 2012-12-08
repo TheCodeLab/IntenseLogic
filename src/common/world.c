@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "common/positionable.h"
+
 struct il_worldIterator {
     size_t n;
 };

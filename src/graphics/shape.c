@@ -94,7 +94,8 @@ struct ilG_shape {
     GLsizei count;
 };
 
-static void shape_draw(const ilG_camera* cam, struct ilG_drawable3d* drawable, const struct timeval* tv)
+static void shape_draw(const ilG_camera* cam, struct ilG_drawable3d* drawable, 
+    const struct timeval* tv, il_positionable* pos)
 {
     (void)tv;
     ilG_shape * shape = (ilG_shape*)drawable;
@@ -102,7 +103,7 @@ static void shape_draw(const ilG_camera* cam, struct ilG_drawable3d* drawable, c
     glUseProgram(shape->program);
     IL_GRAPHICS_TESTERROR("Could not use program");
 
-    ilG_bindUniforms(shape->program, cam, drawable->positionable);
+    ilG_bindUniforms(shape->program, cam, pos);
 
     glBindBuffer(GL_ARRAY_BUFFER, shape->vbo);
     IL_GRAPHICS_TESTERROR("Could not bind vbo");
@@ -194,8 +195,6 @@ ilG_shape * ilG_shape_new(il_positionable * parent, int type)
     IL_GRAPHICS_TESTERROR("Unable to attach shader");
 
     ilG_linkProgram(shape->program);
-
-    ilG_drawable3d_setPositionable(&shape->drawable, parent);
 
     return shape;
 }

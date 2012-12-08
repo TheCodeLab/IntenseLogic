@@ -40,7 +40,7 @@ struct ilG_terrain {
     GLuint program;
     void *draw_ctx;
     void (*draw)(ilG_terrain*, void*, const ilG_camera*,
-                 const struct timeval*);
+        const struct timeval*, il_positionable*);
 };
 
 struct pheightmap {
@@ -50,14 +50,14 @@ struct pheightmap {
 };
 
 static void terrain_draw(const ilG_camera* cam,
-                         struct ilG_drawable3d* drawable, const struct timeval* tv)
+    struct ilG_drawable3d* drawable, const struct timeval* tv, il_positionable* pos)
 {
     ilG_terrain* ter = (ilG_terrain*)drawable;
-    ter->draw(ter, ter->draw_ctx, cam, tv);
+    ter->draw(ter, ter->draw_ctx, cam, tv, pos);
 }
 
 static void heightmap_draw(ilG_terrain* ter, void* ctx,
-                           const ilG_camera* cam, const struct timeval* tv)
+    const ilG_camera* cam, const struct timeval* tv, il_positionable* pos)
 {
     (void)ctx, (void)cam, (void)tv;
     glUseProgram(ter->program);
@@ -70,7 +70,7 @@ static void heightmap_draw(ilG_terrain* ter, void* ctx,
 }
 
 static void pheightmap_draw(ilG_terrain* ter, void* ctx,
-                            const ilG_camera* cam, const struct timeval* tv)
+    const ilG_camera* cam, const struct timeval* tv, il_positionable* pos)
 {
     (void)tv;
     struct pheightmap* pheightmap = ctx;
@@ -78,14 +78,14 @@ static void pheightmap_draw(ilG_terrain* ter, void* ctx,
     glUseProgram(ter->program);
     ilG_testError("glUseProgram");
 
-    ilG_bindUniforms(ter->program, cam, ter->drawable.positionable);
+    ilG_bindUniforms(ter->program, cam, pos);
     ilG_testError("ilG_bindUniforms");
 
     GLint center = glGetUniformLocation(ter->program, "center");
     ilG_testError("glGetUniformLocation");
     glUniform2i(center,
-                (int)floor(ter->drawable.positionable->position.x / pheightmap->resolution),
-                (int)floor(ter->drawable.positionable->position.z / pheightmap->resolution)
+                (int)floor(pos->position.x / pheightmap->resolution),
+                (int)floor(pos->position.z / pheightmap->resolution)
                );
     ilG_testError("glUniform2i");
 
@@ -117,7 +117,7 @@ static void pheightmap_draw(ilG_terrain* ter, void* ctx,
 }
 
 ilG_terrain* ilG_terrain_new(il_terrain* parent,
-        il_positionable* positionable)
+    il_positionable* positionable)
 {
     ilG_terrain * ter = calloc(1, sizeof(ilG_terrain));
     ter->terrain = parent;
@@ -218,8 +218,6 @@ ilG_terrain* ilG_terrain_new(il_terrain* parent,
         // ???
         break;
     }
-
-    ilG_drawable3d_setPositionable(&ter->drawable, positionable);
 
     return ter;
 }

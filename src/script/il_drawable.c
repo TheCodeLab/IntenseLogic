@@ -29,10 +29,6 @@ static int drawable_index(lua_State* L)
         lua_pushinteger(L, self->type);
         return 1;
     }
-    if (strcmp(k, "positionable")) {
-        il_positionable_wrap(L, self->positionable);
-        return 1;
-    }
     return 0;
 }
 
