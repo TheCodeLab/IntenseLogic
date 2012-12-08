@@ -1,5 +1,4 @@
 #include "common/world.h"
-#include "graphics/world.h"
 
 #include <string.h>
 
@@ -7,31 +6,25 @@
 #include "script/il.h"
 #include "interface.h"
 
-int ilG_world_wrap(lua_State* L, ilG_world * w)
+int il_world_wrap(lua_State* L, il_world * w)
 {
     return ilS_createMakeLight(L, w, "world");
 }
 
-int il_world_wrap(lua_State* L, il_world * self)
-{
-    ilG_world* w = il_world_getGraphicsWorld(self);
-    if (w) return ilG_world_wrap(L, w);
-    return ilG_world_wrap(L, ilG_world_new_world(self));
-}
-
 static int world_create(lua_State* L)
 {
-    ilG_world* w = ilG_world_new();
-    return ilG_world_wrap(L, w);
+    il_world* w = il_world_new();
+    return il_world_wrap(L, w);
 }
 
 static int world_index(lua_State* L)
 {
-    ilG_world* self = ilS_getPointer(L, 1, "world", NULL);
-    const char * k = luaL_checkstring(L, 1);
+    il_world* self = ilS_getPointer(L, 1, "world", NULL);
+    const char * k = luaL_optstring(L, 2, NULL);
 
-    if (strcmp(k, "camera")) {
-        return ilG_camera_wrap(L, self->camera);
+    if (strcmp(k, "id")) {
+        lua_pushinteger(L, self->id);
+        return 1;
     }
 
     return 0;

@@ -3,14 +3,15 @@
 
 #include <stdlib.h>
 
-#include "common/positionable.h"
-
 struct il_positionable;
+struct ilG_context;
 
 typedef struct il_world {
-  unsigned refs;
-  size_t nobjects;
-  struct il_positionable** objects;
+    unsigned int id;
+    unsigned refs;
+    size_t nobjects;
+    struct il_positionable** objects;
+    struct ilG_context* context;
 } il_world;
 
 typedef struct il_worldIterator il_worldIterator;

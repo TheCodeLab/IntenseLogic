@@ -5,7 +5,6 @@
 #include "common/string.h"
 #include "common/vector.h"
 #include "common/matrix.h"
-#include "graphics/world.h"
 #include "interface.h"
 
 extern int il_Vector3_wrap(lua_State* L, il_Vector3 v);
@@ -81,8 +80,8 @@ int il_positionable_wrap(lua_State* L, il_positionable* p)
 
 static int pos_create(lua_State* L)
 {
-    ilG_world * world = ilS_getPointer(L, 1, "world", NULL);
-    il_positionable* p = il_positionable_new(world->world);
+    il_world * world = ilS_getPointer(L, 1, "world", NULL);
+    il_positionable* p = il_positionable_new(world);
 
     return il_positionable_wrap(L, p);
 }

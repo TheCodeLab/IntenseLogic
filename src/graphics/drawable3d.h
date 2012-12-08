@@ -4,29 +4,30 @@
 //#include <GL/glew.h>
 
 #include "common/positionable.h"
-#include "camera.h"
+#include "graphics/camera.h"
 
 struct ilG_drawable3d;
+struct ilG_material;
+struct ilG_texture;
 
-typedef void (*ilG_drawable3d_cb)(const ilG_camera*,
-struct ilG_drawable3d*, const struct timeval*);
+typedef void (*ilG_drawable3d_cb)(const ilG_camera*, 
+        struct ilG_drawable3d*, const struct timeval*, il_positionable*);
+typedef void (*ilG_drawable3d_bind_cb)(struct ilG_drawable3d*, void*);
+typedef void (*ilG_drawable3d_update_cb)(struct ilG_drawable3d*, 
+        struct ilG_material*, struct ilG_texture*, void*);
 
 typedef struct ilG_drawable3d {
   int type;
-  il_positionable* positionable;
-  //GLuint shader;
-  void *drawcontext;
+  unsigned int id;
   ilG_drawable3d_cb draw;
+  ilG_drawable3d_bind_cb bind, unbind;
+  ilG_drawable3d_update_cb update;
+  void *draw_ctx, *bind_ctx, *unbind_ctx, *update_ctx;
 } ilG_drawable3d;
 
-typedef struct ilG_drawable3dIterator ilG_drawable3dIterator;
-
-void ilG_drawable3d_setPositionable(ilG_drawable3d*,
-  il_positionable*);
-
-ilG_drawable3d* ilG_drawable3d_iterate(il_positionable*,
-  ilG_drawable3dIterator**);
-
-//ilG_drawable3d * ilG_drawable3d_new(il_positionable * parent);
+ilG_drawable3d* ilG_drawable3d_fromId(unsigned int id); // tracker.c
+void ilG_drawable3d_assignId(ilG_drawable3d*);
+void ilG_drawable3d_setId(ilG_drawable3d*, unsigned int id);
 
 #endif
+

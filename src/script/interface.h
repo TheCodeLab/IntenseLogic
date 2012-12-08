@@ -9,7 +9,6 @@
 #include "common/terrain.h"
 #include "graphics/drawable3d.h"
 #include "graphics/terrain.h"
-#include "graphics/world.h"
 
 void il_Vector_luaGlobals(ilS_script* self, void* ctx);
 void ilS_luaGlobals(ilS_script* self, void * ctx);
@@ -30,7 +29,7 @@ int il_Vector4_wrap(lua_State* L, il_Vector4 v);
 int il_Quaternion_wrap(lua_State* L, il_Quaternion q);
 int il_positionable_wrap(lua_State* L, il_positionable* p);
 int ilS_script_wrap(lua_State* L, ilS_script* s);
-int ilG_world_wrap(lua_State* L, ilG_world * w);
+//int ilG_world_wrap(lua_State* L, ilG_world * w);
 int ilE_wrap(lua_State* L, const ilE_event* e);
 int il_terrain_wrap(lua_State* L, il_terrain* ter);
 int ilA_wrap(lua_State* L, ilA_asset* asset);
