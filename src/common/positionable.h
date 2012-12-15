@@ -7,6 +7,10 @@
 #include "common/vector.h"
 #include "common/world.h"
 
+struct ilG_drawable3d;
+struct ilG_material;
+struct ilG_texture;
+
 typedef struct il_positionable {
   il_Vector3 position;
   il_Quaternion rotation;
@@ -15,6 +19,9 @@ typedef struct il_positionable {
   struct il_world *parent;
   unsigned refs;
   struct timeval last_update;
+  struct ilG_drawable3d* drawable;
+  struct ilG_material* material;
+  struct ilG_texture* texture;
 } il_positionable;
 
 il_positionable * il_positionable_new(

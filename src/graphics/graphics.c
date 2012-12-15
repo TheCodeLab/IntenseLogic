@@ -6,6 +6,8 @@
 #include <GL/glew.h>
 #include <GL/glfw.h>
 #include <sys/time.h>
+#include <IL/il.h>
+#include <IL/ilut.h>
 
 #include "graphics/camera.h"
 #include "common/event.h"
@@ -127,7 +129,7 @@ static void context_setup()
     } else
         il_log(3, "ARB_debug_output missing");
 
-    glfwSwapInterval(1); // 1:1 ratio of frames to vsyncs
+    glfwSwapInterval(0); // 1:1 ratio of frames to vsyncs
 }
 
 static void scene_setup()
@@ -190,6 +192,10 @@ void ilG_init()
     glClearDepth(1.0);
     glDepthFunc(GL_LESS);
     glEnable(GL_DEPTH_TEST);
+
+    // IL setup
+    ilInit();
+    ilutInit();
     
     // Setup the scene stuff (camera, world, etc.)
     scene_setup();
@@ -218,27 +224,37 @@ static void draw()
 
     while (ilG_trackIterate(iter)) {
         if (drawable != ilG_trackGetDrawable(iter)) {
-            drawable->unbind(drawable, drawable->unbind_ctx);
+            if (drawable->unbind)
+                drawable->unbind(drawable, drawable->unbind_ctx);
             drawable = ilG_trackGetDrawable(iter);
-            drawable->bind(drawable, drawable->bind_ctx);
+            if (drawable->bind)
+                drawable->bind(drawable, drawable->bind_ctx);
         }
         if (material != ilG_trackGetMaterial(iter)) {
-            material->unbind(material, material->unbind_ctx);
+            if (material->unbind)
+                material->unbind(material, material->unbind_ctx);
             material = ilG_trackGetMaterial(iter);
-            material->bind(material, material->bind_ctx);
+            if (material->bind)
+                material->bind(material, material->bind_ctx);
         }
         if (texture != ilG_trackGetTexture(iter)) {
-            texture->unbind(texture, texture->unbind_ctx);
+            if (texture->unbind)
+                texture->unbind(texture, texture->unbind_ctx);
             texture = ilG_trackGetTexture(iter);
-            texture->bind(texture, texture->bind_ctx);
+            if (texture->bind)
+                texture->bind(texture, texture->bind_ctx);
         }
-        drawable->update(drawable, material, texture, drawable->update_ctx);
-        material->update(material, drawable, texture, material->update_ctx);
-        texture->update(texture, drawable, material, texture->update_ctx);
+        if (drawable->update)
+            drawable->update(drawable, material, texture, drawable->update_ctx);
+        if (material->update)
+            material->update(material, drawable, texture, material->update_ctx);
+        if (texture->update)
+            texture->update(texture, drawable, material, texture->update_ctx);
 
         pos = ilG_trackGetPositionable(iter);
 
-        drawable->draw(context->camera, drawable, &tv, pos);
+        if (drawable->draw)
+            drawable->draw(context->camera, drawable, &tv, pos);
     }
 
     glfwSwapBuffers();

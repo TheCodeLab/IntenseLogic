@@ -18,6 +18,11 @@ typedef struct ilG_texture {
     void *bind_ctx, *update_ctx, *unbind_ctx;
 } ilG_texture;
 
+struct ilA_asset;
+
+ilG_texture* ilG_texture_fromfile(const char *name);
+ilG_texture* ilG_texture_fromasset(struct ilA_asset* asset);
+
 ilG_texture* ilG_texture_fromId(unsigned int id); // tracker.c
 void ilG_texture_assignId(ilG_texture*);
 void ilG_texture_setId(ilG_texture*, unsigned int id);
