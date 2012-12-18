@@ -20,6 +20,7 @@
             free((list).data);                  \
         }                                       \
         (list).data = tmp;                      \
+        (list).capacity = newcap;               \
     }
 
 #define IL_INDEX(list, id, out)         \
@@ -59,6 +60,8 @@
             memset((list).data + id, 0,     \
                     sizeof((list).data[0]));\
             (out) = (list).data + id;       \
+            if ((list).length <= (id))      \
+                (list).length = (id)+1;     \
         }                                   \
     }
 
