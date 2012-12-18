@@ -8,24 +8,7 @@
 #include "common/string.h"
 #include "asset/asset.h"
 #include "graphics/glutil.h"
-
-/*
-   o Cube
-   v 1.000000 -1.000000 -1.000000
-   v 1.000000 -1.000000 1.000000
-   v -1.000000 -1.000000 1.000000
-   v -1.000000 -1.000000 -1.000000
-   v 1.000000 1.000000 -0.999999
-   v 0.999999 1.000000 1.000001
-   v -1.000000 1.000000 1.000000
-   v -1.000000 1.000000 -1.000000
-   f 1 2 3 4
-   f 5 8 7 6
-   f 1 5 6 2
-   f 2 6 7 3
-   f 3 7 8 4
-   f 5 1 4 8
-   */
+#include "graphics/drawable3d.h"
 
 static float cube[] = {
     // front
@@ -84,26 +67,18 @@ static short cube_index[] = {
 
 struct ilG_shape {
     ilG_drawable3d drawable;
-    int type;
     GLuint vbo;
     GLuint ibo;
     GLuint vao;
-    GLuint program;
-    GLuint texture;
     GLenum mode;
     GLsizei count;
 };
 
-static void shape_draw(const ilG_camera* cam, struct ilG_drawable3d* drawable, 
+static void draw(const ilG_camera* cam, struct ilG_drawable3d* drawable, 
     const struct timeval* tv, il_positionable* pos)
 {
     (void)tv;
-    ilG_shape * shape = (ilG_shape*)drawable;
-
-    glUseProgram(shape->program);
-    IL_GRAPHICS_TESTERROR("Could not use program");
-
-    ilG_bindUniforms(shape->program, cam, pos);
+    struct ilG_shape * shape = (struct ilG_shape*)drawable;
 
     glBindBuffer(GL_ARRAY_BUFFER, shape->vbo);
     IL_GRAPHICS_TESTERROR("Could not bind vbo");
@@ -111,90 +86,85 @@ static void shape_draw(const ilG_camera* cam, struct ilG_drawable3d* drawable,
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, shape->ibo);
     IL_GRAPHICS_TESTERROR("Could not bind ibo");
 
-    //glActiveTexture(GL_TEXTURE0);
-    //glBindTexture(GL_TEXTURE_2D, shape->texture);
-
-    //glEnable(GL_PRIMITIVE_RESTART);
-
-    //glPrimitiveRestartIndex((unsigned short)-1);
-
     glDrawElements(shape->mode, shape->count, GL_UNSIGNED_SHORT, (GLvoid*)0);
     IL_GRAPHICS_TESTERROR("Could not draw ibo");
 }
 
-ilG_shape * ilG_shape_new(il_positionable * parent, int type)
-{
-    ilG_shape * shape = calloc(1, sizeof(ilG_shape));
-    shape->type = type;
-    shape->drawable.type = ('P'<<24) + ('R'<<16) + ('I'<<8) + ('M'<<0);
-    //shape->drawable.positionable = parent;
-    shape->drawable.draw = (ilG_drawable3d_cb)&shape_draw;
+struct ilG_shape box, cylinder, sphere, plane;
 
+void ilG_shape_init()
+{
+    GLuint vao[4], vbo[4], ibo[4];
+    int i;
+    
+    memset(&box,        0, sizeof(struct ilG_shape));
+    memset(&cylinder,   0, sizeof(struct ilG_shape));
+    memset(&sphere,     0, sizeof(struct ilG_shape));
+    memset(&plane,      0, sizeof(struct ilG_shape));
+
+    box.drawable.type       = "Box Primitive";
+    cylinder.drawable.type  = "Cylinder Primitive";
+    sphere.drawable.type    = "Sphere Primitive";
+    plane.drawable.type     = "Plane Primitive";
+
+    // assignment is an expression that returns what was assigned
+    box.drawable.draw       =
+    cylinder.drawable.draw  =
+    sphere.drawable.draw    = 
+    plane.drawable.draw     = &draw;
+
+    // don't want the wrong error to pop up, has happened before
     IL_GRAPHICS_TESTERROR("Unknown error before this function");
 
-    glGenVertexArrays(1, &shape->vao);
-
+    glGenVertexArrays(4, &vao[0]);
     IL_GRAPHICS_TESTERROR("Unable to generate vertex array");
-    glBindVertexArray(shape->vao);
-    IL_GRAPHICS_TESTERROR("Unable to bind vertex array");
+    box.vao         = vao[0];
+    cylinder.vao    = vao[1];
+    sphere.vao      = vao[2];
+    plane.vao       = vao[3];
 
-    glGenBuffers(1, &shape->vbo);
+    glGenBuffers(4, &vbo[0]);
     IL_GRAPHICS_TESTERROR("Unable to generate vertex buffer");
-    glBindBuffer(GL_ARRAY_BUFFER, shape->vbo);
-    IL_GRAPHICS_TESTERROR("Unable to bind vertex buffer");
-    switch(type) {
-    case ilG_box: {
+    box.vbo         = vbo[0];
+    cylinder.vbo    = vbo[1];
+    sphere.vbo      = vbo[2];
+    plane.vbo       = vbo[3];
+
+    glGenBuffers(4, &ibo[0]);
+    IL_GRAPHICS_TESTERROR("Unable to generate index buffer object");
+    box.ibo         = ibo[0];
+    cylinder.ibo    = ibo[1];
+    sphere.ibo      = ibo[2];
+    plane.ibo       = ibo[3];
+
+    for (i = 0; i < 4; i++) {
+        glBindVertexArray(vao[i]);
+        IL_GRAPHICS_TESTERROR("Unable to bind vertex array");
+        
+        glBindBuffer(GL_ARRAY_BUFFER, vbo[i]);
+        IL_GRAPHICS_TESTERROR("Unable to bind vertex buffer");
+
         glBufferData(GL_ARRAY_BUFFER, sizeof(cube), cube, GL_STATIC_DRAW);
         IL_GRAPHICS_TESTERROR("Unable to upload cube data");
-        break;
-    }
-    }
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-    IL_GRAPHICS_TESTERROR("Unable to set vertex attrib pointer");
-    glEnableVertexAttribArray(0);
-    IL_GRAPHICS_TESTERROR("Unable to enable vertex attrib array index 0");
 
-    glGenBuffers(1, &shape->ibo);
-    IL_GRAPHICS_TESTERROR("Unable to generate index buffer object");
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, shape->ibo);
-    IL_GRAPHICS_TESTERROR("Unable to bind index buffer object");
-    switch(type) {
-    case ilG_box: {
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+        IL_GRAPHICS_TESTERROR("Unable to set vertex attrib pointer");
+
+        glEnableVertexAttribArray(0);
+        IL_GRAPHICS_TESTERROR("Unable to enable vertex attrib array index 0");
+
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo[i]);
+        IL_GRAPHICS_TESTERROR("Unable to bind index buffer object");
+
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(cube_index), cube_index, GL_STATIC_DRAW);
         IL_GRAPHICS_TESTERROR("Unable to upload index buffer data");
-    }
-    }
 
-    shape->mode = GL_TRIANGLES;
-    shape->count = 36;
-
-    shape->program = glCreateProgram();
-    IL_GRAPHICS_TESTERROR("Unable to create program");
-
-    GLuint vertex, fragment;
-    il_string vertex_source, fragment_source;
-
-    vertex_source = IL_ASSET_READFILE("cube.vert");
-    fragment_source = IL_ASSET_READFILE("cube.frag");
-
-    if (!vertex_source.length) {
-        il_log(1, "Unable to open cube vertex shader");
-        return NULL;
-    }
-    if (!fragment_source.length) {
-        il_log(1, "Unable to open cube fragment shader");
-        return NULL;
+        box.mode = GL_TRIANGLES;
+        box.count = 36;
     }
 
-    vertex = ilG_makeShader(GL_VERTEX_SHADER, vertex_source);
-    fragment = ilG_makeShader(GL_FRAGMENT_SHADER, fragment_source);
-
-    glAttachShader(shape->program, vertex);
-    IL_GRAPHICS_TESTERROR("Unable to attach shader");
-    glAttachShader(shape->program, fragment);
-    IL_GRAPHICS_TESTERROR("Unable to attach shader");
-
-    ilG_linkProgram(shape->program);
-
-    return shape;
+    ilG_box         = &box.drawable;
+    ilG_cylinder    = &cylinder.drawable;
+    ilG_sphere      = &sphere.drawable;
+    ilG_plane       = &plane.drawable;
 }

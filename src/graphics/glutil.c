@@ -71,6 +71,8 @@ void ilG_testError_(const char *file, int line, const char *func,
 
 GLuint ilG_makeShader(GLenum type, il_string source)
 {
+    IL_GRAPHICS_TESTERROR("Unknown error before function");
+
     GLuint shader = glCreateShader(type);
     IL_GRAPHICS_TESTERROR("Unable to create shader");
 

@@ -24,6 +24,7 @@
 #include "graphics/material.h"
 #include "graphics/texture.h"
 #include "graphics/tracker.h"
+#include "graphics/glutil.h"
 
 extern unsigned time(unsigned*);
 
@@ -31,13 +32,14 @@ int width = 800;
 int height = 600;
 il_world* world;
 il_keymap * keymap;
-ilG_shape* shape;
 ilG_context* context;
 
 static void draw();
 static void quit();
 static GLvoid error_cb(GLenum source, GLenum type, GLuint id, GLenum severity,
                        GLsizei length, const GLchar* message, GLvoid* userParam);
+void ilG_material_init();
+void ilG_shape_init();
 
 static void GLFWCALL key_cb(int key, int action)
 {
@@ -108,6 +110,8 @@ static void context_setup()
     glfwSetMousePosCallback(&mousemove_cb);
     glfwSetMouseWheelCallback(&mousewheel_cb);
 
+    IL_GRAPHICS_TESTERROR("Unknown");
+
     // GLEW
     glewExperimental = GL_TRUE;
     GLenum err = glewInit();
@@ -117,17 +121,23 @@ static void context_setup()
     }
     il_log(3, "Using GLEW %s", glewGetString(GLEW_VERSION));
 
+    IL_GRAPHICS_TESTERROR("glewInit()");
+
 #ifndef __APPLE__
     if (!GLEW_VERSION_3_1) {
         il_log(1, "GL version 3.1 is required, your Segfault Insurance is now invalid");
     }
 #endif
 
+    IL_GRAPHICS_TESTERROR("Unknown");
+#ifdef DEBUG
     if (GLEW_ARB_debug_output) {
         glDebugMessageCallbackARB((GLDEBUGPROCARB)&error_cb, NULL);
         il_log(3, "ARB_debug_output present, enabling advanced errors");
+        IL_GRAPHICS_TESTERROR("glDebugMessageCallbackARB()");
     } else
         il_log(3, "ARB_debug_output missing");
+#endif
 
     glfwSwapInterval(0); // 1:1 ratio of frames to vsyncs
 }
@@ -145,14 +155,11 @@ static void scene_setup()
         75, (float)width/(float)height, 0.25, 100);
     ilG_camera_setEgoCamKeyHandlers(context->camera, keymap);
 
-    il_positionable * shape_positionable = il_positionable_new(world);
-    shape_positionable->position = (il_Vector3) {1,0,0};
-    shape = ilG_shape_new(shape_positionable,ilG_box);
-    if (!shape) {
-        il_log(0, "Failed to create demo shape");
-        abort();
-    }
-    ilG_drawable3d_assignId((ilG_drawable3d*)shape);
+    il_positionable * positionable = il_positionable_new(world);
+    positionable->position = (il_Vector3) {1,0,0};
+    positionable->drawable = ilG_box;
+    positionable->material = ilG_material_default;
+    ilG_trackPositionable(context, positionable);
 
     /*il_terrain *ter = il_terrain_new();
       il_terrain_heightmapFromSeed(
@@ -186,16 +193,19 @@ void ilG_init()
 
     // Setup GL context (glfw, glew, etc.)
     context_setup();
+    IL_GRAPHICS_TESTERROR("Unknown");
     
     // GL setup
     glClearColor(0,0,0,1);
     glClearDepth(1.0);
     glDepthFunc(GL_LESS);
     glEnable(GL_DEPTH_TEST);
+    IL_GRAPHICS_TESTERROR("Error setting up screen");
 
-    // IL setup
-    ilInit();
-    ilutInit();
+    // generate ilG_material_default
+    ilG_material_init();
+    // generate primitive defaults
+    ilG_shape_init();
     
     // Setup the scene stuff (camera, world, etc.)
     scene_setup();
