@@ -13,10 +13,13 @@ typedef void (*ilG_texture_update_cb)(struct ilG_texture*,
 
 typedef struct ilG_texture {
     unsigned int id;
+    const char *name;
     ilG_texture_bind_cb bind, unbind;
     ilG_texture_update_cb update;
     void *bind_ctx, *update_ctx, *unbind_ctx;
 } ilG_texture;
+
+ilG_texture *ilG_texture_default;
 
 struct ilA_asset;
 

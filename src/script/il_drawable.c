@@ -25,8 +25,8 @@ static int drawable_index(lua_State* L)
 
     const char* k = luaL_checkstring(L, 2);
 
-    if (strcmp(k, "type")) {
-        lua_pushinteger(L, self->type);
+    if (strcmp(k, "name")) {
+        lua_pushstring(L, self->name);
         return 1;
     }
     return 0;

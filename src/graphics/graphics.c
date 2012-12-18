@@ -40,6 +40,7 @@ static GLvoid error_cb(GLenum source, GLenum type, GLuint id, GLenum severity,
                        GLsizei length, const GLchar* message, GLvoid* userParam);
 void ilG_material_init();
 void ilG_shape_init();
+void ilG_texture_init();
 
 static void GLFWCALL key_cb(int key, int action)
 {
@@ -159,6 +160,7 @@ static void scene_setup()
     positionable->position = (il_Vector3) {1,0,0};
     positionable->drawable = ilG_box;
     positionable->material = ilG_material_default;
+    positionable->texture = ilG_texture_default;
     ilG_trackPositionable(context, positionable);
 
     /*il_terrain *ter = il_terrain_new();
@@ -206,6 +208,8 @@ void ilG_init()
     ilG_material_init();
     // generate primitive defaults
     ilG_shape_init();
+    // generate default textures
+    ilG_texture_init();
     
     // Setup the scene stuff (camera, world, etc.)
     scene_setup();
@@ -220,12 +224,12 @@ static void draw()
         ilE_pushnew(IL_BASE_SHUTDOWN, 0, NULL);
         return;
     }
-    //il_log(5, "Rendering frame");
+    il_log(5, "Rendering frame");
     struct timeval tv;
-    il_positionable* pos;
-    ilG_drawable3d* drawable;
-    ilG_material* material;
-    ilG_texture* texture;
+    il_positionable* pos = NULL;
+    ilG_drawable3d* drawable = NULL;
+    ilG_material* material = NULL;
+    ilG_texture* texture = NULL;
     ilG_trackiterator * iter = ilG_trackiterator_new(context);
 
     glClearColor(0,0,0,1);
@@ -234,36 +238,39 @@ static void draw()
 
     while (ilG_trackIterate(iter)) {
         if (drawable != ilG_trackGetDrawable(iter)) {
-            if (drawable->unbind)
+            if (drawable && drawable->unbind)
                 drawable->unbind(drawable, drawable->unbind_ctx);
             drawable = ilG_trackGetDrawable(iter);
-            if (drawable->bind)
+            if (drawable && drawable->bind)
                 drawable->bind(drawable, drawable->bind_ctx);
         }
         if (material != ilG_trackGetMaterial(iter)) {
-            if (material->unbind)
+            if (material && material->unbind)
                 material->unbind(material, material->unbind_ctx);
             material = ilG_trackGetMaterial(iter);
-            if (material->bind)
+            if (material && material->bind)
                 material->bind(material, material->bind_ctx);
         }
         if (texture != ilG_trackGetTexture(iter)) {
-            if (texture->unbind)
+            if (texture && texture->unbind)
                 texture->unbind(texture, texture->unbind_ctx);
             texture = ilG_trackGetTexture(iter);
-            if (texture->bind)
+            if (texture && texture->bind)
                 texture->bind(texture, texture->bind_ctx);
         }
-        if (drawable->update)
+        if (drawable && drawable->update)
             drawable->update(drawable, material, texture, drawable->update_ctx);
-        if (material->update)
+        if (material && material->update)
             material->update(material, drawable, texture, material->update_ctx);
-        if (texture->update)
+        if (texture && texture->update)
             texture->update(texture, drawable, material, texture->update_ctx);
 
         pos = ilG_trackGetPositionable(iter);
 
-        if (drawable->draw)
+        il_log(5, "positionable: %p; drawable: \"%s\"; material: \"%s\"; texture: \"%s\"", 
+            pos, drawable? drawable->name : "NULL", material? material->name : "NULL", texture? texture->name : "NULL");
+
+        if (drawable && drawable->draw)
             drawable->draw(context->camera, drawable, &tv, pos);
     }
 

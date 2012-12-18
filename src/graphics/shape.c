@@ -9,6 +9,7 @@
 #include "asset/asset.h"
 #include "graphics/glutil.h"
 #include "graphics/drawable3d.h"
+#include "graphics/tracker.h"
 
 static float cube[] = {
     // front
@@ -102,10 +103,10 @@ void ilG_shape_init()
     memset(&sphere,     0, sizeof(struct ilG_shape));
     memset(&plane,      0, sizeof(struct ilG_shape));
 
-    box.drawable.type       = "Box Primitive";
-    cylinder.drawable.type  = "Cylinder Primitive";
-    sphere.drawable.type    = "Sphere Primitive";
-    plane.drawable.type     = "Plane Primitive";
+    box.drawable.name       = "Box Primitive";
+    cylinder.drawable.name  = "Cylinder Primitive";
+    sphere.drawable.name    = "Sphere Primitive";
+    plane.drawable.name     = "Plane Primitive";
 
     // assignment is an expression that returns what was assigned
     box.drawable.draw       =
@@ -167,4 +168,9 @@ void ilG_shape_init()
     ilG_cylinder    = &cylinder.drawable;
     ilG_sphere      = &sphere.drawable;
     ilG_plane       = &plane.drawable;
+
+    ilG_drawable3d_assignId(ilG_box);
+    ilG_drawable3d_assignId(ilG_cylinder);
+    ilG_drawable3d_assignId(ilG_sphere);
+    ilG_drawable3d_assignId(ilG_plane);
 }

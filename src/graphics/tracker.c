@@ -9,6 +9,7 @@
 #include "graphics/material.h"
 #include "graphics/texture.h"
 #include "common/array.h"
+#include "common/log.h"
 
 // Warning: This file is rather ugly as it uses basically a quintuple pointer.
 
@@ -22,6 +23,28 @@ static context_list contexts;
 
 void ilG_trackPositionable(ilG_context* ctx, il_positionable* self)
 {
+    // pedantic checks because why not
+    if (!ctx) {
+        il_log(1, "Null context");
+        return;
+    }
+    if (!self) {
+        il_log(1, "Null positionable");
+        return;
+    }
+    if (!self->drawable) {
+        il_log(1, "Null drawable in positionable");
+        return;
+    }
+    if (!self->material) {
+        il_log(1, "Null material in positionable");
+        return;
+    }
+    if (!self->texture) {
+        il_log(1, "Null texture in positionable");
+        return;
+    }
+
     drawable_list * drawables;
     IL_INDEXORZERO(contexts, ctx->world->id, drawables);
 

@@ -1,5 +1,5 @@
-#ifndef IL_ARRAY_H
-#define IL_ARRAY_H
+#ifndef IL_LIST_H
+#define IL_LIST_H
 
 /* This is some support code for the engine, to simplify creation of data
  * structures used throughout. This is a simple doubley linked list
