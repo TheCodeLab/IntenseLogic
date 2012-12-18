@@ -20,7 +20,7 @@ typedef struct ilG_material {
     void *bind_ctx, *update_ctx, *unbind_ctx;
 } ilG_material;
 
-ilG_material ilG_material_default;
+ilG_material* ilG_material_default;
 
 ilG_material* ilG_material_fromId(unsigned int id); // tracker.c
 void ilG_material_assignId(ilG_material*);

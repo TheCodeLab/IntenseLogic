@@ -17,7 +17,7 @@ typedef void (*ilG_drawable3d_update_cb)(struct ilG_drawable3d*,
         struct ilG_material*, struct ilG_texture*, void*);
 
 typedef struct ilG_drawable3d {
-  int type;
+  const char* type;
   unsigned int id;
   ilG_drawable3d_cb draw;
   ilG_drawable3d_bind_cb bind, unbind;
