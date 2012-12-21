@@ -54,6 +54,7 @@ void ilG_material_init()
     ilG_linkProgram(mtl.program);
 
     mtl.bind = &bind;
+    mtl.update = &update;
 
     ilG_material_default = &mtl;
 }
