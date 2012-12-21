@@ -1,18 +1,16 @@
 #ifndef ILG_CONTEXT_H
 #define ILG_CONTEXT_H
 
-#include "graphics/drawable3d.h"
-#include "graphics/material.h"
-#include "graphics/texture.h"
-#include "graphics/camera.h"
-#include "common/world.h"
+#include <time.h>
+#include <sys/time.h>
 
 typedef struct ilG_context {
-    ilG_drawable3d* current_drawable;
-    ilG_material* current_material;
-    ilG_texture* current_texture;
-    ilG_camera* camera;
-    il_world* world;
+    struct ilG_drawable3d* drawable;
+    struct ilG_material* material;
+    struct ilG_texture* texture;
+    struct ilG_camera* camera;
+    struct il_world* world;
+    struct timeval tv;
 } ilG_context;
 
 #endif

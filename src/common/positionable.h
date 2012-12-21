@@ -7,10 +7,6 @@
 #include "common/vector.h"
 #include "common/world.h"
 
-struct ilG_drawable3d;
-struct ilG_material;
-struct ilG_texture;
-
 typedef struct il_positionable {
   il_Vector3 position;
   il_Quaternion rotation;

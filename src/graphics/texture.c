@@ -1,8 +1,7 @@
 #include "texture.h"
 
 #include <stdlib.h>
-#include <IL/il.h>
-#include <IL/ilu.h>
+#include <GL/glew.h>
 
 #include "asset/asset.h"
 #include "graphics/tracker.h"
@@ -35,7 +34,7 @@ ilG_texture* ilG_texture_fromasset(ilA_asset* asset)
     return &tex->parent;
 }
 
-struct GLtexture def;
+static struct GLtexture def;
 
 void ilG_texture_init()
 {

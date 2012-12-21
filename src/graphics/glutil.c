@@ -133,10 +133,10 @@ void ilG_linkProgram(GLuint program)
     }
 }
 
-void ilG_bindUniforms(GLuint program, const ilG_camera * camera, const il_positionable * object)
+void ilG_bindMVP(const char *name, GLuint program, const ilG_camera * camera, const il_positionable * object)
 {
     GLint utransform;
-    utransform = glGetUniformLocation(program, "transform");
+    utransform = glGetUniformLocation(program, name);
     ilG_testError("glGetUniformLocation failed");
 
     il_Matrix cam = il_Matrix_mul(
@@ -167,3 +167,4 @@ void ilG_bindUniforms(GLuint program, const ilG_camera * camera, const il_positi
     glUniformMatrix4fv(utransform, 1, GL_TRUE, (const GLfloat*)&mat.data);
     ilG_testError("glUniformMatrix4fv failed");
 }
+

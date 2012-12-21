@@ -1,20 +1,18 @@
 #ifndef IL_GRAPHICS_DRAWABLE3D_H
 #define IL_GRAPHICS_DRAWABLE3D_H
 
-//#include <GL/glew.h>
-
-#include "common/positionable.h"
-#include "graphics/camera.h"
-
+struct il_positionable;
 struct ilG_drawable3d;
 struct ilG_material;
 struct ilG_texture;
+struct ilG_context;
+struct ilG_camera;
 
-typedef void (*ilG_drawable3d_cb)(const ilG_camera*, 
-        struct ilG_drawable3d*, const struct timeval*, il_positionable*);
+typedef void (*ilG_drawable3d_cb)(struct ilG_context*, struct il_positionable*,
+    void*);
 typedef void (*ilG_drawable3d_bind_cb)(struct ilG_drawable3d*, void*);
-typedef void (*ilG_drawable3d_update_cb)(struct ilG_drawable3d*, 
-        struct ilG_material*, struct ilG_texture*, void*);
+typedef void (*ilG_drawable3d_update_cb)(struct ilG_context*, 
+    struct il_positionable*, void*);
 
 typedef struct ilG_drawable3d {
   const char* name;

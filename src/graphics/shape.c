@@ -10,6 +10,7 @@
 #include "graphics/glutil.h"
 #include "graphics/drawable3d.h"
 #include "graphics/tracker.h"
+#include "graphics/context.h"
 
 static float cube[] = {
     // front
@@ -75,11 +76,11 @@ struct ilG_shape {
     GLsizei count;
 };
 
-static void draw(const ilG_camera* cam, struct ilG_drawable3d* drawable, 
-    const struct timeval* tv, il_positionable* pos)
+static void draw(const ilG_context* context, il_positionable* pos, void * ctx)
 {
-    (void)tv;
-    struct ilG_shape * shape = (struct ilG_shape*)drawable;
+    (void)ctx;
+    (void)pos;
+    struct ilG_shape * shape = (struct ilG_shape*)context->drawable;
 
     glBindBuffer(GL_ARRAY_BUFFER, shape->vbo);
     IL_GRAPHICS_TESTERROR("Could not bind vbo");
@@ -91,7 +92,7 @@ static void draw(const ilG_camera* cam, struct ilG_drawable3d* drawable,
     IL_GRAPHICS_TESTERROR("Could not draw ibo");
 }
 
-struct ilG_shape box, cylinder, sphere, plane;
+static struct ilG_shape box, cylinder, sphere, plane;
 
 void ilG_shape_init()
 {
