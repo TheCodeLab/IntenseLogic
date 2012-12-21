@@ -76,7 +76,7 @@ struct ilG_shape {
     GLsizei count;
 };
 
-static void draw(const ilG_context* context, il_positionable* pos, void * ctx)
+static void draw(ilG_context* context, il_positionable* pos, void * ctx)
 {
     (void)ctx;
     (void)pos;
@@ -175,3 +175,4 @@ void ilG_shape_init()
     ilG_drawable3d_assignId(ilG_sphere);
     ilG_drawable3d_assignId(ilG_plane);
 }
+

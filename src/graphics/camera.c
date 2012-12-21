@@ -10,6 +10,7 @@
 #include "common/input.h"
 #include "common/keymap.h"
 #include "common/log.h"
+#include "common/positionable.h"
 
 ilG_camera* ilG_camera_new(il_positionable * parent)
 {
@@ -107,7 +108,7 @@ static void mouseup(ilE_event* ev, int ctx)
     ilI_grabMouse(0);	// Release input and show mouse again
 }
 
-void ilG_camera_setEgoCamKeyHandlers(ilG_camera* camera, il_keymap * keymap)
+void ilG_camera_setEgoCamKeyHandlers(ilG_camera* camera, struct il_keymap * keymap)
 {
     struct ctx * ctx = calloc(1, sizeof(struct ctx));
     ctx->camera = camera;
