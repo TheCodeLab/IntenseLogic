@@ -5,7 +5,6 @@
 #include <sys/time.h>
 #include <GL/glew.h>
 #include <GL/glfw.h>
-#include <sys/time.h>
 #include <IL/il.h>
 #include <IL/ilut.h>
 
@@ -227,9 +226,6 @@ static void draw()
     il_log(5, "Rendering frame");
     struct timeval tv;
     il_positionable* pos = NULL;
-    ilG_drawable3d* drawable = NULL;
-    ilG_material* material = NULL;
-    ilG_texture* texture = NULL;
     ilG_trackiterator * iter = ilG_trackiterator_new(context);
 
     glClearColor(0,0,0,1);
@@ -237,41 +233,48 @@ static void draw()
     gettimeofday(&tv, NULL);
 
     while (ilG_trackIterate(iter)) {
-        if (drawable != ilG_trackGetDrawable(iter)) {
-            if (drawable && drawable->unbind)
-                drawable->unbind(drawable, drawable->unbind_ctx);
-            drawable = ilG_trackGetDrawable(iter);
-            if (drawable && drawable->bind)
-                drawable->bind(drawable, drawable->bind_ctx);
+        if (context->drawable != ilG_trackGetDrawable(iter)) {
+            if (context->drawable && context->drawable->unbind)
+                context->drawable->unbind(context->drawable, 
+                    context->drawable->unbind_ctx);
+            context->drawable = ilG_trackGetDrawable(iter);
+            if (context->drawable && context->drawable->bind)
+                context->drawable->bind(context->drawable, 
+                    context->drawable->bind_ctx);
         }
-        if (material != ilG_trackGetMaterial(iter)) {
-            if (material && material->unbind)
-                material->unbind(material, material->unbind_ctx);
-            material = ilG_trackGetMaterial(iter);
-            if (material && material->bind)
-                material->bind(material, material->bind_ctx);
+        if (context->material != ilG_trackGetMaterial(iter)) {
+            if (context->material && context->material->unbind)
+                context->material->unbind(context->material, 
+                    context->material->unbind_ctx);
+            context->material = ilG_trackGetMaterial(iter);
+            if (context->material && context->material->bind)
+                context->material->bind(context->material, 
+                    context->material->bind_ctx);
         }
-        if (texture != ilG_trackGetTexture(iter)) {
-            if (texture && texture->unbind)
-                texture->unbind(texture, texture->unbind_ctx);
-            texture = ilG_trackGetTexture(iter);
-            if (texture && texture->bind)
-                texture->bind(texture, texture->bind_ctx);
+        if (context->texture != ilG_trackGetTexture(iter)) {
+            if (context->texture && context->texture->unbind)
+                context->texture->unbind(context->texture, 
+                    context->texture->unbind_ctx);
+            context->texture = ilG_trackGetTexture(iter);
+            if (context->texture && context->texture->bind)
+                context->texture->bind(context->texture, 
+                    context->texture->bind_ctx);
         }
-        if (drawable && drawable->update)
-            drawable->update(drawable, material, texture, drawable->update_ctx);
-        if (material && material->update)
-            material->update(material, drawable, texture, material->update_ctx);
-        if (texture && texture->update)
-            texture->update(texture, drawable, material, texture->update_ctx);
 
         pos = ilG_trackGetPositionable(iter);
 
-        il_log(5, "positionable: %p; drawable: \"%s\"; material: \"%s\"; texture: \"%s\"", 
-            pos, drawable? drawable->name : "NULL", material? material->name : "NULL", texture? texture->name : "NULL");
+        if (context->drawable && context->drawable->update)
+            context->drawable->update(context, pos, 
+                context->drawable->update_ctx);
+        if (context->material && context->material->update)
+            context->material->update(context, pos, 
+                context->material->update_ctx);
+        if (context->texture && context->texture->update)
+            context->texture->update(context, pos, 
+                context->texture->update_ctx);
 
-        if (drawable && drawable->draw)
-            drawable->draw(context->camera, drawable, &tv, pos);
+        if (context->drawable && context->drawable->draw)
+            context->drawable->draw(context, pos, context->drawable->draw_ctx);
     }
 
     glfwSwapBuffers();

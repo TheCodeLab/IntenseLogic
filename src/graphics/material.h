@@ -3,13 +3,12 @@
 
 #include <GL/glew.h>
 
-struct ilG_drawable3d;
-struct ilG_texture;
+struct il_positionable;
 struct ilG_material;
+struct ilG_context;
 
-typedef void (*ilG_material_bind_cb)(struct ilG_material* material, void *ctx);
-typedef void (*ilG_material_update_cb)(struct ilG_material* material, 
-        struct ilG_drawable3d* drawable, struct ilG_texture*, void *ctx);
+typedef void (*ilG_material_bind_cb)(struct ilG_material*, void*);
+typedef void (*ilG_material_update_cb)(struct ilG_context*, struct il_positionable*, void*);
 
 typedef struct ilG_material {
     unsigned int id;

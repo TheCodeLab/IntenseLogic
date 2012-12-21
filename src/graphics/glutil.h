@@ -19,7 +19,7 @@ void ilG_testError_(const char *file, int line, const char *func,
 
 GLuint ilG_makeShader(GLenum type, il_string source);
 void ilG_linkProgram(GLuint program);
-void ilG_bindUniforms(GLuint program, const ilG_camera *camera,
+void ilG_bindMVP(const char *name, GLuint program, const ilG_camera *camera,
   const il_positionable * object);
 
 #endif

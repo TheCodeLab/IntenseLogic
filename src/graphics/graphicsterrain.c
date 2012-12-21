@@ -78,7 +78,7 @@ static void pheightmap_draw(ilG_terrain* ter, void* ctx,
     glUseProgram(ter->program);
     ilG_testError("glUseProgram");
 
-    ilG_bindUniforms(ter->program, cam, pos);
+    //ilG_bindUniforms(ter->program, cam, pos);
     ilG_testError("ilG_bindUniforms");
 
     GLint center = glGetUniformLocation(ter->program, "center");

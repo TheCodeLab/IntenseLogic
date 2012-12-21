@@ -9,6 +9,7 @@
 #include "common/terrain.h"
 #include "graphics/drawable3d.h"
 #include "graphics/terrain.h"
+#include "graphics/camera.h"
 
 void il_Vector_luaGlobals(ilS_script* self, void* ctx);
 void ilS_luaGlobals(ilS_script* self, void * ctx);

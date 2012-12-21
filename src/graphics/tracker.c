@@ -10,6 +10,7 @@
 #include "graphics/texture.h"
 #include "common/array.h"
 #include "common/log.h"
+#include "common/positionable.h"
 
 // Warning: This file is rather ugly as it uses basically a quintuple pointer.
 

@@ -1,15 +1,12 @@
 #ifndef ILG_TEXTURE_H
 #define ILG_TEXTURE_H
 
-#include <GL/glew.h>
-
+struct il_positionable;
 struct ilG_texture;
-struct ilG_material;
-struct ilG_drawable3d;
+struct ilG_context;
 
 typedef void (*ilG_texture_bind_cb)(struct ilG_texture*, void*);
-typedef void (*ilG_texture_update_cb)(struct ilG_texture*, 
-        struct ilG_drawable3d*, struct ilG_material*, void*);
+typedef void (*ilG_texture_update_cb)(struct ilG_context*, struct il_positionable*, void*);
 
 typedef struct ilG_texture {
     unsigned int id;

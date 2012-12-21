@@ -3,10 +3,17 @@
 #include "graphics/glutil.h"
 #include "common/string.h"
 #include "asset/asset.h"
+#include "graphics/context.h"
 
 static void bind(ilG_material* material, void *ctx)
 {
     glUseProgram(material->program);
+}
+
+static void update(ilG_context* context, struct il_positionable* pos, void *ctx)
+{
+    (void)ctx;
+    ilG_bindMVP("mvp", context->material->program, context->camera, pos);
 }
 
 static ilG_material mtl;
