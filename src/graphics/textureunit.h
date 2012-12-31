@@ -1,6 +1,8 @@
 #ifndef ILG_TEXTUREUNIT_H
 #define ILG_TEXTUREUNIT_H
 
+#include "common/log.h"
+
 // 64 units per type
 #define ILG_TUNIT_NONE      (0)
 #define ILG_TUNIT_COLOR0    (1<<0)

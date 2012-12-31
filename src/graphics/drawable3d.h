@@ -17,6 +17,7 @@ typedef struct ilG_drawable3d {
   ilG_drawable3d_bind_cb bind, unbind;
   ilG_drawable3d_update_cb update;
   void *draw_ctx, *bind_ctx, *unbind_ctx, *update_ctx;
+  unsigned long long attrs;
 } ilG_drawable3d;
 
 ilG_drawable3d* ilG_drawable3d_fromId(unsigned int id); // tracker.c

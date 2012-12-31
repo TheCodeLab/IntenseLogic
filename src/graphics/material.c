@@ -7,6 +7,9 @@
 #include "asset/asset.h"
 #include "graphics/context.h"
 #include "graphics/textureunit.h"
+#include "graphics/arrayattrib.h"
+#include "common/log.h"
+#include "graphics/drawable3d.h"
 
 static void bind(ilG_context* context, void *ctx)
 {
@@ -24,6 +27,12 @@ static void bind(ilG_context* context, void *ctx)
 static void update(ilG_context* context, struct il_positionable* pos, void *ctx)
 {
     (void)ctx;
+    if (!ILG_TESTATTR(context->drawable->attrs, ILG_ARRATTR_POSITION) ||
+        !ILG_TESTATTR(context->drawable->attrs, ILG_ARRATTR_TEXCOORD)) {
+        il_log( 1, "Drawable \"%s\" does not have the required attributes to "
+                "be drawn with Material \"%s\"", context->drawable->name, 
+                context->material->name);
+    }
     ilG_bindMVP("mvp", context->material->program, context->camera, pos);
 }
 
@@ -67,13 +76,14 @@ void ilG_material_init()
     glAttachShader(mtl.program, mtl.fragshader);
     IL_GRAPHICS_TESTERROR("Unable to attach shader");
 
-    glBindAttribLocation(mtl.program, 0, "in_Position");
-    glBindAttribLocation(mtl.program, 1, "in_Texcoord");
+    glBindAttribLocation(mtl.program, ILG_ARRATTR_POSITION, "in_Position");
+    glBindAttribLocation(mtl.program, ILG_ARRATTR_TEXCOORD, "in_Texcoord");
 
     ilG_linkProgram(mtl.program);
 
     mtl.bind = &bind;
     mtl.update = &update;
+    mtl.unbind = &unbind;
 
     ilG_material_default = &mtl;
 }

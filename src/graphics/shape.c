@@ -11,6 +11,7 @@
 #include "graphics/drawable3d.h"
 #include "graphics/tracker.h"
 #include "graphics/context.h"
+#include "graphics/arrayattrib.h"
 
 static float cube[] = {
     // front
@@ -175,6 +176,9 @@ void ilG_shape_init()
     sphere.ibo      = ibo[2];
     plane.ibo       = ibo[3];
 
+    ILG_SETATTR(box.drawable.attrs, ILG_ARRATTR_POSITION);
+    ILG_SETATTR(box.drawable.attrs, ILG_ARRATTR_TEXCOORD);
+
     for (i = 0; i < 4; i++) {
         glBindVertexArray(vao[i]);
         IL_GRAPHICS_TESTERROR("Unable to bind vertex array");
@@ -188,12 +192,12 @@ void ilG_shape_init()
         glBufferSubData(GL_ARRAY_BUFFER, sizeof(cube),  sizeof(cube_texcoord), cube_texcoord);
         IL_GRAPHICS_TESTERROR("Unable to upload cube data");
 
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
-        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, (GLvoid*)sizeof(cube));
+        glVertexAttribPointer(ILG_ARRATTR_POSITION, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+        glVertexAttribPointer(ILG_ARRATTR_TEXCOORD, 2, GL_FLOAT, GL_FALSE, 0, (GLvoid*)sizeof(cube));
         IL_GRAPHICS_TESTERROR("Unable to set vertex attrib pointer");
 
-        glEnableVertexAttribArray(0);
-        glEnableVertexAttribArray(1);
+        glEnableVertexAttribArray(ILG_ARRATTR_POSITION);
+        glEnableVertexAttribArray(ILG_ARRATTR_TEXCOORD);
         IL_GRAPHICS_TESTERROR("Unable to enable vertex attrib array index 0");
 
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo[i]);
