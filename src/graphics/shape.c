@@ -45,6 +45,39 @@ static float cube[] = {
     1.0,  1.0,  1.0,
 };
 
+static float cube_texcoord[] = {
+    // front
+    0.0,    0.5,
+    0.3333, 0.5,
+    0.3333, 1.0,
+    0.0,    1.0,
+    // top
+    0.3333, 0.5,
+    0.6666, 0.5,
+    0.6666, 1.0,
+    0.3333, 1.0,
+    // back
+    0.0,    0.0,
+    0.3333, 0.0,
+    0.3333, 0.5,
+    0.0,    0.5,
+    // bottom
+    0.3333, 0.0,
+    0.6666, 0.0,
+    0.6666, 0.5,
+    0.3333, 0.5,
+    // left
+    0.6666, 0.5,
+    1.0,    0.5,
+    1.0,    1.0,
+    0.6666, 1.0,
+    // right
+    0.6666, 0.0,
+    1.0,    0.0,
+    1.0,    0.5,
+    0.6666, 0.5,
+};
+
 
 static short cube_index[] = {
     // front
@@ -81,6 +114,9 @@ static void draw(ilG_context* context, il_positionable* pos, void * ctx)
     (void)ctx;
     (void)pos;
     struct ilG_shape * shape = (struct ilG_shape*)context->drawable;
+
+    glBindVertexArray(shape->vao);
+    IL_GRAPHICS_TESTERROR("Could not bind vao");
 
     glBindBuffer(GL_ARRAY_BUFFER, shape->vbo);
     IL_GRAPHICS_TESTERROR("Could not bind vbo");
@@ -146,13 +182,18 @@ void ilG_shape_init()
         glBindBuffer(GL_ARRAY_BUFFER, vbo[i]);
         IL_GRAPHICS_TESTERROR("Unable to bind vertex buffer");
 
-        glBufferData(GL_ARRAY_BUFFER, sizeof(cube), cube, GL_STATIC_DRAW);
+        // store vertices and texcoords in the same buffer
+        glBufferData(GL_ARRAY_BUFFER, sizeof(cube) + sizeof(cube_texcoord), NULL, GL_STATIC_DRAW);
+        glBufferSubData(GL_ARRAY_BUFFER, 0,             sizeof(cube), cube);
+        glBufferSubData(GL_ARRAY_BUFFER, sizeof(cube),  sizeof(cube_texcoord), cube_texcoord);
         IL_GRAPHICS_TESTERROR("Unable to upload cube data");
 
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, (GLvoid*)sizeof(cube));
         IL_GRAPHICS_TESTERROR("Unable to set vertex attrib pointer");
 
         glEnableVertexAttribArray(0);
+        glEnableVertexAttribArray(1);
         IL_GRAPHICS_TESTERROR("Unable to enable vertex attrib array index 0");
 
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo[i]);

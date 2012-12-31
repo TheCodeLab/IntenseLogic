@@ -1,19 +1,35 @@
 #include "material.h"
 
+#include <GL/glew.h>
+
 #include "graphics/glutil.h"
 #include "common/string.h"
 #include "asset/asset.h"
 #include "graphics/context.h"
+#include "graphics/textureunit.h"
 
-static void bind(ilG_material* material, void *ctx)
+static void bind(ilG_context* context, void *ctx)
 {
-    glUseProgram(material->program);
+    IL_GRAPHICS_TESTERROR("Unknown");
+    glUseProgram(context->material->program);
+    IL_GRAPHICS_TESTERROR("glUseProgram()");
+
+    GLint loc = glGetUniformLocation(context->material->program, "tex");
+    IL_GRAPHICS_TESTERROR("glGetUniformLocation()");
+    glUniform1i(loc, 0);
+    IL_GRAPHICS_TESTERROR("glUniform1i()");
+    ILG_TUNIT_ACTIVE(context, 0, ILG_TUNIT_COLOR0);
 }
 
 static void update(ilG_context* context, struct il_positionable* pos, void *ctx)
 {
     (void)ctx;
     ilG_bindMVP("mvp", context->material->program, context->camera, pos);
+}
+
+static void unbind(ilG_context* context, void *ctx)
+{
+    context->num_active = 0;
 }
 
 static ilG_material mtl;
@@ -50,6 +66,9 @@ void ilG_material_init()
     IL_GRAPHICS_TESTERROR("Unable to attach shader");
     glAttachShader(mtl.program, mtl.fragshader);
     IL_GRAPHICS_TESTERROR("Unable to attach shader");
+
+    glBindAttribLocation(mtl.program, 0, "in_Position");
+    glBindAttribLocation(mtl.program, 1, "in_Texcoord");
 
     ilG_linkProgram(mtl.program);
 

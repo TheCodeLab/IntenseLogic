@@ -5,7 +5,7 @@ struct il_positionable;
 struct ilG_texture;
 struct ilG_context;
 
-typedef void (*ilG_texture_bind_cb)(struct ilG_texture*, void*);
+typedef void (*ilG_texture_bind_cb)(struct ilG_context*, void*);
 typedef void (*ilG_texture_update_cb)(struct ilG_context*, struct il_positionable*, void*);
 
 typedef struct ilG_texture {

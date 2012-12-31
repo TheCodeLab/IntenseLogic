@@ -5,8 +5,6 @@
 #include <sys/time.h>
 #include <GL/glew.h>
 #include <GL/glfw.h>
-#include <IL/il.h>
-#include <IL/ilut.h>
 
 #include "graphics/camera.h"
 #include "common/event.h"
@@ -147,6 +145,10 @@ static void scene_setup()
     // create the world
     world = il_world_new();
     context = calloc(sizeof(ilG_context), 1);
+    GLint num_texunits;
+    glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &num_texunits);
+    context->texunits = calloc(sizeof(unsigned), num_texunits);
+    context->num_texunits = num_texunits;
     context->world = world;
     world->context = context;
     context->camera = ilG_camera_new(il_positionable_new(world));
@@ -235,29 +237,29 @@ static void draw()
     while (ilG_trackIterate(iter)) {
         if (context->drawable != ilG_trackGetDrawable(iter)) {
             if (context->drawable && context->drawable->unbind)
-                context->drawable->unbind(context->drawable, 
+                context->drawable->unbind(context, 
                     context->drawable->unbind_ctx);
             context->drawable = ilG_trackGetDrawable(iter);
             if (context->drawable && context->drawable->bind)
-                context->drawable->bind(context->drawable, 
+                context->drawable->bind(context, 
                     context->drawable->bind_ctx);
         }
         if (context->material != ilG_trackGetMaterial(iter)) {
             if (context->material && context->material->unbind)
-                context->material->unbind(context->material, 
+                context->material->unbind(context, 
                     context->material->unbind_ctx);
             context->material = ilG_trackGetMaterial(iter);
             if (context->material && context->material->bind)
-                context->material->bind(context->material, 
+                context->material->bind(context, 
                     context->material->bind_ctx);
         }
         if (context->texture != ilG_trackGetTexture(iter)) {
             if (context->texture && context->texture->unbind)
-                context->texture->unbind(context->texture, 
+                context->texture->unbind(context, 
                     context->texture->unbind_ctx);
             context->texture = ilG_trackGetTexture(iter);
             if (context->texture && context->texture->bind)
-                context->texture->bind(context->texture, 
+                context->texture->bind(context, 
                     context->texture->bind_ctx);
         }
 
