@@ -7,7 +7,7 @@ struct il_positionable;
 struct ilG_material;
 struct ilG_context;
 
-typedef void (*ilG_material_bind_cb)(struct ilG_material*, void*);
+typedef void (*ilG_material_bind_cb)(struct ilG_context*, void*);
 typedef void (*ilG_material_update_cb)(struct ilG_context*, struct il_positionable*, void*);
 
 typedef struct ilG_material {

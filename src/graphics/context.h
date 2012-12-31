@@ -3,6 +3,8 @@
 
 #include <time.h>
 #include <sys/time.h>
+#include <stdlib.h>
+#include <GL/glew.h>
 
 typedef struct ilG_context {
     struct ilG_drawable3d* drawable;
@@ -11,6 +13,9 @@ typedef struct ilG_context {
     struct ilG_camera* camera;
     struct il_world* world;
     struct timeval tv;
+    unsigned *texunits;
+    size_t num_texunits;
+    size_t num_active;
 } ilG_context;
 
 #endif
