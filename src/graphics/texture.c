@@ -13,10 +13,15 @@ struct GLtexture {
     GLuint object;
 };
 
-static void bind(ilG_context* context, void * ctx)
+static void update(ilG_context* context, struct il_positionable* pos, void * ctx)
 {
-    (void)ctx;
+    (void)ctx, (void)pos;
     int i;
+
+    static struct ilG_material* mtl = NULL;
+
+    if (mtl == context->material) return;
+    mtl = context->material;
 
     struct GLtexture *tex = (struct GLtexture*)(context->texture);
     for (i = 0; i < context->num_active; i++) {
@@ -38,7 +43,7 @@ ilG_texture* ilG_texture_fromasset(ilA_asset* asset)
     struct GLtexture *tex = calloc(1, sizeof(struct GLtexture));
 
     //tex->tex = ilutGLLoadImage(il_toC(ilA_getPath(asset)));
-    tex->parent.bind = &bind;
+    tex->parent.update = &update;
 
     return &tex->parent;
 }
@@ -61,7 +66,7 @@ void ilG_texture_init()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 
-    def.parent.bind = &bind;
+    def.parent.update = &update;
 
     ilG_texture_default = &def.parent;
     ilG_texture_assignId(ilG_texture_default);
