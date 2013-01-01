@@ -4,6 +4,7 @@
 #include <GL/glew.h>
 
 #include "asset/asset.h"
+#include "asset/texture.h"
 #include "graphics/tracker.h"
 #include "graphics/context.h"
 #include "graphics/textureunit.h"
@@ -42,8 +43,9 @@ ilG_texture* ilG_texture_fromasset(ilA_asset* asset)
 {
     struct GLtexture *tex = calloc(1, sizeof(struct GLtexture));
 
-    //tex->tex = ilutGLLoadImage(il_toC(ilA_getPath(asset)));
+    tex->object = ilA_assetToTexture(asset);
     tex->parent.update = &update;
+    tex->parent.name = il_StoC(ilA_getPath(asset));
 
     return &tex->parent;
 }

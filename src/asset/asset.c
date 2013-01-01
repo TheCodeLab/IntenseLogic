@@ -1,13 +1,14 @@
 #include "asset.h"
+#include "texture.h"
 
 #include <stdlib.h>
 //#include <stdio.h>
 #include <unistd.h>
 #include <errno.h>
+#include <time.h>
+#include <png.h>
 
 #include "uthash.h"
-//#include "IL/il.h"
-/* #include "SOIL.h" */
 #include "common/log.h"
 
 struct ilA_asset {
@@ -180,9 +181,77 @@ int ilA_delete(ilA_asset* asset)
     return 0;
 }
 
-unsigned int ilA_assetToTexture(ilA_asset *asset)
+GLuint ilA_assetToTexture(ilA_asset *asset)
 {
-    (void)asset;
-    /* return SOIL_load_OGL_texture(il_toC(asset->fullpath), 0, 0, 0); */
-    return 1;
+    FILE* fd = ilA_getHandle(asset, "rb");
+
+    if (!fd) {
+        il_log(1, "Failed to open file");
+        return 0;
+    }
+
+    unsigned char header[8];
+    size_t numbytes = fread(header, 1, 8, fd);
+    if (!png_sig_cmp(header, 0, numbytes)) { // it is, in fact, a png file
+        goto png;
+    }
+
+    il_log(1, "Unknown image type");
+    return 0;
+
+png:
+    {
+        png_structp png_ptr = png_create_read_struct
+            (PNG_LIBPNG_VER_STRING, (png_voidp)NULL,
+            NULL, NULL);
+
+        if (!png_ptr) {
+            il_log(1, "Failed to allocate png structure");
+            return 0;
+        }
+
+        png_infop info_ptr = png_create_info_struct(png_ptr);
+
+        if (!info_ptr) {
+            png_destroy_read_struct(&png_ptr,
+                (png_infopp)NULL, (png_infopp)NULL);
+            il_log(1, "Failed to allocate png info structure");
+            return 0;
+        }
+
+        png_init_io(png_ptr, fd);
+        png_set_sig_bytes(png_ptr, numbytes);
+        png_read_png(png_ptr, info_ptr, PNG_TRANSFORM_SCALE_16 | 
+            PNG_TRANSFORM_PACKING, NULL);
+
+        png_uint_32 width, height;
+        int bpp, ctype;
+        png_get_IHDR(png_ptr, info_ptr, &width, &height, &bpp, &ctype, NULL, 
+            NULL, NULL);
+
+        png_bytepp rows;
+        rows = png_get_rows(png_ptr, info_ptr);
+
+        if (ctype != PNG_COLOR_TYPE_RGB && ctype != PNG_COLOR_TYPE_RGBA) {
+            il_log(1, "Image is not RGB or RGBA");
+        }
+
+        GLuint tex;
+        glGenTextures(1, &tex);
+        glBindTexture(GL_TEXTURE_2D, tex);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, ctype == PNG_COLOR_TYPE_RGB ? GL_RGB : GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+
+        int i;
+        for (i = 0; i < height; i++) {
+            /*              image type,    l, x, y, w,     h, format,                                         size,             data*/
+            glTexSubImage2D(GL_TEXTURE_2D, 0, 0, i, width, 1, ctype == PNG_COLOR_TYPE_RGB ? GL_RGB : GL_RGBA, GL_UNSIGNED_BYTE, rows[i]);
+        }
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+
+        
+        return tex;
+    }
 }
+

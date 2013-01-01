@@ -22,6 +22,7 @@
 #include "graphics/texture.h"
 #include "graphics/tracker.h"
 #include "graphics/glutil.h"
+#include "common/string.h"
 
 extern unsigned time(unsigned*);
 
@@ -59,10 +60,13 @@ static void GLFWCALL mouse_cb(int button, int action)
 
 static void GLFWCALL mousemove_cb(int x, int y)
 {
+    static int last_x = 0, last_y = 0;
     ilI_mouseMove mousemove =
     (ilI_mouseMove) {
-        x, y
+        x - last_x, y - last_y
     };
+    last_x = x;
+    last_y = y;
     ilE_pushnew(IL_INPUT_MOUSEMOVE, sizeof(ilI_mouseMove), &mousemove);
 }
 
@@ -161,7 +165,8 @@ static void scene_setup()
     positionable->position = (il_Vector3) {1,0,0};
     positionable->drawable = ilG_box;
     positionable->material = ilG_material_default;
-    positionable->texture = ilG_texture_default;
+    positionable->texture = ilG_texture_fromfile("test.png");
+    ilG_texture_assignId(positionable->texture);
     ilG_trackPositionable(context, positionable);
 
     /*il_terrain *ter = il_terrain_new();
