@@ -82,10 +82,10 @@ ilG_trackiterator* ilG_trackiterator_new(ilG_context* ctx)
 int ilG_trackIterate(ilG_trackiterator* iter)
 {
     iter->positionable++;
-    if (iter->context       >= contexts.length ||
-        iter->drawable      >= contexts.data[iter->context].length ||
-        iter->material      >= contexts.data[iter->context].data[iter->drawable].length ||
-        iter->texture       >= contexts.data[iter->context].data[iter->drawable].data[iter->material].length ||
+    if (iter->context       >= contexts.length &&
+        iter->drawable      >= contexts.data[iter->context].length &&
+        iter->material      >= contexts.data[iter->context].data[iter->drawable].length &&
+        iter->texture       >= contexts.data[iter->context].data[iter->drawable].data[iter->material].length &&
         iter->positionable  >= contexts.data[iter->context].data[iter->drawable].data[iter->material].data[iter->texture].length)
     {
         return 0;

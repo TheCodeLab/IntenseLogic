@@ -16,10 +16,10 @@ linkflags = "-g -L."
 lib_dirs = ["/usr/lib", "/usr/local/lib"]
 
 libs = {
-    "osx": ["m", "lua"],
-    "mingw": ["mingw32", "ws2_32", "glfw", "opengl32"],
-    "arch": ["m"],
-    "linux": ["m", "lua"]
+    "osx": ["m", "lua", "png"],
+    "mingw": ["mingw32", "ws2_32", "glfw", "opengl32", "png"],
+    "arch": ["m", "png"],
+    "linux": ["m", "lua", "png"]
 }
 
 pkg_libs = {
