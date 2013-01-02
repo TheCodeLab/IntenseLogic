@@ -2,28 +2,11 @@
 
 #include <string.h>
 
-#include "script/il.h"
 #include "common/log.h"
-#include "script/interface.h"
 
 int ilS_script_wrap(lua_State* L, ilS_script* s);
 
-void ilS_init()
-{
-    ilS_registerLuaRegister(&ilS_luaGlobals, NULL);
-    ilS_registerLuaRegister(&il_Vector_luaGlobals, NULL);
-    ilS_registerLuaRegister(&il_positionable_luaGlobals, NULL);
-    ilS_registerLuaRegister(&ilG_world_luaGlobals, NULL);
-    ilS_registerLuaRegister(&il_Quaternion_luaGlobals, NULL);
-    ilS_registerLuaRegister(&ilE_luaGlobals, NULL);
-    ilS_registerLuaRegister(&ilI_luaGlobals, NULL);
-    ilS_registerLuaRegister(&il_terrain_luaGlobals, NULL);
-    ilS_registerLuaRegister(&ilA_luaGlobals, NULL);
-    ilS_registerLuaRegister(&ilG_drawable3d_luaGlobals, NULL);
-    ilS_registerLuaRegister(&ilG_camera_luaGlobals, NULL);
-}
-
-static int lualog(lua_State* L, int level, int fun)
+/*static int lualog(lua_State* L, int level, int fun)
 {
     int nargs = lua_gettop(L);
     il_string strs[nargs];
@@ -89,7 +72,7 @@ static int luaerror(lua_State* L)
         lua_pushfstring(L, "\n\t#%d in %s at %s:%d", i, ar.name, ar.short_src, ar.currentline);
     }
     return lualog(L, 1, 2);
-}
+}*/
 
 ilS_script * ilS_new()
 {
@@ -136,17 +119,11 @@ int ilS_fromSource(ilS_script* self, il_string source)
         self->L = luaL_newstate();
     luaL_openlibs(self->L);
 
-    lua_pushcfunction(self->L, &print);
-    lua_setglobal(self->L, "print");
-    lua_pushnil(self->L);
-    lua_setglobal(self->L, "debug"); // disable debug library
-    lua_pushnil(self->L);
-    lua_setglobal(self->L, "require"); // disable require
+    //lua_pushcfunction(self->L, &print);
+    //lua_setglobal(self->L, "print");
 
-    ilS_openLibs(self);
-
-    lua_pushcfunction(self->L, &luaerror);
-    self->ehandler = lua_gettop(self->L);
+    //lua_pushcfunction(self->L, &luaerror);
+    //self->ehandler = lua_gettop(self->L);
 
 #if LUA_VERSION_NUM == 502
     int res = lua_load(self->L, &reader, &data, chunkname, NULL);
@@ -160,33 +137,10 @@ int ilS_fromSource(ilS_script* self, il_string source)
     }
     return 0;
 }
-static int fromsource(lua_State* L)
-{
-
-    ilS_script* self = (ilS_script*)ilS_getPointer(L, 1, "script", NULL);
-    il_string source = ilS_getString(L, 2);
-
-    int res = ilS_fromSource(self, source);
-    if (res != 0) {
-        return luaL_error(L, self->err);
-    }
-    return 0;
-}
 
 int ilS_fromFile(ilS_script* self, const char * filename)
 {
     return ilS_fromAsset(self, ilA_open(il_fromC((char*)filename)));
-}
-static int fromfile(lua_State* L)
-{
-    ilS_script* self = (ilS_script*)ilS_getPointer(L, 1, "script", NULL);
-    il_string filename = ilS_getString(L, 2);
-
-    int res = ilS_fromFile(self, filename.data);
-    if (res != 0) {
-        return luaL_error(L, self->err);
-    }
-    return 0;
 }
 
 int ilS_run(ilS_script* self)
@@ -201,52 +155,4 @@ int ilS_run(ilS_script* self)
     }
     return 0;
 }
-static int run(lua_State* L)
-{
-    ilS_script* self = (ilS_script*)ilS_getPointer(L, 1, "script", NULL);
 
-    int res = ilS_run(self);
-    if (res != 0) {
-        lua_pushnil(L);
-        lua_pushlstring(L, self->err, self->errlen);
-        return 2;
-    }
-    lua_pushboolean(L, 1);
-    return 1;
-}
-
-int ilS_script_wrap(lua_State* L, ilS_script* s)
-{
-    return ilS_createMakeLight(L, s, "script");
-}
-
-static int create(lua_State* L)
-{
-    ilS_script* self = ilS_new();
-    return ilS_script_wrap(L, self);
-}
-
-void ilS_luaGlobals(ilS_script* self, void * ctx)
-{
-    (void)ctx;
-
-    const luaL_Reg l[] = {
-        {"create",      &create     },
-        {"getType",     &ilS_typeGetter},
-        {"isA",         &ilS_isA},
-        {"fromSource",  &fromsource },
-        {"fromFile",    &fromfile   },
-        {"run",         &run        },
-        {NULL,          NULL        }
-    };
-
-    ilS_startTable(self, l);
-
-    ilS_startMetatable(self, "script");
-    lua_pushvalue(self->L, -2);
-    lua_setfield(self->L, -2, "__index");
-
-    ilS_typeTable(self->L, "script");
-
-    ilS_endTable(self, l, "script");
-}
