@@ -29,6 +29,7 @@ typedef struct ilS_script {
   ilS_fromFile(script, f);  \
   int res = ilS_run(script);\
   if (res != 0) {                 \
+    printf("%s", script->err);    \
     abort();                      \
   }                               \
 }

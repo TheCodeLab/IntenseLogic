@@ -10,22 +10,22 @@ inputs     = "*.c common/*.c graphics/*.c network/*.c script/*.c asset/*.c"
 
 # flags
 cflags    = "-Wall -std=c99 -g -DDEBUG -I./" + src_dir
-linkflags = "-g -L."
+linkflags = "-g -L. -rdynamic"
 
 # libs
 lib_dirs = ["/usr/lib", "/usr/local/lib"]
 
 libs = {
-    "osx": ["m", "lua", "png"],
+    "osx": ["m", "png"],
     "mingw": ["mingw32", "ws2_32", "glfw", "opengl32", "png"],
     "arch": ["m", "png"],
-    "linux": ["m", "lua", "png"]
+    "linux": ["m", "png"]
 }
 
 pkg_libs = {
-    "osx": ["libevent", "libglfw", "glew"],
-    "arch": ["libevent", "libglfw", "glew", "lua", "gl"],
-    "linux": ["libevent", "gl", "glfw", "glew"]
+    "osx": ["libevent", "libglfw", "glew", "luajit"],
+    "arch": ["libevent", "libglfw", "glew", "luajit", "gl"],
+    "linux": ["libevent", "gl", "glfw", "glew", "luajit"]
 }
 
 # link libs
