@@ -11,7 +11,7 @@
 #include "common/input.h"
 #include "common/matrix.h"
 #include "common/base.h"
-#include "common/keymap.h"
+//#include "common/keymap.h"
 #include "graphics/context.h"
 #include "common/log.h"
 #include "graphics/shape.h"
@@ -26,11 +26,16 @@
 
 extern unsigned time(unsigned*);
 
-int width = 800;
-int height = 600;
-il_world* world;
-il_keymap * keymap;
-ilG_context* context;
+static int width = 800;
+static int height = 600;
+static il_world* world;
+//static il_keymap * keymap;
+static ilG_context* context;
+
+void ilG_context_setActive(ilG_context* self)
+{
+    context = self;
+}
 
 static void draw();
 static void quit();
@@ -144,15 +149,12 @@ static void context_setup()
     glfwSwapInterval(0); // 1:1 ratio of frames to vsyncs
 }
 
+/*
 static void scene_setup()
 {
     // create the world
     world = il_world_new();
-    context = calloc(sizeof(ilG_context), 1);
-    GLint num_texunits;
-    glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &num_texunits);
-    context->texunits = calloc(sizeof(unsigned), num_texunits);
-    context->num_texunits = num_texunits;
+    context = ilG_context_new();
     context->world = world;
     world->context = context;
     context->camera = ilG_camera_new(il_positionable_new(world));
@@ -168,18 +170,8 @@ static void scene_setup()
     positionable->texture = ilG_texture_fromfile("test.png");
     ilG_texture_assignId(positionable->texture);
     ilG_trackPositionable(context, positionable);
-
-    /*il_terrain *ter = il_terrain_new();
-      il_terrain_heightmapFromSeed(
-      ter,
-      0xD34DB33F, // seed, does nothing atm
-      1.0, // resolution
-      100 //viewdistance
-      );
-      ilG_terrain_new(ter, il_positionable_new(world));
-      */
-
 }
+*/
 
 static void event_setup()
 {
@@ -193,9 +185,9 @@ static void event_setup()
 
 void ilG_init()
 {
-    keymap = calloc(1, sizeof(il_keymap));
+    /*keymap = calloc(1, sizeof(il_keymap));
     il_keymap_defaults(keymap);
-    il_keymap_parse("keymap.ini", keymap);
+    il_keymap_parse("keymap.ini", keymap);*/
     // setup our shader directory
     ilA_registerReadDir(il_fromC("shaders"),0);
 
@@ -218,7 +210,7 @@ void ilG_init()
     ilG_texture_init();
     
     // Setup the scene stuff (camera, world, etc.)
-    scene_setup();
+    //scene_setup();
     
     // register events
     event_setup();

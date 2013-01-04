@@ -3,10 +3,11 @@
 #include <string.h>
 
 #include "common/log.h"
+#include "common/string.h"
 
 int ilS_script_wrap(lua_State* L, ilS_script* s);
 
-/*static int lualog(lua_State* L, int level, int fun)
+static int lualog(lua_State* L, int level, int fun)
 {
     int nargs = lua_gettop(L);
     il_string strs[nargs];
@@ -19,7 +20,7 @@ int ilS_script_wrap(lua_State* L, ilS_script* s);
     }
 
     for (i = 1; i <= nargs; i++) {
-        strs[i-1] = ilS_toString(L, i);
+        strs[i-1] = il_fromC(lua_tostring(L, i));
     }
     str = strs[0];
     for (i = 2; i <= nargs; i++) {
@@ -40,10 +41,10 @@ int ilS_script_wrap(lua_State* L, ilS_script* s);
                     il_StoC(str)
                    );
 
-    if (level <= (int)il_loglevel)
-        printf("%s", lua_tostring(L, -1));
+    /*if (level <= (int)il_loglevel)
+        printf("%s", lua_tostring(L, -1));*/
 
-    return 1;
+    return level <= (int)il_loglevel;
 }
 
 static int print(lua_State* L)
@@ -72,7 +73,7 @@ static int luaerror(lua_State* L)
         lua_pushfstring(L, "\n\t#%d in %s at %s:%d", i, ar.name, ar.short_src, ar.currentline);
     }
     return lualog(L, 1, 2);
-}*/
+}
 
 ilS_script * ilS_new()
 {
@@ -122,8 +123,8 @@ int ilS_fromSource(ilS_script* self, il_string source)
     //lua_pushcfunction(self->L, &print);
     //lua_setglobal(self->L, "print");
 
-    //lua_pushcfunction(self->L, &luaerror);
-    //self->ehandler = lua_gettop(self->L);
+    lua_pushcfunction(self->L, &luaerror);
+    self->ehandler = lua_gettop(self->L);
 
 #if LUA_VERSION_NUM == 502
     int res = lua_load(self->L, &reader, &data, chunkname, NULL);

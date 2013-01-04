@@ -29,6 +29,10 @@ void ilG_trackPositionable(ilG_context* ctx, il_positionable* self)
         il_log(1, "Null context");
         return;
     }
+    if (!ctx->world) {
+        il_log(1, "Null world in context");
+        return;
+    }
     if (!self) {
         il_log(1, "Null positionable");
         return;

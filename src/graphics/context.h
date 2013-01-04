@@ -18,5 +18,9 @@ typedef struct ilG_context {
     size_t num_active;
 } ilG_context;
 
+ilG_context* ilG_context_new();
+
+void ilG_context_setActive(ilG_context*);
+
 #endif
 
