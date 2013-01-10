@@ -3,6 +3,7 @@ local script = require "script"
 require "graphics"
 local positionable = require "positionable"
 local world = require "world"
+local matrix = require "matrix"
 
 local w = world();
 local c = context();
@@ -15,6 +16,6 @@ box.material = material.default;
 box.texture = texture.default;
 box:track(c);
 
-local cam = camera(positionable(w));
-c.camera = cam;
+c.camera = camera(positionable(w));
+local mat = matrix();
 

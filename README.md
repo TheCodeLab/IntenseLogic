@@ -11,7 +11,8 @@ List of Dependencies:
 * glfw stable
 * glew latest
 * libevent2
-* Lua 5.2
+* libpng
+* LuaJIT (Lua 5.1)
 
 See the Wiki for help building.
 
