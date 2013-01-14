@@ -17,5 +17,5 @@ box.texture = texture.default;
 box:track(c);
 
 c.camera = camera(positionable(w));
-local mat = matrix();
+c.camera.projection_matrix = matrix.perspective(75, 4/3, 0.25, 100);
 
