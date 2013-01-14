@@ -1,11 +1,9 @@
 local ffi = require "ffi"
 
 local positionable = require "positionable"
+local matrix = require "matrix"
 
 ffi.cdef [[
-
-typedef float il_Matrix[16];
-typedef float il_Vector3[3];
 
 typedef struct ilG_camera {
   struct il_positionable* positionable;
@@ -22,6 +20,13 @@ void ilG_camera_setEgoCamKeyHandlers(ilG_camera* camera, struct il_keymap * keym
 ]]
 
 local camera = {}
+
+local function index(t, k)
+    if k == "projection_matrix" then
+        return matrix.wrap(t.ptr.projection_matrix);
+    end
+    return camera[k];
+end
 
 local function wrap(ptr)
     local obj = {};
