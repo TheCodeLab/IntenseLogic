@@ -3,10 +3,11 @@
 
 #include "common/event.h"
 
-#define IL_GRAPHICS_RANGE   (2)
-#define IL_GRAPHICS_TICK    ((IL_GRAPHICS_RANGE<<8) + 0)
+#define IL_GRAPHICS_TICK    (9)
 
 #define IL_GRAPHICS_TICK_LENGTH (16666)
+
+//ilE_queue* ilG_queue;
 
 void ilG_init();
 

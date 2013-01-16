@@ -28,9 +28,10 @@ struct ctx {
     int first_mouse;
 };
 
-static void handleMouseMove(ilE_event* ev, struct ctx * ctx)
+static void handleMouseMove(ilE_queue* queue, ilE_event* ev, struct ctx * ctx)
 {
-    ilI_mouseMove * mousemove = (ilI_mouseMove*)ev->data;
+    (void)queue;
+    ilI_mouseMove * mousemove = (ilI_mouseMove*)ilE_getData(ev, NULL);
 
     if (!ilI_isButtonSet(GLFW_MOUSE_BUTTON_1)) {
         ctx->first_mouse = 1;
@@ -67,10 +68,9 @@ static void handleMouseMove(ilE_event* ev, struct ctx * ctx)
 
 }
 
-static void handleTick(ilE_event* ev, struct ctx * ctx)
+static void handleTick(ilE_queue* queue, ilE_event* ev, struct ctx * ctx)
 {
-    (void)ctx;
-    (void)ev;
+    (void)queue, (void)ctx, (void)ev;
     int forward   = ilI_isKeySet(il_keymap_getkey(ctx->keymap->camera_backward))
                     - ilI_isKeySet(il_keymap_getkey(ctx->keymap->camera_forward));
     int leftward  = ilI_isKeySet(il_keymap_getkey(ctx->keymap->camera_right))
@@ -94,17 +94,15 @@ static void handleTick(ilE_event* ev, struct ctx * ctx)
 }
 
 
-static void mousedown(ilE_event* ev, int ctx)
+static void mousedown(ilE_queue* queue, ilE_event* ev, int ctx)
 {
-    (void)ev;
-    (void)ctx;
+    (void)queue, (void)ev, (void)ctx;
     ilI_grabMouse(1);	// Grab input and hide cursor
 }
 
-static void mouseup(ilE_event* ev, int ctx)
+static void mouseup(ilE_queue* queue, ilE_event* ev, int ctx)
 {
-    (void)ev;
-    (void)ctx;
+    (void)queue, (void)ev, (void)ctx;
     ilI_grabMouse(0);	// Release input and show mouse again
 }
 
@@ -114,11 +112,10 @@ void ilG_camera_setEgoCamKeyHandlers(ilG_camera* camera, struct il_keymap * keym
     ctx->camera = camera;
     ctx->keymap = keymap;
     ctx->first_mouse = 1;
-    ilE_register(IL_BASE_TICK, (ilE_callback)&handleTick, ctx);
-    ilE_register(IL_INPUT_MOUSEMOVE, (ilE_callback)&handleMouseMove, ctx);
-    ilE_register(IL_INPUT_MOUSEDOWN, (ilE_callback)&mousedown, NULL);
-    ilE_register(IL_INPUT_MOUSEUP, (ilE_callback)&mouseup, NULL);
-
+    ilE_register(il_queue, IL_BASE_TICK,        ILE_DONTCARE, (ilE_callback)&handleTick,      ctx);
+    ilE_register(il_queue, IL_INPUT_MOUSEMOVE,  ILE_DONTCARE, (ilE_callback)&handleMouseMove, ctx);
+    ilE_register(il_queue, IL_INPUT_MOUSEDOWN,  ILE_DONTCARE, (ilE_callback)&mousedown,       NULL);
+    ilE_register(il_queue, IL_INPUT_MOUSEUP,    ILE_DONTCARE, (ilE_callback)&mouseup,         NULL);
 }
 
 void ilG_camera_setMovespeed(ilG_camera* camera, il_Vector3 movespeed, float pixels_per_radian)

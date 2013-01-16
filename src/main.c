@@ -2,23 +2,22 @@
 #include "docopt.inc"
 #include "common/common.h"
 #include <GL/glfw.h>
+#include <event2/event.h>
+#include <string.h>
 
 static void update(ilE_event * ev, void * ctx)
 {
     (void)ev;
     (void)ctx;
     glfwPollEvents();
-    //il_log(5, "tick");
+    il_log(5, "tick");
 }
 
 int running = 1;
 
-void shutdown_callback(ilE_event* ev)
-{
-    (void)ev;
-    il_log(3, "Shutting down.");
-    event_base_loopbreak(ilE_base);
-}
+void ilE_loop();
+
+char *strdup(char *str);
 
 char *strtok_r(char *str, const char *delim, char **saveptr);
 
@@ -111,13 +110,9 @@ int main(int argc, char **argv)
     // initialise engine
     il_init();
 
-    // register the updater first so it gets called first (no prioritisation
-    // system needed yet, or really important)
-    ilE_register(IL_BASE_TICK, (ilE_callback)&update, NULL);
-    ilE_register(IL_BASE_SHUTDOWN, (ilE_callback)&shutdown_callback, NULL);
-
+    ilE_register(il_queue, IL_BASE_TICK, ILE_BEFORE, (ilE_callback)&update, NULL);
     // finished initialising, send startup event
-    ilE_pushnew(IL_BASE_STARTUP, 0, NULL);
+    ilE_pushnew(il_queue, IL_BASE_STARTUP, 0, NULL);
 
     if (args.run) {
         ilS_loadfile(args.run);
@@ -125,7 +120,7 @@ int main(int argc, char **argv)
 
     // main loop
     il_log(3, "Starting main loop");
-    event_base_loop(ilE_base, 0);
+    ilE_loop();
 
     // shutdown code (only reached after receiving a IL_BASE_SHUTDOWN event)
 

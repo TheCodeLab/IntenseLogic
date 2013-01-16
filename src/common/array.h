@@ -32,10 +32,10 @@
 
 #define IL_SET(list, id, in) \
     {                                           \
-        if ((id) < (list).length)               \
+        if ((id) < (list).length) {             \
             (list).data[id] = (in);             \
-        else {                                  \
-            while ((id) <= (list).capacity) {   \
+        } else {                                \
+            while ((id) >= (list).capacity) {   \
                 IL_RESIZE(list);                \
             }                                   \
             (list).length = (id) + 1;           \
@@ -45,7 +45,7 @@
 
 #define IL_INDEXORSET(list, id, out, in) \
     {                               \
-       IL_ INDEX(list, id, out);    \
+       IL_INDEX(list, id, out);    \
         if (!(out)) {               \
             IL_SET(list, id, in);   \
             (out) = &(in);          \

@@ -3,28 +3,37 @@
 
 #include <stdint.h>
 #include <stddef.h>
-#include <event2/event.h>
 
-struct event_base * ilE_base;
+#define ilE_pushnew(q, e, s, d) ilE_push(q, ilE_new(e,s,d))
 
 struct timeval;
 
-typedef struct ilE_event {
-  uint16_t eventid;
-  uint8_t size;
-  uint8_t data[];
-} ilE_event;
+typedef struct ilE_queue ilE_queue;
 
-typedef void(*ilE_callback)(ilE_event*, void * ctx);
+typedef struct ilE_event ilE_event;
 
-const ilE_event* ilE_new(uint16_t eventid, uint8_t size, void * data);
+enum ilE_behaviour {
+    ILE_DONTCARE,
+    ILE_BEFORE,
+    ILE_AFTER,
+    ILE_OVERRIDE
+};
 
-int ilE_push(const ilE_event* event);
+ilE_queue* il_queue;
 
-int ilE_pushnew(uint16_t eventid, uint8_t size, void * data);
+typedef void(*ilE_callback)(const ilE_queue*, const ilE_event*, void * ctx);
 
-int ilE_timer(const ilE_event* event, struct timeval * interval);
+ilE_queue* ilE_queue_new();
 
-int ilE_register(uint16_t eventid, ilE_callback callback, void * ctx);
+ilE_event* ilE_new(uint16_t eventid, uint8_t size, void * data);
+
+void * ilE_getData(const ilE_event* event, size_t *size);
+
+int ilE_push(ilE_queue* queue, ilE_event* event);
+
+int ilE_timer(ilE_queue* queue, ilE_event* event, struct timeval * interval);
+
+int ilE_register(ilE_queue* queue, uint16_t eventid, enum ilE_behaviour behaviour, ilE_callback callback, void * ctx);
 
 #endif
+

@@ -24,11 +24,9 @@
 #include "graphics/glutil.h"
 #include "common/string.h"
 
-extern unsigned time(unsigned*);
-
 static int width = 800;
 static int height = 600;
-static il_world* world;
+//static il_world* world;
 //static il_keymap * keymap;
 static ilG_context* context;
 
@@ -49,18 +47,18 @@ static void GLFWCALL key_cb(int key, int action)
 {
     il_log(4, "Key %c", key);
     if (action == GLFW_PRESS)
-        ilE_pushnew(IL_INPUT_KEYDOWN, sizeof(int), &key);
+        ilE_pushnew(il_queue, IL_INPUT_KEYDOWN, sizeof(int), &key);
     else
-        ilE_pushnew(IL_INPUT_KEYUP, sizeof(int), &key);
+        ilE_pushnew(il_queue, IL_INPUT_KEYUP, sizeof(int), &key);
 }
 
 static void GLFWCALL mouse_cb(int button, int action)
 {
     //il_log(4, "Mouse %i", button);
     if (action == GLFW_PRESS)
-        ilE_pushnew(IL_INPUT_MOUSEDOWN, sizeof(int), &button);
+        ilE_pushnew(il_queue, IL_INPUT_MOUSEDOWN, sizeof(int), &button);
     else
-        ilE_pushnew(IL_INPUT_MOUSEUP, sizeof(int), &button);
+        ilE_pushnew(il_queue, IL_INPUT_MOUSEUP, sizeof(int), &button);
 }
 
 static void GLFWCALL mousemove_cb(int x, int y)
@@ -72,7 +70,7 @@ static void GLFWCALL mousemove_cb(int x, int y)
     };
     last_x = x;
     last_y = y;
-    ilE_pushnew(IL_INPUT_MOUSEMOVE, sizeof(ilI_mouseMove), &mousemove);
+    ilE_pushnew(il_queue, IL_INPUT_MOUSEMOVE, sizeof(ilI_mouseMove), &mousemove);
 }
 
 static void GLFWCALL mousewheel_cb(int pos)
@@ -81,7 +79,7 @@ static void GLFWCALL mousewheel_cb(int pos)
     (ilI_mouseWheel) {
         0, pos
     };
-    ilE_pushnew(IL_INPUT_MOUSEWHEEL, sizeof(ilI_mouseWheel), &mousewheel);
+    ilE_pushnew(il_queue, IL_INPUT_MOUSEWHEEL, sizeof(ilI_mouseWheel), &mousewheel);
 }
 
 static void context_setup()
@@ -175,12 +173,13 @@ static void scene_setup()
 
 static void event_setup()
 {
-    ilE_register(IL_GRAPHICS_TICK, (ilE_callback)&draw, NULL);
-    ilE_register(IL_BASE_SHUTDOWN, (ilE_callback)&quit, NULL);
+    //ilG_queue = ilE_queue_new();
+    ilE_register(il_queue, IL_GRAPHICS_TICK, ILE_DONTCARE, (ilE_callback)&draw, NULL);
+    ilE_register(il_queue, IL_BASE_SHUTDOWN, ILE_DONTCARE, (ilE_callback)&quit, NULL);
     int hz = glfwGetWindowParam(GLFW_REFRESH_RATE);
     struct timeval *tv = calloc(1, sizeof(struct timeval));
     tv->tv_usec = hz>0? 1000000.0/hz : 1000000.0/60;
-    ilE_timer(ilE_new(IL_GRAPHICS_TICK, 0, NULL), tv); // kick off the draw loop
+    ilE_timer(il_queue, ilE_new(IL_GRAPHICS_TICK, 0, NULL), tv); // kick off the draw loop
 }
 
 void ilG_init()
@@ -219,7 +218,7 @@ void ilG_init()
 static void draw()
 {
     if (!glfwGetWindowParam(GLFW_OPENED)) {
-        ilE_pushnew(IL_BASE_SHUTDOWN, 0, NULL);
+        ilE_pushnew(il_queue, IL_BASE_SHUTDOWN, 0, NULL);
         return;
     }
     il_log(5, "Rendering frame");
