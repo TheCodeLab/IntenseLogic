@@ -28,7 +28,7 @@ static int width = 800;
 static int height = 600;
 //static il_world* world;
 //static il_keymap * keymap;
-static ilG_context* context;
+static ilG_context* context = NULL;
 
 void ilG_context_setActive(ilG_context* self)
 {
@@ -217,6 +217,11 @@ void ilG_init()
 
 static void draw()
 {
+    if (!context) {
+        il_log(0, "Nothing to do.");
+        ilE_pushnew(il_queue, IL_BASE_SHUTDOWN, 0, NULL);
+        return;
+    }
     if (!glfwGetWindowParam(GLFW_OPENED)) {
         ilE_pushnew(il_queue, IL_BASE_SHUTDOWN, 0, NULL);
         return;
