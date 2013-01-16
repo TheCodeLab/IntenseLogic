@@ -3,6 +3,7 @@
 
 #include <sys/time.h>
 
+#include "common/memory.h"
 #include "common/quaternion.h"
 #include "common/vector.h"
 #include "common/world.h"
@@ -12,16 +13,15 @@ typedef struct il_positionable {
   il_Quaternion rotation;
   il_Vector3 size;
   il_Vector3 velocity;
-  struct il_world *parent;
-  unsigned refs;
+  //struct il_world *parent;
+  il_GC gc;
   struct timeval last_update;
   struct ilG_drawable3d* drawable;
   struct ilG_material* material;
   struct ilG_texture* texture;
 } il_positionable;
 
-il_positionable * il_positionable_new(
-  struct il_world * parent);
+il_positionable * il_positionable_new();
 
 void il_positionable_translate(il_positionable*, il_Vector3 vec);
 

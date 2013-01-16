@@ -3,14 +3,18 @@
 
 #include <stdlib.h>
 
+#include "common/memory.h"
+#include "common/array.h"
+
 struct il_positionable;
 struct ilG_context;
 
+IL_ARRAY(struct il_positionable*, positionable_array);
+
 typedef struct il_world {
+    il_GC gc;
     unsigned int id;
-    unsigned refs;
-    size_t nobjects;
-    struct il_positionable** objects;
+    positionable_array objects;
     struct ilG_context* context;
 } il_world;
 
