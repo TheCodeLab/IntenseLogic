@@ -2,6 +2,8 @@ local ffi = require "ffi"
 
 local positionable = require "positionable"
 local matrix = require "matrix"
+local positionable = require "positionable"
+local vector3 = require "vector3"
 
 ffi.cdef [[
 
@@ -22,16 +24,37 @@ void ilG_camera_setEgoCamKeyHandlers(ilG_camera* camera, struct il_keymap * keym
 local camera = {}
 
 local function index(t, k)
-    if k == "projection_matrix" then
+    if k == "positionable" then
+        return positionable.wrap(t.ptr.positionable)
+    elseif k == "movespeed" then
+        return vector3.wrap(t.ptr.movespeed)
+    elseif k == "projection_matrix" then
         return matrix.wrap(t.ptr.projection_matrix);
+    elseif k == "sensitivity" then
+        return t.ptr.sensitivity;
     end
     return camera[k];
+end
+
+local function newindex(t, k, v)
+    if k == "positionable" then
+        assert(type(v) == "table" and ffi.istype(positionable.type, v.ptr), "Attempt to assign non-positionable to positionable")
+        t.ptr.positionable = v.ptr;
+    elseif k == "movespeed" then
+        assert(type(v) == "table" and ffi.istype(vector3.type, v.ptr), "Attempt to assign non-vector to vector3")
+        t.ptr.movespeed = v.ptr;
+    elseif k == "projection_matrix" then
+        assert(type(v) == "table" and ffi.istype(matrix.type, v.ptr), "Attempt to assign non-matrix to matrix")
+        t.ptr.projection_matrix = v.ptr;
+    else
+        error("Invalid key \""..tostring(k).."\" in camera")
+    end
 end
 
 local function wrap(ptr)
     local obj = {};
     obj.ptr = ptr;
-    setmetatable(obj, {__index = camera})
+    setmetatable(obj, {__index = index, __newindex=newindex})
     return obj
 end
 camera.wrap = wrap

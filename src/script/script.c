@@ -7,72 +7,45 @@
 
 int ilS_script_wrap(lua_State* L, ilS_script* s);
 
-static int lualog(lua_State* L, int level, int fun)
+static int print(lua_State* L)
 {
-    int nargs = lua_gettop(L);
-    il_string strs[nargs];
-    il_string str;
-    int i;
-
-    if (nargs < 1) {
-        printf("\n");
-        return 1;
-    }
-
-    for (i = 1; i <= nargs; i++) {
-        strs[i-1] = il_fromC(lua_tostring(L, i));
-    }
-    str = strs[0];
-    for (i = 2; i <= nargs; i++) {
-        if (!strs[i].length) continue;
-        str = il_concat(str, il_l("\t"), strs[i-1]);
-    }
     lua_Debug ar;
-    int res = lua_getstack(L, fun, &ar);
+    int res = lua_getstack(L, 2, &ar); // level 2 so we skip this function, and
+    // the lua version that converts args to a string for us
     if (res != 1) return -1;
     res = lua_getinfo(L, "nSl", &ar);
     if (!res) return -1;
 
-    lua_pushfstring(L, "%s:%d (%s) %s: %s\n",
-                    ar.short_src,
-                    ar.currentline,
-                    ar.name,
-                    il_loglevel_tostring(level),
-                    il_StoC(str)
-                   );
+    if (3 > il_loglevel) return 0;
 
-    /*if (level <= (int)il_loglevel)
-        printf("%s", lua_tostring(L, -1));*/
+    fprintf(il_logfile, "%s:%d (%s): %s\n",
+            ar.short_src,
+            ar.currentline,
+            ar.name,
+            lua_tostring(L, -1)
+           );
 
-    return level <= (int)il_loglevel;
+    return 0;
 }
 
-static int print(lua_State* L)
-{
-    return lualog(L, 3, 1);
-}
-
-static int luaerror(lua_State* L)
-{
-    int i;
-    lua_Debug ar;
-
-    lua_getstack(L, 2, &ar);
-    lua_getinfo(L, "S", &ar);
-
-    const char * s = lua_tostring(L, 1);
-    if (strstr(s, ar.short_src)) {
-        lua_pop(L, 1);
-        s = strchr(s, ' ')+1;
-        lua_pushlstring(L, s, strlen(s));
-    }
-    lua_pushliteral(L, "\nStack trace:");
-
-    for (i = 1; lua_getstack(L, i, &ar); i++) {
-        lua_getinfo(L, "nSl", &ar);
-        lua_pushfstring(L, "\n\t#%d in %s at %s:%d", i, ar.name, ar.short_src, ar.currentline);
-    }
-    return lualog(L, 1, 2);
+// Blatantly stolen from the lua standalone interpreter
+static int traceback (lua_State *L) {
+  if (!lua_isstring(L, 1))  /* 'message' not a string? */
+    return 1;  /* keep it intact */
+  lua_getfield(L, LUA_GLOBALSINDEX, "debug");
+  if (!lua_istable(L, -1)) {
+    lua_pop(L, 1);
+    return 1;
+  }
+  lua_getfield(L, -1, "traceback");
+  if (!lua_isfunction(L, -1)) {
+    lua_pop(L, 2);
+    return 1;
+  }
+  lua_pushvalue(L, 1);  /* pass error message */
+  lua_pushinteger(L, 2);  /* skip this function and traceback */
+  lua_call(L, 2, 1);  /* call debug.traceback */
+  return 1;
 }
 
 ilS_script * ilS_new()
@@ -120,10 +93,10 @@ int ilS_fromSource(ilS_script* self, il_string source)
         self->L = luaL_newstate();
     luaL_openlibs(self->L);
 
-    //lua_pushcfunction(self->L, &print);
-    //lua_setglobal(self->L, "print");
+    lua_pushcfunction(self->L, &print);
+    lua_setglobal(self->L, "print");
 
-    lua_pushcfunction(self->L, &luaerror);
+    lua_pushcfunction(self->L, &traceback);
     self->ehandler = lua_gettop(self->L);
 
 #if LUA_VERSION_NUM == 502

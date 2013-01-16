@@ -83,7 +83,7 @@ function matrix.rotate(a, v)
 end
 
 function matrix.perspective(fovy, aspect, znear, zfar)
-    return ffi.C.il_Matrix_perspective(fovy, aspect, znear, zfar)
+    return wrap(ffi.C.il_Matrix_perspective(fovy, aspect, znear, zfar))
 end
 
 setmetatable(matrix, {__call=function(self,mat) return matrix.create(mat) end})

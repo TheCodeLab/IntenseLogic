@@ -36,10 +36,14 @@ local function newindex(t, k, v)
     error("Invalid key \""..tostring(k).."\" in context");
 end
 
+local function ts(t)
+    return "World"..t.ptr.id;
+end
+
 local function wrap(ptr)
     local obj = {}
     obj.ptr = ptr;
-    setmetatable(obj, {__index=index, __newindex=newindex});
+    setmetatable(obj, {__index=index, __newindex=newindex, __tostring=ts});
     return obj;
 end
 world.wrap = wrap
