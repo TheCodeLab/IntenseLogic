@@ -14,6 +14,8 @@ typedef struct il_world {
     struct ilG_context* context;
 } il_world;
 
+void il_world_add(il_world*, struct il_positionable*);
+
 ]]
 
 local world = {}
@@ -47,6 +49,10 @@ local function wrap(ptr)
     return obj;
 end
 world.wrap = wrap
+
+function world:add(pos)
+    ffi.C.il_world_add(self.ptr, pos.ptr);
+end
 
 function world.create()
     return wrap(ffi.C.il_world_new());

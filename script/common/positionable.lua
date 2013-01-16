@@ -6,6 +6,8 @@ local world = require "world";
 local context = require "context";
 local vector3 = require "vector3";
 
+require "memory"
+
 ffi.cdef [[
 
 typedef float il_Vector3[3];
@@ -16,15 +18,14 @@ typedef struct il_positionable {
   il_Quaternion rotation;
   il_Vector3 size;
   il_Vector3 velocity;
-  struct il_world *parent;
-  unsigned refs;
+  il_GC gc;
   struct timeval last_update;
   struct ilG_drawable3d* drawable;
   struct ilG_material* material;
   struct ilG_texture* texture;
 } il_positionable;
 
-il_positionable * il_positionable_new(struct il_world * parent);
+il_positionable * il_positionable_new();
 
 void ilG_trackPositionable(struct ilG_context*, struct il_positionable*);
 void ilG_untrackPositionable(struct ilG_context*, struct il_positionable*);
@@ -48,8 +49,6 @@ local function index(t, k)
         return material.wrap(t.ptr.material)
     elseif k == "texture" then
         return texture.wrap(t.ptr.texture)
-    elseif k == "world" then
-        return world.wrap(t.ptr.parent)
     end
     return positionable[k];
 end
@@ -94,10 +93,8 @@ local function wrap(ptr)
 end
 positionable.wrap = wrap;
 
-function positionable.create(world)
-    assert(type(world) == "table", "Expected world");
-    assert(ffi.istype("struct il_world*", world.ptr), "Expected world");
-    return wrap(ffi.C.il_positionable_new(world.ptr));
+function positionable.create()
+    return wrap(ffi.C.il_positionable_new());
 end
 
 function positionable:track(ctx)

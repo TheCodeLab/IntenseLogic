@@ -2,7 +2,6 @@
 #include "common/input.h"
 #include "common/event.h"
 #include "common/log.h"
-#include "common/entity.h"
 
 #include "graphics/graphics.h"
 #include "network/network.h"

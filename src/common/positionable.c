@@ -4,20 +4,22 @@
 
 #include "common/log.h"
 
-il_positionable * il_positionable_new(il_world * parent)
+il_positionable * il_positionable_new()
 {
-    if (!parent) return NULL;
+    //if (!parent) return NULL;
     il_positionable * p = calloc(1,sizeof(il_positionable));
-    p->parent = parent;
+    //p->parent = parent;
     p->size = (il_Vector3) {
         1,1,1
     };
     p->rotation = (il_Quaternion) {
         0,0,0,1
     };
-    parent->refs++;
-    p->refs = 1;
-    il_world_add(parent, p);
+    //parent->gc.refs++;
+    p->gc.refs = 1;
+    p->gc.copy = il_GC_shallowcopy;
+    p->gc.free = il_GC_shallowfree;
+    //il_world_add(parent, p);
     return p;
 }
 
