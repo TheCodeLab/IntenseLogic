@@ -4,6 +4,7 @@ local material = require "material";
 local texture = require "texture";
 local world = require "world";
 local context = require "context";
+local vector3 = require "vector3";
 
 ffi.cdef [[
 
@@ -32,8 +33,16 @@ void ilG_untrackPositionable(struct ilG_context*, struct il_positionable*);
 
 local positionable = {};
 
+positionable.type = ffi.typeof "il_positionable*"
+
 local function index(t, k)
-    if k == "drawable" then
+    if k == "position" then
+        return vector3.wrap(t.ptr.position);
+    elseif k == "size" then
+        return vector3.wrap(t.ptr.size);
+    elseif k == "velocity" then
+        return vector3.wrap(t.ptr.velocity);
+    elseif k == "drawable" then
         return drawable.wrap(t.ptr.drawable)
     elseif k == "material" then
         return material.wrap(t.ptr.material)
@@ -47,30 +56,40 @@ end
 
 local function newindex(t, k, v)
     assert(type(v) == "table")
-    if k == "drawable" then
+    if k == "position" then
+        assert(ffi.istype(vector3.type, v.ptr), "Attempt to assign non-vector to vector")
+        t.ptr.position = v.ptr;
+    elseif k == "size" then
+        assert(ffi.istype(vector3.type, v.ptr), "Attempt to assign non-vector to vector")
+        t.ptr.size = v.ptr;
+    elseif k == "velocity" then
+        assert(ffi.istype(vector3.type, v.ptr), "Attempt to assign non-vector to vector")
+        t.ptr.velocity = v.ptr;
+    elseif k == "drawable" then
         assert(ffi.istype("struct ilG_drawable3d*", v.ptr), "Attempt to assign non-drawable to drawable")
         t.ptr.drawable = v.ptr;
-        return;
     elseif k == "material" then
         assert(ffi.istype("struct ilG_material*", v.ptr), "Attempt to assign non-material to material")
         t.ptr.material = v.ptr;
-        return;
     elseif k == "texture" then
         assert(ffi.istype("struct ilG_texture*", v.ptr), "Attempt to assign non-texture to texture")
         t.ptr.texture = v.ptr;
-        return;
     elseif k == "world" then
         assert(ffi.istype("struct il_world*", v.ptr), "Attempt to assign non-world to world")
         t.ptr.world = v.ptr;
-        return;
+    else
+        error("Invalid key \""..tostring(k).."\" in positionable")
     end
-    error("Invalid key \""..tostring(k).."\" in positionable")
+end
+
+local function ts(t)
+    return "Positionable @ "..tostring(t.world).." "..tostring(t.position)
 end
 
 local function wrap(ptr)
     local obj = {};
     obj.ptr = ptr;
-    setmetatable(obj, {__index=index, __newindex=newindex})
+    setmetatable(obj, {__index=index, __newindex=newindex, __tostring=ts})
     return obj;
 end
 positionable.wrap = wrap;
