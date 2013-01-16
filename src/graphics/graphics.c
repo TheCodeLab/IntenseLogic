@@ -24,7 +24,7 @@
 #include "graphics/glutil.h"
 #include "common/string.h"
 
-extern unsigned time(unsigned*);
+//extern unsigned time(unsigned*);
 
 static int width = 800;
 static int height = 600;

@@ -1,3 +1,4 @@
+#include <string.h>
 #include <stdlib.h>
 #include "docopt.inc"
 #include "common/common.h"
