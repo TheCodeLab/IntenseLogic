@@ -49,6 +49,18 @@ void ilG_trackPositionable(ilG_context* ctx, il_positionable* self)
         il_log(1, "Null texture in positionable");
         return;
     }
+    if (ilG_drawable3d_fromId(self->drawable->id) != self->drawable) {
+        il_log(1, "No ID assigned to drawable");
+        return;
+    }
+    if (ilG_material_fromId(self->material->id) != self->material) {
+        il_log(1, "No ID assigned to material");
+        return;
+    }
+    if (ilG_texture_fromId(self->texture->id) != self->texture) {
+        il_log(1, "No ID assigned to texture");
+        return;
+    }
 
     drawable_list * drawables;
     IL_INDEXORZERO(contexts, ctx->world->id, drawables);
