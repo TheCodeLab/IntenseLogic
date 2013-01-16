@@ -70,7 +70,7 @@ static struct ilG_obj_line* ilG_obj_lookup(const struct ilG_obj_ctx* ctx, enum i
 {
   if (ilG_obj_lookup_cache[t].length >= i && i > 0)
     return ilG_obj_lookup_cache[t].data[i-1];
-  fprintf(stderr, "Invalid index %i (max %u)\n", i, ilG_obj_lookup_cache[t].length);
+  fprintf(stderr, "Invalid index %i (max %zu)\n", i, ilG_obj_lookup_cache[t].length);
   return NULL;
 }
 
