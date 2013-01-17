@@ -241,7 +241,7 @@ png:
         glBindTexture(GL_TEXTURE_2D, tex);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, ctype == PNG_COLOR_TYPE_RGB ? GL_RGB : GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 
-        int i;
+        unsigned int i;
         for (i = 0; i < height; i++) {
             /*              image type,    l, x, y, w,     h, format,                                         size,             data*/
             glTexSubImage2D(GL_TEXTURE_2D, 0, 0, i, width, 1, ctype == PNG_COLOR_TYPE_RGB ? GL_RGB : GL_RGBA, GL_UNSIGNED_BYTE, rows[i]);

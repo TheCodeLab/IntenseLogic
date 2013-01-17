@@ -80,23 +80,29 @@ void ilG_trackPositionable(ilG_context* ctx, il_positionable* self)
 
 void ilG_untrackPositionable(ilG_context* ctx, il_positionable* positionable)
 {
+    (void)ctx, (void)positionable;
     // TODO: stub function
 }
 
 struct ilG_trackiterator {
-    int context, drawable, material, texture, positionable;
+    unsigned int context, drawable, material, texture, positionable;
+    int initialized;
 };
 
 ilG_trackiterator* ilG_trackiterator_new(ilG_context* ctx) 
 {
     ilG_trackiterator *iter = calloc(1, sizeof(ilG_trackiterator));
     iter->context = ctx->world->id;
-    iter->positionable = -1;
+    iter->initialized = 0;
     return iter;
 }
 
 int ilG_trackIterate(ilG_trackiterator* iter)
 {
+    if (!iter->initialized) {
+        iter->initialized = 1;
+        return 1;
+    }
     iter->positionable++;
     if (iter->context       >= contexts.length &&
         iter->drawable      >= contexts.data[iter->context].length &&

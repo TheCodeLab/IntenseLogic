@@ -13,6 +13,7 @@
 
 static void bind(ilG_context* context, void *ctx)
 {
+    (void)ctx;
     IL_GRAPHICS_TESTERROR("Unknown");
     glUseProgram(context->material->program);
     IL_GRAPHICS_TESTERROR("glUseProgram()");
@@ -38,6 +39,7 @@ static void update(ilG_context* context, struct il_positionable* pos, void *ctx)
 
 static void unbind(ilG_context* context, void *ctx)
 {
+    (void)ctx;
     context->num_active = 0;
 }
 
