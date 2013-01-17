@@ -17,7 +17,7 @@ struct GLtexture {
 static void update(ilG_context* context, struct il_positionable* pos, void * ctx)
 {
     (void)ctx, (void)pos;
-    int i;
+    unsigned int i;
 
     static struct ilG_material* mtl = NULL;
 
@@ -55,7 +55,7 @@ static struct GLtexture def;
 void ilG_texture_init()
 {
     // 1x1 white texture for now I guess
-    const static unsigned char data[] = {
+    static const unsigned char data[] = {
         255, 255, 255, 255
     };
 

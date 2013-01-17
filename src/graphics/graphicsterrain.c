@@ -59,7 +59,7 @@ static void terrain_draw(const ilG_camera* cam,
 static void heightmap_draw(ilG_terrain* ter, void* ctx,
     const ilG_camera* cam, const struct timeval* tv, il_positionable* pos)
 {
-    (void)ctx, (void)cam, (void)tv;
+    (void)ctx, (void)cam, (void)tv, (void)pos;
     glUseProgram(ter->program);
 
     //activate the heightmap texture
@@ -72,7 +72,7 @@ static void heightmap_draw(ilG_terrain* ter, void* ctx,
 static void pheightmap_draw(ilG_terrain* ter, void* ctx,
     const ilG_camera* cam, const struct timeval* tv, il_positionable* pos)
 {
-    (void)tv;
+    (void)tv, (void)cam;
     struct pheightmap* pheightmap = ctx;
 
     glUseProgram(ter->program);
@@ -119,6 +119,7 @@ static void pheightmap_draw(ilG_terrain* ter, void* ctx,
 ilG_terrain* ilG_terrain_new(il_terrain* parent,
     il_positionable* positionable)
 {
+    (void)positionable;
     ilG_terrain * ter = calloc(1, sizeof(ilG_terrain));
     ter->terrain = parent;
     ter->drawable.draw = (ilG_drawable3d_cb)&terrain_draw;

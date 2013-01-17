@@ -66,8 +66,9 @@ static void cache_append(struct ilG_obj_line* l) {
   e->length++;
 }
 
-static struct ilG_obj_line* ilG_obj_lookup(const struct ilG_obj_ctx* ctx, enum ilG_obj_line_type t, int i)
+static struct ilG_obj_line* ilG_obj_lookup(const struct ilG_obj_ctx* ctx, enum ilG_obj_line_type t, unsigned int i)
 {
+    (void)ctx;
   if (ilG_obj_lookup_cache[t].length >= i && i > 0)
     return ilG_obj_lookup_cache[t].data[i-1];
   fprintf(stderr, "Invalid index %i (max %zu)\n", i, ilG_obj_lookup_cache[t].length);

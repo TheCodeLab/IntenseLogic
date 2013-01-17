@@ -18,7 +18,7 @@ static il_GC* world_copy(il_GC* gc)
     new->gc.refs = 1;
     new->objects.data = calloc(old->objects.length, sizeof(il_positionable*));
     new->objects.capacity = old->objects.length;
-    int i;
+    unsigned int i;
     for (i = 0; i < old->objects.length; i++) {
         il_GC* oldp = &old->objects.data[i]->gc;
         il_GC* newp = oldp->copy(oldp);
@@ -30,7 +30,7 @@ static il_GC* world_copy(il_GC* gc)
 static void world_free(il_GC* gc)
 {
     il_world* world = (il_world*)((char*)gc + gc->baseptr);
-    int i;
+    unsigned int i;
     for (i = 0; i < world->objects.length; i++) {
         world->objects.data[i]->gc.free(&world->objects.data[i]->gc);
     }
