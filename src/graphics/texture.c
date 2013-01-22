@@ -46,6 +46,7 @@ ilG_texture* ilG_texture_fromasset(ilA_asset* asset)
     tex->object = ilA_assetToTexture(asset);
     tex->parent.update = &update;
     tex->parent.name = il_StoC(ilA_getPath(asset));
+    ilG_texture_assignId(&tex->parent);
 
     return &tex->parent;
 }
