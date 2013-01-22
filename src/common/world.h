@@ -9,12 +9,10 @@
 struct il_positionable;
 struct ilG_context;
 
-IL_ARRAY(struct il_positionable*, positionable_array);
-
 typedef struct il_world {
     il_GC gc;
     unsigned int id;
-    positionable_array objects;
+    IL_ARRAY(struct il_positionable*,) objects;
     struct ilG_context* context;
 } il_world;
 

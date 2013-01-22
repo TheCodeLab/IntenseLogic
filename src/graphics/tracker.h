@@ -7,8 +7,9 @@ struct ilG_texture;
 struct il_positionable;
 struct ilG_context;
 
-void ilG_trackPositionable(struct ilG_context*, struct il_positionable*);
-void ilG_untrackPositionable(struct ilG_context*, struct il_positionable*);
+// int success
+int ilG_trackPositionable(struct ilG_context*, struct il_positionable*);
+int ilG_untrackPositionable(struct ilG_context*, struct il_positionable*);
 
 typedef struct ilG_trackiterator ilG_trackiterator;
 ilG_trackiterator* ilG_trackiterator_new(struct ilG_context*);

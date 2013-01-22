@@ -6,6 +6,8 @@
 #include <stdlib.h>
 #include <GL/glew.h>
 
+#include "common/array.h"
+
 typedef struct ilG_context {
     struct ilG_drawable3d* drawable;
     struct ilG_material* material;
@@ -16,6 +18,7 @@ typedef struct ilG_context {
     unsigned *texunits;
     size_t num_texunits;
     size_t num_active;
+    IL_ARRAY(struct il_positionable*,) positionables; // tracker.c
 } ilG_context;
 
 ilG_context* ilG_context_new();

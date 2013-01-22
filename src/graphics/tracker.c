@@ -12,87 +12,60 @@
 #include "common/log.h"
 #include "common/positionable.h"
 
-// Warning: This file is rather ugly as it uses basically a quintuple pointer.
-
-IL_ARRAY(il_positionable*,  positionable_list);
-IL_ARRAY(positionable_list, texture_list);
-IL_ARRAY(texture_list,      material_list);
-IL_ARRAY(material_list,     drawable_list);
-IL_ARRAY(drawable_list,     context_list);
-
-static context_list contexts;
-
-void ilG_trackPositionable(ilG_context* ctx, il_positionable* self)
+int ilG_trackPositionable(ilG_context* ctx, il_positionable* self)
 {
-    // pedantic checks because why not
-    if (!ctx) {
-        il_log(1, "Null context");
-        return;
-    }
-    if (!ctx->world) {
-        il_log(1, "Null world in context");
-        return;
-    }
-    if (!self) {
-        il_log(1, "Null positionable");
-        return;
-    }
-    if (!self->drawable) {
-        il_log(1, "Null drawable in positionable");
-        return;
-    }
-    if (!self->material) {
-        il_log(1, "Null material in positionable");
-        return;
-    }
-    if (!self->texture) {
-        il_log(1, "Null texture in positionable");
-        return;
-    }
-    if (ilG_drawable3d_fromId(self->drawable->id) != self->drawable) {
-        il_log(1, "No ID assigned to drawable");
-        return;
-    }
-    if (ilG_material_fromId(self->material->id) != self->material) {
-        il_log(1, "No ID assigned to material");
-        return;
-    }
-    if (ilG_texture_fromId(self->texture->id) != self->texture) {
-        il_log(1, "No ID assigned to texture");
-        return;
-    }
+#define check_null(n) if(!n) {il_log(1, "Null " #n); return 0; }
+    // make sure we have valid parameters, several bugs have been caught here
+    check_null(ctx);
+    check_null(self);
+    //check_null(ctx->world);
+    //check_null(ctx->world->id);
+    check_null(self->drawable);
+    check_null(self->material);
+    check_null(self->texture);
+    check_null(self->drawable->id);
+    check_null(self->material->id);
+    check_null(self->texture->id);
+#undef check_null
 
-    drawable_list * drawables;
-    IL_INDEXORZERO(contexts, ctx->world->id, drawables);
-
-    material_list *materials;
-    IL_INDEXORZERO(*drawables, self->drawable->id, materials);
-
-    texture_list *textures;
-    IL_INDEXORZERO(*materials, self->material->id, textures);
-   
-    positionable_list *positionables;
-    IL_INDEXORZERO(*textures, self->texture->id, positionables);
-    
-    IL_APPEND(*positionables, self);
-
+    unsigned int i;
+    for (i = 0; i < ctx->positionables.length; i++) {
+        il_positionable* pos = ctx->positionables.data[i];
+        if (pos->drawable->id > self->drawable->id) goto insert;
+        if (pos->material->id > self->material->id) goto insert;
+        if (pos->texture->id  > self->texture->id)  goto insert;
+        continue;
+insert:
+        IL_INSERT(ctx->positionables, i, self);
+        return 1;
+    }
+    // if we even reach here it means that there are no other drawable-material-texture pairs in the list
+    IL_APPEND(ctx->positionables, self);
+    return 1;
 }
 
-void ilG_untrackPositionable(ilG_context* ctx, il_positionable* positionable)
+int ilG_untrackPositionable(ilG_context* ctx, il_positionable* positionable)
 {
-    (void)ctx, (void)positionable;
-    // TODO: stub function
+    unsigned int i;
+    for (i = 0; i < ctx->positionables.length; i++) {
+        if (ctx->positionables.data[i] == positionable) {
+            IL_REMOVE(ctx->positionables, i);
+            return 0;
+        }
+    }
+    return 1;
 }
 
 struct ilG_trackiterator {
-    unsigned int context, drawable, material, texture, positionable;
+    ilG_context* context;
+    unsigned int i;
     int initialized;
 };
 
 ilG_trackiterator* ilG_trackiterator_new(ilG_context* ctx) 
 {
     ilG_trackiterator *iter = calloc(1, sizeof(ilG_trackiterator));
-    iter->context = ctx->world->id;
+    iter->context = ctx;
     iter->initialized = 0;
     return iter;
 }
@@ -103,67 +76,43 @@ int ilG_trackIterate(ilG_trackiterator* iter)
         iter->initialized = 1;
         return 1;
     }
-    iter->positionable++;
-    if (iter->context       >= contexts.length &&
-        iter->drawable      >= contexts.data[iter->context].length &&
-        iter->material      >= contexts.data[iter->context].data[iter->drawable].length &&
-        iter->texture       >= contexts.data[iter->context].data[iter->drawable].data[iter->material].length &&
-        iter->positionable  >= contexts.data[iter->context].data[iter->drawable].data[iter->material].data[iter->texture].length)
-    {
-        return 0;
-    }
-    if (iter->positionable >= contexts.data[iter->context].data[iter->drawable].data[iter->material].data[iter->texture].length) {
-        iter->positionable = 0;
-        iter->texture++;
-    }
-    if (iter->texture >= contexts.data[iter->context].data[iter->drawable].data[iter->material].length) {
-        iter->texture = 0;
-        iter->material++;
-    }
-    if (iter->material >= contexts.data[iter->context].data[iter->drawable].length) {
-        iter->material = 0;
-        iter->drawable++;
-    }
-    if (iter->drawable >= contexts.data[iter->context].length) {
+    iter->i++;
+    if (iter->i >= iter->context->positionables.length) {
         free(iter);
         return 0;
     }
-    if (!contexts.data[iter->context].data[iter->drawable].data[iter->material].data[iter->texture].data[iter->positionable])
-        return ilG_trackIterate(iter);
+
     return 1;
 }
 
 il_positionable* ilG_trackGetPositionable(ilG_trackiterator* iter)
 {
-    return contexts.data[iter->context].data[iter->drawable].data[iter->material].data[iter->texture].data[iter->positionable];
+    return iter->context->positionables.data[iter->i];
 }
 
 ilG_drawable3d* ilG_trackGetDrawable(ilG_trackiterator* iter)
 {
-    return ilG_drawable3d_fromId(iter->drawable);
+    return iter->context->positionables.data[iter->i]->drawable;
 }
 
 ilG_material* ilG_trackGetMaterial(ilG_trackiterator* iter)
 {
-    return ilG_material_fromId(iter->material);
+    return iter->context->positionables.data[iter->i]->material;
 }
 
 ilG_texture* ilG_trackGetTexture(ilG_trackiterator* iter)
 {
-    return ilG_texture_fromId(iter->texture);
+    return iter->context->positionables.data[iter->i]->texture;
 }
 
-IL_ARRAY(ilG_drawable3d*, drawable_index);
-drawable_index drawable_indices;
-IL_ARRAY(ilG_material*, material_index);
-material_index material_indices;
-IL_ARRAY(ilG_texture*, texture_index);
-texture_index texture_indices;
+IL_ARRAY(ilG_drawable3d*, drawable_index) drawable_indices;
+IL_ARRAY(ilG_material*, material_index) material_indices;
+IL_ARRAY(ilG_texture*, texture_index) texture_indices;
 
 ilG_drawable3d* ilG_drawable3d_fromId(unsigned int id) 
 {
     ilG_drawable3d** out;
-    IL_INDEX(drawable_indices, id, out);
+    IL_INDEX(drawable_indices, id - 1, out);
     if (out) return *out;
     return NULL;
 }
@@ -171,7 +120,7 @@ ilG_drawable3d* ilG_drawable3d_fromId(unsigned int id)
 ilG_material* ilG_material_fromId(unsigned int id) 
 {
     ilG_material** out;
-    IL_INDEX(material_indices, id, out);
+    IL_INDEX(material_indices, id - 1, out);
     if (out) return *out;
     return NULL;
 }
@@ -179,7 +128,7 @@ ilG_material* ilG_material_fromId(unsigned int id)
 ilG_texture* ilG_texture_fromId(unsigned int id)
 {
     ilG_texture** out;
-    IL_INDEX(texture_indices, id, out);
+    IL_INDEX(texture_indices, id - 1, out);
     if (out) return *out;
     return NULL;
 }
@@ -187,39 +136,39 @@ ilG_texture* ilG_texture_fromId(unsigned int id)
 void ilG_drawable3d_assignId(ilG_drawable3d* self)
 {
     if (self->id) return; // already has an ID???
-    self->id = drawable_indices.length;
+    self->id = drawable_indices.length+1;
     IL_APPEND(drawable_indices, self);
 }
 
 void ilG_material_assignId(ilG_material* self)
 {
     if (self->id) return;
-    self->id = material_indices.length;
+    self->id = material_indices.length+1;
     IL_APPEND(material_indices, self);
 }
 
 void ilG_texture_assignId(ilG_texture* self)
 {
     if (self->id) return;
-    self->id = texture_indices.length;
+    self->id = texture_indices.length+1;
     IL_APPEND(texture_indices, self);
 }
 
 void ilG_drawable3d_setId(ilG_drawable3d* self, unsigned int id)
 {
-    self->id = id;
+    self->id = id-1;
     IL_SET(drawable_indices, id, self);
 }
 
 void ilG_material_setId(ilG_material* self, unsigned int id)
 {
-    self->id = id;
+    self->id = id-1;
     IL_SET(material_indices, id, self);
 }
 
 void ilG_texture_setId(ilG_texture* self, unsigned int id)
 {
-    self->id = id;
+    self->id = id-1;
     IL_SET(texture_indices, id, self);
 }
 

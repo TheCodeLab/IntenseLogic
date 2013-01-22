@@ -50,13 +50,29 @@ IL_LIST_APPEND(MyStruct_list, ll, mystruct);
 
 #define IL_LIST_TAIL(list, el) ((list).el.last)
 
+#define IL_LIST_POPHEAD(list, el, out) {    \
+    (out) = IL_LIST_HEAD(list, el);         \
+    if (out)                                \
+        (list)->el.next = (out)->el.next;   \
+    /* in case this is the only item */     \
+    if (!(list)->el.next)                   \
+        (list)->el.last = NULL;             \
+}
+
+#define IL_LIST_POPTAIL(list, el, out) {    \
+    (out) = (list)->el.last;                \
+    if (out)                                \
+        (list)->el.last = (out)->el.last;   \
+    /* in case this is the only item */     \
+    if (!list->el.last)                     \
+        (list)->el.next = NULL;             \
+}
+
 #define IL_LIST_INDEX(list, el, out, id)    \
     while (out && id > 0) {                 \
         (out) = (out)->el.next;             \
         id--;                               \
     }
-
-#define IL_LIST_SET(list, el, item, id)
 
 #define IL_LIST_PREPEND(list, el, item) {                                     \
     (item)->el.next = (list).el.next;   /* set the item's next to the head */ \
@@ -64,6 +80,8 @@ IL_LIST_APPEND(MyStruct_list, ll, mystruct);
         (list).el.next->el.last = (item);/* set the head's tail to the item */\
     (list).el.next = (item);            /* set the head to the item */        \
     (item)->el.last = (list);           /* set the item's last to the list */ \
+    if (!(list)->el.last)               /* in case we're the only item */     \
+        (list)->el.last = (item);                                             \
 }
 
 #define IL_LIST_APPEND(list, el, item) {                                      \
@@ -71,6 +89,8 @@ IL_LIST_APPEND(MyStruct_list, ll, mystruct);
         (list)->el.last->el.next = (item);                                    \
     (item)->el.last = (list)->el.last;  /* set the item's last to the tail */ \
     (list)->el.last = (item);                  /* set the tail to the item */ \
+    if (!list)->el.next)                /* in case we're the only item */     \
+        (list)->el.next = (item);                                             \
 }
 
 #endif

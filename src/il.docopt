@@ -9,4 +9,5 @@ Options:
   -r, --run SCRIPT       Runs script
   -l, --logfile	FILE     Sets the file to print output to
   -p, --path PATH        Adds an asset search path
+  -t, --threads NUM      Sets the number of worker threads
   -v, --verbose	LEVEL    Sets the verbosity level [default: 4]
