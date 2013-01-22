@@ -28,7 +28,7 @@ print(box);
 box.drawable = mesh("teapot.obj"); --drawable.box;
 print(box.drawable.ptr);
 box.material = material.default;
-box.texture = texture.default;
+box.texture = texture.fromfile "test.png"; --texture.default;
 box:track(c);
 print(box);
 
