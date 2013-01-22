@@ -109,7 +109,7 @@ int main(int argc, char **argv)
 #endif
     
     // initialise engine
-    il_init();
+    il_init(args);
 
     ilE_register(il_queue, IL_BASE_TICK, ILE_BEFORE, (ilE_callback)&update, NULL);
     // finished initialising, send startup event

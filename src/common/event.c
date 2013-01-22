@@ -27,18 +27,14 @@ struct callback {
     void * ctx;
 };
 
-IL_ARRAY(struct callback, callback_array);
-
 struct callbackContainer {
     uint16_t id;
-    callback_array arr;
+    IL_ARRAY(struct callback, callback_array) arr;
 };
-
-IL_ARRAY(struct callbackContainer, callbackContainer_array);
 
 struct ilE_queue {
     struct event_base * base;
-    callbackContainer_array callbacks;
+    IL_ARRAY(struct callbackContainer, callbackContainer_array) callbacks;
 };
 
 struct dispatch_ctx {

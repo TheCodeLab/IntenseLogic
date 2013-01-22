@@ -180,6 +180,7 @@ typedef struct {
     char *run;
     char *logfile;
     char *path;
+    char *threads;
     char *verbose;
     /* special */
     char *usage_pattern;
@@ -198,6 +199,7 @@ char *help_message =
 "  -r, --run SCRIPT       Runs script\n"
 "  -l, --logfile	FILE     Sets the file to print output to\n"
 "  -p, --path PATH        Adds an asset search path\n"
+"  -t, --threads NUM      Sets the number of worker threads\n"
 "  -v, --verbose	LEVEL    Sets the verbosity level [default: 4]\n"
 "";
 
@@ -208,7 +210,7 @@ char *usage_pattern =
 
 DocoptArgs docopt(int argc, char *argv[], bool help, char *version) {
     DocoptArgs args = {
-        0, 0, NULL, NULL, NULL, "4",
+        0, 0, NULL, NULL, NULL, NULL, "4",
         usage_pattern, help_message
     };
     Element options[] = {
@@ -216,6 +218,7 @@ DocoptArgs docopt(int argc, char *argv[], bool help, char *version) {
         {Option, {"-r", "--run", 1, 0, NULL}},
         {Option, {"-l", "--logfile", 1, 0, NULL}},
         {Option, {"-p", "--path", 1, 0, NULL}},
+        {Option, {"-t", "--threads", 1, 0, NULL}},
         {Option, {"-v", "--verbose", 1, 0, NULL}},
         {Option, {NULL, "--version", 0, 0, NULL}},
         {None}
@@ -243,6 +246,8 @@ DocoptArgs docopt(int argc, char *argv[], bool help, char *version) {
             args.logfile = o->option.argument;
         } else if (o->option.argument && strcmp(o->option.olong, "--path") == 0) {
             args.path = o->option.argument;
+        } else if (o->option.argument && strcmp(o->option.olong, "--threads") == 0) {
+            args.threads = o->option.argument;
         } else if (o->option.argument && strcmp(o->option.olong, "--verbose") == 0) {
             args.verbose = o->option.argument;
         }
