@@ -89,10 +89,10 @@ function event.unpack(ev)
     elseif ev.id >= 3 and ev.id <= 6 then -- keydown, keyup, mousedown, mouseup
         return ffi.cast("int", ffi.C.ilE_getData(ev.ptr, nil));
     elseif ev.id == 7 then -- mousemove
-        local s = ffi.cast("ilI_mouseMove", ffi.C.ilE_getData(ev.ptr, nil));
+        local s = ffi.cast("ilI_mouseMove*", ffi.C.ilE_getData(ev.ptr, nil));
         return s.x, s.y
     elseif ev.id == 8 then -- mousewheel
-        local s = ffi.cast("ilI_mouseWheel", ffi.C.ilE_getData(ev.ptr, nil));
+        local s = ffi.cast("ilI_mouseWheel*", ffi.C.ilE_getData(ev.ptr, nil));
         return s.y, s.x;
     end
     error "Unable to decompose event"

@@ -5,13 +5,12 @@ local texture = require "texture";
 local world = require "world";
 local context = require "context";
 local vector3 = require "vector3";
+local quaternion = require "quaternion"
 
+require "scalar_defs"
 require "memory"
 
 ffi.cdef [[
-
-typedef float il_Vector3[3];
-typedef float il_Quaternion[4];
 
 typedef struct il_positionable {
   il_Vector3 position;
@@ -43,6 +42,8 @@ local function index(t, k)
         return vector3.wrap(t.ptr.size);
     elseif k == "velocity" then
         return vector3.wrap(t.ptr.velocity);
+    elseif k == "rotation" then
+        return quaternion.wrap(t.ptr.rotation)
     elseif k == "drawable" then
         return drawable.wrap(t.ptr.drawable)
     elseif k == "material" then
@@ -64,6 +65,9 @@ local function newindex(t, k, v)
     elseif k == "velocity" then
         assert(ffi.istype(vector3.type, v.ptr), "Attempt to assign non-vector to vector")
         t.ptr.velocity = v.ptr;
+    elseif k == "rotation" then
+        assert(ffi.istype(quaternion.type, v.ptr), "Attempt to assign non-quaternion to quaternion")
+        t.ptr.rotation = v.ptr;
     elseif k == "drawable" then
         assert(ffi.istype("struct ilG_drawable3d*", v.ptr), "Attempt to assign non-drawable to drawable")
         t.ptr.drawable = v.ptr;
