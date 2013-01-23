@@ -139,16 +139,27 @@ void ilG_bindMVP(const char *name, GLuint program, const ilG_camera * camera, co
     utransform = glGetUniformLocation(program, name);
     ilG_testError("glGetUniformLocation failed");
 
-    il_Matrix cam = il_Matrix_mul(
-                        il_Matrix_translate(camera->positionable->position),
-                        il_Matrix_rotate_q(camera->positionable->rotation)
-                    );
+    il_Vector3 v = camera->positionable->position;
+    /*v.x = -v.x;
+    v.y = -v.y;
+    v.z = -v.z;*/
 
-    il_Matrix view;
+    il_Quaternion q = camera->positionable->rotation;
+    q.x = -q.x;
+    q.y = -q.y;
+    q.z = -q.z;
+    q.w = -q.w;
 
-    int res = il_Matrix_invert(cam, &view);
+    il_Matrix view = il_Matrix_mul(
+        il_Matrix_rotate_q(q),
+        il_Matrix_translate(v)
+    );
+
+    //il_Matrix view;
+
+    /*int res = il_Matrix_invert(cam, &view);
     if (res!=0)
-        il_log(2, "Couldn't invert view matrix?");
+        il_log(2, "Couldn't invert view matrix?");*/
 
     il_Matrix model = il_Matrix_mul(
                           il_Matrix_rotate_q(object->rotation),

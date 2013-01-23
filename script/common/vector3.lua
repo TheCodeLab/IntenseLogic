@@ -1,6 +1,8 @@
 local ffi = require "ffi"
 require "scalar_defs"
 
+local quaternion;
+
 ffi.cdef [[
 
 il_Vector3 il_Vector3_add(il_Vector3 a, il_Vector3 b);
@@ -23,13 +25,16 @@ local vector3 = {}
 
 vector3.type = ffi.typeof "il_Vector3"
 
-local function c_wrap(c, c_f)
+local function c_wrap(c, c_f, c_q)
+    quaternion = quaternion or require "quaternion"
     return function(a, b)
         assert(type(a) == "table" and ffi.istype(vector3.type, a.ptr), "Expected vector3")
         if type(b) == "number" then
             return vector3.wrap(c_f(a.ptr, b))
         elseif type(b) == "table" and ffi.istype(vector3.type, b.ptr) then
             return vector3.wrap(c(a.ptr, b.ptr))
+        elseif c_q and type(b) == "table" and ffi.istype(quaternion.type, b.ptr) then
+            return quaternion.wrap(c_q(a.ptr, b.ptr));
         else
             error("Expected vector3 or number");
         end
@@ -38,7 +43,7 @@ end
 
 local add = c_wrap(ffi.C.il_Vector3_add, ffi.C.il_Vector3_add_f)
 local sub = c_wrap(ffi.C.il_Vector3_sub, ffi.C.il_Vector3_sub_f)
-local mul = c_wrap(ffi.C.il_Vector3_mul, ffi.C.il_Vector3_mul_f)
+local mul = c_wrap(ffi.C.il_Vector3_mul, ffi.C.il_Vector3_mul_f, ffi.C.il_Vector3_rotate_q)
 local div = c_wrap(ffi.C.il_Vector3_div, ffi.C.il_Vector3_div_f)
 
 local function index(t, k)

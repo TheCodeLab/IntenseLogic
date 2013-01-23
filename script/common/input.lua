@@ -17,8 +17,6 @@ function input.isKeySet(key)
     if type(key) == "string" then
         key = ffi.C.il_keymap_getkey(key);
     end
-    print(key);
-    print(string.char(key))
     return ffi.C.ilI_isKeySet(key)
 end
 
