@@ -46,6 +46,9 @@ local function newindex(t, k, v)
     elseif k == "projection_matrix" then
         assert(type(v) == "table" and ffi.istype(matrix.type, v.ptr), "Attempt to assign non-matrix to matrix")
         t.ptr.projection_matrix = v.ptr;
+    elseif k == "sensitivity" then
+        assert(type(v) == "number", "Attempt to assign non-number to number");
+        t.ptr.sensitivity = v;
     else
         error("Invalid key \""..tostring(k).."\" in camera")
     end

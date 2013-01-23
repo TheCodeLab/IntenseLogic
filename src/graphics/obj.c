@@ -511,7 +511,24 @@ ilG_obj_file ilG_obj_readstring(const char * data, ilG_obj_reader inc, const cha
       default:
         break;
     }
+    free(line_str);
   }
+
+  struct ilG_obj_line *cur = ctx.first;
+  last = NULL;
+  while (cur) {
+    free(last);
+    last = cur;
+    cur = cur->next;
+  }
+
+  unsigned int c;
+  for (c = 0; c < 11; c++) {
+    ilG_obj_lookup_cache[c].length = 0;
+    ilG_obj_lookup_cache[c].capacity = 0;
+    free(ilG_obj_lookup_cache[c].data);
+  }
+
   return file;
 }
 
@@ -532,7 +549,10 @@ const char* ilG_obj_stdio_reader(const char *filename)
 
 ilG_obj_file ilG_obj_readfile(const char *filename)
 {
-  return ilG_obj_readstring(ilG_obj_stdio_reader(filename), ilG_obj_stdio_reader, filename);
+  char *data = (char*)ilG_obj_stdio_reader(filename);
+  ilG_obj_file f = ilG_obj_readstring(data, ilG_obj_stdio_reader, filename);
+  free(data);
+  return f;
 }
 
 GLfloat *ilG_obj_to_vbo(ilG_obj_mesh *mesh, enum ilG_obj_vertextype vertex, 

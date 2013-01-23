@@ -91,6 +91,11 @@ ilE_event* ilE_new(uint16_t eventid, uint8_t size, void * data)
     return ev;
 }
 
+uint16_t ilE_getID(const ilE_event* event)
+{
+    return event->id;
+}
+
 void * ilE_getData(const ilE_event* event, size_t *size)
 {
     if (size) {
