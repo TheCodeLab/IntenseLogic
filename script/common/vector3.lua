@@ -27,9 +27,9 @@ local function c_wrap(c, c_f)
     return function(a, b)
         assert(type(a) == "table" and ffi.istype(vector3.type, a.ptr), "Expected vector3")
         if type(b) == "number" then
-            return wrap(c_f(a.ptr, b))
+            return vector3.wrap(c_f(a.ptr, b))
         elseif type(b) == "table" and ffi.istype(vector3.type, b.ptr) then
-            return wrap(c(a.ptr, b.ptr))
+            return vector3.wrap(c(a.ptr, b.ptr))
         else
             error("Expected vector3 or number");
         end

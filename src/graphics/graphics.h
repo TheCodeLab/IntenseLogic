@@ -5,8 +5,6 @@
 
 #define IL_GRAPHICS_TICK    (9)
 
-#define IL_GRAPHICS_TICK_LENGTH (16666)
-
 //ilE_queue* ilG_queue;
 
 void ilG_init();
