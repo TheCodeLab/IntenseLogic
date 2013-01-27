@@ -72,6 +72,10 @@ ilG_trackiterator* ilG_trackiterator_new(ilG_context* ctx)
 
 int ilG_trackIterate(ilG_trackiterator* iter)
 {
+    if (iter->context->positionables.length == 0) {
+        free(iter);
+        return 0;
+    }
     if (!iter->initialized) {
         iter->initialized = 1;
         return 1;
