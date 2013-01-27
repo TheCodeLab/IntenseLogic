@@ -9,7 +9,7 @@ cli_file   = "src/il.docopt"
 inputs     = "*.c common/*.c graphics/*.c network/*.c script/*.c asset/*.c"
 
 # flags
-cflags    = "-Wall -Wextra -pedantic -std=c11 -g -DDEBUG -I./" + src_dir
+cflags    = "-Wall -Wextra -pedantic -std=c99 -g -DDEBUG -I./" + src_dir
 linkflags = "-g -L. -rdynamic"
 
 # libs
