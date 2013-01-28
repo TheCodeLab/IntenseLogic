@@ -56,7 +56,7 @@ static void mtl_unbind(ilG_context* context, void *ctx)
     context->num_active = 0;
 }
 
-const char *strdup(const char*);
+char *strdup(const char*);
 // all parameters to this function may be temporary
 ilG_material* ilG_material_new(il_string vertsource, il_string fragsource, 
     const char *name, const char *position, const char *texcoord,

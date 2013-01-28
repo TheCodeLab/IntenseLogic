@@ -66,11 +66,13 @@ static void cache_append(struct ilG_obj_line* l) {
   e->length++;
 }
 
-static struct ilG_obj_line* ilG_obj_lookup(const struct ilG_obj_ctx* ctx, enum ilG_obj_line_type t, unsigned int i)
+static struct ilG_obj_line* ilG_obj_lookup(const struct ilG_obj_ctx* ctx, enum ilG_obj_line_type t, int i)
 {
     (void)ctx;
-  if (ilG_obj_lookup_cache[t].length >= i && i > 0)
+  if ((int)ilG_obj_lookup_cache[t].length >= i && i > 0)
     return ilG_obj_lookup_cache[t].data[i-1];
+  if (i < 0)
+    return ilG_obj_lookup_cache[t].data[(int)ilG_obj_lookup_cache[t].length + i];
   fprintf(stderr, "Invalid index %i (max %zu)\n", i, ilG_obj_lookup_cache[t].length);
   return NULL;
 }
@@ -162,6 +164,7 @@ static struct ilG_obj_line *ilG_obj_readline(const struct ilG_obj_ctx* ctx, cons
       for (i = 0; i < 4; i++) {
         len = 0; // in case it doesn't match
         matched = sscanf(p, "%*[ \t\n]%n", &len);
+        if (matched == EOF) break;
         p += len;
         matched = sscanf(p, "%i%n", v+i, &len);
         if (!matched) goto face_error;
@@ -555,6 +558,57 @@ ilG_obj_file ilG_obj_readfile(const char *filename)
   return f;
 }
 
+static int copy_vertex(GLfloat *buf, ilG_obj_vertex vert, enum ilG_obj_vertextype filter)
+{
+    int n = 0;
+    if (filter & OBJ_X) {
+        buf[0] = vert[0];
+        n++;
+    }
+    if (filter & OBJ_Y) {
+        buf[1] = vert[1];
+        n++;
+    }
+    if (filter & OBJ_Z) {
+        buf[2] = vert[2];
+        n++;
+    }
+    if (filter & OBJ_W) {
+        buf[3] = vert[3];
+        n++;
+    }
+    return n;
+}
+
+static int copy_texcoord(GLfloat *buf, ilG_obj_texcoord texcoord, enum ilG_obj_texcoordtype filter)
+{
+    int n = 0;
+    if (filter & OBJ_U) {
+        buf[0] = texcoord[0];
+        n++;
+    }
+    if (filter & OBJ_V) {
+        buf[1] = texcoord[1];
+        n++;
+    }
+    if (filter & OBJ_W) {
+        buf[2] = texcoord[2];
+        n++;
+    }
+    return n;
+}
+
+static int copy_normal(GLfloat *buf, ilG_obj_normal normal, enum ilG_obj_normaltype filter)
+{
+    if (filter) {
+        buf[0] = normal[0];
+        buf[1] = normal[1];
+        buf[2] = normal[2];
+        return 3;
+    }
+    return 0;
+}
+
 GLfloat *ilG_obj_to_vbo(ilG_obj_mesh *mesh, enum ilG_obj_vertextype vertex, 
   enum ilG_obj_texcoordtype texcoord, enum ilG_obj_normaltype normal, 
   enum ilG_obj_facetype face, enum ilG_obj_vbolayout layout, size_t *size)
@@ -582,43 +636,86 @@ GLfloat *ilG_obj_to_vbo(ilG_obj_mesh *mesh, enum ilG_obj_vertextype vertex,
   interleaved_size = vertex_size + texcoord_size + normal_size;
   
   while (cur) {
-    num_points += per_point;
+    if (cur->num == 4 && per_point == 3) {
+      num_points += 6;
+    } else {
+      num_points += cur->num;
+    }
     cur = cur->next;
   }
   
-  buf = malloc(num_points * interleaved_size);
+  buf = calloc(num_points, interleaved_size);
   ptr = buf;
   
   if (layout) {
     cur = mesh->first_face;
     while (cur) {
-      memcpy(ptr, cur->vertices, vertex_size * per_point);
-      ptr += 4 * per_point;
+      ptr += copy_vertex(ptr, cur->vertices[0], vertex);
+      ptr += copy_vertex(ptr, cur->vertices[1], vertex);
+      ptr += copy_vertex(ptr, cur->vertices[2], vertex);
+      if (face) { // dealing with quads
+        ptr += copy_vertex(ptr, cur->vertices[3], vertex);
+      } else if (cur->num > 3) { // triangles, and the source isn't a triangle
+        ptr += copy_vertex(ptr, cur->vertices[2], vertex);
+        ptr += copy_vertex(ptr, cur->vertices[3], vertex);
+        ptr += copy_vertex(ptr, cur->vertices[0], vertex);
+      }
       cur = cur->next;
     }
     cur = mesh->first_face;
     while (cur) {
-      memcpy(ptr, cur->texcoords, texcoord_size * per_point);
-      ptr += 3 * per_point;
+      ptr += copy_texcoord(ptr, cur->texcoords[0], texcoord);
+      ptr += copy_texcoord(ptr, cur->texcoords[1], texcoord);
+      ptr += copy_texcoord(ptr, cur->texcoords[2], texcoord);
+      if (face) { 
+        ptr += copy_texcoord(ptr, cur->texcoords[3], texcoord);
+      } else if (cur->num > 3) { 
+        ptr += copy_texcoord(ptr, cur->texcoords[2], texcoord);
+        ptr += copy_texcoord(ptr, cur->texcoords[3], texcoord);
+        ptr += copy_texcoord(ptr, cur->texcoords[0], texcoord);
+      }
       cur = cur->next;
     }
     cur = mesh->first_face;
     while (cur) {
-      memcpy(ptr, cur->normals, normal_size * per_point);
-      ptr += 3 * per_point;
+      ptr += copy_normal(ptr, cur->normals[0], normal);
+      ptr += copy_normal(ptr, cur->normals[1], normal);
+      ptr += copy_normal(ptr, cur->normals[2], normal);
+      if (face) { 
+        ptr += copy_normal(ptr, cur->normals[3], normal);
+      } else if (cur->num > 3) { 
+        ptr += copy_normal(ptr, cur->normals[2], normal);
+        ptr += copy_normal(ptr, cur->normals[3], normal);
+        ptr += copy_normal(ptr, cur->normals[0], normal);
+      }
       cur = cur->next;
     }
   } else {
     cur = mesh->first_face;
     while (cur) {
-      int i;
-      for (i = 0; i < per_point; i++) {
-        memcpy(ptr, cur->vertices + i, vertex_size);
-        ptr += 4;
-        memcpy(ptr, cur->texcoords + i, texcoord_size);
-        ptr += 3;
-        memcpy(ptr, cur->normals + i, normal_size);
-        ptr += 3;
+      ptr += copy_vertex(ptr, cur->vertices[0], vertex);
+      ptr += copy_texcoord(ptr, cur->texcoords[0], texcoord);
+      ptr += copy_normal(ptr, cur->normals[0], normal);
+      ptr += copy_vertex(ptr, cur->vertices[1], vertex);
+      ptr += copy_texcoord(ptr, cur->texcoords[1], texcoord);
+      ptr += copy_normal(ptr, cur->normals[1], normal);
+      ptr += copy_vertex(ptr, cur->vertices[2], vertex);
+      ptr += copy_texcoord(ptr, cur->texcoords[2], texcoord);
+      ptr += copy_normal(ptr, cur->normals[2], normal);
+      if (face) {
+        ptr += copy_vertex(ptr, cur->vertices[3], vertex);
+        ptr += copy_texcoord(ptr, cur->texcoords[3], texcoord);
+        ptr += copy_normal(ptr, cur->normals[3], normal);
+      } else if (cur->num > 3) {
+        ptr += copy_vertex(ptr, cur->vertices[2], vertex);
+        ptr += copy_texcoord(ptr, cur->texcoords[2], texcoord);
+        ptr += copy_normal(ptr, cur->normals[2], normal);
+        ptr += copy_vertex(ptr, cur->vertices[3], vertex);
+        ptr += copy_texcoord(ptr, cur->texcoords[3], texcoord);
+        ptr += copy_normal(ptr, cur->normals[3], normal);
+        ptr += copy_vertex(ptr, cur->vertices[0], vertex);
+        ptr += copy_texcoord(ptr, cur->texcoords[0], texcoord);
+        ptr += copy_normal(ptr, cur->normals[0], normal);
       }
       cur = cur->next;
     }

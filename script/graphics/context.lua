@@ -2,6 +2,7 @@ local ffi = require "ffi";
 local drawable = require "drawable"
 local material = require "material"
 local texture = require "texture"
+local camera;
 local world; --require "world"
 
 ffi.cdef[[
@@ -33,6 +34,7 @@ local context = {};
 
 local function index(t,k)
     world = world or require "world"
+    camera = camera or require "camera"
     if k == "drawable" then 
         return drawable.wrap(t.ptr.drawable)
     elseif k == "material" then
