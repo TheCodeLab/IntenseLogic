@@ -25,14 +25,14 @@ function _G.print(...)
 end
 
 local w = world();
-local c = context();
+local c = context(800, 600);
 c.world = w;
 w.context = c;
 c:setActive();
 local m;
 local t = texture.fromfile "white-marble-texture.png";
 local vf, ff = io.open("shaders/test.vert", "r"), io.open("shaders/test.frag", "r");
-local mtl = material(vf:read "*a", ff:read "*a", "test material", "in_Position", "in_Texcoord", nil, "mvp", {"tex"}, {1});
+local mtl = material(vf:read "*a", ff:read "*a", "test material", "in_Position", "in_Texcoord", nil, "mvp", {"tex"}, {1}, "out_Normal", "out_Ambient", "out_Diffuse", "out_Specular", "phong");
 print(mtl);
 if false then
     m = mesh "minecraft.obj"
@@ -45,7 +45,7 @@ if false then
     minecraft:track(c);
 else
     m = mesh "teapot.obj"
-    local width = 1
+    local width = 3
     for i = 0, width*width*width-1 do
         local box = positionable();
         w:add(box);
@@ -73,6 +73,7 @@ function mousemove(q, ev)
 end
 
 function tick(q, ev)
+    --print "tick"
     local x = input.isKeySet("D") - input.isKeySet("A");
     local z = input.isKeySet("W") - input.isKeySet("S");
     local y = input.isKeySet("R") - input.isKeySet("F");

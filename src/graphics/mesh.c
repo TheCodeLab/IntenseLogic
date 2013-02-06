@@ -60,6 +60,9 @@ ilG_drawable3d* ilG_mesh_fromObj(ilG_obj_mesh * mesh)
     ILG_SETATTR(m->drawable.attrs, ILG_ARRATTR_POSITION);
     ILG_SETATTR(m->drawable.attrs, ILG_ARRATTR_TEXCOORD);
     ILG_SETATTR(m->drawable.attrs, ILG_ARRATTR_NORMAL);
+    ILG_SETATTR(m->drawable.attrs, ILG_ARRATTR_AMBIENT);
+    ILG_SETATTR(m->drawable.attrs, ILG_ARRATTR_DIFFUSE);
+    ILG_SETATTR(m->drawable.attrs, ILG_ARRATTR_SPECULAR);
     m->drawable.bind = &bind;
     m->drawable.draw = &draw;
     ilG_drawable3d_assignId(&m->drawable);

@@ -4,6 +4,7 @@
 #include <GL/glew.h>
 
 #include "common/string.h"
+#include "graphics/light.h"
 
 struct il_positionable;
 struct ilG_material;
@@ -20,6 +21,7 @@ typedef struct ilG_material {
     ilG_material_update_cb update;
     void *bind_ctx, *update_ctx, *unbind_ctx;
     unsigned long long attrs;
+    ilG_phong phong;
 } ilG_material;
 
 ilG_material* ilG_material_default;
@@ -27,7 +29,8 @@ ilG_material* ilG_material_default;
 ilG_material* ilG_material_new(il_string vertsource, il_string fragsource, 
     const char *name, const char *position, const char *texcoord,
     const char *normal, const char *mvp, const char **unitlocs, 
-    unsigned long *unittypes);
+    unsigned long *unittypes, const char *normalOut, const char *ambient, 
+    const char *diffuse, const char *specular, const char *phong);
 
 ilG_material* ilG_material_fromId(unsigned int id); // tracker.c
 void ilG_material_assignId(ilG_material*);

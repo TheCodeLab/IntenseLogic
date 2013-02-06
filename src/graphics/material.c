@@ -12,12 +12,14 @@
 #include "common/log.h"
 #include "graphics/drawable3d.h"
 #include "graphics/tracker.h"
+#include "graphics/fragdata.h"
 
 struct generic_material {
     ilG_material mtl; // oh how I wish the plan9 functionality was in C11
     const char **unitlocs;
     unsigned long *unittypes;
     const char *mvp;
+    const char* phong;
 };
 
 static void mtl_bind(ilG_context* ctx, void * user)
@@ -36,6 +38,7 @@ static void mtl_bind(ilG_context* ctx, void * user)
         ILG_TUNIT_ACTIVE(ctx, i, mtl->unittypes[i]);
         i++;
     }
+    ilG_bindPhong(&mtl->mtl.phong, mtl->mtl.program, mtl->phong); 
 }
 
 static void mtl_update(ilG_context* context, struct il_positionable* pos, void *ctx)
@@ -61,13 +64,15 @@ char *strdup(const char*);
 ilG_material* ilG_material_new(il_string vertsource, il_string fragsource, 
     const char *name, const char *position, const char *texcoord,
     const char *normal, const char *mvp, const char **unitlocs, 
-    unsigned long *unittypes)
+    unsigned long *unittypes, const char *normalOut, const char *ambient, 
+    const char *diffuse, const char *specular, const char *phong)
 {
     struct generic_material* mtl;
    
     mtl = calloc(1, sizeof(struct generic_material));
     if (name)   mtl->mtl.name = strdup(name);
     else        mtl->mtl.name = "(null)";
+    il_log(3, "Building shader \"%s\"", mtl->mtl.name);
     mtl->mtl.vertshader = ilG_makeShader(GL_VERTEX_SHADER, vertsource);
     mtl->mtl.fragshader = ilG_makeShader(GL_FRAGMENT_SHADER, fragsource);
     mtl->mtl.program = glCreateProgram();
@@ -85,6 +90,18 @@ ilG_material* ilG_material_new(il_string vertsource, il_string fragsource,
         glBindAttribLocation(mtl->mtl.program, ILG_ARRATTR_NORMAL, normal);
         ILG_SETATTR(mtl->mtl.attrs, ILG_ARRATTR_NORMAL);
     }
+    if (ambient) {
+        glBindFragDataLocation(mtl->mtl.program, ILG_FRAGDATA_ACCUMULATION, ambient);
+    }
+    if (diffuse) {
+        glBindFragDataLocation(mtl->mtl.program, ILG_FRAGDATA_DIFFUSE, diffuse);
+    }
+    if (specular) {
+        glBindFragDataLocation(mtl->mtl.program, ILG_FRAGDATA_SPECULAR, specular);
+    }
+    if (normalOut) {
+        glBindFragDataLocation(mtl->mtl.program, ILG_FRAGDATA_NORMAL, normalOut);
+    }
     ilG_linkProgram(mtl->mtl.program);
     unsigned int i = 0;
     while (unitlocs[i]) {
@@ -99,7 +116,8 @@ ilG_material* ilG_material_new(il_string vertsource, il_string fragsource,
     }
     mtl->unitlocs   = unitlocs_;
     mtl->unittypes  = unittypes_;
-    mtl->mvp        = strdup(mvp);
+    mtl->mvp        = mvp? strdup(mvp) : NULL;
+    mtl->phong      = phong? strdup(phong) : NULL;
     mtl->mtl.bind   = &mtl_bind;
     mtl->mtl.update = &mtl_update;
     mtl->mtl.unbind = &mtl_unbind;

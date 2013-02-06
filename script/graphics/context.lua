@@ -22,9 +22,10 @@ typedef struct ilG_context {
     unsigned *texunits;
     size_t num_texunits;
     size_t num_active;
+    // TODO: update these trailing member fields
 } ilG_context;
 
-ilG_context* ilG_context_new();
+ilG_context* ilG_context_new(int w, int h);
 
 void ilG_context_setActive(ilG_context*);
 
@@ -71,14 +72,14 @@ local function wrap(ptr)
 end
 context.wrap = wrap;
 
-function context.create()
-    return wrap(ffi.C.ilG_context_new());
+function context.create(w, h)
+    return wrap(ffi.C.ilG_context_new(w, h));
 end
 
 function context:setActive()
     ffi.C.ilG_context_setActive(self.ptr);
 end
 
-setmetatable(context, {__call = context.create})
+setmetatable(context, {__call = function(self, ...) return context.create(...) end})
 return context;
 
