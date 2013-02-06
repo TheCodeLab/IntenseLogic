@@ -9,7 +9,8 @@ struct ilG_material* ilG_material_default;
 struct ilG_material* ilG_material_new(il_string vertsource, il_string fragsource, 
     const char *name, const char *position, const char *texcoord,
     const char *normal, const char *mvp, const char **unitlocs, 
-    unsigned long *unittypes);
+    unsigned long *unittypes, const char *normalOut, const char *ambient, 
+    const char *diffuse, const char *specular, const char *phong);
 
 ]]
 
@@ -26,7 +27,7 @@ material.wrap = wrap;
 material.default = wrap(ffi.C.ilG_material_default);
 
 -- touch this function and I assume no responsibility for segfaults
-function material.create(vert, frag, name, position, texcoord, normal, mvp, unitlocs, unittypes)
+function material.create(vert, frag, name, position, texcoord, normal, mvp, unitlocs, unittypes, normalout, ambient, diffuse, specular, phong)
     assert(type(unitlocs) == "table" and type(unittypes) == "table")
     assert(type(mvp) == "string" and type(vert) == "string" and type(frag) == "string");
 
@@ -51,9 +52,14 @@ function material.create(vert, frag, name, position, texcoord, normal, mvp, unit
     mvp = ffi.cast("const char*", mvp);
     vert = ilstring(vert)
     frag = ilstring(frag)
+    normalout = ffi.cast("const char*", normalout);
+    ambient = ffi.cast("const char*", ambient)
+    diffuse = ffi.cast("const char*", diffuse)
+    specular = ffi.cast("const char*", specular)
+    phong = ffi.cast("const char*", phong)
 
     print(vert, frag, name, position, texcoord, normal, mvp, unitlocs_arr_ptr, unittypes_arr_ptr)
-    local res = ffi.C.ilG_material_new(vert, frag, name, position, texcoord, normal, mvp, unitlocs_arr_ptr, unittypes_arr_ptr)
+    local res = ffi.C.ilG_material_new(vert, frag, name, position, texcoord, normal, mvp, unitlocs_arr_ptr, unittypes_arr_ptr, normalout, ambient, diffuse, specular, phong)
     return material.wrap(res);
 end
 

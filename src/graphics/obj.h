@@ -69,6 +69,12 @@ enum ilG_obj_normaltype {
   OBJ_NORMALS = 1
 };
 
+enum ilG_obj_materialtype {
+    OBJ_AMBIENT = 1,
+    OBJ_DIFFUSE = 2,
+    OBJ_SPECULAR = 4
+};
+
 enum ilG_obj_facetype {
   OBJ_TRIANGLES,
   OBJ_QUADS
@@ -80,8 +86,9 @@ enum ilG_obj_vbolayout {
 };
 
 GLfloat *ilG_obj_to_vbo(ilG_obj_mesh *mesh, enum ilG_obj_vertextype vertex, 
-  enum ilG_obj_texcoordtype texcoord, enum ilG_obj_normaltype normal, 
-  enum ilG_obj_facetype face, enum ilG_obj_vbolayout layout, size_t *size);
+  enum ilG_obj_texcoordtype texcoord, enum ilG_obj_normaltype normal,
+  enum ilG_obj_materialtype material, enum ilG_obj_facetype face, 
+  enum ilG_obj_vbolayout layout, size_t *size);
 
 GLuint ilG_obj_to_gl(ilG_obj_mesh *mesh, GLint *count);
 

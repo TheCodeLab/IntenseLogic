@@ -7,6 +7,7 @@
 #include <GL/glew.h>
 
 #include "common/array.h"
+#include "graphics/light.h"
 
 typedef struct ilG_context {
     struct ilG_drawable3d* drawable;
@@ -19,9 +20,13 @@ typedef struct ilG_context {
     size_t num_texunits;
     size_t num_active;
     IL_ARRAY(struct il_positionable*,) positionables; // tracker.c
+    ilG_phong phong;
+    IL_ARRAY(ilG_light*,) lights;
+    GLuint fbtextures[5], framebuffer; // depth, accumulation, normal, diffuse, specular
+    int width, height;
 } ilG_context;
 
-ilG_context* ilG_context_new();
+ilG_context* ilG_context_new(int w, int h);
 
 void ilG_context_setActive(ilG_context*);
 

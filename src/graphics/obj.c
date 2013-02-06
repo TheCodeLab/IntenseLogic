@@ -564,17 +564,20 @@ static int copy_vertex(GLfloat *buf, ilG_obj_vertex vert, enum ilG_obj_vertextyp
     if (filter & OBJ_X) {
         buf[0] = vert[0];
         n++;
+        buf++;
     }
     if (filter & OBJ_Y) {
-        buf[1] = vert[1];
+        buf[0] = vert[1];
         n++;
+        buf++;
     }
     if (filter & OBJ_Z) {
-        buf[2] = vert[2];
+        buf[0] = vert[2];
         n++;
+        buf++;
     }
     if (filter & OBJ_W) {
-        buf[3] = vert[3];
+        buf[0] = vert[3];
         n++;
     }
     return n;
@@ -586,13 +589,15 @@ static int copy_texcoord(GLfloat *buf, ilG_obj_texcoord texcoord, enum ilG_obj_t
     if (filter & OBJ_U) {
         buf[0] = texcoord[0];
         n++;
+        buf++;
     }
     if (filter & OBJ_V) {
-        buf[1] = texcoord[1];
+        buf[0] = texcoord[1];
         n++;
+        buf++;
     }
     if (filter & OBJ_W) {
-        buf[2] = texcoord[2];
+        buf[0] = texcoord[2];
         n++;
     }
     return n;
@@ -609,15 +614,63 @@ static int copy_normal(GLfloat *buf, ilG_obj_normal normal, enum ilG_obj_normalt
     return 0;
 }
 
+static int copy_ambient(GLfloat* buf, ilG_obj_color color, enum ilG_obj_materialtype filter)
+{
+    if (filter & OBJ_AMBIENT) {
+        buf[0] = color[0];
+        buf[1] = color[1];
+        buf[2] = color[2];
+        //buf[3] = color[3];
+        return 3;
+    }
+    return 0;
+}
+
+static int copy_diffuse(GLfloat* buf, ilG_obj_color color, enum ilG_obj_materialtype filter)
+{
+    if (filter & OBJ_DIFFUSE) {
+        buf[0] = color[0];
+        buf[1] = color[1];
+        buf[2] = color[2];
+        //buf[3] = color[3];
+        return 3;
+    }
+    return 0;
+}
+
+static int copy_specular(GLfloat* buf, ilG_obj_color color, float co, enum ilG_obj_materialtype filter)
+{
+    if (filter & OBJ_SPECULAR) {
+        buf[0] = color[0];
+        buf[1] = color[1];
+        buf[2] = color[2];
+        buf[3] = co;
+        return 4;
+    }
+    return 0;
+}
+
+
+static int copy_material(GLfloat *buf, ilG_obj_mtl* mtl, enum ilG_obj_materialtype filter)
+{
+    int n = 0;
+    n += copy_ambient   (buf,       mtl->ambient, filter);
+    n += copy_diffuse   (buf + n,   mtl->diffuse, filter);
+    n += copy_specular  (buf + n,   mtl->specular, mtl->specular_co, filter);
+    return n;
+}
+
 GLfloat *ilG_obj_to_vbo(ilG_obj_mesh *mesh, enum ilG_obj_vertextype vertex, 
   enum ilG_obj_texcoordtype texcoord, enum ilG_obj_normaltype normal, 
-  enum ilG_obj_facetype face, enum ilG_obj_vbolayout layout, size_t *size)
+  enum ilG_obj_materialtype material, enum ilG_obj_facetype face, 
+  enum ilG_obj_vbolayout layout, size_t *size)
 {
   int       num_points = 0;
   ilG_obj_face  *cur = mesh->first_face;
   size_t    vertex_size, 
             texcoord_size, 
             normal_size, 
+            material_size,
             interleaved_size;
   GLfloat   *buf, 
             *ptr;
@@ -633,7 +686,12 @@ GLfloat *ilG_obj_to_vbo(ilG_obj_mesh *mesh, enum ilG_obj_vertextype vertex,
     ((texcoord&OBJ_V) == OBJ_V) +
     ((texcoord&OBJ_W) == OBJ_W));
   normal_size = sizeof(ilG_obj_normal) * normal;
-  interleaved_size = vertex_size + texcoord_size + normal_size;
+  material_size = sizeof(GLfloat) * 3 * (
+    ((material&OBJ_AMBIENT) == OBJ_AMBIENT) +
+    ((material&OBJ_DIFFUSE) == OBJ_DIFFUSE) +
+    ((material&OBJ_SPECULAR) == OBJ_SPECULAR)) +
+    sizeof(GLfloat) * ((material&OBJ_SPECULAR) == OBJ_SPECULAR);
+  interleaved_size = vertex_size + texcoord_size + normal_size + material_size;
   
   while (cur) {
     if (cur->num == 4 && per_point == 3) {
@@ -647,7 +705,7 @@ GLfloat *ilG_obj_to_vbo(ilG_obj_mesh *mesh, enum ilG_obj_vertextype vertex,
   buf = calloc(num_points, interleaved_size);
   ptr = buf;
   
-  if (layout) {
+  if (layout) { // tightly packed
     cur = mesh->first_face;
     while (cur) {
       ptr += copy_vertex(ptr, cur->vertices[0], vertex);
@@ -690,33 +748,80 @@ GLfloat *ilG_obj_to_vbo(ilG_obj_mesh *mesh, enum ilG_obj_vertextype vertex,
       }
       cur = cur->next;
     }
-  } else {
+    cur = mesh->first_face;
+    while (cur) {
+      ptr += copy_ambient(ptr, mesh->mtl.ambient, material);
+      ptr += copy_ambient(ptr, mesh->mtl.ambient, material);
+      ptr += copy_ambient(ptr, mesh->mtl.ambient, material);
+      if (face) {
+        ptr += copy_ambient(ptr, mesh->mtl.ambient, material);
+      } else if (cur->num > 3) {
+        ptr += copy_ambient(ptr, mesh->mtl.ambient, material);
+        ptr += copy_ambient(ptr, mesh->mtl.ambient, material);
+        ptr += copy_ambient(ptr, mesh->mtl.ambient, material);
+      }
+      cur = cur->next;
+    }
+    while (cur) {
+      ptr += copy_diffuse(ptr, mesh->mtl.diffuse, material);
+      ptr += copy_diffuse(ptr, mesh->mtl.diffuse, material);
+      ptr += copy_diffuse(ptr, mesh->mtl.diffuse, material);
+      if (face) {
+        ptr += copy_diffuse(ptr, mesh->mtl.diffuse, material);
+      } else if (cur->num > 3) {
+        ptr += copy_diffuse(ptr, mesh->mtl.diffuse, material);
+        ptr += copy_diffuse(ptr, mesh->mtl.diffuse, material);
+        ptr += copy_diffuse(ptr, mesh->mtl.diffuse, material);
+      }
+      cur = cur->next;
+    }
+    while (cur) {
+      ptr += copy_specular(ptr, mesh->mtl.specular, mesh->mtl.specular_co, material);
+      ptr += copy_specular(ptr, mesh->mtl.specular, mesh->mtl.specular_co, material);
+      ptr += copy_specular(ptr, mesh->mtl.specular, mesh->mtl.specular_co, material);
+      if (face) {
+        ptr += copy_specular(ptr, mesh->mtl.specular, mesh->mtl.specular_co, material);
+      } else if (cur->num > 3) {
+        ptr += copy_specular(ptr, mesh->mtl.specular, mesh->mtl.specular_co, material);
+        ptr += copy_specular(ptr, mesh->mtl.specular, mesh->mtl.specular_co, material);
+        ptr += copy_specular(ptr, mesh->mtl.specular, mesh->mtl.specular_co, material);
+      }
+      cur = cur->next;
+    }
+  } else { // interleaved
     cur = mesh->first_face;
     while (cur) {
       ptr += copy_vertex(ptr, cur->vertices[0], vertex);
       ptr += copy_texcoord(ptr, cur->texcoords[0], texcoord);
       ptr += copy_normal(ptr, cur->normals[0], normal);
+      ptr += copy_material(ptr, &mesh->mtl, material);
       ptr += copy_vertex(ptr, cur->vertices[1], vertex);
       ptr += copy_texcoord(ptr, cur->texcoords[1], texcoord);
       ptr += copy_normal(ptr, cur->normals[1], normal);
+      ptr += copy_material(ptr, &mesh->mtl, material);
       ptr += copy_vertex(ptr, cur->vertices[2], vertex);
       ptr += copy_texcoord(ptr, cur->texcoords[2], texcoord);
       ptr += copy_normal(ptr, cur->normals[2], normal);
+      ptr += copy_material(ptr, &mesh->mtl, material);
       if (face) {
         ptr += copy_vertex(ptr, cur->vertices[3], vertex);
         ptr += copy_texcoord(ptr, cur->texcoords[3], texcoord);
         ptr += copy_normal(ptr, cur->normals[3], normal);
+        ptr += copy_material(ptr, &mesh->mtl, material);
       } else if (cur->num > 3) {
         ptr += copy_vertex(ptr, cur->vertices[2], vertex);
         ptr += copy_texcoord(ptr, cur->texcoords[2], texcoord);
         ptr += copy_normal(ptr, cur->normals[2], normal);
+        ptr += copy_material(ptr, &mesh->mtl, material);
         ptr += copy_vertex(ptr, cur->vertices[3], vertex);
         ptr += copy_texcoord(ptr, cur->texcoords[3], texcoord);
         ptr += copy_normal(ptr, cur->normals[3], normal);
+        ptr += copy_material(ptr, &mesh->mtl, material);
         ptr += copy_vertex(ptr, cur->vertices[0], vertex);
         ptr += copy_texcoord(ptr, cur->texcoords[0], texcoord);
         ptr += copy_normal(ptr, cur->normals[0], normal);
-      }
+        ptr += copy_material(ptr, &mesh->mtl, material);
+     }
       cur = cur->next;
     }
   }
@@ -730,25 +835,35 @@ GLuint ilG_obj_to_gl(ilG_obj_mesh *mesh, GLint *count)
   GLfloat *data;
   size_t size, stride;
   
-  stride = sizeof(GLfloat) * 10;
+  stride = sizeof(GLfloat) * 20;
   glGenBuffers(1, &buf);
   glBindBuffer(GL_ARRAY_BUFFER, buf);
   data = ilG_obj_to_vbo(mesh, OBJ_XYZW, OBJ_UVW, OBJ_NORMALS, 
-    OBJ_TRIANGLES, OBJ_INTERLEAVED, &size);
+    OBJ_AMBIENT|OBJ_DIFFUSE|OBJ_SPECULAR, OBJ_TRIANGLES, OBJ_INTERLEAVED, 
+    &size);
   *count = size/stride;
   glBufferData(GL_ARRAY_BUFFER, size, data, GL_STATIC_DRAW);
   free(data);
   
-  glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, stride, NULL);
+  glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, stride, NULL); // position
   glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, stride, 
-    (void*)(sizeof(GLfloat)*4));
+    (void*)(sizeof(GLfloat)*4));    // texcoord
   glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, stride,
-    (void*)(sizeof(GLfloat)*7));
+    (void*)(sizeof(GLfloat)*7)); //normal
+  glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, stride,
+    (void*)(sizeof(GLfloat)*10)); // ambient
+  glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, stride,
+    (void*)(sizeof(GLfloat)*13)); // diffuse
+  glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, stride,
+    (void*)(sizeof(GLfloat)*16)); // specular
   
   glEnableVertexAttribArray(0);
   glEnableVertexAttribArray(1);
   glEnableVertexAttribArray(2);
-  
+  glEnableVertexAttribArray(3);
+  glEnableVertexAttribArray(4);
+  glEnableVertexAttribArray(5);
+
   return buf;
 }
 

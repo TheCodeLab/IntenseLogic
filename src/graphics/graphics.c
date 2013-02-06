@@ -23,6 +23,8 @@
 #include "graphics/tracker.h"
 #include "graphics/glutil.h"
 #include "common/string.h"
+#include "graphics/arrayattrib.h"
+#include "graphics/textureunit.h"
 
 static int width = 800;
 static int height = 600;
@@ -35,6 +37,7 @@ void ilG_context_setActive(ilG_context* self)
     context = self;
 }
 
+static void global_draw();
 static void draw();
 static void quit();
 static GLvoid error_cb(GLenum source, GLenum type, GLuint id, GLenum severity,
@@ -54,7 +57,7 @@ static void GLFWCALL key_cb(int key, int action)
 
 static void GLFWCALL mouse_cb(int button, int action)
 {
-    //il_log(4, "Mouse %i", button);
+    il_log(4, "Mouse %i", button);
     if (action == GLFW_PRESS)
         ilE_pushnew(il_queue, IL_INPUT_MOUSEDOWN, sizeof(int), &button);
     else
@@ -147,34 +150,10 @@ static void context_setup()
     glfwSwapInterval(0); // 1:1 ratio of frames to vsyncs
 }
 
-/*
-static void scene_setup()
-{
-    // create the world
-    world = il_world_new();
-    context = ilG_context_new();
-    context->world = world;
-    world->context = context;
-    context->camera = ilG_camera_new(il_positionable_new(world));
-    context->camera->movespeed = (il_Vector3) {1,1,1};
-    context->camera->projection_matrix = il_Matrix_perspective(
-        75, (float)width/(float)height, 0.25, 100);
-    ilG_camera_setEgoCamKeyHandlers(context->camera, keymap);
-
-    il_positionable * positionable = il_positionable_new(world);
-    positionable->position = (il_Vector3) {1,0,0};
-    positionable->drawable = ilG_box;
-    positionable->material = ilG_material_default;
-    positionable->texture = ilG_texture_fromfile("test.png");
-    ilG_texture_assignId(positionable->texture);
-    ilG_trackPositionable(context, positionable);
-}
-*/
-
 static void event_setup()
 {
     //ilG_queue = ilE_queue_new();
-    ilE_register(il_queue, IL_GRAPHICS_TICK, ILE_DONTCARE, (ilE_callback)&draw, NULL);
+    ilE_register(il_queue, IL_GRAPHICS_TICK, ILE_DONTCARE, (ilE_callback)&global_draw, NULL);
     ilE_register(il_queue, IL_BASE_SHUTDOWN, ILE_DONTCARE, (ilE_callback)&quit, NULL);
     int hz = glfwGetWindowParam(GLFW_REFRESH_RATE);
     struct timeval *tv = calloc(1, sizeof(struct timeval));
@@ -195,7 +174,7 @@ void ilG_init()
     IL_GRAPHICS_TESTERROR("Unknown");
     
     // GL setup
-    glClearColor(0,0,0,1);
+    glClearColor(1.0, 0.41, 0.72, 1.0); // hot pink because why not
     glClearDepth(1.0);
     glDepthFunc(GL_LESS);
     glEnable(GL_DEPTH_TEST);
@@ -207,10 +186,7 @@ void ilG_init()
     ilG_shape_init();
     // generate default textures
     ilG_texture_init();
-    
-    // Setup the scene stuff (camera, world, etc.)
-    //scene_setup();
-    
+        
     // register events
     event_setup();
 }
@@ -230,10 +206,20 @@ static void draw()
     struct timeval tv;
     il_positionable* pos = NULL;
     ilG_trackiterator * iter = ilG_trackiterator_new(context);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, context->framebuffer);
 
-    glClearColor(0,0,0,1);
+    glClearColor(0.39, 0.58, 0.93, 1.0);
+    glEnable(GL_DEPTH_TEST);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     gettimeofday(&tv, NULL);
+
+    static GLenum drawbufs[] = {
+        GL_COLOR_ATTACHMENT0,   // accumulation
+        GL_COLOR_ATTACHMENT1,   // normal
+        GL_COLOR_ATTACHMENT2,   // diffuse
+        GL_COLOR_ATTACHMENT3    // specular
+    };
+    glDrawBuffers(4, &drawbufs[0]);
 
     while (ilG_trackIterate(iter)) {
         if (context->drawable != ilG_trackGetDrawable(iter)) {
@@ -280,6 +266,70 @@ static void draw()
             context->drawable->draw(context, pos, context->drawable->draw_ctx);
     }
 
+    // TODO: light drawing code here
+    glBindFramebuffer(GL_FRAMEBUFFER, context->framebuffer);
+}
+
+static void fullscreenTexture()
+{
+    ilG_testError("Unknown");
+    static int data[] = {
+        1, 1,
+        1, 0,
+        0, 0,
+        1, 1,
+        0, 1,
+        0, 0,
+    };
+    static GLuint vao, vbo = 0;
+    if (!vbo) {
+        glGenVertexArrays(1, &vao);
+        glBindVertexArray(vao);
+        glGenBuffers(1, &vbo);
+        glBindBuffer(GL_ARRAY_BUFFER, vbo);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(data), &data, GL_STATIC_DRAW);
+        glVertexAttribPointer(ILG_ARRATTR_POSITION, 2, GL_INT, GL_FALSE, 0, NULL);
+        glVertexAttribPointer(ILG_ARRATTR_TEXCOORD, 2, GL_INT, GL_FALSE, 0, NULL);
+        glEnableVertexAttribArray(ILG_ARRATTR_POSITION);
+        glEnableVertexAttribArray(ILG_ARRATTR_TEXCOORD);
+    }
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBindVertexArray(vao);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+    ilG_testError("Error drawing fullscreen quad");
+}
+
+static void global_draw()
+{
+    //il_log(3, "Drawing window");
+    ilG_testError("Unknown");
+    static ilG_material* material = NULL;
+    if (!material) {
+        const char* unitlocs[] = {
+            "tex",
+            NULL
+        };
+        unsigned long unittypes[] = {
+            ILG_TUNIT_NONE
+        };
+        material = ilG_material_new(IL_ASSET_READFILE("post.vert"), 
+            IL_ASSET_READFILE("post.frag"), "Post Processing Shader", 
+            "in_Position", "in_Texcoord", NULL, NULL, &unitlocs[0], &unittypes[0],
+            NULL, NULL, NULL, NULL, NULL);
+    }
+    draw();
+    // clean up the state
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glDisable(GL_DEPTH_TEST);
+    context->material = material;
+    material->bind(context, material->bind_ctx);
+    // no update() as we don't deal with positionables here
+    // setup to do postprocessing
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_RECTANGLE, context->fbtextures[1]); // bind the accumulation buffer
+    fullscreenTexture();
+    material->unbind(context, material->unbind_ctx);
+    ilG_testError("global_draw()");
     glfwSwapBuffers();
 }
 

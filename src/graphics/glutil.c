@@ -71,6 +71,7 @@ void ilG_testError_(const char *file, int line, const char *func,
 
 GLuint ilG_makeShader(GLenum type, il_string source)
 {
+    il_log(3, "Building %s shader", type == GL_VERTEX_SHADER? "vertex" : "fragment");
     IL_GRAPHICS_TESTERROR("Unknown error before function");
 
     GLuint shader = glCreateShader(type);
@@ -101,6 +102,7 @@ GLuint ilG_makeShader(GLenum type, il_string source)
 
 void ilG_linkProgram(GLuint program)
 {
+    il_log(3, "Linking program");
     glLinkProgram(program);
     IL_GRAPHICS_TESTERROR("Unable to link program");
 
