@@ -663,7 +663,7 @@ static int copy_material(GLfloat *buf, ilG_obj_mtl* mtl, enum ilG_obj_materialty
 GLfloat *ilG_obj_to_vbo(ilG_obj_mesh *mesh, enum ilG_obj_vertextype vertex, 
   enum ilG_obj_texcoordtype texcoord, enum ilG_obj_normaltype normal, 
   enum ilG_obj_materialtype material, enum ilG_obj_facetype face, 
-  enum ilG_obj_vbolayout layout, size_t *size)
+  enum ilG_obj_vbolayout layout, size_t *size, size_t *stride)
 {
   int       num_points = 0;
   ilG_obj_face  *cur = mesh->first_face;
@@ -692,6 +692,9 @@ GLfloat *ilG_obj_to_vbo(ilG_obj_mesh *mesh, enum ilG_obj_vertextype vertex,
     ((material&OBJ_SPECULAR) == OBJ_SPECULAR)) +
     sizeof(GLfloat) * ((material&OBJ_SPECULAR) == OBJ_SPECULAR);
   interleaved_size = vertex_size + texcoord_size + normal_size + material_size;
+  if (stride) {
+      *stride = interleaved_size;
+  }
   
   while (cur) {
     if (cur->num == 4 && per_point == 3) {
@@ -835,12 +838,12 @@ GLuint ilG_obj_to_gl(ilG_obj_mesh *mesh, GLint *count)
   GLfloat *data;
   size_t size, stride;
   
-  stride = sizeof(GLfloat) * 20;
+  //stride = sizeof(GLfloat) * 20;
   glGenBuffers(1, &buf);
   glBindBuffer(GL_ARRAY_BUFFER, buf);
   data = ilG_obj_to_vbo(mesh, OBJ_XYZW, OBJ_UVW, OBJ_NORMALS, 
     OBJ_AMBIENT|OBJ_DIFFUSE|OBJ_SPECULAR, OBJ_TRIANGLES, OBJ_INTERLEAVED, 
-    &size);
+    &size, &stride);
   *count = size/stride;
   glBufferData(GL_ARRAY_BUFFER, size, data, GL_STATIC_DRAW);
   free(data);

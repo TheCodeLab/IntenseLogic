@@ -265,6 +265,9 @@ static void draw()
         if (context->drawable && context->drawable->draw)
             context->drawable->draw(context, pos, context->drawable->draw_ctx);
     }
+    context->drawable = NULL;
+    context->material = NULL;
+    context->texture = NULL;
 
     // TODO: light drawing code here
     glBindFramebuffer(GL_FRAMEBUFFER, context->framebuffer);

@@ -88,7 +88,7 @@ enum ilG_obj_vbolayout {
 GLfloat *ilG_obj_to_vbo(ilG_obj_mesh *mesh, enum ilG_obj_vertextype vertex, 
   enum ilG_obj_texcoordtype texcoord, enum ilG_obj_normaltype normal,
   enum ilG_obj_materialtype material, enum ilG_obj_facetype face, 
-  enum ilG_obj_vbolayout layout, size_t *size);
+  enum ilG_obj_vbolayout layout, size_t *size, size_t *stride);
 
 GLuint ilG_obj_to_gl(ilG_obj_mesh *mesh, GLint *count);
 
