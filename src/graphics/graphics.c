@@ -5,6 +5,7 @@
 #include <sys/time.h>
 #include <GL/glew.h>
 #include <GL/glfw.h>
+#include <math.h>
 
 #include "graphics/camera.h"
 #include "common/event.h"
@@ -191,35 +192,12 @@ void ilG_init()
     event_setup();
 }
 
-static void draw()
+static void draw_geometry()
 {
-    if (!context) {
-        il_log(0, "Nothing to do.");
-        ilE_pushnew(il_queue, IL_BASE_SHUTDOWN, 0, NULL);
-        return;
-    }
-    if (!glfwGetWindowParam(GLFW_OPENED)) {
-        ilE_pushnew(il_queue, IL_BASE_SHUTDOWN, 0, NULL);
-        return;
-    }
-    il_log(5, "Rendering frame");
     struct timeval tv;
     il_positionable* pos = NULL;
     ilG_trackiterator * iter = ilG_trackiterator_new(context);
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, context->framebuffer);
-
-    glClearColor(0.39, 0.58, 0.93, 1.0);
-    glEnable(GL_DEPTH_TEST);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     gettimeofday(&tv, NULL);
-
-    static GLenum drawbufs[] = {
-        GL_COLOR_ATTACHMENT0,   // accumulation
-        GL_COLOR_ATTACHMENT1,   // normal
-        GL_COLOR_ATTACHMENT2,   // diffuse
-        GL_COLOR_ATTACHMENT3    // specular
-    };
-    glDrawBuffers(4, &drawbufs[0]);
 
     while (ilG_trackIterate(iter)) {
         if (context->drawable != ilG_trackGetDrawable(iter)) {
@@ -268,13 +246,192 @@ static void draw()
     context->drawable = NULL;
     context->material = NULL;
     context->texture = NULL;
+}
 
-    // TODO: light drawing code here
+static void draw_lights()
+{
+    // icosahedron code lifted from http://blog.andreaskahler.com/2009/06/creating-icosphere-mesh-in-code.html
+    const GLfloat t = (1.0 + sqrt(5.0)) / 2.0;
+    GLfloat points[] = {
+        -1,  t,  0,
+         1,  t,  0,
+        -1, -t,  0,
+         1, -t,  0,
+
+         0, -1,  t,
+         0,  1,  t,
+         0, -1, -t,
+         0,  1, -t,
+
+         t,  0, -1,
+         t,  0,  1,
+        -t,  0, -1,
+        -t,  0,  1,
+    };
+    static GLuint indices[] = {
+        0, 11, 5,
+        0, 5, 1,
+        0, 1, 7,
+        0, 7, 10,
+        0, 10, 11,
+
+        1, 5, 9,
+        5, 11, 4,
+        11, 10, 2,
+        10, 7, 6,
+        7, 1, 8,
+
+        3, 9, 4,
+        3, 4, 2,
+        3, 2, 6,
+        3, 6, 8,
+        3, 8, 9,
+
+        4, 9, 5,
+        2, 4, 11,
+        6, 2, 10,
+        8, 6, 7,
+        9, 8, 1,
+    };
+
+    ilG_testError("Unknown");
+    if (!context->lightdata.material) {
+        const char* unitlocs[] = {
+            "depth",
+            //"accumulation",
+            "normal",
+            "diffuse",
+            "specular",
+            NULL
+        };
+        unsigned long unittypes[] = {
+            ILG_TUNIT_NONE,
+            //ILG_TUNIT_NONE,
+            ILG_TUNIT_NONE,
+            ILG_TUNIT_NONE,
+            ILG_TUNIT_NONE
+        };
+        context->lightdata.material = ilG_material_new(
+            IL_ASSET_READFILE("light.vert"), IL_ASSET_READFILE("light.frag"), 
+            "Deferred Shader", "in_Position", NULL, NULL, NULL, &unitlocs[0], 
+            &unittypes[0], NULL, NULL, NULL, NULL, NULL);
+        glGenVertexArrays(1, &context->lightdata.vao);
+        glBindVertexArray(context->lightdata.vao);
+        glGenBuffers(1, &context->lightdata.vbo);
+        glGenBuffers(1, &context->lightdata.ibo);
+        glBindBuffer(GL_ARRAY_BUFFER, context->lightdata.vbo);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(points), points, GL_STATIC_DRAW);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+        glEnableVertexAttribArray(0);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, context->lightdata.ibo);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+        context->lightdata.invalidated = 1;
+    }
+    context->material = context->lightdata.material;
+    if (context->lightdata.invalidated) {
+        if (!context->lightdata.created) {
+            context->lightdata.lights_index = glGetUniformBlockIndex(context->material->program, "LightBlock");
+            context->lightdata.mvp_index = glGetUniformBlockIndex(context->material->program, "MVPBlock");
+            glGetActiveUniformBlockiv(context->material->program, context->lightdata.lights_index, GL_UNIFORM_BLOCK_DATA_SIZE, &context->lightdata.lights_size);
+            glGetActiveUniformBlockiv(context->material->program, context->lightdata.mvp_index, GL_UNIFORM_BLOCK_DATA_SIZE, &context->lightdata.mvp_size);
+            //GLubyte *lights_buf = malloc(lights_size), *mvp_buf = malloc(mvp_size);
+            const GLchar *lights_names[] = {
+                "color",
+                "radius"
+            }, *mvp_names[] = {
+                "mvp"
+            };
+            GLuint lights_indices[2], mvp_indices[1];
+            glGetUniformIndices(context->material->program, 2, lights_names, lights_indices);
+            glGetUniformIndices(context->material->program, 1, mvp_names, mvp_indices);
+            glGetActiveUniformsiv(context->material->program, 2, lights_indices, GL_UNIFORM_OFFSET, context->lightdata.lights_offset);
+            glGetActiveUniformsiv(context->material->program, 1, mvp_indices, GL_UNIFORM_OFFSET, context->lightdata.mvp_offset);
+            context->lightdata.created = 1;
+        }
+        if (context->lightdata.lights_ubo) {
+            glDeleteBuffers(1, &context->lightdata.lights_ubo);
+            glDeleteBuffers(1, &context->lightdata.mvp_ubo);
+        }
+        glGenBuffers(1, &context->lightdata.lights_ubo);
+        glGenBuffers(1, &context->lightdata.mvp_ubo);
+        glBindBuffer(GL_UNIFORM_BUFFER, context->lightdata.lights_ubo);
+        GLubyte *lights_buf = calloc(1, context->lightdata.lights_size);        
+        unsigned int i;
+        for (i = 0; i < context->lights.length; i++) {
+            ((il_Vector3*)lights_buf + context->lightdata.lights_offset[0])[i] = context->lights.data[i]->color;
+            ((float*)lights_buf + context->lightdata.lights_offset[1])[i] = context->lights.data[i]->radius;
+        }
+        glBufferData(GL_UNIFORM_BUFFER, context->lightdata.lights_size, lights_buf, GL_DYNAMIC_DRAW);
+        glBindBuffer(GL_UNIFORM_BUFFER, context->lightdata.mvp_ubo);
+        free(lights_buf);
+        GLubyte *mvp_buf = calloc(1, context->lightdata.mvp_size);
+        for (i = 0; i < context->lights.length; i++) {
+            ((il_Matrix*)mvp_buf + context->lightdata.mvp_offset[0])[i] = 
+                il_Matrix_transpose(ilG_computeMVP(context->camera, context->lights.data[i]->positionable));
+        }
+        glBufferData(GL_UNIFORM_BUFFER, context->lightdata.mvp_size, mvp_buf, GL_DYNAMIC_DRAW);
+        free(mvp_buf);
+        context->lightdata.invalidated = 0;
+    }
+    glBindVertexArray(context->lightdata.vao);
+    glBindBuffer(GL_ARRAY_BUFFER, context->lightdata.vbo);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, context->lightdata.ibo);
+    glBindBufferBase(GL_UNIFORM_BUFFER, context->lightdata.lights_index, context->lightdata.lights_ubo);
+    glBindBufferBase(GL_UNIFORM_BUFFER, context->lightdata.mvp_index, context->lightdata.mvp_ubo);
+    context->material->bind(context, context->material->bind_ctx);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_RECTANGLE, context->fbtextures[0]);
+    glActiveTexture(GL_TEXTURE0 + 2);
+    glBindTexture(GL_TEXTURE_RECTANGLE, context->fbtextures[2]);
+    glActiveTexture(GL_TEXTURE0 + 3);
+    glBindTexture(GL_TEXTURE_RECTANGLE, context->fbtextures[3]);
+    glActiveTexture(GL_TEXTURE0 + 4);
+    glBindTexture(GL_TEXTURE_RECTANGLE, context->fbtextures[4]);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_ONE, GL_ONE);
+    
+    glDrawElementsInstanced(GL_TRIANGLES, sizeof(indices)/sizeof(GLuint), GL_UNSIGNED_INT, NULL, context->lights.length);
+    glDisable(GL_BLEND);
+    context->material->unbind(context, context->material->unbind_ctx);
+    ilG_testError("Error drawing lights");
+}
+
+static void draw()
+{
+    if (!context) {
+        il_log(0, "Nothing to do.");
+        ilE_pushnew(il_queue, IL_BASE_SHUTDOWN, 0, NULL);
+        return;
+    }
+    if (!glfwGetWindowParam(GLFW_OPENED)) {
+        ilE_pushnew(il_queue, IL_BASE_SHUTDOWN, 0, NULL);
+        return;
+    }
+    il_log(5, "Rendering frame");
+
+    static GLenum drawbufs[] = {
+        GL_COLOR_ATTACHMENT0,   // accumulation
+        GL_COLOR_ATTACHMENT1,   // normal
+        GL_COLOR_ATTACHMENT2,   // diffuse
+        GL_COLOR_ATTACHMENT3    // specular
+    };
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, context->framebuffer);
+    glDrawBuffers(4, &drawbufs[0]);
+    glClearColor(0.39, 0.58, 0.93, 1.0);
+    glEnable(GL_DEPTH_TEST);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    draw_geometry();
+
     glBindFramebuffer(GL_FRAMEBUFFER, context->framebuffer);
+    glFrontFace(GL_CCW);
+    glCullFace(GL_FRONT);
+    draw_lights();
+    glCullFace(GL_BACK);
 }
 
 static void fullscreenTexture()
 {
+
     ilG_testError("Unknown");
     static int data[] = {
         1, 1,
@@ -320,10 +477,12 @@ static void global_draw()
             "in_Position", "in_Texcoord", NULL, NULL, &unitlocs[0], &unittypes[0],
             NULL, NULL, NULL, NULL, NULL);
     }
+    glEnable(GL_CULL_FACE);
     draw();
     // clean up the state
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glDisable(GL_DEPTH_TEST);
+    glDisable(GL_CULL_FACE);
     context->material = material;
     material->bind(context, material->bind_ctx);
     // no update() as we don't deal with positionables here

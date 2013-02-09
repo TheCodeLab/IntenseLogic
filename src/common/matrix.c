@@ -60,6 +60,11 @@ il_Matrix il_Matrix_translate(il_Vector3 t)
     return n;
 }
 
+il_Vector3 il_Matrix_getTranslation(il_Matrix m)
+{
+    return (il_Vector3){m.data[3], m.data[7], m.data[11]};
+}
+
 il_Matrix il_Matrix_rotate_v(float a, il_Vector3 n)
 {
     il_Matrix b = il_Matrix_identity;
@@ -121,6 +126,11 @@ il_Matrix il_Matrix_scale(il_Vector3 v)
     n.data[15] = 1.0;
 
     return n;
+}
+
+il_Vector3 il_Matrix_getScale(il_Matrix m)
+{
+    return (il_Vector3){m.data[0], m.data[5], m.data[10]};
 }
 
 // blatantly ripped off from
@@ -270,3 +280,14 @@ int il_Matrix_invert(il_Matrix m, il_Matrix* invOut)
 
     return 0;
 }
+
+il_Matrix il_Matrix_transpose(il_Matrix m)
+{
+    return (il_Matrix) {{
+        m.data[0], m.data[4], m.data[8],  m.data[12],
+        m.data[1], m.data[5], m.data[9],  m.data[13],
+        m.data[2], m.data[6], m.data[10], m.data[14],
+        m.data[3], m.data[7], m.data[11], m.data[15],
+    }};
+}
+
