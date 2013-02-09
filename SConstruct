@@ -2,15 +2,20 @@ import os
 import support.docopt_c
 
 # defs
-output     = "il"
-src_dir    = "src"
-build_dir  = "build"
-cli_file   = "src/il.docopt"
-inputs     = "*.c common/*.c graphics/*.c network/*.c script/*.c asset/*.c"
+output    = "il"
+src_dir   = "src"
+build_dir = "build"
+cli_file  = "src/il.docopt"
+inputs    = "*.c common/*.c graphics/*.c network/*.c script/*.c asset/*.c"
+platform  = ARGUMENTS.get("platform", "linux")
 
 # flags
 cflags    = "-Wall -Wextra -pedantic -std=c99 -g -DDEBUG -I./" + src_dir
 linkflags = "-g -L. -rdynamic"
+
+# luajit requires this
+if platform == "osx":
+    linkflags += " -pagezero_size 10000 -image_base 100000000"
 
 # libs
 lib_dirs = ["/usr/lib", "/usr/local/lib"]
@@ -30,8 +35,7 @@ pkg_libs = {
 
 # link libs
 VariantDir(build_dir, src_dir, duplicate = 0)
-platform = ARGUMENTS.get("platform", "linux")
-env      = Environment(CCFLAGS = cflags, LINKFLAGS = linkflags)
+env = Environment(CCFLAGS = cflags, LINKFLAGS = linkflags)
 
 for lib in pkg_libs[platform] :
     env.ParseConfig("pkg-config " + lib + " --cflags --libs")
