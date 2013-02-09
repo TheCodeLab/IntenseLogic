@@ -20,17 +20,16 @@ enum ilG_light_type {
 
 typedef struct ilG_light {
     struct il_positionable* positionable;
-    ilG_phong phong;
+    il_Vector3 color;
     enum ilG_light_type type;
     GLuint texture; // shadow map
-    float radius; // only for directional lights
-    float intensity;
+    float radius;
 } ilG_light;
 
 ilG_light* ilG_light_new();
 void ilG_bindPhong(ilG_phong* phong, GLuint program, const char *prefix);
-void ilG_bindLight(ilG_light* light, GLuint program, const char *prefix);
-void ilG_bindLights(struct ilG_context* context, GLuint program, const char *prefix);
+/*void ilG_bindLight(ilG_light* light, GLuint program, const char *prefix);
+void ilG_bindLights(struct ilG_context* context, GLuint program, const char *prefix);*/
 
 #endif
 

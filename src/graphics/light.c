@@ -28,13 +28,12 @@ void ilG_bindPhong(ilG_phong* phong, GLuint program, const char *prefix)
     BIND(glUniform3fv,  GLfloat*,   diffuse,        "diffuse"       );
     BIND(glUniform3fv,  GLfloat*,   specular,       "specular"      );
     BIND(glUniform1fv,  GLfloat*,   specular_co,    "specular_co"   );
-    BIND(glUniform1fv,  GLfloat*,   transparency,   "transparency"  );
 #undef BIND
     free(str);
 
 }
 
-void ilG_bindLight(ilG_light* light, GLuint program, const char *prefix)
+/*void ilG_bindLight(ilG_light* light, GLuint program, const char *prefix)
 {
     size_t len;
     char *str = NULL;
@@ -45,12 +44,8 @@ void ilG_bindLight(ilG_light* light, GLuint program, const char *prefix)
     sprintf(str, fmt, prefix, __VA_ARGS__);             \
     fn(glGetUniformLocation(program, str), 1,           \
         (T)&light->loc);
-    BIND(glUniform3fv,  GLfloat*,   positionable->position,     "position"      );
-    BIND(glUniform4fv,  GLfloat*,   positionable->rotation,     "rotation"      );
-    BIND(glUniform1iv,  GLint*,     type,                       "type"          );
     BIND(glUniform1iv,  GLint*,     texture,                    "texture"       );
     BIND(glUniform1fv,  GLfloat*,   radius,                     "radius"        );
-    BIND(glUniform1fv,  GLfloat*,   intensity,                  "intensity"     );
 #undef BIND
     ilG_bindPhong(&light->phong, program, prefix);
     free(str);
@@ -69,5 +64,5 @@ void ilG_bindLights(ilG_context* context, GLuint program, const char *prefix)
         ilG_bindLight(context->lights.data[i], program, prefix);
     }
     free(str);
-}
+}*/
 

@@ -7,6 +7,7 @@
 #include "common/log.h"
 #include "common/positionable.h"
 #include "graphics/camera.h"
+#include "common/matrix.h"
 
 const char * ilG_strerror(GLenum err);
 
@@ -21,5 +22,6 @@ GLuint ilG_makeShader(GLenum type, il_string source);
 void ilG_linkProgram(GLuint program);
 void ilG_bindMVP(const char *name, GLuint program, const ilG_camera *camera,
   const il_positionable * object);
+il_Matrix ilG_computeMVP(const ilG_camera* camera, const il_positionable* object);
 
 #endif

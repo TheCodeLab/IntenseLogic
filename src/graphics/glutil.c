@@ -135,16 +135,9 @@ void ilG_linkProgram(GLuint program)
     }
 }
 
-void ilG_bindMVP(const char *name, GLuint program, const ilG_camera * camera, const il_positionable * object)
+il_Matrix ilG_computeMVP(const ilG_camera* camera, const il_positionable* object)
 {
-    GLint utransform;
-    utransform = glGetUniformLocation(program, name);
-    ilG_testError("glGetUniformLocation failed");
-
     il_Vector3 v = camera->positionable->position;
-    /*v.x = -v.x;
-    v.y = -v.y;
-    v.z = -v.z;*/
 
     il_Quaternion q = camera->positionable->rotation;
     q.x = -q.x;
@@ -157,26 +150,31 @@ void ilG_bindMVP(const char *name, GLuint program, const ilG_camera * camera, co
         il_Matrix_translate(v)
     );
 
-    //il_Matrix view;
-
-    /*int res = il_Matrix_invert(cam, &view);
-    if (res!=0)
-        il_log(2, "Couldn't invert view matrix?");*/
-
     il_Matrix model = il_Matrix_mul(
-                          il_Matrix_rotate_q(object->rotation),
-                          il_Matrix_mul(
-                              il_Matrix_scale(object->size),
-                              il_Matrix_translate(object->position)
-                          ));
+        il_Matrix_rotate_q(object->rotation),
+        il_Matrix_mul(
+            il_Matrix_scale(object->size),
+            il_Matrix_translate(object->position)
+        ));
 
     il_Matrix mat = il_Matrix_mul(
-                        camera->projection_matrix,
-                        il_Matrix_mul(
-                            view,
-                            model
-                        ));
+        camera->projection_matrix,
+        il_Matrix_mul(
+            view,
+            model
+        ));
 
+    return mat;
+}
+
+void ilG_bindMVP(const char *name, GLuint program, const ilG_camera * camera, const il_positionable * object)
+{
+    GLint utransform;
+    utransform = glGetUniformLocation(program, name);
+    ilG_testError("glGetUniformLocation failed");
+
+    il_Matrix mat = ilG_computeMVP(camera, object);
+    
     glUniformMatrix4fv(utransform, 1, GL_TRUE, (const GLfloat*)&mat.data);
     ilG_testError("glUniformMatrix4fv failed");
 }

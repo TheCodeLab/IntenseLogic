@@ -24,6 +24,13 @@ typedef struct ilG_context {
     IL_ARRAY(ilG_light*,) lights;
     GLuint fbtextures[5], framebuffer; // depth, accumulation, normal, diffuse, specular
     int width, height;
+    struct {
+        GLuint vao, vbo, ibo, lights_ubo, lights_index, mvp_ubo, mvp_index;
+        GLint lights_size, mvp_size, lights_offset[2], mvp_offset[1];
+        struct ilG_material* material;
+        int invalidated;
+        int created;
+    } lightdata;
 } ilG_context;
 
 ilG_context* ilG_context_new(int w, int h);
