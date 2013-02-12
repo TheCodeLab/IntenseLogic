@@ -27,6 +27,7 @@ typedef struct ilG_light {
 } ilG_light;
 
 ilG_light* ilG_light_new();
+void ilG_light_add(ilG_light*, struct ilG_context* context);
 void ilG_bindPhong(ilG_phong* phong, GLuint program, const char *prefix);
 /*void ilG_bindLight(ilG_light* light, GLuint program, const char *prefix);
 void ilG_bindLights(struct ilG_context* context, GLuint program, const char *prefix);*/

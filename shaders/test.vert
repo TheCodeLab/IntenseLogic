@@ -20,7 +20,7 @@ void main()
     gl_Position = mvp * in_Position;
     texcoord = in_Texcoord;
     normal = in_Normal;
-    ambient = in_Ambient;
+    ambient = in_Diffuse;//in_Ambient;
     diffuse = in_Diffuse;
     specular = in_Specular;
 }

@@ -23,5 +23,6 @@ void ilG_linkProgram(GLuint program);
 void ilG_bindMVP(const char *name, GLuint program, const ilG_camera *camera,
   const il_positionable * object);
 il_Matrix ilG_computeMVP(const ilG_camera* camera, const il_positionable* object);
+il_Matrix ilG_computeV(const ilG_camera* camera);
 
 #endif

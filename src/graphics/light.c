@@ -3,7 +3,9 @@
 #include <stdlib.h>
 #include <GL/glew.h>
 #include <stdio.h>
+#include <string.h>
 
+#include "common/array.h"
 #include "graphics/context.h"
 #include "common/positionable.h"
 
@@ -11,6 +13,12 @@ ilG_light* ilG_light_new()
 {
     ilG_light* light = calloc(1, sizeof(ilG_light));
     return light;
+}
+
+void ilG_light_add(ilG_light* self, ilG_context* context)
+{
+    IL_APPEND(context->lights, self);
+    context->lightdata.invalidated = 1;
 }
 
 void ilG_bindPhong(ilG_phong* phong, GLuint program, const char *prefix)

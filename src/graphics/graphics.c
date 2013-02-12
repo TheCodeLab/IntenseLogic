@@ -328,7 +328,7 @@ static void draw_lights()
         context->lightdata.invalidated = 1;
     }
     context->material = context->lightdata.material;
-    if (context->lightdata.invalidated) {
+    /*if (context->lightdata.invalidated) {
         if (!context->lightdata.created) {
             context->lightdata.lights_index = glGetUniformBlockIndex(context->material->program, "LightBlock");
             context->lightdata.mvp_index = glGetUniformBlockIndex(context->material->program, "MVPBlock");
@@ -336,15 +336,16 @@ static void draw_lights()
             glGetActiveUniformBlockiv(context->material->program, context->lightdata.mvp_index, GL_UNIFORM_BLOCK_DATA_SIZE, &context->lightdata.mvp_size);
             //GLubyte *lights_buf = malloc(lights_size), *mvp_buf = malloc(mvp_size);
             const GLchar *lights_names[] = {
+                "position",
                 "color",
                 "radius"
             }, *mvp_names[] = {
                 "mvp"
             };
-            GLuint lights_indices[2], mvp_indices[1];
-            glGetUniformIndices(context->material->program, 2, lights_names, lights_indices);
+            GLuint lights_indices[3], mvp_indices[1];
+            glGetUniformIndices(context->material->program, 3, lights_names, lights_indices);
             glGetUniformIndices(context->material->program, 1, mvp_names, mvp_indices);
-            glGetActiveUniformsiv(context->material->program, 2, lights_indices, GL_UNIFORM_OFFSET, context->lightdata.lights_offset);
+            glGetActiveUniformsiv(context->material->program, 3, lights_indices, GL_UNIFORM_OFFSET, context->lightdata.lights_offset);
             glGetActiveUniformsiv(context->material->program, 1, mvp_indices, GL_UNIFORM_OFFSET, context->lightdata.mvp_offset);
             context->lightdata.created = 1;
         }
@@ -358,8 +359,9 @@ static void draw_lights()
         GLubyte *lights_buf = calloc(1, context->lightdata.lights_size);        
         unsigned int i;
         for (i = 0; i < context->lights.length; i++) {
-            ((il_Vector3*)lights_buf + context->lightdata.lights_offset[0])[i] = context->lights.data[i]->color;
-            ((float*)lights_buf + context->lightdata.lights_offset[1])[i] = context->lights.data[i]->radius;
+            ((il_Vector3*)lights_buf + context->lightdata.lights_offset[0])[i] = context->lights.data[i]->positionable->position;
+            ((il_Vector3*)lights_buf + context->lightdata.lights_offset[1])[i] = context->lights.data[i]->color;
+            ((float*)lights_buf + context->lightdata.lights_offset[2])[i] = context->lights.data[i]->radius;
         }
         glBufferData(GL_UNIFORM_BUFFER, context->lightdata.lights_size, lights_buf, GL_DYNAMIC_DRAW);
         glBindBuffer(GL_UNIFORM_BUFFER, context->lightdata.mvp_ubo);
@@ -372,25 +374,52 @@ static void draw_lights()
         glBufferData(GL_UNIFORM_BUFFER, context->lightdata.mvp_size, mvp_buf, GL_DYNAMIC_DRAW);
         free(mvp_buf);
         context->lightdata.invalidated = 0;
-    }
+    }*/
     glBindVertexArray(context->lightdata.vao);
     glBindBuffer(GL_ARRAY_BUFFER, context->lightdata.vbo);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, context->lightdata.ibo);
-    glBindBufferBase(GL_UNIFORM_BUFFER, context->lightdata.lights_index, context->lightdata.lights_ubo);
-    glBindBufferBase(GL_UNIFORM_BUFFER, context->lightdata.mvp_index, context->lightdata.mvp_ubo);
+    //glBindBufferBase(GL_UNIFORM_BUFFER, context->lightdata.lights_index, context->lightdata.lights_ubo);
+    //glBindBufferBase(GL_UNIFORM_BUFFER, context->lightdata.mvp_index, context->lightdata.mvp_ubo);
     context->material->bind(context, context->material->bind_ctx);
+    /*glUniform3f(glGetUniformLocation(context->material->program, "camera"), 
+            context->camera->positionable->position.x, 
+            context->camera->positionable->position.y,
+            context->camera->positionable->position.z);*/
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_RECTANGLE, context->fbtextures[0]);
-    glActiveTexture(GL_TEXTURE0 + 2);
+    glActiveTexture(GL_TEXTURE0 + 1);
     glBindTexture(GL_TEXTURE_RECTANGLE, context->fbtextures[2]);
-    glActiveTexture(GL_TEXTURE0 + 3);
+    glActiveTexture(GL_TEXTURE0 + 2);
     glBindTexture(GL_TEXTURE_RECTANGLE, context->fbtextures[3]);
-    glActiveTexture(GL_TEXTURE0 + 4);
+    glActiveTexture(GL_TEXTURE0 + 3);
     glBindTexture(GL_TEXTURE_RECTANGLE, context->fbtextures[4]);
     glEnable(GL_BLEND);
+    glDisable(GL_DEPTH_TEST);
     glBlendFunc(GL_ONE, GL_ONE);
+
+    il_Matrix vp = il_Matrix_mul(context->camera->projection_matrix, ilG_computeV(context->camera));
+    il_Matrix ivp;
+    int res = il_Matrix_invert(vp, &ivp);
+    if (res) {
+        il_log(1, "Unable to invert matrix");
+    }
     
-    glDrawElementsInstanced(GL_TRIANGLES, sizeof(indices)/sizeof(GLuint), GL_UNSIGNED_INT, NULL, context->lights.length);
+    GLint position_loc  = glGetUniformLocation(context->material->program, "position"),
+          color_loc     = glGetUniformLocation(context->material->program, "color"),
+          radius_loc    = glGetUniformLocation(context->material->program, "radius"),
+          ivp_loc       = glGetUniformLocation(context->material->program, "ivp");
+    glUniformMatrix4fv(ivp_loc, 1, GL_TRUE, &ivp.data[0]);
+    unsigned int i;
+    for (i = 0; i < context->lights.length; i++) {
+        il_Vector3 pos = context->lights.data[i]->positionable->position;
+        glUniform3f(position_loc, pos.x, pos.y, pos.z);
+        il_Vector3 col = context->lights.data[i]->color;
+        glUniform3f(color_loc, col.x, col.y, col.z);
+        glUniform1f(radius_loc, context->lights.data[i]->radius);
+        ilG_bindMVP("mvp", context->material->program, context->camera, context->lights.data[i]->positionable);
+        glDrawElements(GL_TRIANGLES, sizeof(indices)/sizeof(GLuint), GL_UNSIGNED_INT, NULL);
+    }
+    //glDrawElementsInstanced(GL_TRIANGLES, sizeof(indices)/sizeof(GLuint), GL_UNSIGNED_INT, NULL, context->lights.length);
     glDisable(GL_BLEND);
     context->material->unbind(context, context->material->unbind_ctx);
     ilG_testError("Error drawing lights");

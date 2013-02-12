@@ -13,6 +13,7 @@ local mesh = require "mesh"
 local event = require "event"
 local input = require "input"
 local quaternion = require "quaternion"
+local light = require "light"
 
 local oldprint=print
 function _G.print(...)
@@ -32,7 +33,7 @@ c:setActive();
 local m;
 local t = texture.fromfile "white-marble-texture.png";
 local vf, ff = io.open("shaders/test.vert", "r"), io.open("shaders/test.frag", "r");
-local mtl = material(vf:read "*a", ff:read "*a", "test material", "in_Position", "in_Texcoord", nil, "mvp", {"tex"}, {1}, "out_Normal", "out_Ambient", "out_Diffuse", "out_Specular", "phong");
+local mtl = material(vf:read "*a", ff:read "*a", "test material", "in_Position", "in_Texcoord", "in_Normal", "mvp", {"tex"}, {1}, "out_Normal", "out_Ambient", "out_Diffuse", "out_Specular", "phong");
 print(mtl);
 if false then
     m = mesh "minecraft.obj"
@@ -57,15 +58,18 @@ else
     end
 end
 c.camera = camera(positionable(w));
-c.camera.projection_matrix = matrix.perspective(75, 4/3, 0.25, 1000);
+c.camera.projection_matrix = matrix.perspective(75, 4/3, 2, 1000);
 c.camera.positionable.position = vector3(0, -5, -25);
 c.camera.sensitivity = .01
 c.camera.movespeed = vector3(1,1,1)
+local l = light(0, 4, 3, 50, 0, 0, 1.0) -- x y z radius r g b
+print(l.positionable)
+l:add(c)
 
 local first_mouse = true
 function mousemove(q, ev)
     if first_mouse then first_mouse = false return end
-    if not input.isButtonSet(0) == 1 then return end -- TODO: Make this work
+    if input.isButtonSet(0) == 0 then return end -- TODO: Make this work
     local x, y = ev:unpack()
     local yaw = quaternion(vector3(0, 1, 0), x * c.camera.sensitivity);
     local pitch = quaternion(vector3(1, 0, 0), y * c.camera.sensitivity);
