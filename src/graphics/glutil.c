@@ -135,7 +135,7 @@ void ilG_linkProgram(GLuint program)
     }
 }
 
-il_Matrix ilG_computeMVP(const ilG_camera* camera, const il_positionable* object)
+il_Matrix ilG_computeV(const ilG_camera* camera)
 {
     il_Vector3 v = camera->positionable->position;
 
@@ -149,7 +149,14 @@ il_Matrix ilG_computeMVP(const ilG_camera* camera, const il_positionable* object
         il_Matrix_rotate_q(q),
         il_Matrix_translate(v)
     );
+    
+    return view;
+}
 
+il_Matrix ilG_computeMVP(const ilG_camera* camera, const il_positionable* object)
+{
+    il_Matrix view = ilG_computeV(camera);
+    
     il_Matrix model = il_Matrix_mul(
         il_Matrix_rotate_q(object->rotation),
         il_Matrix_mul(
@@ -173,9 +180,9 @@ void ilG_bindMVP(const char *name, GLuint program, const ilG_camera * camera, co
     utransform = glGetUniformLocation(program, name);
     ilG_testError("glGetUniformLocation failed");
 
-    il_Matrix mat = ilG_computeMVP(camera, object);
+    il_Matrix mat = il_Matrix_transpose(ilG_computeMVP(camera, object));
     
-    glUniformMatrix4fv(utransform, 1, GL_TRUE, (const GLfloat*)&mat.data);
+    glUniformMatrix4fv(utransform, 1, GL_FALSE, (const GLfloat*)&mat.data);
     ilG_testError("glUniformMatrix4fv failed");
 }
 

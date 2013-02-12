@@ -26,7 +26,7 @@ typedef struct ilG_context {
     int width, height;
     struct {
         GLuint vao, vbo, ibo, lights_ubo, lights_index, mvp_ubo, mvp_index;
-        GLint lights_size, mvp_size, lights_offset[2], mvp_offset[1];
+        GLint lights_size, mvp_size, lights_offset[3], mvp_offset[1];
         struct ilG_material* material;
         int invalidated;
         int created;
