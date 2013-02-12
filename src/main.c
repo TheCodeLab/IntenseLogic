@@ -18,7 +18,7 @@ int running = 1;
 
 void ilE_loop();
 
-char *strdup(char *str);
+char *strdup(const char *str);
 
 char *strtok_r(char *str, const char *delim, char **saveptr);
 
@@ -107,7 +107,7 @@ int main(int argc, char **argv)
     WSADATA WSAData;
     WSAStartup(0x101, &WSAData);
 #endif
-    
+
     // initialise engine
     il_init(args);
 
