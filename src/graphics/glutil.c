@@ -71,8 +71,7 @@ void ilG_testError_(const char *file, int line, const char *func,
 
 GLuint ilG_makeShader(GLenum type, il_string source)
 {
-    il_log(3, "Building %s shader", type == GL_VERTEX_SHADER? "vertex" : "fragment");
-    IL_GRAPHICS_TESTERROR("Unknown error before function");
+    IL_GRAPHICS_TESTERROR("Unknown");
 
     GLuint shader = glCreateShader(type);
     IL_GRAPHICS_TESTERROR("Unable to create shader");
@@ -90,17 +89,20 @@ GLuint ilG_makeShader(GLenum type, il_string source)
         char * str = calloc(1, len);
         glGetShaderInfoLog(shader, len, NULL, str);
         il_log(status == GL_TRUE? 4 : 1,
-                      "Shader info log: \n"
+                      "%s Shader info log: \n"
                       "---- BEGIN SHADER INFO LOG ----\n"
                       "%s\n"
-                      "---- END SHADER INFO LOG ----\n", str);
+                      "---- END SHADER INFO LOG ----\n", type == GL_VERTEX_SHADER? "Vertex" : "Fragment", str);
         free(str);
+        if (status == GL_FALSE) {
+            return 0;
+        }
     }
 
     return shader;
 }
 
-void ilG_linkProgram(GLuint program)
+int ilG_linkProgram(GLuint program)
 {
     il_log(3, "Linking program");
     glLinkProgram(program);
@@ -117,6 +119,9 @@ void ilG_linkProgram(GLuint program)
                       "%s\n"
                       "---- END PROGRAM INFO LOG ----\n", str);
         free(str);
+        if (status == GL_FALSE) {
+            return 1;
+        }
     }
 
     glValidateProgram(program);
@@ -132,57 +137,61 @@ void ilG_linkProgram(GLuint program)
                       "%s\n"
                       "---- END PROGRAM INFO LOG ----\n", str);
         free(str);
+        if (status == GL_FALSE) {
+            return 1;
+        }
     }
+    return 0;
 }
 
-il_Matrix ilG_computeV(const ilG_camera* camera)
+il_Matrix ilG_computeMVP(enum ilG_transform filter, const ilG_camera* camera, const il_positionable* object)
 {
-    il_Vector3 v = camera->positionable->position;
+    il_Matrix mvp;
+    if (filter & ILG_PROJECTION) {
+        mvp = camera->projection_matrix;
+    } else {
+        mvp = il_Matrix_identity;
+    }
+    if (filter & ILG_VIEW) {
+        il_Vector3 v = camera->positionable->position;
 
-    il_Quaternion q = camera->positionable->rotation;
-    q.x = -q.x;
-    q.y = -q.y;
-    q.z = -q.z;
-    q.w = -q.w;
+        il_Quaternion q = camera->positionable->rotation;
+        q.x = -q.x;
+        q.y = -q.y;
+        q.z = -q.z;
+        q.w = -q.w;
 
-    il_Matrix view = il_Matrix_mul(
-        il_Matrix_rotate_q(q),
-        il_Matrix_translate(v)
-    );
-    
-    return view;
-}
-
-il_Matrix ilG_computeMVP(const ilG_camera* camera, const il_positionable* object)
-{
-    il_Matrix view = ilG_computeV(camera);
-    
-    il_Matrix model = il_Matrix_mul(
-        il_Matrix_rotate_q(object->rotation),
-        il_Matrix_mul(
-            il_Matrix_scale(object->size),
-            il_Matrix_translate(object->position)
+        il_Matrix view = il_Matrix_mul(
+            il_Matrix_rotate_q(q),
+            il_Matrix_translate(v)
+        );
+        mvp = il_Matrix_mul(mvp, view);
+    }
+    if (filter & ILG_MODEL) {
+        il_Matrix model = il_Matrix_mul(
+            il_Matrix_rotate_q(object->rotation),
+            il_Matrix_mul(
+                il_Matrix_scale(object->size),
+                il_Matrix_translate(object->position)
         ));
-
-    il_Matrix mat = il_Matrix_mul(
-        camera->projection_matrix,
-        il_Matrix_mul(
-            view,
-            model
-        ));
-
-    return mat;
+        mvp = il_Matrix_mul(mvp, model);
+    }
+    if (filter & ILG_INVERSE) {
+        int res = il_Matrix_invert(mvp, &mvp);
+        if (res != 0) {
+            il_log(1, "Failed to invert MPV matrix");
+        }
+    }
+    
+    return mvp;
 }
 
-void ilG_bindMVP(const char *name, GLuint program, const ilG_camera * camera, const il_positionable * object)
+void ilG_bindMVP(GLint location, enum ilG_transform filter, const ilG_camera * camera, const il_positionable * object)
 {
-    GLint utransform;
-    utransform = glGetUniformLocation(program, name);
-    ilG_testError("glGetUniformLocation failed");
-
-    il_Matrix mat = il_Matrix_transpose(ilG_computeMVP(camera, object));
+    ilG_testError("Unknown");
+    il_Matrix mat = ilG_computeMVP(filter, camera, object);
     
-    glUniformMatrix4fv(utransform, 1, GL_FALSE, (const GLfloat*)&mat.data);
+    glUniformMatrix4fv(location, 1, GL_TRUE, &mat.data[0]);
     ilG_testError("glUniformMatrix4fv failed");
 }
 

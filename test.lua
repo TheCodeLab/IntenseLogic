@@ -33,7 +33,23 @@ c:setActive();
 local m;
 local t = texture.fromfile "white-marble-texture.png";
 local vf, ff = io.open("shaders/test.vert", "r"), io.open("shaders/test.frag", "r");
-local mtl = material(vf:read "*a", ff:read "*a", "test material", "in_Position", "in_Texcoord", "in_Normal", "mvp", {"tex"}, {1}, "out_Normal", "out_Ambient", "out_Diffuse", "out_Specular", "phong");
+--local mtl = material(vf:read "*a", ff:read "*a", "test material", "in_Position", "in_Texcoord", "in_Normal", "mvp", {"tex"}, {1}, "out_Normal", "out_Ambient", "out_Diffuse", "out_Specular", "phong");
+local mtl = material()
+mtl:vertex(vf:read "*a")
+mtl:fragment(ff:read "*a")
+vf:close()
+ff:close()
+mtl:name "Test material"
+mtl:arrayAttrib("position", "in_Position")
+mtl:arrayAttrib("texcoord", "in_Texcoord")
+mtl:arrayAttrib("normal", "in_Normal")
+mtl:matrix("MVP", "mvp")
+mtl:textureUnit("color0", "tex")
+mtl:fragData("normal", "out_Normal")
+mtl:fragData("accumulation", "out_Ambient")
+mtl:fragData("diffuse", "out_Diffuse")
+mtl:fragData("specular", "out_Specular")
+mtl:link()
 print(mtl);
 if false then
     m = mesh "minecraft.obj"

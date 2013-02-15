@@ -26,6 +26,7 @@
 #include "common/string.h"
 #include "graphics/arrayattrib.h"
 #include "graphics/textureunit.h"
+#include "graphics/fragdata.h"
 
 static int width = 800;
 static int height = 600;
@@ -249,82 +250,25 @@ static void draw_geometry()
 }
 
 static void draw_lights()
-{
-    // icosahedron code lifted from http://blog.andreaskahler.com/2009/06/creating-icosphere-mesh-in-code.html
-    const GLfloat t = (1.0 + sqrt(5.0)) / 2.0;
-    GLfloat points[] = {
-        -1,  t,  0,
-         1,  t,  0,
-        -1, -t,  0,
-         1, -t,  0,
-
-         0, -1,  t,
-         0,  1,  t,
-         0, -1, -t,
-         0,  1, -t,
-
-         t,  0, -1,
-         t,  0,  1,
-        -t,  0, -1,
-        -t,  0,  1,
-    };
-    static GLuint indices[] = {
-        0, 11, 5,
-        0, 5, 1,
-        0, 1, 7,
-        0, 7, 10,
-        0, 10, 11,
-
-        1, 5, 9,
-        5, 11, 4,
-        11, 10, 2,
-        10, 7, 6,
-        7, 1, 8,
-
-        3, 9, 4,
-        3, 4, 2,
-        3, 2, 6,
-        3, 6, 8,
-        3, 8, 9,
-
-        4, 9, 5,
-        2, 4, 11,
-        6, 2, 10,
-        8, 6, 7,
-        9, 8, 1,
-    };
-
+{ 
     ilG_testError("Unknown");
     if (!context->lightdata.material) {
-        const char* unitlocs[] = {
-            "depth",
-            //"accumulation",
-            "normal",
-            "diffuse",
-            "specular",
-            NULL
-        };
-        unsigned long unittypes[] = {
-            ILG_TUNIT_NONE,
-            //ILG_TUNIT_NONE,
-            ILG_TUNIT_NONE,
-            ILG_TUNIT_NONE,
-            ILG_TUNIT_NONE
-        };
-        context->lightdata.material = ilG_material_new(
-            IL_ASSET_READFILE("light.vert"), IL_ASSET_READFILE("light.frag"), 
-            "Deferred Shader", "in_Position", NULL, NULL, NULL, &unitlocs[0], 
-            &unittypes[0], NULL, NULL, NULL, NULL, NULL);
-        glGenVertexArrays(1, &context->lightdata.vao);
-        glBindVertexArray(context->lightdata.vao);
-        glGenBuffers(1, &context->lightdata.vbo);
-        glGenBuffers(1, &context->lightdata.ibo);
-        glBindBuffer(GL_ARRAY_BUFFER, context->lightdata.vbo);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(points), points, GL_STATIC_DRAW);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
-        glEnableVertexAttribArray(0);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, context->lightdata.ibo);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+        struct ilG_material* mtl = ilG_material_new();
+        ilG_material_vertex(mtl, IL_ASSET_READFILE("light.vert"));
+        ilG_material_fragment(mtl, IL_ASSET_READFILE("light.frag"));
+        ilG_material_name(mtl, "Deferred Shader");
+        ilG_material_arrayAttrib(mtl, ILG_ARRATTR_POSITION, "in_Position");
+        ilG_material_textureUnit(mtl, ILG_TUNIT_NONE, "depth");
+        ilG_material_textureUnit(mtl, ILG_TUNIT_NONE, "normal");
+        ilG_material_textureUnit(mtl, ILG_TUNIT_NONE, "diffuse");
+        ilG_material_textureUnit(mtl, ILG_TUNIT_NONE, "specular");
+        ilG_material_matrix(mtl, ILG_INVERSE | ILG_VP, "ivp");
+        ilG_material_fragData(mtl, ILG_FRAGDATA_ACCUMULATION, "out_Color");
+        ilG_material_matrix(mtl, ILG_MVP, "mvp");
+        if (ilG_material_link(mtl)) {
+            abort();
+        }
+        context->lightdata.material = mtl;
         context->lightdata.invalidated = 1;
     }
     context->material = context->lightdata.material;
@@ -375,16 +319,17 @@ static void draw_lights()
         free(mvp_buf);
         context->lightdata.invalidated = 0;
     }*/
-    glBindVertexArray(context->lightdata.vao);
-    glBindBuffer(GL_ARRAY_BUFFER, context->lightdata.vbo);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, context->lightdata.ibo);
     //glBindBufferBase(GL_UNIFORM_BUFFER, context->lightdata.lights_index, context->lightdata.lights_ubo);
     //glBindBufferBase(GL_UNIFORM_BUFFER, context->lightdata.mvp_index, context->lightdata.mvp_ubo);
+    context->drawable = ilG_icosahedron;
+    if (context->drawable->bind) {
+        context->drawable->bind(context, context->drawable->bind_ctx);
+    }
     context->material->bind(context, context->material->bind_ctx);
-    /*glUniform3f(glGetUniformLocation(context->material->program, "camera"), 
+    glUniform3f(glGetUniformLocation(context->material->program, "camera"), 
             context->camera->positionable->position.x, 
             context->camera->positionable->position.y,
-            context->camera->positionable->position.z);*/
+            context->camera->positionable->position.z);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_RECTANGLE, context->fbtextures[0]);
     glActiveTexture(GL_TEXTURE0 + 1);
@@ -396,28 +341,23 @@ static void draw_lights()
     glEnable(GL_BLEND);
     glDisable(GL_DEPTH_TEST);
     glBlendFunc(GL_ONE, GL_ONE);
-
-    il_Matrix vp = il_Matrix_mul(context->camera->projection_matrix, ilG_computeV(context->camera));
-    il_Matrix ivp;
-    int res = il_Matrix_invert(vp, &ivp);
-    if (res) {
-        il_log(1, "Unable to invert matrix");
-    }
     
     GLint position_loc  = glGetUniformLocation(context->material->program, "position"),
           color_loc     = glGetUniformLocation(context->material->program, "color"),
-          radius_loc    = glGetUniformLocation(context->material->program, "radius"),
-          ivp_loc       = glGetUniformLocation(context->material->program, "ivp");
-    glUniformMatrix4fv(ivp_loc, 1, GL_TRUE, &ivp.data[0]);
+          radius_loc    = glGetUniformLocation(context->material->program, "radius");
     unsigned int i;
     for (i = 0; i < context->lights.length; i++) {
+        if (context->drawable->update) {
+            context->drawable->update(context, context->lights.data[i]->positionable, context->drawable->update_ctx);
+        }
+        context->material->update(context, context->lights.data[i]->positionable, context->material->update_ctx);
         il_Vector3 pos = context->lights.data[i]->positionable->position;
         glUniform3f(position_loc, pos.x, pos.y, pos.z);
         il_Vector3 col = context->lights.data[i]->color;
         glUniform3f(color_loc, col.x, col.y, col.z);
         glUniform1f(radius_loc, context->lights.data[i]->radius);
-        ilG_bindMVP("mvp", context->material->program, context->camera, context->lights.data[i]->positionable);
-        glDrawElements(GL_TRIANGLES, sizeof(indices)/sizeof(GLuint), GL_UNSIGNED_INT, NULL);
+        context->drawable->draw(context, context->lights.data[i]->positionable, context->drawable->draw_ctx);
+        //glDrawElements(GL_TRIANGLES, sizeof(indices)/sizeof(GLuint), GL_UNSIGNED_INT, NULL);
     }
     //glDrawElementsInstanced(GL_TRIANGLES, sizeof(indices)/sizeof(GLuint), GL_UNSIGNED_INT, NULL, context->lights.length);
     glDisable(GL_BLEND);
@@ -494,7 +434,7 @@ static void global_draw()
     ilG_testError("Unknown");
     static ilG_material* material = NULL;
     if (!material) {
-        const char* unitlocs[] = {
+        /*const char* unitlocs[] = {
             "tex",
             NULL
         };
@@ -504,7 +444,17 @@ static void global_draw()
         material = ilG_material_new(IL_ASSET_READFILE("post.vert"), 
             IL_ASSET_READFILE("post.frag"), "Post Processing Shader", 
             "in_Position", "in_Texcoord", NULL, NULL, &unitlocs[0], &unittypes[0],
-            NULL, NULL, NULL, NULL, NULL);
+            NULL, NULL, NULL, NULL, NULL);*/
+        material = ilG_material_new();
+        ilG_material_vertex(material, IL_ASSET_READFILE("post.vert"));
+        ilG_material_fragment(material, IL_ASSET_READFILE("post.frag"));
+        ilG_material_name(material, "Post Processing Shader");
+        ilG_material_arrayAttrib(material, ILG_ARRATTR_POSITION, "in_Position");
+        ilG_material_arrayAttrib(material, ILG_ARRATTR_TEXCOORD, "in_Texcoord");
+        ilG_material_textureUnit(material, ILG_TUNIT_NONE, "tex");
+        if (ilG_material_link(material)) {
+            abort();
+        }
     }
     glEnable(GL_CULL_FACE);
     draw();
