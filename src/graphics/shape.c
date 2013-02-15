@@ -13,7 +13,7 @@
 #include "graphics/context.h"
 #include "graphics/arrayattrib.h"
 
-static float cube[] = {
+static const float cube[] = {
     // front
     -1.0, -1.0,  1.0,
     1.0, -1.0,  1.0,
@@ -46,7 +46,7 @@ static float cube[] = {
     1.0,  1.0,  1.0,
 };
 
-static float cube_texcoord[] = {
+static const float cube_texcoord[] = {
     // front
     0.0,    0.5,
     0.3333, 0.5,
@@ -80,7 +80,7 @@ static float cube_texcoord[] = {
 };
 
 
-static short cube_index[] = {
+static const short cube_index[] = {
     // front
     0,  1,  2,
     2,  3,  0,
@@ -101,6 +101,52 @@ static short cube_index[] = {
     22, 23, 20,
 };
 
+// icosahedron code lifted from http://blog.andreaskahler.com/2009/06/creating-icosphere-mesh-in-code.html
+#define ico_t 1.618033988749895 
+//(1.0 + sqrt(5.0)) / 2.0; // no compile time sqrt() :( // or using consts in other consts :(
+static const GLfloat ico[] = {
+    -1,  ico_t,  0,
+     1,  ico_t,  0,
+    -1, -ico_t,  0,
+     1, -ico_t,  0,
+
+     0, -1,  ico_t,
+     0,  1,  ico_t,
+     0, -1, -ico_t,
+     0,  1, -ico_t,
+
+     ico_t,  0, -1,
+     ico_t,  0,  1,
+    -ico_t,  0, -1,
+    -ico_t,  0,  1,
+};
+#undef ico_t
+static short ico_index[] = {
+    0, 11, 5,
+    0, 5, 1,
+    0, 1, 7,
+    0, 7, 10,
+    0, 10, 11,
+
+    1, 5, 9,
+    5, 11, 4,
+    11, 10, 2,
+    10, 7, 6,
+    7, 1, 8,
+
+    3, 9, 4,
+    3, 4, 2,
+    3, 2, 6,
+    3, 6, 8,
+    3, 8, 9,
+
+    4, 9, 5,
+    2, 4, 11,
+    6, 2, 10,
+    8, 6, 7,
+    9, 8, 1,
+};
+
 struct ilG_shape {
     ilG_drawable3d drawable;
     GLuint vbo;
@@ -110,26 +156,27 @@ struct ilG_shape {
     GLsizei count;
 };
 
+static void bind(ilG_context* context, void *ctx)
+{
+    (void)ctx;
+    struct ilG_shape * shape = (struct ilG_shape*)context->drawable;
+    glBindVertexArray(shape->vao);
+    glBindBuffer(GL_ARRAY_BUFFER, shape->vbo);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, shape->ibo);
+    IL_GRAPHICS_TESTERROR("Could not bind drawable");
+}
+
 static void draw(ilG_context* context, il_positionable* pos, void * ctx)
 {
     (void)ctx;
     (void)pos;
     struct ilG_shape * shape = (struct ilG_shape*)context->drawable;
 
-    glBindVertexArray(shape->vao);
-    IL_GRAPHICS_TESTERROR("Could not bind vao");
-
-    glBindBuffer(GL_ARRAY_BUFFER, shape->vbo);
-    IL_GRAPHICS_TESTERROR("Could not bind vbo");
-
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, shape->ibo);
-    IL_GRAPHICS_TESTERROR("Could not bind ibo");
-
     glDrawElements(shape->mode, shape->count, GL_UNSIGNED_SHORT, (GLvoid*)0);
-    IL_GRAPHICS_TESTERROR("Could not draw ibo");
+    IL_GRAPHICS_TESTERROR("Could not draw drawable");
 }
 
-static struct ilG_shape box, cylinder, sphere, plane;
+static struct ilG_shape box, cylinder, icosahedron, plane;
 
 void ilG_shape_init()
 {
@@ -138,19 +185,24 @@ void ilG_shape_init()
     
     memset(&box,        0, sizeof(struct ilG_shape));
     memset(&cylinder,   0, sizeof(struct ilG_shape));
-    memset(&sphere,     0, sizeof(struct ilG_shape));
+    memset(&icosahedron,0, sizeof(struct ilG_shape));
     memset(&plane,      0, sizeof(struct ilG_shape));
 
-    box.drawable.name       = "Box Primitive";
-    cylinder.drawable.name  = "Cylinder Primitive";
-    sphere.drawable.name    = "Sphere Primitive";
-    plane.drawable.name     = "Plane Primitive";
+    box.drawable.name           = "Box Primitive";
+    cylinder.drawable.name      = "Cylinder Primitive";
+    icosahedron.drawable.name   = "Icosahedron Primitive";
+    plane.drawable.name         = "Plane Primitive";
 
     // assignment is an expression that returns what was assigned
-    box.drawable.draw       =
-    cylinder.drawable.draw  =
-    sphere.drawable.draw    = 
-    plane.drawable.draw     = &draw;
+    box.drawable.draw           =
+    cylinder.drawable.draw      =
+    icosahedron.drawable.draw   = 
+    plane.drawable.draw         = &draw;
+
+    box.drawable.bind           =
+    cylinder.drawable.bind      =
+    icosahedron.drawable.bind   =
+    plane.drawable.bind         = &bind;
 
     // don't want the wrong error to pop up, has happened before
     IL_GRAPHICS_TESTERROR("Unknown error before this function");
@@ -159,25 +211,27 @@ void ilG_shape_init()
     IL_GRAPHICS_TESTERROR("Unable to generate vertex array");
     box.vao         = vao[0];
     cylinder.vao    = vao[1];
-    sphere.vao      = vao[2];
+    icosahedron.vao = vao[2];
     plane.vao       = vao[3];
 
     glGenBuffers(4, &vbo[0]);
     IL_GRAPHICS_TESTERROR("Unable to generate vertex buffer");
     box.vbo         = vbo[0];
     cylinder.vbo    = vbo[1];
-    sphere.vbo      = vbo[2];
+    icosahedron.vbo = vbo[2];
     plane.vbo       = vbo[3];
 
     glGenBuffers(4, &ibo[0]);
     IL_GRAPHICS_TESTERROR("Unable to generate index buffer object");
     box.ibo         = ibo[0];
     cylinder.ibo    = ibo[1];
-    sphere.ibo      = ibo[2];
+    icosahedron.ibo = ibo[2];
     plane.ibo       = ibo[3];
 
     ILG_SETATTR(box.drawable.attrs, ILG_ARRATTR_POSITION);
     ILG_SETATTR(box.drawable.attrs, ILG_ARRATTR_TEXCOORD);
+
+    ILG_SETATTR(icosahedron.drawable.attrs, ILG_ARRATTR_POSITION);
 
     for (i = 0; i < 4; i++) {
         glBindVertexArray(vao[i]);
@@ -187,14 +241,28 @@ void ilG_shape_init()
         IL_GRAPHICS_TESTERROR("Unable to bind vertex buffer");
 
         // store vertices and texcoords in the same buffer
-        glBufferData(GL_ARRAY_BUFFER, sizeof(cube) + sizeof(cube_texcoord), NULL, GL_STATIC_DRAW);
-        glBufferSubData(GL_ARRAY_BUFFER, 0,             sizeof(cube), cube);
-        glBufferSubData(GL_ARRAY_BUFFER, sizeof(cube),  sizeof(cube_texcoord), cube_texcoord);
-        IL_GRAPHICS_TESTERROR("Unable to upload cube data");
-
-        glVertexAttribPointer(ILG_ARRATTR_POSITION, 3, GL_FLOAT, GL_FALSE, 0, NULL);
-        glVertexAttribPointer(ILG_ARRATTR_TEXCOORD, 2, GL_FLOAT, GL_FALSE, 0, (GLvoid*)sizeof(cube));
-        IL_GRAPHICS_TESTERROR("Unable to set vertex attrib pointer");
+        switch(i) {
+          case 0:
+            glBufferData(GL_ARRAY_BUFFER, sizeof(cube) + sizeof(cube_texcoord), NULL, GL_STATIC_DRAW);
+            glBufferSubData(GL_ARRAY_BUFFER, 0,             sizeof(cube), cube);
+            glBufferSubData(GL_ARRAY_BUFFER, sizeof(cube),  sizeof(cube_texcoord), cube_texcoord);
+            IL_GRAPHICS_TESTERROR("Unable to upload cube data");
+            glVertexAttribPointer(ILG_ARRATTR_POSITION, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+            glVertexAttribPointer(ILG_ARRATTR_TEXCOORD, 2, GL_FLOAT, GL_FALSE, 0, (GLvoid*)sizeof(cube));
+            IL_GRAPHICS_TESTERROR("Unable to set vertex attrib pointer");
+            break;
+          case 2:
+            glBufferData(GL_ARRAY_BUFFER, sizeof(ico) /*+ sizeof(ico_texcoord)*/, NULL, GL_STATIC_DRAW);
+            glBufferSubData(GL_ARRAY_BUFFER, 0,             sizeof(ico), ico);
+            //glBufferSubData(GL_ARRAY_BUFFER, sizeof(ico),   sizeof(cube_texcoord), cube_texcoord);
+            IL_GRAPHICS_TESTERROR("Unable to upload icosahedron data");
+            glVertexAttribPointer(ILG_ARRATTR_POSITION, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+            //glVertexAttribPointer(ILG_ARRATTR_TEXCOORD, 2, GL_FLOAT, GL_FALSE, 0, (GLvoid*)sizeof(cube));
+            IL_GRAPHICS_TESTERROR("Unable to set vertex attrib pointer");
+            break;
+          default:
+            break;
+        }
 
         glEnableVertexAttribArray(ILG_ARRATTR_POSITION);
         glEnableVertexAttribArray(ILG_ARRATTR_TEXCOORD);
@@ -203,21 +271,32 @@ void ilG_shape_init()
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo[i]);
         IL_GRAPHICS_TESTERROR("Unable to bind index buffer object");
 
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(cube_index), cube_index, GL_STATIC_DRAW);
-        IL_GRAPHICS_TESTERROR("Unable to upload index buffer data");
-
-        box.mode = GL_TRIANGLES;
-        box.count = 36;
+        switch(i) {
+          case 0:
+            glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(cube_index), cube_index, GL_STATIC_DRAW);
+            IL_GRAPHICS_TESTERROR("Unable to upload index buffer data");
+            box.mode = GL_TRIANGLES;
+            box.count = 36;
+            break;
+          case 2:
+            glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(ico_index), ico_index, GL_STATIC_DRAW);
+            IL_GRAPHICS_TESTERROR("Unable to upload index buffer data");
+            icosahedron.mode = GL_TRIANGLES;
+            icosahedron.count = 20 * 3;
+            break;
+          default:
+            break;
+        }
     }
 
     ilG_box         = &box.drawable;
     ilG_cylinder    = &cylinder.drawable;
-    ilG_sphere      = &sphere.drawable;
+    ilG_icosahedron = &icosahedron.drawable;
     ilG_plane       = &plane.drawable;
 
     ilG_drawable3d_assignId(ilG_box);
     ilG_drawable3d_assignId(ilG_cylinder);
-    ilG_drawable3d_assignId(ilG_sphere);
+    ilG_drawable3d_assignId(ilG_icosahedron);
     ilG_drawable3d_assignId(ilG_plane);
 }
 

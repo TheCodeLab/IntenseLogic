@@ -17,6 +17,10 @@ void ilA_registerReadDir(il_string path, int priority);
 
 ilA_asset* ilA_open(il_string path);
 
+void ilA_ref(ilA_asset*);
+
+void ilA_unref(ilA_asset*);
+
 il_string ilA_getPath(ilA_asset*);
 
 FILE* ilA_getHandle(ilA_asset* asset, const char *flags);

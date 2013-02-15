@@ -5,7 +5,7 @@ struct ilG_drawable3d;
 
 struct ilG_drawable3d *ilG_box, 
                       *ilG_cylinder, 
-                      *ilG_sphere, 
+                      *ilG_icosahedron, 
                       *ilG_plane;
 
 #endif

@@ -19,10 +19,19 @@ void ilG_testError_(const char *file, int line, const char *func,
 #define IL_GRAPHICS_TESTERROR ilG_testError
 
 GLuint ilG_makeShader(GLenum type, il_string source);
-void ilG_linkProgram(GLuint program);
-void ilG_bindMVP(const char *name, GLuint program, const ilG_camera *camera,
-  const il_positionable * object);
-il_Matrix ilG_computeMVP(const ilG_camera* camera, const il_positionable* object);
-il_Matrix ilG_computeV(const ilG_camera* camera);
+int /*failure*/ ilG_linkProgram(GLuint program);
+
+enum ilG_transform {
+    ILG_PROJECTION = 1,
+    ILG_VIEW = 2,
+    ILG_MODEL = 4,
+    ILG_INVERSE = 8,
+    ILG_VP = ILG_PROJECTION | ILG_VIEW,
+    ILG_MVP = ILG_VP | ILG_MODEL,
+};
+il_Matrix ilG_computeMVP(enum ilG_transform filter, const ilG_camera *camera, 
+    const il_positionable * object);
+void ilG_bindMVP(GLint location, enum ilG_transform filter, 
+    const ilG_camera *camera, const il_positionable * object);
 
 #endif

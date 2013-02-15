@@ -7,6 +7,7 @@
 #define ILG_ARRATTR_AMBIENT     (3)
 #define ILG_ARRATTR_DIFFUSE     (4)
 #define ILG_ARRATTR_SPECULAR    (5)
+#define ILG_ARRATTR_NUMATTRS    (6)
 
 #define ILG_SETATTR(flag, attr) (flag |= (1<<(attr)))
 #define ILG_TESTATTR(flag, attr) ((flag & (1<<(attr))) == (1<<attr))

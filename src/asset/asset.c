@@ -126,6 +126,16 @@ ilA_asset* ilA_open(il_string path)
     return asset;
 }
 
+void ilA_ref(ilA_asset* asset) 
+{
+    asset->refs++;
+}
+
+void ilA_unref(ilA_asset* asset) 
+{
+    asset->refs--;
+}
+
 il_string ilA_getPath(ilA_asset* self)
 {
     return self->fullpath;

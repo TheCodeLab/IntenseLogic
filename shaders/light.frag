@@ -19,7 +19,7 @@ flat in int instanceID;
 out vec3 out_Color;
 
 void main() {
-    vec4 pos_xyzw = ivp * vec4(gl_FragCoord.xy, texture(depth, gl_FragCoord.xy).x, 1.0);
+    vec4 pos_xyzw = ivp * vec4(gl_FragCoord.xy/vec2(400,300)-vec2(400, 300), texture(depth, gl_FragCoord.xy).x, 1.0);
     vec3 pos = pos_xyzw.xyz / pos_xyzw.w;
     vec3 light_dir = normalize(position/*[instanceID]*/ - pos);
     vec3 norm = texture(normal, gl_FragCoord.xy).xyz;
@@ -27,9 +27,13 @@ void main() {
     out_Color += texture(diffuse, gl_FragCoord.xy).xyz * max(0, dot(light_dir, norm));
     vec3 user_dir = normalize(camera - pos);
     vec3 ray = normalize(2 * dot(light_dir, norm) * norm - light_dir);
-    vec4 specular = texture(specular, gl_FragCoord.xy);
-    out_Color += specular.xyz * pow(max(0, dot(ray, user_dir)), specular.w);
+    vec4 spec = texture(specular, gl_FragCoord.xy);
+    //out_Color += specular.xyz * pow(max(0, dot(ray, user_dir)), specular.w);
     //out_Color += vec3(0, 0, .3); // blue hint
     //out_Color = vec3(1.0);
+    //out_Color = vec3(0, length(pos - position)/radius, 0);
+    if (length(pos - position) < 1) {
+        out_Color = vec3(1, 0, 0);
+    }
 }
 
