@@ -31,7 +31,8 @@ c.world = w;
 w.context = c;
 c:setActive();
 local m;
-local t = texture.fromfile "white-marble-texture.png";
+local t = texture()
+t:fromfile("color0", "white-marble-texture.png")
 local vf, ff = io.open("shaders/test.vert", "r"), io.open("shaders/test.frag", "r");
 --local mtl = material(vf:read "*a", ff:read "*a", "test material", "in_Position", "in_Texcoord", "in_Normal", "mvp", {"tex"}, {1}, "out_Normal", "out_Ambient", "out_Diffuse", "out_Specular", "phong");
 local mtl = material()
@@ -44,6 +45,7 @@ mtl:arrayAttrib("position", "in_Position")
 mtl:arrayAttrib("texcoord", "in_Texcoord")
 mtl:arrayAttrib("normal", "in_Normal")
 mtl:matrix("MVP", "mvp")
+mtl:matrix("IM", "im")
 mtl:textureUnit("color0", "tex")
 mtl:fragData("normal", "out_Normal")
 mtl:fragData("accumulation", "out_Ambient")
@@ -78,9 +80,16 @@ c.camera.projection_matrix = matrix.perspective(75, 4/3, 2, 1000);
 c.camera.positionable.position = vector3(0, -5, -25);
 c.camera.sensitivity = .01
 c.camera.movespeed = vector3(1,1,1)
-local l = light(0, 4, 3, 50, 0, 0, 1.0) -- x y z radius r g b
+--[[local l = light(-5, -5, -5, 50, 0, 0, 1.0) -- x y z radius r g b
 print(l.positionable)
 l:add(c)
+local sig = positionable();
+w:add(sig)
+sig.position = vector3(-5, -5, -5)
+sig.drawable = drawable.box;
+sig.material = material.default;
+sig.texture = texture.default;
+sig:track(c)]]
 
 local first_mouse = true
 function mousemove(q, ev)

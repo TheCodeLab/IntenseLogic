@@ -9,49 +9,68 @@
 #include "graphics/context.h"
 #include "graphics/textureunit.h"
 
-struct GLtexture {
-    ilG_texture parent;
-    GLuint object;
+struct texture_ctx {
+    struct ilG_material* mtl;
+    struct texture_unit {
+        int used;
+        GLuint tex;
+        GLenum mode;
+    } units[ILG_TUNIT_NUMUNITS];
 };
 
-static void update(ilG_context* context, struct il_positionable* pos, void * ctx)
+static void texture_update(ilG_context* context, struct il_positionable* pos, void *user)
 {
-    (void)ctx, (void)pos;
+    (void)pos;
     unsigned int i;
+    struct texture_ctx *ctx = user;
 
-    static struct ilG_material* mtl = NULL;
-
-    if (mtl == context->material) return;
-    mtl = context->material;
-
-    struct GLtexture *tex = (struct GLtexture*)(context->texture);
+    if (ctx->mtl == context->material) return;
+    ctx->mtl = context->material;
     for (i = 0; i < context->num_active; i++) {
-        if (context->texunits[i] == ILG_TUNIT_COLOR0) {
+        if (ctx->units[context->texunits[i]].used) {
             glActiveTexture(i);
-            glBindTexture(GL_TEXTURE_2D, tex->object);
+            glBindTexture(ctx->units[context->texunits[i]].mode, ctx->units[context->texunits[i]].tex);
         }
     }
 }
 
-ilG_texture* ilG_texture_fromfile(const char *name)
+ilG_texture* ilG_texture_new()
+{
+    ilG_texture *tex = calloc(1, sizeof(ilG_texture));
+    struct texture_ctx *ctx = calloc(1, sizeof(struct texture_ctx));
+    tex->update = &texture_update;
+    tex->bind_ctx = 
+    tex->update_ctx = 
+    tex->unbind_ctx = ctx;
+    tex->name = "Unnamed";
+    ilG_texture_assignId(tex);
+    return tex;
+}
+
+char *strdup(const char*);
+void ilG_texture_setName(ilG_texture* self, const char *name)
+{
+    self->name = strdup(name);
+}
+
+void ilG_texture_fromfile(ilG_texture* self, unsigned unit, const char *name)
 {
     ilA_asset* asset = ilA_open(il_fromC(name));
-    return ilG_texture_fromasset(asset);
+    ilG_texture_fromasset(self, unit, asset);
 }
 
-ilG_texture* ilG_texture_fromasset(ilA_asset* asset)
+void ilG_texture_fromasset(ilG_texture* self, unsigned unit, ilA_asset* asset)
 {
-    struct GLtexture *tex = calloc(1, sizeof(struct GLtexture));
-
-    tex->object = ilA_assetToTexture(asset);
-    tex->parent.update = &update;
-    tex->parent.name = il_StoC(ilA_getPath(asset));
-    ilG_texture_assignId(&tex->parent);
-
-    return &tex->parent;
+    struct texture_ctx *ctx = self->update_ctx;
+    ctx->units[unit] = (struct texture_unit) {
+        .used = 1,
+        .tex = ilA_assetToTexture(asset),
+        .mode = GL_TEXTURE_2D
+    };
 }
 
-static struct GLtexture def;
+static ilG_texture def;
+static struct texture_ctx defctx;
 
 void ilG_texture_init()
 {
@@ -60,18 +79,18 @@ void ilG_texture_init()
         255, 255, 255, 255
     };
 
-    def.parent.name = "Default Texture";
-
-    glGenTextures(1, &def.object);
-    glBindTexture(GL_TEXTURE_2D, def.object);
+    def.name = "Default Texture";
+    glGenTextures(1, &defctx.units[ILG_TUNIT_COLOR0].tex);
+    glBindTexture(GL_TEXTURE_2D, defctx.units[ILG_TUNIT_COLOR0].tex);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, 
         GL_UNSIGNED_BYTE, data);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-
-    def.parent.update = &update;
-
-    ilG_texture_default = &def.parent;
+    def.update = &texture_update;
+    def.bind_ctx =
+    def.update_ctx =
+    def.unbind_ctx = &defctx;
+    ilG_texture_default = &def;
     ilG_texture_assignId(ilG_texture_default);
 }
 
