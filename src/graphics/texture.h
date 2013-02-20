@@ -20,8 +20,10 @@ ilG_texture *ilG_texture_default;
 
 struct ilA_asset;
 
-ilG_texture* ilG_texture_fromfile(const char *name);
-ilG_texture* ilG_texture_fromasset(struct ilA_asset* asset);
+ilG_texture* ilG_texture_new();
+void ilG_texture_setName(ilG_texture* self, const char *name);
+void ilG_texture_fromfile(ilG_texture* self, unsigned unit, const char *name);
+void ilG_texture_fromasset(ilG_texture* self, unsigned unit, struct ilA_asset* asset);
 
 ilG_texture* ilG_texture_fromId(unsigned int id); // tracker.c
 void ilG_texture_assignId(ilG_texture*);

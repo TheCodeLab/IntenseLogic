@@ -84,7 +84,8 @@
         }                                       \
         memmove( (list).data + (id) + 1,        \
                  (list).data + (id),            \
-                 (list).length - (id) - 1 );    \
+                 sizeof((list).data[0]) *       \
+                 ((list).length - (id)) );      \
         (list).length++;                        \
         (list).data[id] = (in);                 \
     } while(0)

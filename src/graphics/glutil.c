@@ -179,7 +179,7 @@ il_Matrix ilG_computeMVP(enum ilG_transform filter, const ilG_camera* camera, co
     if (filter & ILG_INVERSE) {
         int res = il_Matrix_invert(mvp, &mvp);
         if (res != 0) {
-            il_log(1, "Failed to invert MPV matrix");
+            il_log(1, "Failed to invert matrix");
         }
     }
     

@@ -157,6 +157,8 @@ int il_Matrix_invert(il_Matrix m, il_Matrix* invOut)
     double inv[16], det;
     int i;
 
+    m = il_Matrix_transpose(m); //column major fff
+
     inv[0] = m.data[5]  * m.data[10] * m.data[15] -
              m.data[5]  * m.data[11] * m.data[14] -
              m.data[9]  * m.data[6]  * m.data[15] +
@@ -277,6 +279,8 @@ int il_Matrix_invert(il_Matrix m, il_Matrix* invOut)
 
     for (i = 0; i < 16; i++)
         invOut->data[i] = inv[i] * det;
+
+    il_Matrix_transpose(*invOut);
 
     return 0;
 }

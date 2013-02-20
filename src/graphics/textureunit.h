@@ -4,12 +4,16 @@
 #include "common/log.h"
 
 // 64 units per type
-#define ILG_TUNIT_NONE      (0)
-#define ILG_TUNIT_COLOR0    (1<<0)
-#define ILG_TUNIT_NORMAL0   (1<<6)
-#define ILG_TUNIT_BUMP0     (1<<12)
-#define ILG_TUNIT_SHADOW0   (1<<18)
-#define ILG_TUNIT_HEIGHT0   (1<<24)
+#define ILG_TUNIT_NONE          (0)
+#define ILG_TUNIT_COLOR0        (1)
+#define ILG_TUNIT_NORMAL0       (32)
+#define ILG_TUNIT_BUMP0         (64)
+#define ILG_TUNIT_SHADOW0       (96)
+#define ILG_TUNIT_HEIGHT0       (128)
+// types that only need 1 unit
+#define ILG_TUNIT_PAGETABLE     (160)
+#define ILG_TUNIT_VIRTUALTEX    (161)
+#define ILG_TUNIT_NUMUNITS      (162)
 
 #define ILG_TUNIT_ACTIVE(context, unit, type)   \
     if ((unit) < (context)->num_texunits) {     \
