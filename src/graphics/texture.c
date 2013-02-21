@@ -8,6 +8,7 @@
 #include "graphics/tracker.h"
 #include "graphics/context.h"
 #include "graphics/textureunit.h"
+#include "common/log.h"
 
 struct texture_ctx {
     struct ilG_material* mtl;
@@ -67,6 +68,86 @@ void ilG_texture_fromasset(ilG_texture* self, unsigned unit, ilA_asset* asset)
         .tex = ilA_assetToTexture(asset),
         .mode = GL_TEXTURE_2D
     };
+}
+
+void ilG_texture_fromGL(ilG_texture* self, unsigned unit, GLenum target, GLuint tex)
+{
+    struct texture_ctx *ctx = self->update_ctx;
+
+    ctx->units[unit] = (struct texture_unit) {
+        .used = 1,
+        .tex = tex,
+        .mode = target
+    };
+}
+
+void ilG_texture_fromdata(ilG_texture* self, unsigned unit, GLenum target, 
+    GLenum internalformat, unsigned width, unsigned height, unsigned depth, GLenum format, 
+    GLenum type, void *data)
+{
+    struct texture_ctx *ctx = self->update_ctx;
+    GLuint tex;
+
+    glGenTextures(target, &tex);
+    glBindTexture(target, tex);
+    switch (target) {
+        case GL_TEXTURE_1D:
+        case GL_PROXY_TEXTURE_1D:
+        glTexImage1D(target, 0, internalformat, width, 0, format, type, data);
+        break;
+        case GL_TEXTURE_2D:
+        case GL_PROXY_TEXTURE_2D:
+        case GL_TEXTURE_1D_ARRAY:
+        case GL_PROXY_TEXTURE_1D_ARRAY:
+        case GL_TEXTURE_RECTANGLE:
+        case GL_PROXY_TEXTURE_RECTANGLE:
+        case GL_TEXTURE_CUBE_MAP_POSITIVE_X:
+        case GL_TEXTURE_CUBE_MAP_NEGATIVE_X:
+        case GL_TEXTURE_CUBE_MAP_POSITIVE_Y:
+        case GL_TEXTURE_CUBE_MAP_NEGATIVE_Y:
+        case GL_TEXTURE_CUBE_MAP_POSITIVE_Z:
+        case GL_TEXTURE_CUBE_MAP_NEGATIVE_Z:
+        case GL_PROXY_TEXTURE_CUBE_MAP:
+        glTexImage2D(target, 0, internalformat, width, height, 0, format, type, data);
+        break;
+        case GL_TEXTURE_3D:
+        case GL_PROXY_TEXTURE_3D:
+        case GL_TEXTURE_2D_ARRAY:
+        case GL_PROXY_TEXTURE_2D_ARRAY:
+        glTexImage3D(target, 0, internalformat, width, height, depth, 0, format, type, data);
+        break;
+        default:
+        il_log(1, "Unknown texture format");
+        return;
+    }
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+
+    ctx->units[unit] = (struct texture_unit) {
+        .used = 1,
+        .tex = tex,
+        .mode = target
+    };
+}
+
+GLuint ilG_texture_getTex(ilG_texture* self, unsigned unit, GLenum *target)
+{
+    struct texture_ctx *ctx = self->update_ctx;
+
+    if (target) {
+        *target = ctx->units[unit].mode;
+    }
+    return ctx->units[unit].tex;
+}
+
+void ilG_texture_setFilter(ilG_texture* self, unsigned unit, GLenum min_filter, GLenum mag_filter)
+{
+    struct texture_ctx *ctx = self->update_ctx;
+
+    glBindTexture(ctx->units[unit].mode, ctx->units[unit].tex);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, mag_filter);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, min_filter);
 }
 
 static ilG_texture def;
