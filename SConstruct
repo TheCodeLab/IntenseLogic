@@ -11,7 +11,12 @@ platform  = ARGUMENTS.get("platform", "linux")
 
 # flags
 cflags    = "-Wall -Wextra -pedantic -std=c99 -g -DDEBUG -I./" + src_dir
-linkflags = "-g -L. -rdynamic"
+linkflags = "-g -L."
+if platform == "mingw":
+    cflags += " -DWIN32"
+    linkflags += " -Wl,--export-all-symbols"
+else:
+    linkflags += " -rdynamic" # assume ELF because I'm terrible
 
 # luajit requires this
 if platform == "osx":
@@ -22,7 +27,7 @@ lib_dirs = ["/usr/lib", "/usr/local/lib"]
 
 libs = {
     "osx": ["m", "png"],
-    "mingw": ["mingw32", "ws2_32", "glfw", "opengl32", "png"],
+    "mingw": ["mingw32", "libevent", "ws2_32", "glfw", "glew32", "opengl32", "png", "z", "lua51"],
     "arch": ["m", "png"],
     "linux": ["m", "png"]
 }
@@ -30,7 +35,8 @@ libs = {
 pkg_libs = {
     "osx": ["libevent", "libglfw", "glew", "luajit"],
     "arch": ["libevent", "libglfw", "glew", "luajit", "gl"],
-    "linux": ["libevent", "gl", "glfw", "glew", "luajit"]
+    "linux": ["libevent", "gl", "glfw", "glew", "luajit"],
+    "mingw": []
 }
 
 # link libs
@@ -40,8 +46,8 @@ env = Environment(CCFLAGS = cflags, LINKFLAGS = linkflags)
 for lib in pkg_libs[platform] :
     env.ParseConfig("pkg-config " + lib + " --cflags --libs")
 
-for lib in libs[platform] :
-    env.Append(LIBS = lib)
+#for lib in libs[platform] :
+env.Append(LIBS = libs[platform])
 
 # get sources
 sources = []

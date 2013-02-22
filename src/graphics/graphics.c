@@ -178,6 +178,7 @@ void ilG_init()
     // GL setup
     glClearColor(1.0, 0.41, 0.72, 1.0); // hot pink because why not
     glClearDepth(1.0);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glDepthFunc(GL_LESS);
     glEnable(GL_DEPTH_TEST);
     IL_GRAPHICS_TESTERROR("Error setting up screen");

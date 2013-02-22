@@ -22,34 +22,6 @@ char *strdup(const char *str);
 
 char *strtok_r(char *str, const char *delim, char **saveptr);
 
-#ifdef WIN32
-// http://stackoverflow.com/a/12979321
-char *strtok_r(char *str, const char *delim, char **nextp)
-{
-    char *ret;
-
-    if (str == NULL) {
-        str = *nextp;
-    }
-
-    str += strspn(str, delim);
-
-    if (*str == '\0') {
-        return NULL;
-    }
-
-    ret = str;
-    str += strcspn(str, delim);
-
-    if (*str) {
-        *str++ = '\0';
-    }
-
-    *nextp = str;
-    return ret;
-}
-#endif
-
 int main(int argc, char **argv)
 {
     DocoptArgs args = docopt(argc, argv, 1, "0.0pre-alpha");

@@ -6,25 +6,6 @@
 
 size_t strnlen(const char *s, size_t maxlen);
 
-#ifdef WIN32
-size_t strnlen(const char *str, size_t maxlen) // ripped off from glibc, stripped down significantly
-{
-    const char *char_ptr, *end_ptr = str + maxlen;
-    if (maxlen == 0)
-        return 0;
-    if (end_ptr < str, 0)
-        end_ptr = (const char *) ~0UL;
-    for (char_ptr = str; ; ++char_ptr) {
-        if (*char_ptr == '\0') {
-            if (char_ptr > end_ptr)
-                char_ptr = end_ptr;
-            return char_ptr - str;
-        }
-    }
-    return end_ptr - str;
-}
-#endif
-
 il_string il_CtoS(const char * s, int len)
 {
     if (len < 0) {
