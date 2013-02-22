@@ -520,7 +520,9 @@ ilG_obj_file ilG_obj_readstring(const char * data, ilG_obj_reader inc, const cha
   struct ilG_obj_line *cur = ctx.first;
   last = NULL;
   while (cur) {
-    free(last);
+    if (last && last->type != OBJ_FACE) {
+      free(last);
+    }
     last = cur;
     cur = cur->next;
   }
