@@ -1,7 +1,7 @@
 #version 140
 
-in ivec2 in_Position;
-in ivec2 in_Texcoord;
+in vec2 in_Position;
+in vec2 in_Texcoord;
 out vec2 texcoord;
 
 void main()

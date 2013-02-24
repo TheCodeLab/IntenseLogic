@@ -176,9 +176,6 @@ void ilG_init()
     IL_GRAPHICS_TESTERROR("Unknown");
     
     // GL setup
-    glClearColor(1.0, 0.41, 0.72, 1.0); // hot pink because why not
-    glClearDepth(1.0);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glDepthFunc(GL_LESS);
     glEnable(GL_DEPTH_TEST);
     IL_GRAPHICS_TESTERROR("Error setting up screen");
@@ -373,10 +370,6 @@ static void draw()
         ilE_pushnew(il_queue, IL_BASE_SHUTDOWN, 0, NULL);
         return;
     }
-    if (!glfwGetWindowParam(GLFW_OPENED)) {
-        ilE_pushnew(il_queue, IL_BASE_SHUTDOWN, 0, NULL);
-        return;
-    }
     il_log(5, "Rendering frame");
 
     static GLenum drawbufs[] = {
@@ -403,13 +396,11 @@ static void fullscreenTexture()
 {
 
     ilG_testError("Unknown");
-    static int data[] = {
-        1, 1,
-        1, 0,
+    static float data[] = {
         0, 0,
-        1, 1,
-        0, 1,
-        0, 0,
+	0, 1,
+	1, 1,
+	1, 0
     };
     static GLuint vao, vbo = 0;
     if (!vbo) {
@@ -418,19 +409,23 @@ static void fullscreenTexture()
         glGenBuffers(1, &vbo);
         glBindBuffer(GL_ARRAY_BUFFER, vbo);
         glBufferData(GL_ARRAY_BUFFER, sizeof(data), &data, GL_STATIC_DRAW);
-        glVertexAttribPointer(ILG_ARRATTR_POSITION, 2, GL_INT, GL_FALSE, 0, NULL);
-        glVertexAttribPointer(ILG_ARRATTR_TEXCOORD, 2, GL_INT, GL_FALSE, 0, NULL);
+        glVertexAttribPointer(ILG_ARRATTR_POSITION, 2, GL_FLOAT, GL_FALSE, 0, NULL);
+        glVertexAttribPointer(ILG_ARRATTR_TEXCOORD, 2, GL_FLOAT, GL_FALSE, 0, NULL);
         glEnableVertexAttribArray(ILG_ARRATTR_POSITION);
         glEnableVertexAttribArray(ILG_ARRATTR_TEXCOORD);
     }
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
     glBindVertexArray(vao);
-    glDrawArrays(GL_TRIANGLES, 0, 6);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
     ilG_testError("Error drawing fullscreen quad");
 }
 
 static void global_draw()
 {
+    if (!glfwGetWindowParam(GLFW_OPENED)) {
+        ilE_pushnew(il_queue, IL_BASE_SHUTDOWN, 0, NULL);
+        return;
+    }
     //il_log(3, "Drawing window");
     ilG_testError("Unknown");
     static ilG_material* material = NULL;
@@ -456,9 +451,19 @@ static void global_draw()
         if (ilG_material_link(material)) {
             abort();
         }
+	ilG_testError("Error creating material");
     }
+    glClearColor(1.0, 0.41, 0.72, 1.0); // hot pink because why not
+    ilG_testError("glClearColor");
+    glClearDepth(1.0);
+    ilG_testError("glClearDepth");
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    ilG_testError("glClear");
     glEnable(GL_CULL_FACE);
+    ilG_testError("glEnable");
+    ilG_testError("Error setting up for draw");
     draw();
+    ilG_testError("Error drawing scene");
     // clean up the state
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glDisable(GL_DEPTH_TEST);
@@ -469,9 +474,11 @@ static void global_draw()
     // setup to do postprocessing
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_RECTANGLE, context->fbtextures[1]); // bind the accumulation buffer
+    ilG_testError("Error setting up for post processing");
     fullscreenTexture();
+    ilG_testError("Error post processing");
     material->unbind(context, material->unbind_ctx);
-    ilG_testError("global_draw()");
+    ilG_testError("Error cleaning up shaders");
     glfwSwapBuffers();
 }
 

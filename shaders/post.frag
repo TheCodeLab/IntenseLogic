@@ -6,6 +6,6 @@ out vec3 color;
 
 void main()
 {
-    color = vec3(texture(tex, texcoord * vec2(textureSize(tex))).xyz);
+    color = texture(tex, texcoord * vec2(800, 600/*textureSize(tex)*/)).xyz;
 }
 
