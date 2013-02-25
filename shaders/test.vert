@@ -14,14 +14,14 @@ out vec3 diffuse;
 out vec4 specular;
 
 uniform mat4 mvp;
-uniform mat4 vp;
+uniform mat4 im;
 
 void main()
 {
     gl_Position = mvp * in_Position;
     texcoord = in_Texcoord;
-    vec4 normal4 = vp * vec4(in_Normal, 1.0);
-    normal = normal4.xyz / normal4.w;
+    vec4 normal4 = vec4(in_Normal, 0.0) * im;
+    normal = normal4.xyz;
     ambient = in_Diffuse;//in_Ambient;
     diffuse = in_Diffuse;
     specular = in_Specular;
