@@ -1,297 +1,280 @@
 #include "matrix.h"
 
 #include <stdlib.h>
-#include <math.h>
 #include <string.h>
+#include <xmmintrin.h>
+#include <math.h>
 
-#include "quaternion.h"
+// SSE code copied from GLM which is under the MIT license: http://glm.g-truc.net/copying.txt
 
-il_Matrix il_Matrix_identity = {
-    {
-        1, 0, 0, 0,
-        0, 1, 0, 0,
-        0, 0, 1, 0,
-        0, 0, 0, 1
-    }
-};
+extern void* aligned_alloc(size_t align, size_t size);
+extern void aligned_free(void*);
 
-il_Matrix il_Matrix_mul(il_Matrix a, il_Matrix b)
+il_mat il_mat_new()
 {
-    il_Matrix c;
-
-    int i,j,k;
-    for(i=0; i<4; i++) {
-        for(j=0; j<4; j++) {
-            c.data[i*4+j]=0;
-            for(k=0; k<4; k++) {
-                c.data[i*4+j]+=a.data[i*4+k]*b.data[k*4+j];
-            }
-        }
-    }
-
-    return c;
+    il_mat m = aligned_alloc(sizeof(float) * 4, sizeof(float) * 16);
+    return m;
 }
 
-il_Vector4 il_Vector4_mul_m(il_Vector4 vec, il_Matrix b)
+void il_mat_free(il_mat m)
 {
-    float c[4];
-    float *a = (float*)&vec;
-
-    int row1, col;
-
-    for (row1 = 0; row1 < 4; row1++) {
-        c[row1] = 0;
-        for (col = 0; col < 4; col++) {
-            c[row1] += a[col] * b.data[row1*4 + col];
-        }
-    }
-
-    return (il_Vector4) {
-        c[0],c[1],c[2],c[3]
-    };
+    aligned_free(m);
 }
 
-il_Matrix il_Matrix_translate(il_Vector3 t)
+il_mat il_mat_copy(il_mat m)
 {
-    il_Matrix n = il_Matrix_identity;
-    n.data[3] = t.x;
-    n.data[7] = t.y;
-    n.data[11] = t.z;
-    return n;
-}
-
-il_Vector3 il_Matrix_getTranslation(il_Matrix m)
-{
-    return (il_Vector3){m.data[3], m.data[7], m.data[11]};
-}
-
-il_Matrix il_Matrix_rotate_v(float a, il_Vector3 n)
-{
-    il_Matrix b = il_Matrix_identity;
-    float c = cosf(a);
-    float s = sinf(a);
-    b.data[0] = n.x*n.x*(1-c)+c;
-    b.data[1] = n.x*n.y*(1-c)-(n.z*s);
-    b.data[2] = n.x*n.z*(1-c)+(n.y*s);
-
-    b.data[4] = n.y*n.x*(1-c)+(n.z*s);
-    b.data[5] = n.y*n.y*(1-c)+c;
-    b.data[6] = n.y*n.z*(1-c)-(n.x*s);
-
-    b.data[8] = n.x*n.z*(1-c)-(n.y*s);
-    b.data[9] = n.y*n.z*(1-c)+(n.x*s);
-    b.data[10]= n.z*n.z*(1-c)+c;
-
-    return b;
-}
-
-/*
-   vec3 Q = 2.*q.xyz;
-   qMat = mat3(
-   1 - Q.y*q.y - Q.z*q.z, Q.x*q.y + Q.z*q.w, Q.x*q.z - Q.y*q.w,
-   Q.x*q.y - Q.z*q.w, 1 - Q.x*q.x - Q.z*q.z, Q.y*q.z + Q.x*q.w,
-   Q.x*q.z + Q.y*q.w, Q.y*q.z - Q.x*q.w, 1 - Q.x*q.x - Q.y*q.y); */
-il_Matrix il_Matrix_rotate_q(il_Quaternion q)
-{
-    il_Vector3 Q = il_Vector3_mul_f((il_Vector3) {
-        q.x,q.y,q.z
-    },2.0f);
-    il_Matrix n;
-    memset(&n, 0, sizeof(il_Matrix));
-
-    n.data[0] = 1 - (Q.y*q.y) - (Q.z*q.z);
-    n.data[1] = (Q.x*q.y) + (Q.z*q.w);
-    n.data[2] = (Q.x*q.z) - (Q.y*q.w);
-
-    n.data[4] = (Q.x*q.y) - (Q.z*q.w);
-    n.data[5] = 1 - (Q.x*q.x) - (Q.z*q.z);
-    n.data[6] = (Q.y*q.z) + (Q.x*q.w);
-
-    n.data[8] = (Q.x*q.z) + (Q.y*q.w);
-    n.data[9] = (Q.y*q.z) - (Q.x*q.w);
-    n.data[10]= 1 - (Q.x*q.x) - (Q.y*q.y);
-
-    n.data[15] = 1;
-
-    return n;
-}
-
-il_Matrix il_Matrix_scale(il_Vector3 v)
-{
-    il_Matrix n;
-    memset(&n, 0, sizeof(il_Matrix));
-    n.data[0] = v.x;
-    n.data[5] = v.y;
-    n.data[10] = v.z;
-    n.data[15] = 1.0;
-
-    return n;
-}
-
-il_Vector3 il_Matrix_getScale(il_Matrix m)
-{
-    return (il_Vector3){m.data[0], m.data[5], m.data[10]};
-}
-
-// blatantly ripped off from
-// http://www.opengl.org/sdk/docs/man/xhtml/gluPerspective.xml
-il_Matrix il_Matrix_perspective(double fovy, double aspect, double znear, double zfar)
-{
-    il_Matrix res;
-    memset(&res, 0, sizeof(il_Matrix));
-
-    double f = 1.0/tan(fovy/2);
-
-    res.data[0] = f / aspect;
-    res.data[5] = f;
-    res.data[10] = (zfar+znear)/(znear-zfar);
-    res.data[11] = (2*zfar*znear)/(znear-zfar);
-    res.data[14] = -1;
-
+    il_mat res = il_mat_new();
+    memcpy(res, m, sizeof(float) * 16);
     return res;
 }
 
-int il_Matrix_invert(il_Matrix m, il_Matrix* invOut)
+il_mat il_mat_set(il_mat m, il_vec4 a, il_vec4 b, il_vec4 c, il_vec4 d)
 {
-
-    double inv[16], det;
-    int i;
-
-    m = il_Matrix_transpose(m); //column major fff
-
-    inv[0] = m.data[5]  * m.data[10] * m.data[15] -
-             m.data[5]  * m.data[11] * m.data[14] -
-             m.data[9]  * m.data[6]  * m.data[15] +
-             m.data[9]  * m.data[7]  * m.data[14] +
-             m.data[13] * m.data[6]  * m.data[11] -
-             m.data[13] * m.data[7]  * m.data[10];
-
-    inv[4] = -m.data[4]  * m.data[10] * m.data[15] +
-             m.data[4]  * m.data[11] * m.data[14] +
-             m.data[8]  * m.data[6]  * m.data[15] -
-             m.data[8]  * m.data[7]  * m.data[14] -
-             m.data[12] * m.data[6]  * m.data[11] +
-             m.data[12] * m.data[7]  * m.data[10];
-
-    inv[8] = m.data[4]  * m.data[9] * m.data[15] -
-             m.data[4]  * m.data[11] * m.data[13] -
-             m.data[8]  * m.data[5] * m.data[15] +
-             m.data[8]  * m.data[7] * m.data[13] +
-             m.data[12] * m.data[5] * m.data[11] -
-             m.data[12] * m.data[7] * m.data[9];
-
-    inv[12] = -m.data[4]  * m.data[9] * m.data[14] +
-              m.data[4]  * m.data[10] * m.data[13] +
-              m.data[8]  * m.data[5] * m.data[14] -
-              m.data[8]  * m.data[6] * m.data[13] -
-              m.data[12] * m.data[5] * m.data[10] +
-              m.data[12] * m.data[6] * m.data[9];
-
-    inv[1] = -m.data[1]  * m.data[10] * m.data[15] +
-             m.data[1]  * m.data[11] * m.data[14] +
-             m.data[9]  * m.data[2] * m.data[15] -
-             m.data[9]  * m.data[3] * m.data[14] -
-             m.data[13] * m.data[2] * m.data[11] +
-             m.data[13] * m.data[3] * m.data[10];
-
-    inv[5] = m.data[0]  * m.data[10] * m.data[15] -
-             m.data[0]  * m.data[11] * m.data[14] -
-             m.data[8]  * m.data[2] * m.data[15] +
-             m.data[8]  * m.data[3] * m.data[14] +
-             m.data[12] * m.data[2] * m.data[11] -
-             m.data[12] * m.data[3] * m.data[10];
-
-    inv[9] = -m.data[0]  * m.data[9] * m.data[15] +
-             m.data[0]  * m.data[11] * m.data[13] +
-             m.data[8]  * m.data[1] * m.data[15] -
-             m.data[8]  * m.data[3] * m.data[13] -
-             m.data[12] * m.data[1] * m.data[11] +
-             m.data[12] * m.data[3] * m.data[9];
-
-    inv[13] = m.data[0]  * m.data[9] * m.data[14] -
-              m.data[0]  * m.data[10] * m.data[13] -
-              m.data[8]  * m.data[1] * m.data[14] +
-              m.data[8]  * m.data[2] * m.data[13] +
-              m.data[12] * m.data[1] * m.data[10] -
-              m.data[12] * m.data[2] * m.data[9];
-
-    inv[2] = m.data[1]  * m.data[6] * m.data[15] -
-             m.data[1]  * m.data[7] * m.data[14] -
-             m.data[5]  * m.data[2] * m.data[15] +
-             m.data[5]  * m.data[3] * m.data[14] +
-             m.data[13] * m.data[2] * m.data[7] -
-             m.data[13] * m.data[3] * m.data[6];
-
-    inv[6] = -m.data[0]  * m.data[6] * m.data[15] +
-             m.data[0]  * m.data[7] * m.data[14] +
-             m.data[4]  * m.data[2] * m.data[15] -
-             m.data[4]  * m.data[3] * m.data[14] -
-             m.data[12] * m.data[2] * m.data[7] +
-             m.data[12] * m.data[3] * m.data[6];
-
-    inv[10] = m.data[0]  * m.data[5] * m.data[15] -
-              m.data[0]  * m.data[7] * m.data[13] -
-              m.data[4]  * m.data[1] * m.data[15] +
-              m.data[4]  * m.data[3] * m.data[13] +
-              m.data[12] * m.data[1] * m.data[7] -
-              m.data[12] * m.data[3] * m.data[5];
-
-    inv[14] = -m.data[0]  * m.data[5] * m.data[14] +
-              m.data[0]  * m.data[6] * m.data[13] +
-              m.data[4]  * m.data[1] * m.data[14] -
-              m.data[4]  * m.data[2] * m.data[13] -
-              m.data[12] * m.data[1] * m.data[6] +
-              m.data[12] * m.data[2] * m.data[5];
-
-    inv[3] = -m.data[1] * m.data[6] * m.data[11] +
-             m.data[1] * m.data[7] * m.data[10] +
-             m.data[5] * m.data[2] * m.data[11] -
-             m.data[5] * m.data[3] * m.data[10] -
-             m.data[9] * m.data[2] * m.data[7] +
-             m.data[9] * m.data[3] * m.data[6];
-
-    inv[7] = m.data[0] * m.data[6] * m.data[11] -
-             m.data[0] * m.data[7] * m.data[10] -
-             m.data[4] * m.data[2] * m.data[11] +
-             m.data[4] * m.data[3] * m.data[10] +
-             m.data[8] * m.data[2] * m.data[7] -
-             m.data[8] * m.data[3] * m.data[6];
-
-    inv[11] = -m.data[0] * m.data[5] * m.data[11] +
-              m.data[0] * m.data[7] * m.data[9] +
-              m.data[4] * m.data[1] * m.data[11] -
-              m.data[4] * m.data[3] * m.data[9] -
-              m.data[8] * m.data[1] * m.data[7] +
-              m.data[8] * m.data[3] * m.data[5];
-
-    inv[15] = m.data[0] * m.data[5] * m.data[10] -
-              m.data[0] * m.data[6] * m.data[9] -
-              m.data[4] * m.data[1] * m.data[10] +
-              m.data[4] * m.data[2] * m.data[9] +
-              m.data[8] * m.data[1] * m.data[6] -
-              m.data[8] * m.data[2] * m.data[5];
-
-    det = m.data[0] * inv[0] + m.data[1] * inv[4] + m.data[2] * inv[8] + m.data[3] * inv[12];
-
-    if (det == 0) return -1;
-
-    det = 1.0 / det;
-
-    for (i = 0; i < 16; i++)
-        invOut->data[i] = inv[i] * det;
-
-    il_Matrix_transpose(*invOut);
-
-    return 0;
+    if (!m) {
+        m = il_mat_new();
+    }
+    memcpy(m + 0,  a, sizeof(il_vec4));
+    memcpy(m + 4,  b, sizeof(il_vec4));
+    memcpy(m + 8,  c, sizeof(il_vec4));
+    memcpy(m + 12, d, sizeof(il_vec4));
+    return m;
 }
 
-il_Matrix il_Matrix_transpose(il_Matrix m)
+il_mat il_mat_mul(const il_mat a, const il_mat b, il_mat res)
 {
-    return (il_Matrix) {{
-        m.data[0], m.data[4], m.data[8],  m.data[12],
-        m.data[1], m.data[5], m.data[9],  m.data[13],
-        m.data[2], m.data[6], m.data[10], m.data[14],
-        m.data[3], m.data[7], m.data[11], m.data[15],
-    }};
+    if (!res) {
+        res = il_mat_new();
+    }
+#ifdef IL_SSE
+    __mm128 r1[4], r2[4];
+    int i;
+    for (i = 0; i < 4; i++) {
+        r1[i] = _mm_load_ps(a + i*4);
+        r2[i] = _mm_load_ps(b + i*4);
+    }
+    for (i = 0; i < 4; i++) {
+        __m128 e0 = _mm_shuffle_ps(r2[i], r2[i], _MM_SHUFFLE(0, 0, 0, 0));
+        __m128 e1 = _mm_shuffle_ps(r2[i], r2[i], _MM_SHUFFLE(1, 1, 1, 1));
+        __m128 e2 = _mm_shuffle_ps(r2[i], r2[i], _MM_SHUFFLE(2, 2, 2, 2));
+        __m128 e3 = _mm_shuffle_ps(r2[i], r2[i], _MM_SHUFFLE(3, 3, 3, 3));
+
+        __m128 m0 = _mm_mul_ps(r1[0], e0);
+        __m128 m1 = _mm_mul_ps(r1[1], e1);
+        __m128 m2 = _mm_mul_ps(r1[2], e2);
+        __m128 m3 = _mm_mul_ps(r1[3], e3);
+
+        __m128 a0 = _mm_add_ps(m0, m1);
+        __m128 a1 = _mm_add_ps(m2, m3);
+        __m128 a2 = _mm_add_ps(a0, a1);
+
+        _mm_store_ps(res + i*4, a2);
+    }
+#else
+    int i,j,k;
+    for(i=0; i<4; i++) {
+        for(j=0; j<4; j++) {
+            res[i*4+j]=0;
+            for(k=0; k<4; k++) {
+                res[i*4+j]+=a[i*4+k]*b[k*4+j];
+            }
+        }
+    }
+#endif
+    return res;
+}
+
+il_mat il_mat_translate(const il_vec4 v, il_mat m)
+{
+    if (!m) {
+        m = il_mat_new();
+    }
+    float data[] = {
+        1, 0, 0, v[0],
+        0, 1, 0, v[1],
+        0, 0, 1, v[2],
+        0, 0, 0, v[3],
+    };
+    memcpy(m, data, sizeof(data));
+    return m;
+}
+
+il_mat il_mat_scale(const il_vec4 v, il_mat m)
+{
+    if (!m) {
+        m = il_mat_new();
+    }
+    float data[] = {
+        v[0], 0,    0,    0,
+        0,    v[1], 0,    0,
+        0,    0,    v[2], 0,
+        0,    0,    0,    v[3],
+    };
+    memcpy(m, data, sizeof(data));
+    return m;
+}
+
+il_mat il_mat_identity(il_mat m)
+{
+    if (!m) {
+        m = il_mat_new();
+    }
+    float data[] = {
+        1, 0, 0, 0,
+        0, 1, 0, 0,
+        0, 0, 1, 0,
+        0, 0, 0, 1,
+    };
+    memcpy(m, data, sizeof(data));
+    return m;
+}
+
+il_mat il_mat_perspective(il_mat m, float fovy, float aspect, float znear, float zfar)
+{
+    // http://www.opengl.org/sdk/docs/man/xhtml/gluPerspective.xml
+    if (!m) {
+        m = il_mat_new();
+    }
+    memset(m, 0, sizeof(float)*16);
+    float f = 1.0/tan(fovy/2);
+    m[0] = f / aspect;
+    m[5] = f;
+    m[10] = (zfar+znear)/(znear-zfar);
+    m[11] = (2*zfar*znear)/(znear-zfar);
+    m[14] = -1;
+    return m;
+}
+
+il_mat il_mat_rotate(const il_quat q, il_mat m)
+{
+    if (!m) {
+        m = il_mat_new();
+    }
+    m[0] =  1 - 2 * q[1] * q[1] - 2 * q[2] * q[2];
+    m[1] =  2 * q[0] * q[1] + 2 * q[3] * q[2];
+    m[2] =  2 * q[0] * q[2] - 2 * q[3] * q[1];
+    m[4] =  2 * q[0] * q[1] - 2 * q[3] * q[2];
+    m[5] =  1 - 2 * q[0] * q[0] - 2 * q[2] * q[2];
+    m[6] =  2 * q[1] * q[2] + 2 * q[3] * q[0];
+    m[8] =  2 * q[0] * q[2] + 2 * q[3] * q[1];
+    m[9] =  2 * q[1] * q[2] - 2 * q[3] * q[0];
+    m[10] = 1 - 2 * q[0] * q[0] - 2 * q[1] * q[1];
+    m[15] = 1.0;
+    return m;
+}
+
+il_mat il_mat_invert(const il_mat a, il_mat res)
+{
+    if (!res) {
+        res = il_mat_new();
+    }
+#ifdef IL_SSE
+
+#else
+    float Coef00 = a[2*4 + 2] * a[3*4 + 3] - a[2*4 + 3] * a[3*4 + 2];
+    float Coef02 = a[2*4 + 1] * a[3*4 + 3] - a[2*4 + 3] * a[3*4 + 1];
+    float Coef03 = a[2*4 + 1] * a[3*4 + 2] - a[2*4 + 2] * a[3*4 + 1];
+    float Coef04 = a[1*4 + 2] * a[3*4 + 3] - a[1*4 + 3] * a[3*4 + 2];
+    float Coef06 = a[1*4 + 1] * a[3*4 + 3] - a[1*4 + 3] * a[3*4 + 1];
+    float Coef07 = a[1*4 + 1] * a[3*4 + 2] - a[1*4 + 2] * a[3*4 + 1];
+    float Coef08 = a[1*4 + 2] * a[2*4 + 3] - a[1*4 + 3] * a[2*4 + 2];
+    float Coef10 = a[1*4 + 1] * a[2*4 + 3] - a[1*4 + 3] * a[2*4 + 1];
+    float Coef11 = a[1*4 + 1] * a[2*4 + 2] - a[1*4 + 2] * a[2*4 + 1];
+    float Coef12 = a[0*4 + 2] * a[3*4 + 3] - a[0*4 + 3] * a[3*4 + 2];
+    float Coef14 = a[0*4 + 1] * a[3*4 + 3] - a[0*4 + 3] * a[3*4 + 1];
+    float Coef15 = a[0*4 + 1] * a[3*4 + 2] - a[0*4 + 2] * a[3*4 + 1];
+    float Coef16 = a[0*4 + 2] * a[2*4 + 3] - a[0*4 + 3] * a[2*4 + 2];
+    float Coef18 = a[0*4 + 1] * a[2*4 + 3] - a[0*4 + 3] * a[2*4 + 1];
+    float Coef19 = a[0*4 + 1] * a[2*4 + 2] - a[0*4 + 2] * a[2*4 + 1];
+    float Coef20 = a[0*4 + 2] * a[1*4 + 3] - a[0*4 + 3] * a[1*4 + 2];
+    float Coef22 = a[0*4 + 1] * a[1*4 + 3] - a[0*4 + 3] * a[1*4 + 1];
+    float Coef23 = a[0*4 + 1] * a[1*4 + 2] - a[0*4 + 2] * a[1*4 + 1];
+
+    il_vec4 SignA = il_vec4_set(NULL, +1, -1, +1, -1);
+    il_vec4 SignB = il_vec4_set(NULL, -1, +1, -1, +1);
+
+    il_vec4 Fac0 = il_vec4_set(NULL, Coef00, Coef00, Coef02, Coef03);
+    il_vec4 Fac1 = il_vec4_set(NULL, Coef04, Coef04, Coef06, Coef07);
+    il_vec4 Fac2 = il_vec4_set(NULL, Coef08, Coef08, Coef10, Coef11);
+    il_vec4 Fac3 = il_vec4_set(NULL, Coef12, Coef12, Coef14, Coef15);
+    il_vec4 Fac4 = il_vec4_set(NULL, Coef16, Coef16, Coef18, Coef19);
+    il_vec4 Fac5 = il_vec4_set(NULL, Coef20, Coef20, Coef22, Coef23);
+
+    il_vec4 Vec0 = il_vec4_set(NULL, a[0*4 + 1], a[0*4 + 0], a[0*4 + 0], a[0*4 + 0]);
+    il_vec4 Vec1 = il_vec4_set(NULL, a[1*4 + 1], a[1*4 + 0], a[1*4 + 0], a[1*4 + 0]);
+    il_vec4 Vec2 = il_vec4_set(NULL, a[2*4 + 1], a[2*4 + 0], a[2*4 + 0], a[2*4 + 0]);
+    il_vec4 Vec3 = il_vec4_set(NULL, a[3*4 + 1], a[3*4 + 0], a[3*4 + 0], a[3*4 + 0]);
+
+    il_vec4 v1f0 = il_vec4_mul(Vec1, Fac0, NULL);
+    il_vec4 v0f0 = il_vec4_mul(Vec0, Fac0, NULL);
+    il_vec4 v0f1 = il_vec4_mul(Vec0, Fac1, NULL);
+    il_vec4 v0f2 = il_vec4_mul(Vec0, Fac2, NULL);
+
+    il_vec4 v2f1 = il_vec4_mul(Vec2, Fac1, NULL);
+    il_vec4 v2f3 = il_vec4_mul(Vec2, Fac3, NULL);
+    il_vec4 v1f3 = il_vec4_mul(Vec1, Fac3, NULL);
+    il_vec4 v1f4 = il_vec4_mul(Vec1, Fac4, NULL);
+
+    il_vec4 v3f2 = il_vec4_mul(Vec3, Fac2, NULL);
+    il_vec4 v3f4 = il_vec4_mul(Vec3, Fac4, NULL);
+    il_vec4 v3f5 = il_vec4_mul(Vec3, Fac5, NULL);
+    il_vec4 v2f5 = il_vec4_mul(Vec2, Fac5, NULL);
+
+    il_vec4_free(Fac0);
+    il_vec4_free(Fac1);
+    il_vec4_free(Fac2);
+    il_vec4_free(Fac3);
+    il_vec4_free(Fac4);
+
+    Vec0 = il_vec4_sub(v1f0, v2f1, Vec0);
+    Vec1 = il_vec4_sub(v0f0, v2f3, Vec1);
+    Vec2 = il_vec4_sub(v0f1, v1f3, Vec2);
+    Vec3 = il_vec4_sub(v0f2, v1f4, Vec3);
+
+    Vec0 = il_vec4_add(Vec0, v3f2, Vec0);
+    Vec1 = il_vec4_add(Vec1, v3f4, Vec1);
+    Vec2 = il_vec4_add(Vec2, v3f5, Vec2);
+    Vec3 = il_vec4_add(Vec3, v2f5, Vec3);
+
+    Vec0 = il_vec4_mul(SignA, Vec0, Vec0);
+    Vec1 = il_vec4_mul(SignB, Vec1, Vec1);
+    Vec2 = il_vec4_mul(SignA, Vec2, Vec2);
+    Vec3 = il_vec4_mul(SignB, Vec3, Vec3);
+
+    il_vec4_free(SignA);
+    il_vec4_free(SignB);
+    il_vec4_free(v1f0);
+    il_vec4_free(v0f0);
+    il_vec4_free(v0f1);
+    il_vec4_free(v0f2);
+    il_vec4_free(v2f1);
+    il_vec4_free(v2f3);
+    il_vec4_free(v1f3);
+    il_vec4_free(v1f4);
+    il_vec4_free(v3f2);
+    il_vec4_free(v3f4);
+    il_vec4_free(v3f5);
+    il_vec4_free(v2f5);
+
+    res = il_mat_set(res, Vec0, Vec1, Vec2, Vec3);
+
+    il_vec4_free(Vec0);
+    il_vec4_free(Vec1);
+    il_vec4_free(Vec2);
+    il_vec4_free(Vec3);
+
+    il_vec4 Row0 = il_vec4_set(NULL, res[0], res[1], res[2], res[3]);
+    il_vec4 a_row0 = il_vec4_set(NULL, a[0], a[1], a[2], a[3]);
+
+    float Determinant = il_vec4_dot(a_row0, Row0);
+
+    il_vec4_free(Row0);
+    il_vec4_free(a_row0);
+
+    int i;
+    for (i = 0; i < 16; i++) {
+        res[i] /= Determinant;
+    }
+#endif
+    return res;
 }
 

@@ -3,14 +3,14 @@ local ffi = require "ffi"
 local positionable = require "positionable"
 local matrix = require "matrix"
 local positionable = require "positionable"
-local vector3 = require "vector3"
+local vector4 = require "vector4"
 
 ffi.cdef [[
 
 typedef struct ilG_camera {
   struct il_positionable* positionable;
-  il_Vector3 movespeed;
-  il_Matrix projection_matrix;
+  il_vec4 movespeed;
+  il_mat projection_matrix;
   float sensitivity;
   unsigned refs;
 } ilG_camera;
@@ -27,7 +27,7 @@ local function index(t, k)
     if k == "positionable" then
         return positionable.wrap(t.ptr.positionable)
     elseif k == "movespeed" then
-        return vector3.wrap(t.ptr.movespeed)
+        return vector4.wrap(t.ptr.movespeed)
     elseif k == "projection_matrix" then
         return matrix.wrap(t.ptr.projection_matrix);
     elseif k == "sensitivity" then
@@ -41,10 +41,10 @@ local function newindex(t, k, v)
         assert(type(v) == "table" and ffi.istype(positionable.type, v.ptr), "Attempt to assign non-positionable to positionable")
         t.ptr.positionable = v.ptr;
     elseif k == "movespeed" then
-        assert(type(v) == "table" and ffi.istype(vector3.type, v.ptr), "Attempt to assign non-vector to vector3")
+        assert(vector4.check(v))
         t.ptr.movespeed = v.ptr;
     elseif k == "projection_matrix" then
-        assert(type(v) == "table" and ffi.istype(matrix.type, v.ptr), "Attempt to assign non-matrix to matrix")
+        assert(matrix.check(v))
         t.ptr.projection_matrix = v.ptr;
     elseif k == "sensitivity" then
         assert(type(v) == "number", "Attempt to assign non-number to number");

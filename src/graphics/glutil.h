@@ -29,7 +29,7 @@ enum ilG_transform {
     ILG_VP = ILG_PROJECTION | ILG_VIEW,
     ILG_MVP = ILG_VP | ILG_MODEL,
 };
-il_Matrix ilG_computeMVP(enum ilG_transform filter, const ilG_camera *camera, 
+il_mat ilG_computeMVP(enum ilG_transform filter, const ilG_camera *camera, 
     const il_positionable * object);
 void ilG_bindMVP(GLint location, enum ilG_transform filter, 
     const ilG_camera *camera, const il_positionable * object);

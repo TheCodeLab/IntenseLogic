@@ -9,7 +9,7 @@ struct il_positionable;
 struct ilG_context;
 
 typedef struct ilG_phong {
-    il_Vector3 ambient, diffuse, specular;
+    il_vec4 ambient, diffuse, specular;
     float specular_co, transparency;
 } ilG_phong;
 
@@ -20,7 +20,7 @@ enum ilG_light_type {
 
 typedef struct ilG_light {
     struct il_positionable* positionable;
-    il_Vector3 color;
+    il_vec4 color;
     enum ilG_light_type type;
     GLuint texture; // shadow map
     float radius;

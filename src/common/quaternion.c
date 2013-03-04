@@ -1,57 +1,127 @@
 #include "quaternion.h"
 
+#include <stdlib.h>
 #include <math.h>
+#include <string.h>
 
-il_Quaternion il_Quaternion_fromAxisAngle(il_Vector3 v, float a)
+extern void* aligned_alloc(size_t align, size_t size);
+extern void aligned_free(void*);
+
+il_quat il_quat_new()
 {
-    il_Quaternion q;
-    float s = sinf(a/2);
-    q.x = s * v.x;
-    q.y = s * v.y;
-    q.z = s * v.z;
-    q.w = cosf(a/2);
+    il_quat q = aligned_alloc(sizeof(float) * 4, sizeof(float) * 4);
     return q;
 }
 
-il_Quaternion il_Quaternion_fromYPR(float bank, float heading, float attitude)
+void il_quat_free(il_quat q)
 {
-    il_Quaternion quat;
-    float c1 = cos(heading/2);
-    float c2 = cos(attitude/2);
-    float c3 = cos(bank/2);
-    float s1 = sin(heading/2);
-    float s2 = sin(attitude/2);
-    float s3 = sin(bank/2);
-
-    quat.w = (c1 * c2 * c3) - (s1 * s2 * s3);
-    quat.x = (s1 * s2 * c3) + (c1 * c2 * s3);
-    quat.y = (s1 * c2 * c3) + (c1 * s2 * s3);
-    quat.z = (c1 * s2 * c3) - (s1 * c2 * s3);
-
-    return quat;
+    aligned_free(q);
 }
 
-// ab = (a1b1 − a2b2 − a3b3 − a4b4) + (a1b2 + a2b1 + a3b4 − a4b3)i +
-// (a1b3 − a2b4 + a3b1 + a4b2)j + (a1b4 + a2b3 − a3b2 + a4b1)k
-// http://content.gpwiki.org/index.php/Quaternions
-il_Quaternion il_Quaternion_mul(il_Quaternion a, il_Quaternion b)
+il_quat il_quat_copy(il_quat q)
 {
-    il_Quaternion c;
-
-    float a1 = a.w;
-    float a2 = a.x;
-    float a3 = a.y;
-    float a4 = a.z;
-
-    float b1 = b.w;
-    float b2 = b.x;
-    float b3 = b.y;
-    float b4 = b.z;
-
-    c.w = a1*b1 - a2*b2 - a3*b3 - a4*b4;
-    c.x = a1*b2 + a2*b1 + a3*b4 - a4*b3;
-    c.y = a1*b3 - a2*b4 + a3*b1 + a4*b2;
-    c.z = a1*b4 + a2*b3 - a3*b2 + a4*b1;
-
-    return c;
+    il_quat res = il_quat_new();
+    memcpy(res, q, sizeof(float) * 4);
+    return res;
 }
+
+il_quat il_quat_set(il_quat q, float x, float y, float z, float w)
+{
+    if (!q) {
+        q = il_quat_new();
+    }
+    q[0] = x;
+    q[1] = y;
+    q[2] = z;
+    q[3] = w;
+    return q;
+}
+
+il_quat il_quat_mul(const il_quat a, const il_quat b, il_quat q)
+{
+    if (!q) {
+        q = il_quat_new();
+    }
+    q[0] = a[0]*b[0] - a[1]*b[1] - a[2]*b[2] - a[3]*b[3];
+    q[1] = a[0]*b[1] + a[1]*b[0] + a[2]*b[3] - a[3]*b[2];
+    q[2] = a[0]*b[2] - a[1]*b[3] + a[2]*b[0] + a[3]*b[1];
+    q[3] = a[0]*b[3] + a[1]*b[2] - a[2]*b[1] + a[3]*b[0];
+    return q;
+}
+
+il_quat il_quat_lerp(const il_quat a, const il_quat b, float t, il_quat q)
+{
+    if (!q) {
+        q = il_quat_new();
+    }
+    q[0] = a[0] * (1-t) + b[0] * t;
+    q[1] = a[1] * (1-t) + b[1] * t;
+    q[2] = a[2] * (1-t) + b[2] * t;
+    q[3] = a[3] * (1-t) + b[3] * t;
+    q = il_quat_normalize(q, q);
+    return q;
+}
+
+il_quat il_quat_fromYPR(float yaw, float pitch, float roll, il_quat q)
+{
+    if (!q) {
+        q = il_quat_new();
+    }
+    float c1 = cos(yaw/2);
+    float c2 = cos(pitch/2);
+    float c3 = cos(roll/2);
+    float s1 = sin(yaw/2);
+    float s2 = sin(pitch/2);
+    float s3 = sin(roll/2);
+    q[0] = (c1 * c2 * c3) - (s1 * s2 * s3);
+    q[1] = (s1 * s2 * c3) + (c1 * c2 * s3);
+    q[2] = (s1 * c2 * c3) + (c1 * s2 * s3);
+    q[3] = (c1 * s2 * c3) - (s1 * c2 * s3);
+    return q;
+
+}
+
+il_quat il_quat_fromAxisAngle(float x, float y, float z, float a, il_quat q)
+{
+    if (!q) {
+        q = il_quat_new();
+    }
+    float s = sinf(a/2);
+    q[0] = s * x;
+    q[1] = s * y;
+    q[2] = s * z;
+    q[3] = cosf(a/2);
+    return q;
+}
+
+il_quat il_quat_normalize(const il_quat a, il_quat q)
+{
+    if (!q) {
+        q = il_quat_new();
+    }
+    float len = il_quat_len(a);
+    if (len > 0) {
+        float ilen = 1/len;
+        q[0] = a[0] * ilen;
+        q[1] = a[1] * ilen;
+        q[2] = a[2] * ilen;
+        q[3] = a[3] * ilen;
+    } else {
+        q[0] = 1;
+        q[1] = 0;
+        q[2] = 0;
+        q[3] = 0;
+    }
+    return q;
+}
+
+float il_quat_len(const il_quat a)
+{
+    return sqrt(il_quat_dot(a));
+}
+
+float il_quat_dot(const il_quat a)
+{
+    return a[0] * a[0] + a[1] * a[1] + a[2] * a[2] + a[3] * a[3];
+}
+

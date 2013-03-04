@@ -1,6 +1,9 @@
 #ifndef IL_ARRAY_H
 #define IL_ARRAY_H
 
+#include <stdlib.h>
+#include <string.h>
+
 #define IL_ARRAY(T, name)    \
     struct name {   \
         T *data;            \
