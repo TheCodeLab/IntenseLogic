@@ -325,9 +325,9 @@ static void draw_lights()
     }
     context->material->bind(context, context->material->bind_ctx);
     glUniform3f(glGetUniformLocation(context->material->program, "camera"), 
-            context->camera->positionable->position.x, 
-            context->camera->positionable->position.y,
-            context->camera->positionable->position.z);
+            context->camera->positionable->position[0], 
+            context->camera->positionable->position[1],
+            context->camera->positionable->position[2]);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_RECTANGLE, context->fbtextures[0]);
     glActiveTexture(GL_TEXTURE0 + 1);
@@ -349,10 +349,10 @@ static void draw_lights()
             context->drawable->update(context, context->lights.data[i]->positionable, context->drawable->update_ctx);
         }
         context->material->update(context, context->lights.data[i]->positionable, context->material->update_ctx);
-        il_Vector3 pos = context->lights.data[i]->positionable->position;
-        glUniform3f(position_loc, pos.x, pos.y, pos.z);
-        il_Vector3 col = context->lights.data[i]->color;
-        glUniform3f(color_loc, col.x, col.y, col.z);
+        il_vec4 pos = context->lights.data[i]->positionable->position;
+        glUniform3f(position_loc, pos[0], pos[1], pos[2]);
+        il_vec4 col = context->lights.data[i]->color;
+        glUniform3f(color_loc, col[0], col[1], col[2]);
         glUniform1f(radius_loc, context->lights.data[i]->radius);
         context->drawable->draw(context, context->lights.data[i]->positionable, context->drawable->draw_ctx);
         //glDrawElements(GL_TRIANGLES, sizeof(indices)/sizeof(GLuint), GL_UNSIGNED_INT, NULL);

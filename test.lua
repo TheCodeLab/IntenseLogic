@@ -8,7 +8,7 @@ local camera   = require "camera";
 local positionable = require "positionable"
 local world = require "world"
 local matrix = require "matrix"
-local vector3 = require "vector3"
+local vector4 = require "vector4"
 local mesh = require "mesh"
 local event = require "event"
 local input = require "input"
@@ -64,22 +64,23 @@ if false then
     minecraft:track(c);
 else
     m = mesh "teapot.obj"
-    local width = 3
+    local width = 1
     for i = 0, width*width*width-1 do
         local box = positionable();
         w:add(box);
         box.drawable = m; --drawable.box;
         box.material = mtl;
         box.texture = t
-        box.position = vector3(i % width, math.floor((i%(width*width)) / width), math.floor(i/(width*width))) * 15
+        box.position = vector4(i % width, math.floor((i%(width*width)) / width), math.floor(i/(width*width))) * vector4(15, 15, 15, 1)
         box:track(c);
+        --print(box.position)
     end
 end
 c.camera = camera(positionable(w));
 c.camera.projection_matrix = matrix.perspective(75, 4/3, 2, 1000);
-c.camera.positionable.position = vector3(0, -5, -25);
+c.camera.positionable.position = vector4(0, -5, -25);
 c.camera.sensitivity = .01
-c.camera.movespeed = vector3(1,1,1)
+c.camera.movespeed = vector4(1,1,1)
 --[[local l = light(-5, -5, -5, 50, 0, 0, 1.0) -- x y z radius r g b
 print(l.positionable)
 l:add(c)
@@ -96,8 +97,8 @@ function mousemove(q, ev)
     if first_mouse then first_mouse = false return end
     if input.isButtonSet(0) == 0 then return end -- TODO: Make this work
     local x, y = ev:unpack()
-    local yaw = quaternion(vector3(0, 1, 0), x * c.camera.sensitivity);
-    local pitch = quaternion(vector3(1, 0, 0), y * c.camera.sensitivity);
+    local yaw = quaternion(vector4(0, 1, 0), x * c.camera.sensitivity);
+    local pitch = quaternion(vector4(1, 0, 0), y * c.camera.sensitivity);
     c.camera.positionable.rotation = c.camera.positionable.rotation * yaw * pitch;
 end
 
@@ -107,10 +108,10 @@ function tick(q, ev)
     local z = input.isKeySet("W") - input.isKeySet("S");
     local y = input.isKeySet("R") - input.isKeySet("F");
     local r = input.isKeySet("Q") - input.isKeySet("E");
-    local v = vector3(x,y,z);
+    local v = vector4(x,y,z);
     v = v * c.camera.movespeed;
     c.camera.positionable.position = c.camera.positionable.position + v * c.camera.positionable.rotation;
-    local bank = quaternion(vector3(0, 0, 1), r * c.camera.sensitivity);
+    local bank = quaternion(vector4(0, 0, 1), r * c.camera.sensitivity);
     c.camera.positionable.rotation = c.camera.positionable.rotation * bank;
 end
 

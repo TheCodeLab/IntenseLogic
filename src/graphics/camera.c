@@ -16,7 +16,7 @@ ilG_camera* ilG_camera_new(il_positionable * parent)
 {
     ilG_camera* camera = calloc(1, sizeof(ilG_camera));
     camera->positionable = parent;
-    camera->projection_matrix = il_Matrix_identity;
+    camera->projection_matrix = il_mat_identity(NULL);
     camera->sensitivity = 0.002;
     camera->refs = 1;
     return camera;
@@ -45,24 +45,19 @@ static void handleMouseMove(ilE_queue* queue, ilE_event* ev, struct ctx * ctx)
 
     il_log(5, "MouseMove: %i %i", mousemove->x, mousemove->y);
 
-    il_Quaternion yaw = il_Quaternion_fromAxisAngle(
-    (il_Vector3) {
-        0, 1, 0
-    },
-    -mousemove->x * ctx->camera->sensitivity
-                        );
+    il_quat yaw = il_quat_fromAxisAngle(0, 1, 0, 
+        -mousemove->x * ctx->camera->sensitivity, NULL);
 
-    il_Quaternion pitch = il_Quaternion_fromAxisAngle(
-    (il_Vector3) {
-        1, 0, 0
-    },
-    -mousemove->y * ctx->camera->sensitivity
-                          );
+    il_quat pitch = il_quat_fromAxisAngle(1, 0, 0,
+        -mousemove->y * ctx->camera->sensitivity, NULL);
 
-    il_Quaternion quat;
+    il_quat quat;
 
-    quat = il_Quaternion_mul(ctx->camera->positionable->rotation, yaw);
-    quat = il_Quaternion_mul(pitch, quat);
+    quat = il_quat_mul(ctx->camera->positionable->rotation, yaw, NULL);
+    quat = il_quat_mul(pitch, quat, quat);
+
+    il_quat_free(yaw);
+    il_quat_free(pitch);
 
     ctx->camera->positionable->rotation = quat;
 
@@ -85,11 +80,9 @@ static void handleTick(ilE_queue* queue, ilE_event* ev, struct ctx * ctx)
 
     il_positionable_translate (
         ctx->camera->positionable,
-    (il_Vector3) {
-        ctx->camera->movespeed.x * -leftward,
-            ctx->camera->movespeed.y * -upward,
-            ctx->camera->movespeed.z * forward
-    }
+        ctx->camera->movespeed[0] * -leftward,
+        ctx->camera->movespeed[1] * -upward,
+        ctx->camera->movespeed[2] * forward
     );
 }
 
@@ -118,7 +111,7 @@ void ilG_camera_setEgoCamKeyHandlers(ilG_camera* camera, struct il_keymap * keym
     ilE_register(il_queue, IL_INPUT_MOUSEUP,    ILE_DONTCARE, (ilE_callback)&mouseup,         NULL);
 }
 
-void ilG_camera_setMovespeed(ilG_camera* camera, il_Vector3 movespeed, float pixels_per_radian)
+void ilG_camera_setMovespeed(ilG_camera* camera, il_vec4 movespeed, float pixels_per_radian)
 {
     camera->movespeed = movespeed;
     camera->sensitivity = 1.0/pixels_per_radian;
