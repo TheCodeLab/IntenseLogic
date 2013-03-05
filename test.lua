@@ -1,4 +1,7 @@
 package.path = package.path..";script/?.lua;script/graphics/?.lua;script/common/?.lua"
+
+require "strict"
+
 local script = require "script"
 local drawable = require "drawable";
 local context  = require "context";

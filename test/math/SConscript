@@ -1,0 +1,21 @@
+import os
+
+output    = "mathtest"
+src_dir   = "#test/math"
+build_dir = "#build"
+inputs    = "*.c"
+
+Import("platform")
+Import("env")
+
+sources = []
+for module in Split(inputs) :
+    sources.extend(Glob(src_dir + "/" + module))
+
+objects = env.Object(source = sources)
+
+mathtest = env.Program(target = build_dir + "/" + output, 
+                       source = objects)
+
+Return("mathtest")
+
