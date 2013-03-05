@@ -7,46 +7,28 @@
 #include <xmmintrin.h>
 #endif
 
-#ifndef _ISOC11_SOURCE
-void *aligned_alloc(size_t align, size_t size)
-{
-    char *ptr = malloc(size + align);
-    char *aligned = (char*)((size_t)(ptr + align) & (~(align-1)));
-    aligned[-1] = aligned - ptr;
-    return aligned;
-}
-
-void aligned_free(void *ptr)
-{
-    free((char*)ptr - ((char*)ptr)[-1]);
-}
-#else
-void aligned_free(void* ptr)
-{
-    free(ptr);
-}
-#endif
+#include "ilmath.h"
 
 il_vec4 il_vec4_new()
 {
-    il_vec4 v = aligned_alloc(sizeof(float) * 4, sizeof(float) * 4);
+    il_vec4 v = il_math_get_policy()->allocate(sizeof(float) * 4);
     return v;
 }
 
 il_vec2 il_vec2_new()
 {
-    il_vec2 v = aligned_alloc(sizeof(double) * 2, sizeof(double) * 2);
+    il_vec2 v = il_math_get_policy()->allocate(sizeof(double) * 2);
     return v;
 }
 
 void il_vec4_free(il_vec4 vec)
 {
-    aligned_free(vec);
+    il_math_get_policy()->deallocate(vec);
 }
 
 void il_vec2_free(il_vec2 vec)
 {
-    aligned_free(vec);
+    il_math_get_policy()->deallocate(vec);
 }
 
 il_vec4 il_vec4_copy(il_vec4 vec)
