@@ -8,13 +8,17 @@ inputs    = "*.c"
 Import("platform")
 Import("env")
 
+ilmath = env.Clone()
+
+ilmath.Append(CPPPATH = src_dir)
+
 sources = []
 for module in Split(inputs) :
-    sources.extend(Glob(src_dir + "/" + module))
+    sources.extend(Glob(module))
 
-objects = env.Object(source = sources, CPPPATH = src_dir)
+objects = ilmath.Object(source = sources)
 
-libilmath = env.StaticLibrary(target = build_dir + "/" + output, 
+libilmath = ilmath.StaticLibrary(target = build_dir + "/" + output, 
                               source = objects)
 
 Return("libilmath")
