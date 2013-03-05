@@ -29,7 +29,7 @@ ilE_event* ilE_new(uint16_t eventid, uint8_t size, void * data);
 
 uint16_t ilE_getID(const ilE_event* event);
 
-void * ilE_getData(const ilE_event* event, size_t *size);
+const void * ilE_getData(const ilE_event* event, size_t *size);
 
 int ilE_push(ilE_queue* queue, ilE_event* event);
 

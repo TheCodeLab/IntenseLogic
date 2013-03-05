@@ -285,7 +285,7 @@ static struct mtl_line mtl_readline(const char *line)
     int len = 0;
     sscanf(line, "%*[ \t\n]%n", &len);
     if (len == line_len) {
-      res.type = OBJ_COMMENT; // treat empty lines as comments
+      res.type = MTL_COMMENT; // treat empty lines as comments
       return res;
     }
   }

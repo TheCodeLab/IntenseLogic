@@ -83,7 +83,7 @@ int ilS_fromSource(ilS_script* self, il_string source)
     struct reader_ctx data;
     data.loaded = 0;
     data.source = source;
-    char * chunkname;
+    char * chunkname = NULL;
     if (self->filename) {
         chunkname = malloc(strlen(self->filename) + 2);
         sprintf(chunkname, "@%s", self->filename);
