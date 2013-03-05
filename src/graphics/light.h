@@ -3,7 +3,7 @@
 
 #include <GL/glew.h>
 
-#include "common/vector.h"
+#include "math/vector.h"
 
 struct il_positionable;
 struct ilG_context;

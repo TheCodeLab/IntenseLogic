@@ -4,8 +4,8 @@
 #include <sys/time.h>
 
 #include "common/memory.h"
-#include "common/quaternion.h"
-#include "common/vector.h"
+#include "math/quaternion.h"
+#include "math/vector.h"
 #include "common/world.h"
 
 typedef struct il_positionable {

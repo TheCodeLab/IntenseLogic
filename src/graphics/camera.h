@@ -1,8 +1,8 @@
 #ifndef IL_GRAPHICS_CAMERA_H
 #define IL_GRAPHICS_CAMERA_H
 
-#include "common/matrix.h"
-#include "common/vector.h"
+#include "math/matrix.h"
+#include "math/vector.h"
 
 struct il_keymap;
 

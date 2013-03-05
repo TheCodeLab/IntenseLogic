@@ -7,7 +7,7 @@
 #include "common/log.h"
 #include "common/positionable.h"
 #include "graphics/camera.h"
-#include "common/matrix.h"
+#include "math/matrix.h"
 
 const char * ilG_strerror(GLenum err);
 
