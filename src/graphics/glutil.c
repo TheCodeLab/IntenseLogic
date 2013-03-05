@@ -4,7 +4,7 @@
 #include <GL/glew.h>
 #include <stdarg.h>
 
-#include "common/matrix.h"
+#include "math/matrix.h"
 #include "graphics/camera.h"
 #include "common/positionable.h"
 

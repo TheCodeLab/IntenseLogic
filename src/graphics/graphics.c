@@ -10,7 +10,7 @@
 #include "graphics/camera.h"
 #include "common/event.h"
 #include "common/input.h"
-#include "common/matrix.h"
+#include "math/matrix.h"
 #include "common/base.h"
 //#include "common/keymap.h"
 #include "graphics/context.h"
