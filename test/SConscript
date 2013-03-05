@@ -1,0 +1,12 @@
+#Export("platform")
+#print("hi")
+
+Import("platform")
+Import("env")
+
+Export("platform")
+Export("env")
+
+SConscript("math/SConscript")
+Default(None)
+

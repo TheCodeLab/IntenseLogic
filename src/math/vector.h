@@ -1,7 +1,7 @@
 #ifndef IL_VECTOR_H
 #define IL_VECTOR_H
 
-#include "math/quaternion.h"
+#include "quaternion.h"
 
 typedef double *il_vec2;
 typedef float *il_vec4;

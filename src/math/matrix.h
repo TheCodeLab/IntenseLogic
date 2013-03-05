@@ -1,8 +1,8 @@
 #ifndef IL_MATRIX_H
 #define IL_MATRIX_H
 
-#include "math/vector.h"
-#include "math/quaternion.h"
+#include "vector.h"
+#include "quaternion.h"
 
 typedef float *il_mat;
 
