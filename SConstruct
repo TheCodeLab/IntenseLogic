@@ -27,34 +27,34 @@ lib_dirs = ["/usr/lib", "/usr/local/lib"]
 
 libs = {
     "osx":   ["ilmath", "m", "png"],
-    "mingw": ["ilmath", "mingw32", "libevent", "ws2_32", "glfw", "glew32", "opengl32", "png", "z", "lua51"],
+    "mingw": ["ilmath", "mingw32", "libevent", "ws2_32", "glfw", "glew32", "opengl32", "png", "z", "lua51", "mowgli-2"],
     "arch":  ["ilmath", "m", "png"],
     "linux": ["ilmath", "m", "png"]
 }
 
 pkg_libs = {
-    "osx":   ["libevent", "libglfw", "glew", "luajit"],
-    "arch":  ["libevent", "libglfw", "glew", "luajit", "gl"],
-    "linux": ["libevent", "gl", "glfw", "glew", "luajit"],
+    "osx":   ["libevent", "libglfw", "glew", "luajit", "libmowgli-2"],
+    "arch":  ["libevent", "libglfw", "glew", "luajit", "gl", "libmowgli-2"],
+    "linux": ["libevent", "gl", "glfw", "glew", "luajit", "libmowgli-2"],
     "mingw": []
 }
 
 # link libs
 VariantDir(build_dir, src_dir, duplicate = 0)
-env = Environment(CCFLAGS = cflags, LINKFLAGS = linkflags)
+env = Environment(CC = os.environ['CC'], CCFLAGS = cflags, LINKFLAGS = linkflags)
 
-env['CPPPATH'] = [src_dir]
+env.Append(CPPPATH = [src_dir])
 
 for lib in pkg_libs[platform] :
     env.ParseConfig("pkg-config " + lib + " --cflags --libs")
 
-Export("platform")
-Export("env")
-libilmath = SConscript("src/math/SConscript", platform=platform)
-SConscript("test/SConscript", platform=platform)
-
 #for lib in libs[platform] :
 env.Append(LIBS = libs[platform])
+
+Export("platform")
+Export("env")
+libilmath = SConscript("src/math/SConscript", platform=platform, env=env)
+SConscript("test/SConscript", platform=platform, env=env)
 
 # get sources
 sources = []
