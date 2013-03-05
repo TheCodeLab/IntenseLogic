@@ -2,7 +2,7 @@ local ffi = require "ffi"
 
 require "scalar_defs"
 
-local vector3-- = require "vector3"
+local vector4-- = require "vector3"
 
 ffi.cdef [[
 
@@ -48,7 +48,7 @@ function index(t,k)
 end
 
 function newindex(t, k, v)
-    vector3 = vector3 or require "vector3"
+    vector4 = vector4 or require "vector4"
     if k == "x" or k == "y" or k == "z" or k == "w" then
         assert(type(v) == "number")
         t.ptr[({x=0, y=1, z=2, w=3})[k]] = v
@@ -90,7 +90,7 @@ end
 
 function quaternion.create(...)
     vector4 = vector4 or require "vector4"
-    args = {...};
+    local args = {...};
     if #args == 3 then -- YPR
         assert(type(args[1]) == "number" and type(args[2]) == "number" and type(args[3]) == "number")
         return quaternion.wrap(ffi.C.il_quat_fromYPR(args[1], args[2], args[3], nil))
