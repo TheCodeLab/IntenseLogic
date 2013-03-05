@@ -1,0 +1,25 @@
+import os
+
+output    = "libilmath"
+src_dir   = "src"
+build_dir = "#build"
+inputs    = "math/*.c"
+Import("platform")
+
+# flags
+cflags    = "-Wall -Wextra -pedantic -std=c99 -g -DDEBUG -I./"+src_dir
+linkflags = "-g -L."
+
+sources = []
+for module in Split(inputs) :
+    sources.extend(Glob(build_dir + "/" + module))
+
+env = Environment(CCFLAGS = cflags, LINKFLAGS = linkflags)
+
+objects = env.Object(source = sources)
+
+print(objects)
+
+env.StaticLibrary(target = build_dir + "/" + output, 
+                  source = objects)
+

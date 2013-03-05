@@ -11,7 +11,7 @@ platform  = ARGUMENTS.get("platform", "linux")
 
 # flags
 cflags    = "-Wall -Wextra -pedantic -std=c99 -g -DDEBUG -I./" + src_dir
-linkflags = "-g -L."
+linkflags = "-g -L. -Lbuild"
 if platform == "mingw":
     cflags += " -DWIN32"
     linkflags += " -Wl,--export-all-symbols"
@@ -26,15 +26,15 @@ if platform == "osx":
 lib_dirs = ["/usr/lib", "/usr/local/lib"]
 
 libs = {
-    "osx": ["m", "png"],
-    "mingw": ["mingw32", "libevent", "ws2_32", "glfw", "glew32", "opengl32", "png", "z", "lua51"],
-    "arch": ["m", "png"],
-    "linux": ["m", "png"]
+    "osx":   ["ilmath", "m", "png"],
+    "mingw": ["ilmath", "mingw32", "libevent", "ws2_32", "glfw", "glew32", "opengl32", "png", "z", "lua51"],
+    "arch":  ["ilmath", "m", "png"],
+    "linux": ["ilmath", "m", "png"]
 }
 
 pkg_libs = {
-    "osx": ["libevent", "libglfw", "glew", "luajit"],
-    "arch": ["libevent", "libglfw", "glew", "luajit", "gl"],
+    "osx":   ["libevent", "libglfw", "glew", "luajit"],
+    "arch":  ["libevent", "libglfw", "glew", "luajit", "gl"],
     "linux": ["libevent", "gl", "glfw", "glew", "luajit"],
     "mingw": []
 }
@@ -45,6 +45,9 @@ env = Environment(CCFLAGS = cflags, LINKFLAGS = linkflags)
 
 for lib in pkg_libs[platform] :
     env.ParseConfig("pkg-config " + lib + " --cflags --libs")
+
+Export("platform")
+SConscript("src/math/SConscript", platform=platform)
 
 #for lib in libs[platform] :
 env.Append(LIBS = libs[platform])
@@ -63,6 +66,8 @@ handle.close()
 objects = env.Object(source = sources)
 
 # link program
-env.Program(target  = build_dir + "/" + output,
-            source  = objects,
-            LIBPATH = lib_dirs)
+prog = env.Program(target  = build_dir + "/" + output,
+                   source  = objects,
+                   LIBPATH = lib_dirs)
+Depends(prog, "build/libilmath.a")
+
