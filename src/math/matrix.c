@@ -7,18 +7,17 @@
 
 // SSE code copied from GLM which is under the MIT license: http://glm.g-truc.net/copying.txt
 
-extern void* aligned_alloc(size_t align, size_t size);
-extern void aligned_free(void*);
+#include "ilmath.h"
 
 il_mat il_mat_new()
 {
-    il_mat m = aligned_alloc(sizeof(float) * 4, sizeof(float) * 16);
+    il_mat m = il_math_get_policy()->allocate(sizeof(float) * 16);
     return m;
 }
 
 void il_mat_free(il_mat m)
 {
-    aligned_free(m);
+    il_math_get_policy()->deallocate(m);     
 }
 
 il_mat il_mat_copy(il_mat m)

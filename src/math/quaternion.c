@@ -4,18 +4,17 @@
 #include <math.h>
 #include <string.h>
 
-extern void* aligned_alloc(size_t align, size_t size);
-extern void aligned_free(void*);
+#include "ilmath.h"
 
 il_quat il_quat_new()
 {
-    il_quat q = aligned_alloc(sizeof(float) * 4, sizeof(float) * 4);
+    il_quat q = il_math_get_policy()->allocate(sizeof(float) * 4);
     return q;
 }
 
 void il_quat_free(il_quat q)
 {
-    aligned_free(q);
+    il_math_get_policy()->deallocate(q);
 }
 
 il_quat il_quat_copy(il_quat q)
