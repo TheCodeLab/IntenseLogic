@@ -60,7 +60,7 @@ il_vec4 il_vec4_set(il_vec4 vec, float x, float y, float z, float w)
     return vec;
 }
 
-il_vec4 il_vec4_add(il_vec4 a, il_vec4 b, il_vec4 vec)
+il_vec4 il_vec4_add(const il_vec4 a, const il_vec4 b, il_vec4 vec)
 {
     if (!vec) {
        vec = il_vec4_new();
@@ -76,7 +76,7 @@ il_vec4 il_vec4_add(il_vec4 a, il_vec4 b, il_vec4 vec)
     return vec;
 }
 
-il_vec4 il_vec4_sub(il_vec4 a, il_vec4 b, il_vec4 vec)
+il_vec4 il_vec4_sub(const il_vec4 a, const il_vec4 b, il_vec4 vec)
 {
     if (!vec) {
        vec = il_vec4_new();
@@ -92,7 +92,7 @@ il_vec4 il_vec4_sub(il_vec4 a, il_vec4 b, il_vec4 vec)
     return vec;
 }
 
-il_vec4 il_vec4_mul(il_vec4 a, il_vec4 b, il_vec4 vec)
+il_vec4 il_vec4_mul(const il_vec4 a, const il_vec4 b, il_vec4 vec)
 {
     if (!vec) {
        vec = il_vec4_new();
@@ -108,7 +108,7 @@ il_vec4 il_vec4_mul(il_vec4 a, il_vec4 b, il_vec4 vec)
     return vec;
 }
 
-il_vec4 il_vec4_div(il_vec4 a, il_vec4 b, il_vec4 vec)
+il_vec4 il_vec4_div(const il_vec4 a, const il_vec4 b, il_vec4 vec)
 {
     if (!vec) {
        vec = il_vec4_new();

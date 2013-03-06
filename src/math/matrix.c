@@ -32,10 +32,10 @@ il_mat il_mat_set(il_mat m, il_vec4 a, il_vec4 b, il_vec4 c, il_vec4 d)
     if (!m) {
         m = il_mat_new();
     }
-    memcpy(m + 0,  a, sizeof(il_vec4));
-    memcpy(m + 4,  b, sizeof(il_vec4));
-    memcpy(m + 8,  c, sizeof(il_vec4));
-    memcpy(m + 12, d, sizeof(il_vec4));
+    memcpy(m + 0,  a, sizeof(float) * 4);
+    memcpy(m + 4,  b, sizeof(float) * 4);
+    memcpy(m + 8,  c, sizeof(float) * 4);
+    memcpy(m + 12, d, sizeof(float) * 4);
     return m;
 }
 
@@ -262,12 +262,12 @@ il_mat il_mat_invert(const il_mat a, il_mat res)
     il_vec4_free(Vec3);
 
     il_vec4 Row0 = il_vec4_set(NULL, res[0], res[1], res[2], res[3]);
-    il_vec4 a_row0 = il_vec4_set(NULL, a[0], a[1], a[2], a[3]);
+    il_vec4 a_col0 = il_vec4_set(NULL, a[0], a[4], a[8], a[12]);
 
-    float Determinant = il_vec4_dot(a_row0, Row0);
+    float Determinant = il_vec4_dot(a_col0, Row0);
 
     il_vec4_free(Row0);
-    il_vec4_free(a_row0);
+    il_vec4_free(a_col0);
 
     int i;
     for (i = 0; i < 16; i++) {
