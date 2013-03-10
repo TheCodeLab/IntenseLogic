@@ -77,10 +77,14 @@ function gc(obj)
     ffi.C.il_quat_free(obj.ptr)
 end
 
+function ts(self)
+    return "("..self.ptr[0]..", "..self.ptr[1]..", "..self.ptr[2]..", "..self.ptr[3]..")"
+end
+
 function quaternion.wrap(ptr)
     local obj = {}
     obj.ptr = ptr;
-    setmetatable(obj, {__index = index, __newindex=newindex, __mul = mul, __gc = gc})
+    setmetatable(obj, {__index = index, __newindex=newindex, __mul = mul, __gc = gc, __tostring = ts})
     return obj
 end
 

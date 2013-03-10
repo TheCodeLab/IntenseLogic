@@ -9,6 +9,10 @@
 il_quat il_quat_new()
 {
     il_quat q = il_math_get_policy()->allocate(sizeof(float) * 4);
+    q[0] = 0;
+    q[1] = 0;
+    q[2] = 0;
+    q[3] = 1;
     return q;
 }
 
@@ -41,10 +45,10 @@ il_quat il_quat_mul(const il_quat a, const il_quat b, il_quat q)
     if (!q) {
         q = il_quat_new();
     }
-    q[0] = a[0]*b[0] - a[1]*b[1] - a[2]*b[2] - a[3]*b[3];
-    q[1] = a[0]*b[1] + a[1]*b[0] + a[2]*b[3] - a[3]*b[2];
-    q[2] = a[0]*b[2] - a[1]*b[3] + a[2]*b[0] + a[3]*b[1];
-    q[3] = a[0]*b[3] + a[1]*b[2] - a[2]*b[1] + a[3]*b[0];
+    q[3] = a[3] * b[3] - a[0] * b[0] - a[1] * b[1] - a[2] * b[2];
+    q[0] = a[3] * b[0] + a[0] * b[3] + a[1] * b[2] - a[2] * b[1];
+    q[1] = a[3] * b[1] + a[1] * b[3] + a[2] * b[0] - a[0] * b[2];
+    q[2] = a[3] * b[2] + a[2] * b[3] + a[0] * b[1] - a[1] * b[0];
     return q;
 }
 
@@ -90,7 +94,7 @@ il_quat il_quat_fromAxisAngle(float x, float y, float z, float a, il_quat q)
     q[1] = s * y;
     q[2] = s * z;
     q[3] = cosf(a/2);
-    return q;
+    return il_quat_normalize(q, q);
 }
 
 il_quat il_quat_normalize(const il_quat a, il_quat q)
@@ -106,21 +110,21 @@ il_quat il_quat_normalize(const il_quat a, il_quat q)
         q[2] = a[2] * ilen;
         q[3] = a[3] * ilen;
     } else {
-        q[0] = 1;
+        q[0] = 0;
         q[1] = 0;
         q[2] = 0;
-        q[3] = 0;
+        q[3] = 1;
     }
     return q;
 }
 
 float il_quat_len(const il_quat a)
 {
-    return sqrt(il_quat_dot(a));
+    return sqrt(il_quat_dot(a, a));
 }
 
-float il_quat_dot(const il_quat a)
+float il_quat_dot(const il_quat a, const il_quat b)
 {
-    return a[0] * a[0] + a[1] * a[1] + a[2] * a[2] + a[3] * a[3];
+    return a[0] * b[0] + a[1] * b[1] + a[2] * b[2] + a[3] * b[3];
 }
 

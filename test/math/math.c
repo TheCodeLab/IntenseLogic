@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <math.h>
 
 #include "math/matrix.h"
 #include "math/quaternion.h"
@@ -70,12 +71,21 @@ int dotTest()
     return res == 20.f;
 }
 
+int quatLenTest()
+{
+    il_quat a = il_quat_set(NULL, 0, 0, 0, 1);
+    float len = il_quat_len(a);
+    printf("Length of (0, 0, 0, 1): %f\n", len);
+    return len == 1.f;
+}
+
 struct {
     int (*fn)();
     const char *name;
 } tests[] = {
     {inversionTest, "inversion"},
     {dotTest, "dot"},
+    {quatLenTest, "quaternion-length"},
     {NULL, NULL}
 };
 

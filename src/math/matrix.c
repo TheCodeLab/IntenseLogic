@@ -70,14 +70,16 @@ il_mat il_mat_mul(const il_mat a, const il_mat b, il_mat res)
     }
 #else
     int i,j,k;
+    float mat[16];
     for(i=0; i<4; i++) {
         for(j=0; j<4; j++) {
-            res[i*4+j]=0;
+            mat[i*4+j]=0;
             for(k=0; k<4; k++) {
-                res[i*4+j]+=a[i*4+k]*b[k*4+j];
+                mat[i*4+j]+=a[i*4+k]*b[k*4+j];
             }
         }
     }
+    memcpy(res, mat, sizeof(float) * 16);
 #endif
     return res;
 }
