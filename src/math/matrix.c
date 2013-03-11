@@ -71,9 +71,10 @@ il_mat il_mat_mul(const il_mat a, const il_mat b, il_mat res)
 #else
     int i,j,k;
     float mat[16];
+    memset(mat, 0, sizeof(float) * 16);
     for(i=0; i<4; i++) {
         for(j=0; j<4; j++) {
-            mat[i*4+j]=0;
+            //mat[i*4+j]=0;
             for(k=0; k<4; k++) {
                 mat[i*4+j]+=a[i*4+k]*b[k*4+j];
             }
@@ -150,6 +151,7 @@ il_mat il_mat_rotate(const il_quat q, il_mat m)
     if (!m) {
         m = il_mat_new();
     }
+    memset(m, 0, sizeof(float) * 16);
     m[0] =  1 - 2 * q[1] * q[1] - 2 * q[2] * q[2];
     m[1] =  2 * q[0] * q[1] + 2 * q[3] * q[2];
     m[2] =  2 * q[0] * q[2] - 2 * q[3] * q[1];

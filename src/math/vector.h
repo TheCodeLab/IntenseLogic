@@ -14,6 +14,7 @@ il_vec4 il_vec4_copy(il_vec4 vec);
 il_vec2 il_vec2_copy(il_vec2 vec);
 
 il_vec4 il_vec4_set(il_vec4 vec, float x, float y, float z, float w);
+char *il_vec4_print(const il_vec4 v, char *buf, unsigned length);
 
 il_vec4 il_vec4_add(const il_vec4 a, const il_vec4 b, il_vec4 vec);
 il_vec4 il_vec4_sub(const il_vec4 a, const il_vec4 b, il_vec4 vec);

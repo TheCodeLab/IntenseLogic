@@ -1,6 +1,7 @@
 #include "quaternion.h"
 
 #include <stdlib.h>
+#include <stdio.h>
 #include <math.h>
 #include <string.h>
 
@@ -126,5 +127,16 @@ float il_quat_len(const il_quat a)
 float il_quat_dot(const il_quat a, const il_quat b)
 {
     return a[0] * b[0] + a[1] * b[1] + a[2] * b[2] + a[3] * b[3];
+}
+
+char *il_quat_print(const il_quat q, char *buf, unsigned len)
+{
+    unsigned flen = snprintf(NULL, 0, "[% .2f % .2f % .2f % .2f]", q[0], q[1], q[2], q[3]);
+    ++flen;
+    if (!buf || flen > len) {
+        buf = realloc(buf, flen);
+    }
+    snprintf(buf, flen, "[% .2f % .2f % .2f % .2f]", q[0], q[1], q[2], q[3]);
+    return buf;
 }
 
