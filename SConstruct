@@ -41,7 +41,9 @@ pkg_libs = {
 
 # link libs
 VariantDir(build_dir, src_dir, duplicate = 0)
-env = Environment(CC = os.environ['CC'], CCFLAGS = cflags, LINKFLAGS = linkflags)
+env = Environment(CCFLAGS = cflags, LINKFLAGS = linkflags)
+if 'CC' in os.environ:
+    env['CC'] = os.environ['CC']
 
 env.Append(CPPPATH = [src_dir])
 
