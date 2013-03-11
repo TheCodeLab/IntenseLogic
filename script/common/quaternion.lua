@@ -65,8 +65,14 @@ function newindex(t, k, v)
 end
 
 function mul(a, b)
-    assert(type(b) == "table" and ffi.istype(quaternion.type, b.ptr))
-    return quaternion.wrap(ffi.C.il_quat_mul(a.ptr, b.ptr, nil))
+    vector4 = vector4 or require "vector4"
+    if quaternion.check(b) then
+        return quaternion.wrap(ffi.C.il_quat_mul(a.ptr, b.ptr, nil))
+    elseif vector4.check(b) then
+        return b * a
+    else
+        error("Expected quaternion or vector4")
+    end
 end
 
 function lerp(a, b, t)
@@ -84,12 +90,13 @@ end
 function quaternion.wrap(ptr)
     local obj = {}
     obj.ptr = ptr;
+    obj.T = "quat"
     setmetatable(obj, {__index = index, __newindex=newindex, __mul = mul, __gc = gc, __tostring = ts})
     return obj
 end
 
 function quaternion.check(obj)
-    return type(obj) == "table" and ffi.istype(quaternion.type, obj.ptr)
+    return type(obj) == "table" and obj.T == "quat" and ffi.istype(quaternion.type, obj.ptr)
 end
 
 function quaternion.create(...)

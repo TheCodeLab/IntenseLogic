@@ -99,15 +99,15 @@ local first_mouse = true
 function mousemove(q, ev)
     if first_mouse then first_mouse = false return end
     if input.isButtonSet(0) == 0 then return end -- TODO: Make this work
-    print("old",c.camera.positionable.rotation)
+    --print("old",c.camera.positionable.rotation)
     local x, y = ev:unpack()
-    print("x ",x,"y ", y)
+    --print("x ",x,"y ", y)
     local yaw = quaternion(vector4(0, 1, 0), x * c.camera.sensitivity);
-    print("yaw:",yaw)
+    --print("yaw:",yaw)
     local pitch = quaternion(vector4(1, 0, 0), y * c.camera.sensitivity);
-    print("pitch: ",pitch)
+    --print("pitch: ",pitch)
     local rot = c.camera.positionable.rotation * yaw * pitch;
-    print("rot: ", rot)
+    --print("rot: ", rot)
     c.camera.positionable.rotation = rot
 end
 
@@ -117,18 +117,19 @@ function tick(q, ev)
     local z = input.isKeySet("W") - input.isKeySet("S");
     local y = input.isKeySet("R") - input.isKeySet("F");
     local r = input.isKeySet("Q") - input.isKeySet("E");
-    local v = vector4(x,y,z, 0);
+    local v = vector4(x,y,z);
     print("v", v)
     v = v * c.camera.movespeed;
-    print("v", v)
+    print("v'", v)
+    v = v * c.camera.positionable.rotation
+    print("rotation", c.camera.positionable.rotation)
+    v.w = 0
+    print("v''", v)
     print("old", c.camera.positionable.position)
-    c.camera.positionable.position = c.camera.positionable.position + v * c.camera.positionable.rotation;
+    c.camera.positionable.position = c.camera.positionable.position + v;
     print("new", c.camera.positionable.position)
     local bank = quaternion(vector4(0, 0, 1), r * c.camera.sensitivity);
-    print("bank",bank)
-    print("old", c.camera.positionable.rotation)
     c.camera.positionable.rotation = c.camera.positionable.rotation * bank;
-    print("new", c.camera.positionable.rotation)
 end
 
 event.register(event.mainqueue, 1, tick); -- tick
