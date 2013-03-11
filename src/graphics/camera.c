@@ -111,7 +111,7 @@ void ilG_camera_setEgoCamKeyHandlers(ilG_camera* camera, struct il_keymap * keym
     ilE_register(il_queue, IL_INPUT_MOUSEUP,    ILE_DONTCARE, (ilE_callback)&mouseup,         NULL);
 }
 
-void ilG_camera_setMovespeed(ilG_camera* camera, il_vec4 movespeed, float pixels_per_radian)
+void ilG_camera_setMovespeed(ilG_camera* camera, il_vec3 movespeed, float pixels_per_radian)
 {
     camera->movespeed = movespeed;
     camera->sensitivity = 1.0/pixels_per_radian;
