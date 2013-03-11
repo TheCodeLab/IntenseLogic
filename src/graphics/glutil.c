@@ -153,7 +153,7 @@ il_mat ilG_computeMVP(enum ilG_transform filter, const ilG_camera* camera, const
         mvp = il_mat_identity(NULL);
     }
     if (filter & ILG_VIEW) {
-        il_vec4 v = camera->positionable->position;
+        il_vec4 v = il_vec3_to_vec4(camera->positionable->position, 1.0, NULL);
 
         il_quat q = il_quat_copy(camera->positionable->rotation);
         q[0] = -q[0];
@@ -169,6 +169,7 @@ il_mat ilG_computeMVP(enum ilG_transform filter, const ilG_camera* camera, const
         il_mat_free(translate);
         il_mat_free(view);
         il_quat_free(q);
+        il_vec4_free(v);
     }
     if (filter & ILG_MODEL) {
         il_mat model = il_mat_new();

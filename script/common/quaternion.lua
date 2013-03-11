@@ -2,7 +2,7 @@ local ffi = require "ffi"
 
 require "scalar_defs"
 
-local vector4-- = require "vector3"
+local vector3-- = require "vector3"
 
 ffi.cdef [[
 
@@ -26,7 +26,7 @@ local quaternion = {}
 quaternion.type = ffi.typeof("il_quat");
 
 function index(t,k)
-    vector4 = vector4 or require "vector4"
+    vector3 = vector3 or require "vector3"
     if k == "x" then
         return t.ptr[0]
     elseif k == "y" then
@@ -36,7 +36,7 @@ function index(t,k)
     elseif k == "w" or k == "i" then
         return t.ptr[3]
     elseif k == "v" then
-        return vector4(t.x, t.y, t.z)
+        return vector3(t.x, t.y, t.z)
     elseif k == "len" then
         return il_quat_len(t.ptr)
     elseif k == "dot" then
@@ -48,12 +48,12 @@ function index(t,k)
 end
 
 function newindex(t, k, v)
-    vector4 = vector4 or require "vector4"
+    vector3 = vector3 or require "vector3"
     if k == "x" or k == "y" or k == "z" or k == "w" then
         assert(type(v) == "number")
         t.ptr[({x=0, y=1, z=2, w=3})[k]] = v
     elseif k == "v" then
-        assert(vector4.check(v))
+        assert(vector3.check(v))
         t.ptr[0] = v.x
         t.ptr[1] = v.y
         t.ptr[2] = v.z
@@ -65,13 +65,13 @@ function newindex(t, k, v)
 end
 
 function mul(a, b)
-    vector4 = vector4 or require "vector4"
+    vector3 = vector3 or require "vector3"
     if quaternion.check(b) then
         return quaternion.wrap(ffi.C.il_quat_mul(a.ptr, b.ptr, nil))
-    elseif vector4.check(b) then
+    elseif vector3.check(b) then
         return b * a
     else
-        error("Expected quaternion or vector4")
+        error("Expected quaternion or vector3")
     end
 end
 
@@ -84,7 +84,7 @@ function gc(obj)
 end
 
 function ts(self)
-    return "("..self.ptr[0]..", "..self.ptr[1]..", "..self.ptr[2]..", "..self.ptr[3]..")"
+    return "["..self.ptr[0]..", "..self.ptr[1]..", "..self.ptr[2]..", "..self.ptr[3].."]"
 end
 
 function quaternion.wrap(ptr)
@@ -100,13 +100,13 @@ function quaternion.check(obj)
 end
 
 function quaternion.create(...)
-    vector4 = vector4 or require "vector4"
+    vector3 = vector3 or require "vector3"
     local args = {...};
     if #args == 3 then -- YPR
         assert(type(args[1]) == "number" and type(args[2]) == "number" and type(args[3]) == "number")
         return quaternion.wrap(ffi.C.il_quat_fromYPR(args[1], args[2], args[3], nil))
-    elseif #args == 2 then -- axis angle with vec4
-        assert(vector4.check(args[1]))
+    elseif #args == 2 then -- axis angle with vec3
+        assert(vector3.check(args[1]))
         assert(type(args[2]) == "number")
         return quaternion.wrap(ffi.C.il_quat_fromAxisAngle(args[1].x, args[1].y, args[1].z, args[2], nil))
     elseif #args == 4 then -- axis angle from numbers

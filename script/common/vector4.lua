@@ -2,6 +2,7 @@ local ffi = require "ffi"
 require "scalar_defs"
 
 local quaternion;
+local vector3;
 
 ffi.cdef [[
 
@@ -10,14 +11,14 @@ void il_vec4_free(il_vec4 vec);
 il_vec4 il_vec4_copy(il_vec4 vec);
 
 il_vec4 il_vec4_set(il_vec4 vec, float x, float y, float z, float w);
+char *il_vec4_print(const il_vec4 v, char *buf, unsigned length);
 
 il_vec4 il_vec4_add(const il_vec4 a, const il_vec4 b, il_vec4 vec);
 il_vec4 il_vec4_sub(const il_vec4 a, const il_vec4 b, il_vec4 vec);
 il_vec4 il_vec4_mul(const il_vec4 a, const il_vec4 b, il_vec4 vec);
 il_vec4 il_vec4_div(const il_vec4 a, const il_vec4 b, il_vec4 vec);
-il_vec4 il_vec4_rotate(const il_vec4 a, const il_quat q, il_vec4 vec);
-il_vec4 il_vec4_cross(const il_vec4 a, const il_vec4 b, il_vec4 vec);
 float il_vec4_dot(const il_vec4 a, const il_vec4 b);
+il_vec3 il_vec4_to_vec3(const il_vec4 a, il_vec4 vec);
 
 ]]
 
@@ -28,6 +29,9 @@ vector4.type = ffi.typeof "il_vec4"
 local function c_wrap(c)
     return function(a, b)
         assert(vector4.check(a))
+        if type(b) == "number" then
+            b = vector4(b, b, b, b)
+        end
         assert(vector4.check(b))
         return vector4.wrap(c(a.ptr, b.ptr, nil))
     end
@@ -35,27 +39,16 @@ end
 
 local add = c_wrap(ffi.C.il_vec4_add)
 local sub = c_wrap(ffi.C.il_vec4_sub)
-local oldmul = c_wrap(ffi.C.il_vec4_mul)
+local mul = c_wrap(ffi.C.il_vec4_mul)
 local div = c_wrap(ffi.C.il_vec4_div)
 
-local function mul(a, b)
-    quaternion = quaternion or require "quaternion"
-    assert(vector4.check(a))
-    if vector4.check(b) then
-        return oldmul(a,b)
-    elseif quaternion.check(b) then
-        return vector4.wrap(ffi.C.il_vec4_rotate(a.ptr, b.ptr, nil))
-    else
-        error("Expected vector4 or quaternion")
-    end
-end
-
 local function index(t, k)
-    --if k == "len" then
-    --    return ffi.C.il_Vector3_len(t.ptr)
-    --elseif k == "normal" then
-    --    return ffi.C.il_Vector3_normalise(t.ptr)
-    if k == "x" then
+    vector3 = vector3 or require "vector3"
+    if k == "len" or k == "length" then
+        return ffi.C.il_vec4_dot(t.ptr, t.ptr)
+    elseif k == "vec3" then
+        return vector3.wrap(ffi.C.il_vec4_to_vec3(t.ptr, nil))
+    elseif k == "x" then
         return t.ptr[0];
     elseif k == "y" then
         return t.ptr[1];
@@ -86,7 +79,8 @@ local function newindex(t, k, v)
 end
 
 local function ts(t)
-    return "["..t.x..", "..t.y..", "..t.z..", "..t.w.."]";
+    -- not really worth using il_vec4_print
+    return "("..t.x..", "..t.y..", "..t.z..", "..t.w..")";
 end
 
 local function gc(obj)
@@ -104,6 +98,11 @@ vector4.wrap = wrap;
 
 function vector4.check(obj)
     return type(obj) == "table" and obj.T == "vec4" and ffi.istype(vector4.type, obj.ptr)
+end
+
+function vector4.dot(a,b)
+    assert(vector4.check(a) and vector4.check(b))
+    return ffi.C.il_vec4_dot(a.ptr, b.ptr)
 end
 
 function vector4.create(x, y, z, w)

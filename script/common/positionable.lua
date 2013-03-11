@@ -4,7 +4,7 @@ local material = require "material";
 local texture = require "texture";
 local world = require "world";
 local context = require "context";
-local vector4 = require "vector4";
+local vector3 = require "vector3";
 local quaternion = require "quaternion"
 
 require "scalar_defs"
@@ -13,10 +13,10 @@ require "memory"
 ffi.cdef [[
 
 typedef struct il_positionable {
-  il_vec4 position;
+  il_vec3 position;
   il_quat rotation;
-  il_vec4 size;
-  il_vec4 velocity;
+  il_vec3 size;
+  il_vec3 velocity;
   il_GC gc;
   struct timeval last_update;
   struct ilG_drawable3d* drawable;
@@ -37,11 +37,11 @@ positionable.type = ffi.typeof "il_positionable*"
 
 local function index(t, k)
     if k == "position" then
-        return vector4.wrap(t.ptr.position);
+        return vector3.wrap(t.ptr.position);
     elseif k == "size" then
-        return vector4.wrap(t.ptr.size);
+        return vector3.wrap(t.ptr.size);
     elseif k == "velocity" then
-        return vector4.wrap(t.ptr.velocity);
+        return vector3.wrap(t.ptr.velocity);
     elseif k == "rotation" then
         return quaternion.wrap(t.ptr.rotation)
     elseif k == "drawable" then
@@ -57,13 +57,13 @@ end
 local function newindex(t, k, v)
     assert(type(v) == "table")
     if k == "position" then
-        assert(ffi.istype(vector4.type, v.ptr), "Attempt to assign non-vector to vector")
+        assert(vector3.check(v), "Attempt to assign non-vector to vector3")
         t.ptr.position = v.ptr;
     elseif k == "size" then
-        assert(ffi.istype(vector4.type, v.ptr), "Attempt to assign non-vector to vector")
+        assert(vector3.check(v), "Attempt to assign non-vector to vector3")
         t.ptr.size = v.ptr;
     elseif k == "velocity" then
-        assert(ffi.istype(vector4.type, v.ptr), "Attempt to assign non-vector to vector")
+        assert(vector3.check(v), "Attempt to assign non-vector to vector3")
         t.ptr.velocity = v.ptr;
     elseif k == "rotation" then
         assert(ffi.istype(quaternion.type, v.ptr), "Attempt to assign non-quaternion to quaternion")

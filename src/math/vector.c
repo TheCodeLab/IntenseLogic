@@ -136,44 +136,104 @@ il_vec4 il_vec4_div(const il_vec4 a, const il_vec4 b, il_vec4 vec)
     return vec;
 }
 
-il_vec4 il_vec4_cross(const il_vec4 a, const il_vec4 b, il_vec4 vec)
+float il_vec4_dot(const il_vec4 a, const il_vec4 b)
+{
+    return a[0] * b[0] + a[1] * b[1] + a[2] * b[2] + a[3] * b[3];
+}
+
+il_vec3 il_vec4_to_vec3(const il_vec4 a, il_vec3 vec)
 {
     if (!vec) {
-        vec = il_vec4_new();
+        vec = il_vec3_new();
     }
-    vec[0] = a[1] * b[2] - b[1] * a[2];
-    vec[1] = a[2] * b[0] - b[2] * a[0];
-    vec[2] = a[0] * b[1] - b[0] * a[1];
+    vec[0] = a[0] / a[3];
+    vec[1] = a[1] / a[3];
+    vec[2] = a[2] / a[3];
+    vec[3] = 1.0;
     return vec;
 }
 
-il_vec4 il_vec4_rotate(const il_vec4 a, const il_quat q, il_vec4 vec)
+///////////////////////////////////////////////////////////////////////////////
+// vec3 operations
+
+il_vec3 il_vec3_rotate(const il_vec3 a, const il_quat q, il_vec3 vec)
 {
     if (!vec) {
-        vec = il_vec4_new();
+        vec = il_vec3_new();
     }
-    il_vec4 uv;
-    il_vec4 qv = il_vec4_set(NULL, q[0], q[1], q[2], 1.0);
-    uv = il_vec4_cross(qv, a, NULL);
+    /* From glm/gtc/quaternion.inl
+                typename detail::tquat<T>::value_type Two(2);
+
+		detail::tvec3<T> uv, uuv;
+		detail::tvec3<T> QuatVector(q.x, q.y, q.z);
+		uv = glm::cross(QuatVector, v);
+		uuv = glm::cross(QuatVector, uv);
+		uv *= (Two * q.w); 
+		uuv *= Two; 
+
+		return v + uv + uuv;
+    */
+    il_vec3 uv;
+    il_vec3 qv = il_vec3_set(NULL, q[0], q[1], q[2]);
+    uv = il_vec3_cross(qv, a, NULL);
     float n = 2 * q[3];
     uv[0] *= n;
     uv[1] *= n;
     uv[2] *= n;
-    vec = il_vec4_add(a, uv, vec);
-    uv = il_vec4_cross(qv, uv, uv);
+    vec = il_vec3_add(a, uv, vec);
+    uv = il_vec3_cross(qv, uv, uv);
     uv[0] *= 2; 
     uv[1] *= 2;
     uv[2] *= 2;
-    vec = il_vec4_add(uv, vec, vec);
-    il_vec4_free(qv);
-    il_vec4_free(uv);
+    vec = il_vec3_add(uv, vec, vec);
+    il_vec3_free(qv);
+    il_vec3_free(uv);
 
     return vec;
 }
 
-float il_vec4_dot(const il_vec4 a, const il_vec4 b)
+il_vec3 il_vec3_cross(const il_vec3 a, const il_vec3 b, il_vec3 vec)
 {
-    return a[0] * b[0] + a[1] * b[1] + a[2] * b[2] + a[3] * b[3];
+    if (!vec) {
+        vec = il_vec3_new();
+    }
+    float n[3];
+    n[0] = a[1] * b[2] - b[1] * a[2];
+    n[1] = a[2] * b[0] - b[2] * a[0];
+    n[2] = a[0] * b[1] - b[0] * a[1];
+    vec[0] = n[0];
+    vec[1] = n[1];
+    vec[2] = n[2];
+    return vec;
+}
+
+float il_vec3_dot(const il_vec3 a, const il_vec3 b)
+{
+    return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+}
+
+il_vec3 il_vec3_normal(const il_vec3 a, il_vec3 vec)
+{
+    if (!vec) {
+        vec = il_vec3_new();
+    }
+    float len = il_vec3_len(a);
+    vec[0] = a[0]/len;
+    vec[1] = a[1]/len;
+    vec[2] = a[2]/len;
+    return vec;
+}
+
+il_vec4 il_vec3_to_vec4(const il_vec3 a, float w, il_vec4 vec)
+{
+    if (!vec) {
+        vec = il_vec4_new();
+    }
+    vec[0] = a[0];
+    vec[1] = a[1];
+    vec[2] = a[2];
+    vec[3] = w;
+    return vec;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
