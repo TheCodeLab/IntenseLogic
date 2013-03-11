@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <string.h>
+#include <stdio.h>
 #ifdef IL_SSE
 #include <xmmintrin.h>
 #endif
@@ -58,6 +59,17 @@ il_vec4 il_vec4_set(il_vec4 vec, float x, float y, float z, float w)
     vec[2] = z;
     vec[3] = w;
     return vec;
+}
+
+char *il_vec4_print(const il_vec4 v, char *buf, unsigned length)
+{
+    unsigned flen = snprintf(NULL, 0, "(% .2f % .2f % .2f % .2f)", v[0], v[1], v[2], v[3]);
+    ++flen;
+    if (!buf || flen > length) {
+        buf = realloc(buf, flen);
+    }
+    snprintf(buf, flen, "(% .2f % .2f % .2f % .2f)", v[0], v[1], v[2], v[3]);
+    return buf;
 }
 
 il_vec4 il_vec4_add(const il_vec4 a, const il_vec4 b, il_vec4 vec)

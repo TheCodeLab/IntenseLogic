@@ -193,6 +193,24 @@ void ilG_bindMVP(GLint location, enum ilG_transform filter, const ilG_camera * c
 {
     ilG_testError("Unknown");
     il_mat mat = ilG_computeMVP(filter, camera, object);
+    // I really resorted to this to try tracking down a bug with rendering
+    /*char *camera_pos = il_vec4_print(camera->positionable->position, NULL, 0),
+         *camera_rot = il_quat_print(camera->positionable->rotation, NULL, 0),
+         *object_pos = NULL, *object_rot = NULL;
+    if (object) {
+        object_pos = il_vec4_print(object->position, NULL, 0);
+        object_rot = il_quat_print(object->rotation, NULL, 0);
+    }
+    printf("T<%i> camera<%p, %s, %s> object<%p, %s, %s>", filter, camera, camera_pos, camera_rot, object, object_pos, object_rot);
+    free(camera_pos);
+    free(camera_rot);
+    free(object_pos);
+    free(object_rot);
+    int i;
+    for (i = 0; i < 16; i++) {
+        printf(" % .6f", mat[i]);
+    }
+    printf("\n");*/
     
     glUniformMatrix4fv(location, 1, GL_TRUE, mat);
     ilG_testError("glUniformMatrix4fv failed");
