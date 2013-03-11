@@ -26,18 +26,29 @@ local vector4 = {}
 vector4.type = ffi.typeof "il_vec4"
 
 local function c_wrap(c)
-    quaternion = quaternion or require "quaternion"
     return function(a, b)
-        assert(type(a) == "table" and ffi.istype(vector4.type, a.ptr), "Expected vector4")
-        assert(type(b) == "table" and ffi.istype(vector4.type, b.ptr), "Expected vector4")
+        assert(vector4.check(a))
+        assert(vector4.check(b))
         return vector4.wrap(c(a.ptr, b.ptr, nil))
     end
 end
 
 local add = c_wrap(ffi.C.il_vec4_add)
 local sub = c_wrap(ffi.C.il_vec4_sub)
-local mul = c_wrap(ffi.C.il_vec4_mul)
+local oldmul = c_wrap(ffi.C.il_vec4_mul)
 local div = c_wrap(ffi.C.il_vec4_div)
+
+local function mul(a, b)
+    quaternion = quaternion or require "quaternion"
+    assert(vector4.check(a))
+    if vector4.check(b) then
+        return oldmul(a,b)
+    elseif quaternion.check(b) then
+        return vector4.wrap(ffi.C.il_vec4_rotate(a.ptr, b.ptr, nil))
+    else
+        error("Expected vector4 or quaternion")
+    end
+end
 
 local function index(t, k)
     --if k == "len" then
@@ -59,13 +70,17 @@ end
 local function newindex(t, k, v)
     assert(type(v) == "number")
     if k == "x" then
-        t.ptr[0] = v;
+        t.ptr[0] = v
+        return
     elseif k == "y" then
-        t.ptr[1] = v;
+        t.ptr[1] = v
+        return
     elseif k == "z" then
-        t.ptr[2] = v;
+        t.ptr[2] = v
+        return
     elseif k == "w" then
         t.ptr[3] = v
+        return
     end
     error("Invalid key "..tostring(k).." in vector4")
 end
@@ -81,13 +96,14 @@ end
 local function wrap(ptr)
     local obj = {}
     obj.ptr = ptr;
+    obj.T = "vec4"
     setmetatable(obj, {__index=index, __newindex=newindex, __tostring=ts, __add=add, __sub=sub, __mul=mul, __div=div, __gc=gc})
     return obj;
 end
 vector4.wrap = wrap;
 
 function vector4.check(obj)
-    return type(obj) == "table" and ffi.istype(vector4.type, obj.ptr)
+    return type(obj) == "table" and obj.T == "vec4" and ffi.istype(vector4.type, obj.ptr)
 end
 
 function vector4.create(x, y, z, w)
