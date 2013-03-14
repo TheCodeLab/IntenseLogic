@@ -113,10 +113,10 @@ function tick(q, ev)
     local y = input.isKeySet("R") - input.isKeySet("F")
     local r = input.isKeySet("Q") - input.isKeySet("E")
     local v = vector3(x,y,z) * c.camera.movespeed
-    print("r", c.camera.positionable.rotation)
-    print("v", v)
+    --print("r", c.camera.positionable.rotation)
+    --print("v", v)
     v = v * c.camera.positionable.rotation
-    print("v'", v)
+    --print("v'", v)
     c.camera.positionable.position = c.camera.positionable.position + v
     local bank = quaternion(vector3(0, 0, 1), r * c.camera.sensitivity)
     c.camera.positionable.rotation = c.camera.positionable.rotation * bank
