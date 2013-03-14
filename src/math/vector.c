@@ -4,6 +4,7 @@
 #include <assert.h>
 #include <string.h>
 #include <stdio.h>
+#include <math.h>
 #ifdef IL_SSE
 #include <xmmintrin.h>
 #endif
@@ -153,6 +154,11 @@ il_vec3 il_vec4_to_vec3(const il_vec4 a, il_vec3 vec)
     return vec;
 }
 
+float il_vec4_len(const il_vec4 a)
+{
+    return sqrt(il_vec4_dot(a,a));
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // vec3 operations
 
@@ -173,21 +179,23 @@ il_vec3 il_vec3_rotate(const il_vec3 a, const il_quat q, il_vec3 vec)
 
 		return v + uv + uuv;
     */
-    il_vec3 uv;
-    il_vec3 qv = il_vec3_set(NULL, q[0], q[1], q[2]);
+    il_vec3 uv, uuv, qv;
+    qv = il_vec3_set(NULL, q[0], q[1], q[2]);
     uv = il_vec3_cross(qv, a, NULL);
-    float n = 2 * q[3];
-    uv[0] *= n;
-    uv[1] *= n;
-    uv[2] *= n;
+    uuv = il_vec3_cross(qv, uv, NULL);
+    uv[0] *= 2*q[3];
+    uv[1] *= 2*q[3];
+    uv[2] *= 2*q[3];
+    uuv[0] *= 2;
+    uuv[1] *= 2;
+    uuv[2] *= 2;
+
     vec = il_vec3_add(a, uv, vec);
-    uv = il_vec3_cross(qv, uv, uv);
-    uv[0] *= 2; 
-    uv[1] *= 2;
-    uv[2] *= 2;
-    vec = il_vec3_add(uv, vec, vec);
-    il_vec3_free(qv);
+    vec = il_vec3_add(vec, uuv, vec);
+
     il_vec3_free(uv);
+    il_vec3_free(uuv);
+    il_vec3_free(qv);
 
     return vec;
 }
@@ -234,6 +242,11 @@ il_vec4 il_vec3_to_vec4(const il_vec3 a, float w, il_vec4 vec)
     vec[2] = a[2];
     vec[3] = w;
     return vec;
+}
+
+float il_vec3_len(const il_vec3 a)
+{
+    return sqrt(il_vec3_dot(a,a));
 }
 
 ///////////////////////////////////////////////////////////////////////////////
