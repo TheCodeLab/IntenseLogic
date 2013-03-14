@@ -3,7 +3,7 @@ local ffi = require "ffi"
 require "scalar_defs"
 
 local positionable = require "positionable"
-local vector4 = require "vector4"
+local vector3 = require "vector3"
 
 ffi.cdef [[
 
@@ -18,7 +18,7 @@ enum ilG_light_type {
 
 typedef struct ilG_light {
     struct il_positionable* positionable;
-    il_vec4 color;
+    il_vec3 color;
     enum ilG_light_type type;
     GLuint texture; // shadow map
     float radius;
@@ -35,7 +35,7 @@ local function index(t, k)
     if k == "positionable" then
         return positionable.wrap(t.ptr.positionable);
     elseif k == "color" then
-        return vector4.wrap(t.ptr.color)
+        return vector3.wrap(t.ptr.color)
     elseif k == "type" then
         return t.ptr['type']
     elseif k == "radius" then
@@ -49,7 +49,7 @@ local function newindex(t, k, v)
         assert(type(v) == "table" and ffi.istype("struct il_positionable*", v.ptr))
         t.ptr.positionable = v.ptr
     elseif k == "color" then
-        assert(vector4.check(v))
+        assert(vector3.check(v))
         t.ptr.color = v.ptr
     elseif k == "type" then
         assert(type(v) == "number")
@@ -78,7 +78,7 @@ function light.create(...)
     if type(args[1]) == "table" then -- postionable or position
         if ffi.istype("struct il_positionable*", args[1].ptr) then
             obj.positionable = args[1]
-        elseif ffi.istype(vector4.type, args[1].ptr) then
+        elseif vector3.check(args[1]) then
             obj.positionable = positionable(args[1])
         else
             error("Expected positionable or vector3")
@@ -86,7 +86,7 @@ function light.create(...)
         n = 2
     elseif type(args[1]) == "number" then -- x y z coords
         obj.positionable = positionable()
-        obj.positionable.position = vector4(args[1], args[2], args[3])
+        obj.positionable.position = vector3(args[1], args[2], args[3])
         n = 4
     end
     if type(args[n]) == "number" then -- radius
@@ -97,7 +97,7 @@ function light.create(...)
         assert(ffi.istype(vector4.type, args[n].ptr))
         obj.color = args[n]
     elseif type(args[n]) == "number" then
-        obj.color = vector4(args[n], args[n+1], args[n+2])
+        obj.color = vector3(args[n], args[n+1], args[n+2])
     end
     return obj
 end
