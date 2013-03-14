@@ -28,7 +28,7 @@ il_vec4 il_vec4_mul(const il_vec4 a, const il_vec4 b, il_vec4 vec);
 il_vec4 il_vec4_div(const il_vec4 a, const il_vec4 b, il_vec4 vec);
 float il_vec4_dot(const il_vec4 a, const il_vec4 b);
 il_vec3 il_vec4_to_vec3(const il_vec4 a, il_vec4 vec);
-#define il_vec4_len(a) il_vec4_dot(a,a)
+float il_vec4_len(const il_vec4 a);
 
 // component wise, we can just ignore that it does the w operation
 #define il_vec3_add(a, b, v) ((il_vec3)il_vec4_add((il_vec4)a, (il_vec4)b, (il_vec4)v))
@@ -40,7 +40,7 @@ il_vec3 il_vec3_cross(const il_vec3 a, const il_vec3 b, il_vec3 vec);
 float il_vec3_dot(const il_vec3 a, const il_vec3 b);
 il_vec3 il_vec3_normal(const il_vec3 a, il_vec3 vec);
 il_vec4 il_vec3_to_vec4(const il_vec3 a, float w, il_vec4 vec);
-#define il_vec3_len(a) il_vec3_dot(a,a)
+float il_vec3_len(const il_vec3 a);
 
 il_vec2 il_vec2_add(il_vec2 a, il_vec2 b, il_vec2 vec);
 il_vec2 il_vec2_sub(il_vec2 a, il_vec2 b, il_vec2 vec);

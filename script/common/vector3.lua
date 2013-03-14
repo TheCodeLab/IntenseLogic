@@ -21,7 +21,7 @@ il_vec3 il_vec3_cross(const il_vec3 a, const il_vec3 b, il_vec3 vec);
 float il_vec3_dot(const il_vec3 a, const il_vec3 b);
 il_vec3 il_vec3_normal(const il_vec3 a, il_vec3 vec);
 il_vec4 il_vec3_to_vec4(const il_vec3 a, float w, il_vec4 vec);
-//#define il_vec3_len(a) il_vec3_dot(a,a)
+float il_vec3_len(const il_vec3 a);
 
 ]]
 
@@ -65,7 +65,7 @@ local function index(t, k)
     elseif k == "z" then
         return t.ptr[2]
     elseif k == "len" then
-        return il_vec3_dot(t.ptr, t.ptr)
+        return il_vec3_len(t.ptr)
     elseif k == "normal" then
         return vector3.wrap(ffi.C.il_vec3_normal(t.ptr, nil))
     elseif k == "vec4" then

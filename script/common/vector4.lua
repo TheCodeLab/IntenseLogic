@@ -19,6 +19,7 @@ il_vec4 il_vec4_mul(const il_vec4 a, const il_vec4 b, il_vec4 vec);
 il_vec4 il_vec4_div(const il_vec4 a, const il_vec4 b, il_vec4 vec);
 float il_vec4_dot(const il_vec4 a, const il_vec4 b);
 il_vec3 il_vec4_to_vec3(const il_vec4 a, il_vec4 vec);
+float il_vec4_len(const il_vec4 a);
 
 ]]
 
@@ -45,7 +46,7 @@ local div = c_wrap(ffi.C.il_vec4_div)
 local function index(t, k)
     vector3 = vector3 or require "vector3"
     if k == "len" or k == "length" then
-        return ffi.C.il_vec4_dot(t.ptr, t.ptr)
+        return ffi.C.il_vec4_len(t.ptr)
     elseif k == "vec3" then
         return vector3.wrap(ffi.C.il_vec4_to_vec3(t.ptr, nil))
     elseif k == "x" then
