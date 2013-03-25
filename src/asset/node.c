@@ -35,6 +35,7 @@ static void stdio_free(ilA_node *self)
     munmap(ctx->contents, ctx->size);
     close(ctx->fd);
     free(ctx->path);
+    free(ctx);
     free(self);
 }
 
@@ -80,11 +81,41 @@ ilA_file *ilA_node_stdio_file(const char *path, enum ilA_file_mode mode)
     return f;
 }
 
-struct dir_ctx {
-    DIR *dir;
-};
+static void dir_free(ilA_node *self)
+{
+    free(self->user);
+    free(self);
+}
 
-ilA_dir *ilA_node_stdio_dir(const char *path);
+static ilA_node* dir_lookup(ilA_dir* self, const char *path)
+{
+    struct stat s;
+    char *buf = malloc(strlen(path) + strlen(self->node.user) + 2);
+    strcpy(buf, self->node.user);
+    strcat(buf, "/");
+    strcat(buf, path);
+    if (stat(path, &s) != 0) {
+        return NULL;
+    }
+    ilA_node* node;
+    if (S_ISDIR(s.st_mode)) {
+        node = &ilA_node_stdio_dir(buf)->node;
+    } else {
+        node = &ilA_node_stdio_file(buf, 0)->node;
+    }
+    free(buf);
+    return node;
+}
+
+ilA_dir *ilA_node_stdio_dir(const char *path)
+{
+    ilA_dir *d = calloc(1, sizeof(ilA_dir));
+    d->node.type = ILA_NODE_DIR;
+    d->node.free = dir_free;
+    d->node.user = strdup(path);
+    d->lookup = dir_lookup;
+    return d;
+}
 
 ilA_dir *ilA_node_union(ilA_dir *a, ilA_dir *b);
 
