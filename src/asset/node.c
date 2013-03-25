@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <dirent.h>
+#include <string.h>
 
 ilA_node *ilA_node_ref(ilA_node* node) 
 {
@@ -25,6 +26,7 @@ struct stdio_ctx {
     int fd;
     void *contents;
     size_t size;
+    char *path;
 };
 
 static void stdio_free(ilA_node *self)
@@ -32,6 +34,7 @@ static void stdio_free(ilA_node *self)
     struct stdio_ctx *ctx = self->user;
     munmap(ctx->contents, ctx->size);
     close(ctx->fd);
+    free(ctx->path);
     free(self);
 }
 
@@ -44,6 +47,10 @@ static void *stdio_contents(ilA_file* self, size_t *size)
         }
         return ctx->contents;
     }
+    int oflag = (self->mode&ILA_FILE_READ && self->mode&ILA_FILE_WRITE? O_RDWR :
+                    (self->mode&ILA_FILE_READ? O_RDONLY : 0) |
+                    (self->mode&ILA_FILE_WRITE? O_WRONLY : 0));
+    ctx->fd = open(ctx->path, oflag);
     struct stat s;
     if (fstat(ctx->fd, &s) != 0) {
         return NULL;
@@ -59,21 +66,23 @@ static void *stdio_contents(ilA_file* self, size_t *size)
     return ctx->contents;
 }
 
+char *strdup(const char*);
 ilA_file *ilA_node_stdio_file(const char *path, enum ilA_file_mode mode)
 {
     ilA_file *f = calloc(1, sizeof(ilA_file));
     f->node.type = ILA_NODE_FILE;
     f->mode = mode;
     struct stdio_ctx *ctx = calloc(1, sizeof(struct stdio_ctx));
+    ctx->path = strdup(path);
     f->node.user = ctx;
-    int oflag = (mode&ILA_FILE_READ && mode&ILA_FILE_WRITE? O_RDWR :
-                    (mode&ILA_FILE_READ? O_RDONLY : 0) |
-                    (mode&ILA_FILE_WRITE? O_WRONLY : 0));
-    ctx->fd = open(path, oflag);
     f->node.free = stdio_free;
     f->contents = stdio_contents;
     return f;
 }
+
+struct dir_ctx {
+    DIR *dir;
+};
 
 ilA_dir *ilA_node_stdio_dir(const char *path);
 
