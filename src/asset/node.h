@@ -37,11 +37,12 @@ typedef struct ilA_dir {
 #define ILA_FILE(node) ((ilA_file*)(node->type == ILA_NODE_FILE? node : NULL))
 #define ILA_DIR(node) ((ilA_dir*)(node->type == ILA_NODE_DIR? node : NULL))
 
-ilA_node *ilA_node_ref(ilA_node* node);
-void ilA_node_unref(ilA_node* node);
+ilA_node *ilA_node_ref(void* node);
+void ilA_node_unref(void* node);
 ilA_file *ilA_node_stdio_file(const char *path, enum ilA_file_mode mode);
 ilA_dir *ilA_node_stdio_dir(const char *path);
 ilA_dir *ilA_node_union(ilA_dir *a, ilA_dir *b);
+ilA_dir *ilA_node_prefix(ilA_dir *dir, const char *path);
 ilA_node *ilA_node_lookup(const char *path, ilA_dir* dir);
 
 #endif
