@@ -56,6 +56,7 @@ env.Append(LIBS = libs[platform])
 Export("platform")
 Export("env")
 libilmath = SConscript("src/math/SConscript", platform=platform, env=env)
+Export("libilmath")
 SConscript("test/SConscript", platform=platform, env=env)
 
 # get sources

@@ -165,6 +165,30 @@ il_mat il_mat_rotate(const il_quat q, il_mat m)
     return m;
 }
 
+/*static void dividecol(il_mat m, int c, float f)
+{
+    m[0  + c] /= f;
+    m[4  + c] /= f;
+    m[8  + c] /= f;
+    m[12 + c] /= f;
+}*/
+
+static void subtractrow(il_mat m, int src, int dst, float f)
+{
+    m[dst*4 + 0] -= m[src*4 + 0] * f;
+    m[dst*4 + 1] -= m[src*4 + 1] * f;
+    m[dst*4 + 2] -= m[src*4 + 2] * f;
+    m[dst*4 + 3] -= m[src*4 + 3] * f;
+}
+
+static void swaprow(il_mat m, int src, int dst)
+{
+    float r[4];
+    memcpy(r,           m + 4*dst,  sizeof(r));
+    memcpy(m + 4*dst,   m + 4*src,  sizeof(r));
+    memcpy(m + 4*src,   r,          sizeof(r));
+}
+
 il_mat il_mat_invert(const il_mat a, il_mat res)
 {
     if (!res) {
@@ -173,7 +197,33 @@ il_mat il_mat_invert(const il_mat a, il_mat res)
 #ifdef IL_SSE
 
 #else
-    float Coef00 = a[2*4 + 2] * a[3*4 + 3] - a[2*4 + 3] * a[3*4 + 2];
+    //il_mat m = il_mat_copy(a);
+    memcpy(res, a, sizeof(float)*16);
+    int i, j, k;
+    for (i = 0; i < 3; i++) {
+        int p = -1;
+        for (k = i; k < 4; k++) {
+            if (a[p*4+i] != 0.f) {
+                p = k;
+                break;
+            }
+        }
+        if (p == -1) {
+            return NULL;
+        }
+        if (p != i) {
+            swaprow(res, p, i);
+        }
+        for (j = 0; j < 4; j++) {
+            float m = a[j*4+i] / a[i*5];
+            subtractrow(res, j, i, m);
+        }
+    }
+    if (res[15] == 0.f) { // ???
+        return NULL;
+    }
+    return res;
+    /*float Coef00 = a[2*4 + 2] * a[3*4 + 3] - a[2*4 + 3] * a[3*4 + 2];
     float Coef02 = a[2*4 + 1] * a[3*4 + 3] - a[2*4 + 3] * a[3*4 + 1];
     float Coef03 = a[2*4 + 1] * a[3*4 + 2] - a[2*4 + 2] * a[3*4 + 1];
     float Coef04 = a[1*4 + 2] * a[3*4 + 3] - a[1*4 + 3] * a[3*4 + 2];
@@ -276,7 +326,7 @@ il_mat il_mat_invert(const il_mat a, il_mat res)
     int i;
     for (i = 0; i < 16; i++) {
         res[i] /= Determinant;
-    }
+    }*/
 #endif
     return res;
 }

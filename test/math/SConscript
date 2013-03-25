@@ -7,6 +7,7 @@ inputs    = "*.c"
 
 Import("platform")
 Import("env")
+Import("libilmath")
 
 sources = []
 for module in Split(inputs) :
@@ -16,6 +17,7 @@ objects = env.Object(source = sources)
 
 mathtest = env.Program(target = build_dir + "/" + output, 
                        source = objects)
+Depends(mathtest, libilmath)
 
 Return("mathtest")
 
