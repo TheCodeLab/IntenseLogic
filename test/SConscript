@@ -7,6 +7,9 @@ Import("env")
 Export("platform")
 Export("env")
 
+Import("libilmath")
+Export("libilmath")
+
 SConscript("math/SConscript")
 Default(None)
 

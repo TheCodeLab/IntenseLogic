@@ -31,20 +31,29 @@ int inversionTest()
 {
     il_mat mat = il_mat_new();
     int i;
-    for (i = 0; i < 16; i++) {
+    /*for (i = 0; i < 16; i++) {
         mat[i] = (float)rand() / RAND_MAX;
-    }
+    }*/
+    mat = il_mat_identity(mat);
+    mat[3] = 34;
+    mat[7] = 24;
+    mat[11] = 45;
     printf("Input matrix:\n");
     print_matrix(mat);
     il_mat inverted = il_mat_invert(mat, NULL);
+    if (!inverted) {
+        printf("Inversion failed.\n");
+        return 0;
+    }
     printf("Inverted matrix:\n");
     print_matrix(inverted);
     il_mat final = il_mat_mul(mat, inverted, inverted);
     printf("Input * Inverted:\n");
     print_matrix(final);
     int success = 1;
+    il_mat ident = il_mat_identity(NULL);
     for (i = 0; i < 16; i++) {
-        float diff = mat[i] - final[i];
+        float diff = mat[i] - ident[i];
         final[i] = diff;
         if (diff > 0.001 || diff < -0.001) {
             success = 0;
