@@ -8,6 +8,8 @@
 #include <dirent.h>
 #include <string.h>
 
+#include <mowgli.h>
+
 ilA_node *ilA_node_ref(ilA_node* node) 
 {
     node->refs++;
@@ -72,6 +74,7 @@ ilA_file *ilA_node_stdio_file(const char *path, enum ilA_file_mode mode)
 {
     ilA_file *f = calloc(1, sizeof(ilA_file));
     f->node.type = ILA_NODE_FILE;
+    f->node.impl = "stdio";
     f->mode = mode;
     struct stdio_ctx *ctx = calloc(1, sizeof(struct stdio_ctx));
     ctx->path = strdup(path);
@@ -111,13 +114,61 @@ ilA_dir *ilA_node_stdio_dir(const char *path)
 {
     ilA_dir *d = calloc(1, sizeof(ilA_dir));
     d->node.type = ILA_NODE_DIR;
+    d->node.impl = "stdio";
     d->node.free = dir_free;
     d->node.user = strdup(path);
     d->lookup = dir_lookup;
     return d;
 }
 
-ilA_dir *ilA_node_union(ilA_dir *a, ilA_dir *b);
+struct union_ctx {
+    mowgli_list_t *dirs;
+};
+
+static void union_free(ilA_node* self)
+{
+    struct union_ctx *ctx = self->user;
+    mowgli_list_free(ctx->dirs);
+    free(ctx);
+    free(self);
+}
+
+static ilA_node *union_lookup(ilA_dir* self, const char *path)
+{
+    mowgli_node_t *node;
+    struct union_ctx *ctx = self->node.user;
+    ilA_node *res;
+    MOWGLI_LIST_FOREACH(node, ctx->dirs->head) {
+        ilA_dir *dir = node->data;
+        res = ilA_node_lookup(path, dir);
+        if (res) {
+            return res;
+        }
+    }
+    return NULL;
+}
+
+ilA_dir *ilA_node_union(ilA_dir *a, ilA_dir *b)
+{
+    if (strcmp(a->node.impl, "union") == 0) {
+        mowgli_node_add(b, mowgli_node_create(), ((struct union_ctx*)a->node.user)->dirs);
+    }
+    if (strcmp(b->node.impl, "union") == 0) {
+        mowgli_node_add_head(a, mowgli_node_create(), ((struct union_ctx*)b->node.user)->dirs);
+    }
+
+    ilA_dir *d = calloc(1, sizeof(ilA_dir));
+    d->node.type = ILA_NODE_DIR;
+    d->node.impl = "union";
+    d->node.free = union_free;
+    d->lookup = union_lookup;
+    struct union_ctx *ctx = calloc(1, sizeof(struct union_ctx));
+    d->node.user = ctx;
+    ctx->dirs = mowgli_list_create();
+    mowgli_node_add(a, mowgli_node_create(), ctx->dirs);
+    mowgli_node_add(b, mowgli_node_create(), ctx->dirs);
+    return d;
+}
 
 ilA_node *ilA_node_lookup(const char *path, ilA_dir* dir)
 {
