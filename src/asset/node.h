@@ -11,6 +11,7 @@ enum ilA_node_type {
 
 typedef struct ilA_node {
     enum ilA_node_type type;
+    const char *impl;
     int refs;
     void (*free)(struct ilA_node* self);
     void *user;
