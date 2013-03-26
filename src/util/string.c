@@ -1,6 +1,8 @@
 #include "ilstring.h"
 
 #include <string.h>
+#include <stdio.h>
+#include <stdarg.h>
 
 static size_t compute_canary(const il_string *s)
 {
@@ -88,6 +90,11 @@ void il_string_unref(void* ptr)
     if (il_string_verify(s) && s->refs) {
         (*s->refs)--;
     }
+    if (*s->refs == 0) {
+        free(s->refs);
+        free(s->start);
+        free(s);
+    }
 }
 
 il_string *il_string_sub(il_string *s, int p1, int p2)
@@ -139,5 +146,21 @@ int il_string_byte(const il_string *s, int pos)
     return s->data[pos];
 }
 
-il_string *il_string_format(const char *fmt, ...);
+il_string *il_string_format(const char *fmt, ...)
+{
+    // TODO: find some way to convert %S into %s while converting the corresponding il_string to a char*
+    va_list ap;
+    va_start(ap, fmt);
+    int len = vsnprintf(NULL, 0, fmt, ap);
+    il_string *str = calloc(1, sizeof(il_string));
+    str->length = len;
+    str->capacity = len+1;
+    str->start = str->data = calloc(1, len+1);
+    str->canary = compute_canary(str);
+    str->refs = calloc(1, sizeof(int));
+    *str->refs = 1;
+    vsnprintf(str->data, len, fmt, ap);
+    va_end(ap);
+    return str;
+}
 
