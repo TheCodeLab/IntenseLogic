@@ -90,7 +90,31 @@ void il_string_unref(void* ptr)
     }
 }
 
-il_string *il_string_sub(const il_string *s, int p1, int p2);
+il_string *il_string_sub(il_string *s, int p1, int p2)
+{
+    if (!il_string_verify(s)) {
+        return NULL;
+    }
+    if (p1 < 0) {
+        p1 += s->length;
+    }
+    if (p2 < 0) {
+        p2 += s->length;
+    }
+    if (p1 < 0 || p2 < 0 || (size_t)p1 > s->length || (size_t)p2 > s->length || p1 > p2) {
+        return NULL;
+    }
+    il_string *str = calloc(1, sizeof(il_string));
+    str->length = p2 - p1;
+    str->capacity = s->capacity - p1;
+    str->start = s->start;
+    str->data = s->data + p1;
+    str->canary = compute_canary(str);
+    str->refs = s->refs;
+    (*str->refs)++;
+    return str;
+}
+
 int il_string_cmp(const il_string *a, const il_string *b);
 char il_string_byte(const il_string *s, int pos);
 il_string *il_string_format(const char *fmt, ...);

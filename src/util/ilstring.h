@@ -16,7 +16,7 @@ char *il_string_cstring(const il_string *s, size_t *len);
 int il_string_verify(const il_string *s);
 il_string *il_string_ref(void* s);
 void il_string_unref(void* s);
-il_string *il_string_sub(const il_string *s, int p1, int p2);
+il_string *il_string_sub(il_string *s, int p1, int p2);
 int il_string_cmp(const il_string *a, const il_string *b);
 char il_string_byte(const il_string *s, int pos);
 il_string *il_string_format(const char *fmt, ...);
