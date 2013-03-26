@@ -115,7 +115,29 @@ il_string *il_string_sub(il_string *s, int p1, int p2)
     return str;
 }
 
-int il_string_cmp(const il_string *a, const il_string *b);
-char il_string_byte(const il_string *s, int pos);
+int il_string_cmp(const il_string *a, const il_string *b)
+{
+    if (!il_string_verify(a) || !il_string_verify(b)) {
+        return ~0; // ???
+    }
+    if (a == b) {
+        return 0;
+    } else if (a->data == b->data) {
+        return a->length - b->length;
+    }
+    return strncmp(a->data, b->data, a->length < b->length? a->length : b->length);
+}
+
+int il_string_byte(const il_string *s, int pos)
+{
+    if (pos < 0) {
+        pos += s->length;
+    }
+    if (pos < 0 || (size_t)pos >= s->length) {
+        return -1;
+    }
+    return s->data[pos];
+}
+
 il_string *il_string_format(const char *fmt, ...);
 
