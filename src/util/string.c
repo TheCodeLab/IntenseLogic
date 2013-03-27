@@ -148,7 +148,7 @@ int il_string_byte(const il_string *s, int pos)
 
 il_string *il_string_format(const char *fmt, ...)
 {
-    // TODO: find some way to convert %S into %s while converting the corresponding il_string to a char*
+    // TODO: find some way to specify IL types in the format string
     va_list ap;
     va_start(ap, fmt);
     int len = vsnprintf(NULL, 0, fmt, ap);
