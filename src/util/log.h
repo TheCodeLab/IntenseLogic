@@ -9,7 +9,9 @@ const char *il_log_prefixes[5];
   (strstr(name, "src/")?strstr(name, "src/"):name)
 
 #define il_log_real(file, line, func, lvl, fmt, ...) \
-    mowgli_log_prefix_real(file, line, func, prefixes[lvl], fmt, __VA_ARGS__)
+    if (il_can_log(file, lvl)) { \
+        mowgli_log_prefix_real(file, line, func, prefixes[lvl], fmt, __VA_ARGS__); \
+    }
 
 #define il_debug(fmt, ...)      il_log_real(il_prettifyFile(__FILE__), __LINE__, __func__, 4, fmt, __VA_ARGS__)
 #define il_log(fmt, ...)        il_log_real(il_prettifyFile(__FILE__), __LINE__, __func__, 3, fmt, __VA_ARGS__)
