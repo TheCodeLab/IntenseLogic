@@ -194,6 +194,9 @@ void ilG_bindMVP(GLint location, enum ilG_transform filter, const ilG_camera * c
 {
     ilG_testError("Unknown");
     il_mat mat = ilG_computeMVP(filter, camera, object);
+    if (!mat) {
+        return;
+    }
     // I really resorted to this to try tracking down a bug with rendering
     /*char *camera_pos = il_vec4_print(camera->positionable->position, NULL, 0),
          *camera_rot = il_quat_print(camera->positionable->rotation, NULL, 0),
