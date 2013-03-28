@@ -2,7 +2,7 @@
 
 #include <string.h>
 
-#include "common/log.h"
+#include "util/log.h"
 #include "common/string.h"
 
 int ilS_script_wrap(lua_State* L, ilS_script* s);
@@ -16,14 +16,14 @@ static int print(lua_State* L)
     res = lua_getinfo(L, "nSl", &ar);
     if (!res) return -1;
 
-    if (3 > il_loglevel) return 0;
-
-    fprintf(il_logfile, "%s:%d (%s): %s\n",
-            ar.short_src,
-            ar.currentline,
-            ar.name,
-            lua_tostring(L, -1)
-           );
+    il_log_real(
+        ar.short_src,
+        ar.currentline,
+        ar.name,
+        3,
+        "%s",
+        lua_tostring(L, -1)
+    );
 
     return 0;
 }
@@ -120,7 +120,7 @@ int ilS_fromFile(ilS_script* self, const char * filename)
 int ilS_run(ilS_script* self)
 {
     self->running = 1;
-    il_log(3, "Running script %s", self->filename);
+    il_log("Running script %s", self->filename);
     int res = lua_pcall(self->L, 0, 0, self->ehandler);
     if (res) {
         self->err = lua_tolstring(self->L, -1, &self->errlen);

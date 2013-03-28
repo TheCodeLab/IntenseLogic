@@ -4,7 +4,6 @@
 
 #include <GL/glew.h>
 
-#include "common/log.h"
 #include "common/string.h"
 #include "asset/asset.h"
 #include "graphics/glutil.h"
