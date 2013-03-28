@@ -53,8 +53,8 @@ void ilG_testError_(const char *file, int line, const char *func,
         va_list ap;
         va_start(ap, fmt);
         int len = vsnprintf(NULL, 0, fmt, ap);
-        char buf[len];
-        vsnprintf(buf, len, fmt, ap);
+        char buf[len+1];
+        vsnprintf(buf, len+1, fmt, ap);
         va_end(ap);
         il_error("%s: %s (%i)", buf, ilG_strerror(err), err);
     }
@@ -79,11 +79,11 @@ GLuint ilG_makeShader(GLenum type, il_string source)
     if (len > 1) {
         char * str = calloc(1, len);
         glGetShaderInfoLog(shader, len, NULL, str);
-        il_log(status == GL_TRUE? 4 : 1,
-                      "%s Shader info log: \n"
-                      "---- BEGIN SHADER INFO LOG ----\n"
-                      "%s\n"
-                      "---- END SHADER INFO LOG ----\n", type == GL_VERTEX_SHADER? "Vertex" : "Fragment", str);
+        if (status == GL_TRUE) {
+            il_debug("%s Shader info log: %s", type == GL_VERTEX_SHADER? "Vertex" : "Fragment", str);
+        } else {
+            il_error("%s Shader info log: %s", type == GL_VERTEX_SHADER? "Vertex" : "Fragment", str);
+        }
         free(str);
         if (status == GL_FALSE) {
             return 0;
@@ -95,7 +95,7 @@ GLuint ilG_makeShader(GLenum type, il_string source)
 
 int ilG_linkProgram(GLuint program)
 {
-    il_log(3, "Linking program");
+    il_log("Linking program");
     glLinkProgram(program);
     IL_GRAPHICS_TESTERROR("Unable to link program");
 
@@ -105,10 +105,11 @@ int ilG_linkProgram(GLuint program)
     if (len > 1) {
         char * str = calloc(1, len);
         glGetProgramInfoLog(program, len, NULL, str);
-        il_log(status == GL_TRUE? 4 : 1, "Program info log: \n"
-                      "---- BEGIN PROGRAM INFO LOG ----\n"
-                      "%s\n"
-                      "---- END PROGRAM INFO LOG ----\n", str);
+        if (status == GL_TRUE) {
+            il_debug("Program info log: %s", str);
+        } else {
+            il_error("Program info log: %s", str);
+        }
         free(str);
         if (status == GL_FALSE) {
             return 1;
@@ -123,10 +124,11 @@ int ilG_linkProgram(GLuint program)
     if (len > 1) {
         char * str = calloc(1, len);
         glGetProgramInfoLog(program, len, NULL, str);
-        il_log(status == GL_TRUE? 4 : 1, "Program info log: \n"
-                      "---- BEGIN PROGRAM INFO LOG ----\n"
-                      "%s\n"
-                      "---- END PROGRAM INFO LOG ----\n", str);
+        if (status == GL_TRUE) {
+            il_debug("Program info log: %s", str);
+        } else {
+            il_error("Program info log: %s", str);
+        }
         free(str);
         if (status == GL_FALSE) {
             return 1;
