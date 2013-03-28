@@ -14,7 +14,7 @@
 #include "common/base.h"
 //#include "common/keymap.h"
 #include "graphics/context.h"
-#include "common/log.h"
+#include "util/log.h"
 #include "graphics/shape.h"
 #include "asset/asset.h"
 #include "common/world.h"
@@ -90,14 +90,13 @@ static void GLFWCALL mousewheel_cb(int pos)
 static void context_setup()
 {
     if (!glfwInit()) {
-        il_log(0, "glfwInit() failed");
-        abort();
+        il_fatal("glfwInit() failed");
     }
 
     {
         int major, minor, rev;
         glfwGetVersion(&major, &minor, &rev);
-        il_log(3, "Using GLFW version %i.%i.%i", major, minor, rev);
+        il_log("Using GLFW version %i.%i.%i", major, minor, rev);
     }
 
     glfwOpenWindowHint(GLFW_OPENGL_VERSION_MAJOR, 3);
@@ -110,8 +109,7 @@ static void context_setup()
     glfwOpenWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
 #endif
     if (!glfwOpenWindow(width, height, 8, 8, 8, 8, 32, 8, GLFW_WINDOW)) {
-        il_log(0, "glfwOpenWindow() failed");
-        abort();
+        il_fatal("glfwOpenWindow() failed - are you sure you have OpenGL 3.1?");
     }
 
     // register glfw stuff
@@ -126,16 +124,15 @@ static void context_setup()
     glewExperimental = GL_TRUE;
     GLenum err = glewInit();
     if (GLEW_OK != err) {
-        il_log(0, "glewInit() failed: %s", glewGetErrorString(err));
-        abort();
+        il_fatal("glewInit() failed: %s", glewGetErrorString(err));
     }
-    il_log(3, "Using GLEW %s", glewGetString(GLEW_VERSION));
+    il_log("Using GLEW %s", glewGetString(GLEW_VERSION));
 
     IL_GRAPHICS_TESTERROR("glewInit()");
 
 #ifndef __APPLE__
     if (!GLEW_VERSION_3_1) {
-        il_log(1, "GL version 3.1 is required, your Segfault Insurance is now invalid");
+        il_error("GL version 3.1 is required, your Segfault Insurance is now invalid");
     }
 #endif
 
@@ -143,10 +140,10 @@ static void context_setup()
 #ifdef DEBUG
     if (GLEW_ARB_debug_output) {
         glDebugMessageCallbackARB((GLDEBUGPROCARB)&error_cb, NULL);
-        il_log(3, "ARB_debug_output present, enabling advanced errors");
+        il_log("ARB_debug_output present, enabling advanced errors");
         IL_GRAPHICS_TESTERROR("glDebugMessageCallbackARB()");
     } else
-        il_log(3, "ARB_debug_output missing");
+        il_log("ARB_debug_output missing");
 #endif
 
     glfwSwapInterval(0); // 1:1 ratio of frames to vsyncs
@@ -366,11 +363,11 @@ static void draw_lights()
 static void draw()
 {
     if (!context) {
-        il_log(0, "Nothing to do.");
+        il_fatal("Nothing to render.");
         ilE_pushnew(il_queue, IL_BASE_SHUTDOWN, 0, NULL);
         return;
     }
-    il_log(5, "Rendering frame");
+    il_debug("Rendering frame");
 
     static GLenum drawbufs[] = {
         GL_COLOR_ATTACHMENT0,   // accumulation
@@ -513,7 +510,7 @@ static GLvoid error_cb(GLenum source, GLenum type, GLuint id, GLenum severity,
         case GL_DEBUG_SEVERITY_LOW_ARB:     sseverity="LOW";    break;
         default: sseverity="???";
     }
-    fprintf(il_logfile, "OpenGL %s (%s) %s: %s\n", ssource, stype,
+    il_log("OpenGL %s %s (%s): %s\n", ssource, stype,
             sseverity, message);
 }
 
