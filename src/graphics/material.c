@@ -9,7 +9,7 @@
 #include "graphics/context.h"
 #include "graphics/textureunit.h"
 #include "graphics/arrayattrib.h"
-#include "common/log.h"
+#include "util/log.h"
 #include "graphics/drawable3d.h"
 #include "graphics/tracker.h"
 #include "graphics/fragdata.h"
@@ -69,9 +69,9 @@ static void mtl_update(ilG_context* context, struct il_positionable* pos, void *
         return;
     }
     if ((mtl->attrs & context->drawable->attrs) != mtl->attrs) {
-        il_log( 1, "Drawable \"%s\" does not have the required attributes to "
-                "be drawn with Material \"%s\"", context->drawable->name, 
-                mtl->name);
+        il_error("Drawable \"%s\" does not have the required attributes to "
+                 "be drawn with Material \"%s\"", context->drawable->name, 
+                 mtl->name);
     }
     unsigned int i;
     for (i = 0; i < mtl->config->matrices.length; i++) {
@@ -147,7 +147,7 @@ void ilG_material_matrix(ilG_material* self, enum ilG_transform type, const char
 int /*failure*/ ilG_material_link(ilG_material* self)
 {
     ilG_testError("Unknown");
-    il_log(3, "Building shader \"%s\"", self->name);
+    il_log("Building shader \"%s\"", self->name);
     self->vertshader = ilG_makeShader(GL_VERTEX_SHADER, self->config->vertsource);
     self->fragshader = ilG_makeShader(GL_FRAGMENT_SHADER, self->config->fragsource);
     self->program = glCreateProgram();
@@ -274,9 +274,9 @@ static void update(ilG_context* context, struct il_positionable* pos, void *ctx)
     (void)ctx;
     if (!ILG_TESTATTR(context->drawable->attrs, ILG_ARRATTR_POSITION) ||
         !ILG_TESTATTR(context->drawable->attrs, ILG_ARRATTR_TEXCOORD)) {
-        il_log( 1, "Drawable \"%s\" does not have the required attributes to "
-                "be drawn with Material \"%s\"", context->drawable->name, 
-                context->material->name);
+        il_error("Drawable \"%s\" does not have the required attributes to "
+                 "be drawn with Material \"%s\"", context->drawable->name, 
+                 context->material->name);
     }
     ilG_bindMVP(glGetUniformLocation(context->material->program, "mvp"), ILG_MVP, context->camera, pos);
 }
@@ -301,11 +301,11 @@ void ilG_material_init()
     fragment_source = IL_ASSET_READFILE("shaders/default.frag");
 
     if (!vertex_source.length) {
-        il_log(1, "Unable to open cube vertex shader");
+        il_error("Unable to open cube vertex shader");
         return;
     }
     if (!fragment_source.length) {
-        il_log(1, "Unable to open cube fragment shader");
+        il_error("Unable to open cube fragment shader");
         return;
     }
 

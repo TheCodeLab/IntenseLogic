@@ -8,7 +8,7 @@
 #include "graphics/tracker.h"
 #include "graphics/context.h"
 #include "graphics/textureunit.h"
-#include "common/log.h"
+#include "util/log.h"
 
 struct texture_ctx {
     struct ilG_material* mtl;
@@ -117,7 +117,7 @@ void ilG_texture_fromdata(ilG_texture* self, unsigned unit, GLenum target,
         glTexImage3D(target, 0, internalformat, width, height, depth, 0, format, type, data);
         break;
         default:
-        il_log(1, "Unknown texture format");
+        il_error("Unknown texture format");
         return;
     }
 

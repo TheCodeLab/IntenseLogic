@@ -4,7 +4,6 @@
 
 #include "graphics/drawable3d.h"
 #include "common/heightmap.h"
-#include "common/log.h"
 #include "graphics/context.h"
 #include "common/positionable.h"
 #include "graphics/glutil.h"
