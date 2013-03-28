@@ -50,7 +50,7 @@ void ilG_texture_init();
 
 static void GLFWCALL key_cb(int key, int action)
 {
-    il_log(4, "Key %c", key);
+    il_debug("Key %c", key);
     if (action == GLFW_PRESS)
         ilE_pushnew(il_queue, IL_INPUT_KEYDOWN, sizeof(int), &key);
     else
@@ -59,7 +59,7 @@ static void GLFWCALL key_cb(int key, int action)
 
 static void GLFWCALL mouse_cb(int button, int action)
 {
-    il_log(4, "Mouse %i", button);
+    il_debug("Mouse %i", button);
     if (action == GLFW_PRESS)
         ilE_pushnew(il_queue, IL_INPUT_MOUSEDOWN, sizeof(int), &button);
     else
