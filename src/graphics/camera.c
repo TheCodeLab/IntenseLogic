@@ -9,7 +9,7 @@
 #include "common/base.h"
 #include "common/input.h"
 #include "common/keymap.h"
-#include "common/log.h"
+#include "util/log.h"
 #include "common/positionable.h"
 
 ilG_camera* ilG_camera_new(il_positionable * parent)
@@ -43,7 +43,7 @@ static void handleMouseMove(ilE_queue* queue, ilE_event* ev, struct ctx * ctx)
         return;
     }
 
-    il_log(5, "MouseMove: %i %i", mousemove->x, mousemove->y);
+    il_debug("MouseMove: %i %i", mousemove->x, mousemove->y);
 
     il_quat yaw = il_quat_fromAxisAngle(0, 1, 0, 
         -mousemove->x * ctx->camera->sensitivity, NULL);

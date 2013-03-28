@@ -4,7 +4,6 @@
 #include <GL/glew.h>
 
 #include "common/string.h"
-#include "common/log.h"
 #include "common/positionable.h"
 #include "graphics/camera.h"
 #include "math/matrix.h"

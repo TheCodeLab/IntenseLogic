@@ -3,10 +3,12 @@
 #include <stdlib.h>
 #include <GL/glew.h>
 #include <stdarg.h>
+#include <stdio.h>
 
 #include "math/matrix.h"
 #include "graphics/camera.h"
 #include "common/positionable.h"
+#include "util/log.h"
 
 const char * ilG_strerror(GLenum err)
 {
@@ -48,24 +50,13 @@ void ilG_testError_(const char *file, int line, const char *func,
 {
     GLenum err;
     if ((err = glGetError()) != GL_NO_ERROR) {
-        fprintf(il_logfile, "%s:%i (%s) %s: ",
-                il_prettifyFile(file),
-                line,
-                func,
-                il_loglevel_tostring(1)
-               );
-
         va_list ap;
         va_start(ap, fmt);
-        vfprintf(il_logfile, fmt, ap);
+        int len = vsnprintf(NULL, 0, fmt, ap);
+        char buf[len];
+        vsnprintf(buf, len, fmt, ap);
         va_end(ap);
-
-        fprintf(il_logfile, ": %s (%i)",
-                ilG_strerror(err),
-                err
-               );
-
-        fputc('\n', il_logfile);
+        il_error("%s: %s (%i)", buf, ilG_strerror(err), err);
     }
 }
 
