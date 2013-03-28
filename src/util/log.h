@@ -9,7 +9,7 @@ extern void mowgli_log_prefix_real(const char *file, int line, const char *func,
 const char *il_log_prefixes[5];
 
 #define il_prettifyFile(name) \
-  (strstr(name, "src/")?strstr(name, "src/"):name)
+  (strstr(name, "src/")?strstr(name, "src/")+4:name)
 
 #define il_log_real(file, line, func, lvl, ...) \
     if (il_can_log(file, lvl)) { \
