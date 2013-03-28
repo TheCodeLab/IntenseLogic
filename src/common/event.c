@@ -7,7 +7,7 @@
 #include <event2/event.h>
 
 #include "common/base.h"
-#include "common/log.h"
+#include "util/log.h"
 #include "common/array.h"
 
 enum flags {
@@ -51,6 +51,8 @@ static void dispatch(evutil_socket_t fd, short events, void *ctx)
     unsigned i;
     // figure out which entry in our callbacks array array is for this event
     struct callbackContainer* container = NULL;
+
+    il_debug("Dispatch: %i", ev->id);
     for (i = 0; i < queue->callbacks.length; i++) {
         if (queue->callbacks.data[i].id == ev->id) {
             container = &queue->callbacks.data[i];
@@ -184,7 +186,7 @@ int ilE_register(ilE_queue* queue, uint16_t eventid, enum ilE_behaviour behaviou
 void shutdown_callback(ilE_event* ev)
 {
     (void)ev;
-    il_log(3, "Shutting down.");
+    il_log("Shutting down.");
     event_base_loopbreak(il_queue->base);
 }
 

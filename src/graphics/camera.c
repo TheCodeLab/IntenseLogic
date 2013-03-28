@@ -76,7 +76,7 @@ static void handleTick(ilE_queue* queue, ilE_event* ev, struct ctx * ctx)
     //il_log(5, "Camera moving for=%i lef=%i upw=%i", forward, leftward, upward);
 
     if (forward == 0 && leftward == 0 && upward == 0) return;
-    il_log(5, "Moving camera.");
+    il_debug("Moving camera.");
 
     il_positionable_translate (
         ctx->camera->positionable,

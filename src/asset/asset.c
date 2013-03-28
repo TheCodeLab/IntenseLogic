@@ -9,7 +9,7 @@
 #include <png.h>
 
 #include "uthash.h"
-#include "common/log.h"
+#include "util/log.h"
 
 struct ilA_asset {
     il_string path;
@@ -150,7 +150,7 @@ il_string ilA_readContents(ilA_asset* asset)
 {
     FILE* handle = ilA_getHandle(asset, "r");
     if (!handle) {
-        il_log(2, "Could not open file \"%s\": %s (%i)", il_toC(asset->path), strerror(errno), errno);
+        il_error("Could not open file \"%s\": %s (%i)", il_toC(asset->path), strerror(errno), errno);
         return (il_string) {
             0,NULL
         };
@@ -196,7 +196,7 @@ GLuint ilA_assetToTexture(ilA_asset *asset)
     FILE* fd = ilA_getHandle(asset, "rb");
 
     if (!fd) {
-        il_log(1, "Failed to open file");
+        il_error("Failed to open file");
         return 0;
     }
 
@@ -206,7 +206,7 @@ GLuint ilA_assetToTexture(ilA_asset *asset)
         goto png;
     }
 
-    il_log(1, "Unknown image type");
+    il_error("Unknown image type");
     return 0;
 
 png:
@@ -216,7 +216,7 @@ png:
             NULL, NULL);
 
         if (!png_ptr) {
-            il_log(1, "Failed to allocate png structure");
+            il_error("Failed to allocate png structure");
             return 0;
         }
 
@@ -225,7 +225,7 @@ png:
         if (!info_ptr) {
             png_destroy_read_struct(&png_ptr,
                 (png_infopp)NULL, (png_infopp)NULL);
-            il_log(1, "Failed to allocate png info structure");
+            il_error("Failed to allocate png info structure");
             return 0;
         }
 
@@ -243,7 +243,7 @@ png:
         rows = png_get_rows(png_ptr, info_ptr);
 
         if (ctype != PNG_COLOR_TYPE_RGB && ctype != PNG_COLOR_TYPE_RGBA) {
-            il_log(1, "Image is not RGB or RGBA");
+            il_error("Image is not RGB or RGBA");
         }
 
         GLuint tex;
