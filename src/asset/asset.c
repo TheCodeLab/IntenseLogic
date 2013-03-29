@@ -77,13 +77,13 @@ static il_string *search_paths(il_string *path)
         char *p = fullpath;
 
         strncpy(p, cur->path->data, cur->path->length);
-        p+= cur->path->length;
+        p+= strnlen(cur->path->data, cur->path->length);
 
         *p = '/';
         p++;
 
         strncpy(p, path->data, path->length);
-        p += path->length;
+        p += strnlen(path->data, path->length);
 
         *p = 0;
 
