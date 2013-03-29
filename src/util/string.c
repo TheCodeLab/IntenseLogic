@@ -19,10 +19,16 @@ const il_string *il_string_static(const char *s)
     return str;
 }
 
-il_string *il_string_new(const char *s)
+il_string *il_string_new(const char *s, int len)
 {
     il_string *str = calloc(1, sizeof(il_string));
-    str->length = strlen(s);
+    size_t nlen;
+    if (len < 0) {
+        nlen = strlen(s);
+    } else {
+        nlen = strnlen(s, len);
+    }
+    str->length = nlen<len? nlen+1 : nlen;
     str->capacity = strlen(s);
     str->start = str->data = strdup(s);
     str->canary = compute_canary(str);
@@ -68,7 +74,8 @@ char *il_string_cstring(const il_string *s, size_t *len)
 
 int il_string_verify(const il_string *s)
 {
-    return  s->canary == compute_canary(s) &&
+    return  s->data && s->start &&
+            s->canary == compute_canary(s) &&
             s->data >= s->start &&
             s->capacity >= s->length &&
             (!s->refs || *s->refs > 0);

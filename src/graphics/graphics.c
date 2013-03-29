@@ -23,7 +23,7 @@
 #include "graphics/texture.h"
 #include "graphics/tracker.h"
 #include "graphics/glutil.h"
-#include "common/string.h"
+#include "util/ilstring.h"
 #include "graphics/arrayattrib.h"
 #include "graphics/textureunit.h"
 #include "graphics/fragdata.h"
@@ -166,7 +166,7 @@ void ilG_init()
     il_keymap_defaults(keymap);
     il_keymap_parse("keymap.ini", keymap);*/
     // setup our shader directory
-    ilA_registerReadDir(il_fromC("shaders"),0);
+    ilA_registerReadDir(il_string_new("shaders", strlen("shaders")),0);
 
     // Setup GL context (glfw, glew, etc.)
     context_setup();

@@ -41,14 +41,14 @@ int main(int argc, char **argv)
 
         token = strtok_r(str, ":", &saveptr);
         while(token) {
-            ilA_registerReadDir(il_fromC(token), 3);
+            ilA_registerReadDir(il_string_new(token, strlen(token)), 3);
             token = strtok_r(NULL, ":", &saveptr);
         }
     } else {
         // reasonable defaults
-        ilA_registerReadDir(il_fromC((char*)"."), 4);
-        ilA_registerReadDir(il_fromC((char*)"config"), 4);
-        ilA_registerReadDir(il_fromC((char*)"shaders"), 4);
+        ilA_registerReadDir(il_string_new(".",       -1), 4);
+        ilA_registerReadDir(il_string_new("config",  -1), 4);
+        ilA_registerReadDir(il_string_new("shaders", -1), 4);
     }
     il_log("Asset paths loaded");
 
@@ -61,7 +61,7 @@ int main(int argc, char **argv)
     }*/
 
     if (args.path){
-        ilA_registerReadDir(il_fromC(args.path), 1);
+        ilA_registerReadDir(il_string_new(args.path, strlen(args.path)), 1);
     }
 
     // I have no idea why I have to use this piece of code
