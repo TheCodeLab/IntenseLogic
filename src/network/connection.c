@@ -12,6 +12,7 @@
 #include <event2/listener.h>
 #include <event2/dns.h>
 #include <event2/util.h>
+#include <string.h>
 
 extern int asprintf(char **str, const char *fmt, ...);
 
@@ -66,11 +67,11 @@ ilN_connection * ilN_connection_new()
     return con;
 }
 
-int ilN_connection_disconnect(ilN_connection * con, il_string reason)
+int ilN_connection_disconnect(ilN_connection * con, const char* reason)
 {
     TEST_ERROR(con, con->state != CONNECTED, "Not connected");
     int res;
-    res = ilN_connection_write(con, IL_BASE_SHUTDOWN, reason.data, reason.length);
+    res = ilN_connection_write(con, IL_BASE_SHUTDOWN, reason, strlen(reason));
     TEST_ERROR(con, res != 0, "Failed to write shutdown event");
     con->state = CLOSED;
     bufferevent_free(con->bufferevent);
