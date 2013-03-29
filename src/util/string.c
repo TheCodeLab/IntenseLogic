@@ -28,8 +28,7 @@ il_string *il_string_new(const char *s, int len)
     } else {
         nlen = strnlen(s, len);
     }
-    str->length = nlen<len? nlen+1 : nlen;
-    str->capacity = strlen(s);
+    str->length = str->capacity = nlen<len? nlen+1 : nlen;
     str->start = str->data = strdup(s);
     str->canary = compute_canary(str);
     str->refs = calloc(1, sizeof(int));
@@ -74,7 +73,7 @@ char *il_string_cstring(const il_string *s, size_t *len)
 
 int il_string_verify(const il_string *s)
 {
-    return  s->data && s->start &&
+    return  s && s->data && s->start &&
             s->canary == compute_canary(s) &&
             s->data >= s->start &&
             s->capacity >= s->length &&
@@ -94,9 +93,10 @@ il_string *il_string_ref(void* ptr)
 void il_string_unref(void* ptr)
 {
     il_string *s = ptr;
-    if (il_string_verify(s) && s->refs) {
-        (*s->refs)--;
+    if (!il_string_verify(s) || !s->refs) {
+        return;
     }
+    (*s->refs)--;
     if (*s->refs == 0) {
         free(s->refs);
         free(s->start);
@@ -159,6 +159,7 @@ il_string *il_string_format(const char *fmt, ...)
     va_list ap;
     va_start(ap, fmt);
     int len = vsnprintf(NULL, 0, fmt, ap);
+    va_end(ap);
     il_string *str = calloc(1, sizeof(il_string));
     str->length = len;
     str->capacity = len+1;
@@ -166,7 +167,8 @@ il_string *il_string_format(const char *fmt, ...)
     str->canary = compute_canary(str);
     str->refs = calloc(1, sizeof(int));
     *str->refs = 1;
-    vsnprintf(str->data, len, fmt, ap);
+    va_start(ap, fmt);
+    vsnprintf(str->data, len+1, fmt, ap);
     va_end(ap);
     return str;
 }
