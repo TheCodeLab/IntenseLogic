@@ -12,9 +12,9 @@
 #include "util/log.h"
 
 struct ilA_asset {
-    il_string path;
-    il_string searchdir;
-    il_string fullpath;
+    il_string *path;
+    il_string *searchdir;
+    il_string *fullpath;
     unsigned refs;
     FILE* handle;
     unsigned handlerefs;
@@ -24,26 +24,27 @@ struct ilA_asset {
 ilA_asset* assets = NULL;
 
 struct SearchPath {
-    il_string path;
+    il_string *path;
     int priority;
     struct SearchPath *next;
 };
 
 struct SearchPath *first;
-il_string writedir;
+il_string *writedir;
 
 void ilA_init()
 {
 
 }
 
-void ilA_setWriteDir(il_string path)
+void ilA_setWriteDir(il_string *path)
 {
-    writedir = path;
+    writedir = il_string_ref(path);
 }
 
-void ilA_registerReadDir(il_string path, int priority)
+void ilA_registerReadDir(il_string *path, int priority)
 {
+    il_string_ref(path);
     struct SearchPath *cur = first;
     if (!cur) {
         cur = calloc(1, sizeof(struct SearchPath));
@@ -67,102 +68,105 @@ void ilA_registerReadDir(il_string path, int priority)
     ins->next = cur;
 }
 
-static il_string search_paths(il_string path)
+static il_string *search_paths(il_string *path)
 {
     struct SearchPath *cur = first;
     while (cur) {
         // dir ~ '/' ~ path ~ 0
-        char *fullpath = calloc(1, cur->path.length + path.length + 2);
+        char *fullpath = calloc(1, cur->path->length + path->length + 2);
         char *p = fullpath;
 
-        strncpy(p, cur->path.data, cur->path.length);
-        p+= cur->path.length;
+        strncpy(p, cur->path->data, cur->path->length);
+        p+= cur->path->length;
 
         *p = '/';
         p++;
 
-        strncpy(p, path.data, path.length);
-        p += path.length;
+        strncpy(p, path->data, path->length);
+        p += path->length;
 
         *p = 0;
 
         // returns zero on success
         if (!access(fullpath, R_OK|W_OK))
-            return cur->path;
+            return il_string_ref(cur->path);
 
         // try again
         cur = cur->next;
     }
-    return (il_string) {
-        0, NULL
-    };
+    return NULL;
 }
 
-ilA_asset* ilA_open(il_string path)
+ilA_asset* ilA_open(il_string *path)
 {
     ilA_asset *asset;
 
-    HASH_FIND(hh, assets, path.data, path.length, asset);
+    HASH_FIND(hh, assets, path->data, path->length, asset);
 
     if (asset) {
         asset->refs++;
         return asset;
     }
 
-    il_string res = search_paths(path);
+    il_string *res = search_paths(path);
 
-    if (!res.length) {
+    if (!res) {
         res = writedir;
     }
 
     asset = calloc(1, sizeof(ilA_asset));
-    asset->path = path;
+    asset->path = il_string_ref(path);
     asset->searchdir = res;
     asset->handle = NULL;
 
-    asset->fullpath = il_concat(res, il_fromC("/"), path);
+    asset->fullpath = il_string_format("%s/%s", il_StoC(res), il_StoC(path));
 
-    HASH_ADD_KEYPTR(hh, assets, path.data, path.length, asset);
+    il_string_unref(res);
+
+    HASH_ADD_KEYPTR(hh, assets, path->data, path->length, asset);
     return asset;
 }
 
-void ilA_ref(ilA_asset* asset) 
+ilA_asset* ilA_ref(void* ptr) 
 {
+    ilA_asset* asset = ptr;
     asset->refs++;
+    return asset;
 }
 
-void ilA_unref(ilA_asset* asset) 
+void ilA_unref(void* ptr) 
 {
+    ilA_asset* asset = ptr;
     asset->refs--;
 }
 
-il_string ilA_getPath(ilA_asset* self)
+il_string *ilA_getPath(ilA_asset* self)
 {
-    return self->fullpath;
+    return il_string_ref(self->fullpath);
 }
 
 FILE* ilA_getHandle(ilA_asset* asset, const char *flags)
 {
-    return fopen(il_toC(asset->fullpath), flags);
+    return fopen(il_StoC(asset->fullpath), flags);
 }
 
-il_string ilA_readContents(ilA_asset* asset)
+il_string *ilA_readContents(ilA_asset* asset)
 {
     FILE* handle = ilA_getHandle(asset, "r");
     if (!handle) {
-        il_error("Could not open file \"%s\": %s (%i)", il_toC(asset->path), strerror(errno), errno);
-        return (il_string) {
-            0,NULL
-        };
+        il_error("Could not open file \"%s\": %s (%i)", il_StoC(asset->path), strerror(errno), errno);
+        return NULL;
     }
-    il_string str;
+    il_string *str;
+    size_t len;
 
     fseek(handle, 0, SEEK_END); /* Seek to the end of the file */
-    str.length = ftell(handle); /* Find out how many bytes into the file we are */
-    str.data = (char*)calloc(1, str.length); /* Allocate a buffer for the entire length of the file */
+    len = ftell(handle); /* Find out how many bytes into the file we are */
+    char buf[len];
     fseek(handle, 0, SEEK_SET); /* Go back to the beginning of the file */
-    fread((char*)str.data, str.length, 1, handle); /* Read the contents of the file in to the buffer */
+    fread(buf, len, 1, handle); /* Read the contents of the file in to the buffer */
     fclose(handle); /* Close the file */
+    str = il_string_new(buf, len);
 
     return str;
 }
@@ -186,7 +190,7 @@ int ilA_delete(ilA_asset* asset)
     if (asset->refs > 1)
         return -1;
 
-    remove(il_toC(asset->fullpath));
+    remove(il_StoC(asset->fullpath));
     ilA_close(asset);
     return 0;
 }

@@ -56,7 +56,7 @@ void ilG_texture_setName(ilG_texture* self, const char *name)
 
 void ilG_texture_fromfile(ilG_texture* self, unsigned unit, const char *name)
 {
-    ilA_asset* asset = ilA_open(il_fromC(name));
+    ilA_asset* asset = ilA_open(il_string_new(name, strlen(name)));
     ilG_texture_fromasset(self, unit, asset);
 }
 

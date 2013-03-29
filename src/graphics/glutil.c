@@ -60,14 +60,14 @@ void ilG_testError_(const char *file, int line, const char *func,
     }
 }
 
-GLuint ilG_makeShader(GLenum type, il_string source)
+GLuint ilG_makeShader(GLenum type, il_string *source)
 {
     IL_GRAPHICS_TESTERROR("Unknown");
 
     GLuint shader = glCreateShader(type);
     IL_GRAPHICS_TESTERROR("Unable to create shader");
 
-    glShaderSource(shader, 1, (const GLchar**)&source.data, (GLint*)&source.length);
+    glShaderSource(shader, 1, (const GLchar**)&source->data, (const GLint*)&source->length);
     IL_GRAPHICS_TESTERROR("Unable to set shader source");
 
     glCompileShader(shader);

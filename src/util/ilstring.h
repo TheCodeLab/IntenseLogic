@@ -4,13 +4,13 @@
 #include <stdlib.h>
 
 typedef struct il_string {
-  size_t length, capacity, canary;
-  char *data, *start;
-  int *refs;
+    size_t length, capacity, canary;
+    char *data, *start;
+    int *refs;
 } il_string;
 
 const il_string *il_string_static(const char *s);
-il_string *il_string_new(const char *s);
+il_string *il_string_new(const char *s, int len);
 il_string *il_string_copy(const il_string *s);
 char *il_string_cstring(const il_string *s, size_t *len);
 int il_string_verify(const il_string *s);

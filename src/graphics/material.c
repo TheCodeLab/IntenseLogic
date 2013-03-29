@@ -4,7 +4,6 @@
 #include <string.h>
 
 #include "graphics/glutil.h"
-#include "common/string.h"
 #include "asset/asset.h"
 #include "graphics/context.h"
 #include "graphics/textureunit.h"
@@ -31,8 +30,8 @@ struct matrixinfo {
 struct ilG_material_config {
     IL_ARRAY(struct textureunit,) texunits;    
     IL_ARRAY(struct matrixinfo,) matrices;
-    il_string vertsource;
-    il_string fragsource;
+    il_string *vertsource;
+    il_string *fragsource;
     const char* attriblocs[ILG_ARRATTR_NUMATTRS];
     const char* fraglocs[ILG_FRAGDATA_NUMATTRS];
 };
@@ -99,14 +98,14 @@ ilG_material* ilG_material_new()
     return mtl;
 }
 
-void ilG_material_vertex(ilG_material* self, il_string source) 
+void ilG_material_vertex(ilG_material* self, il_string *source) 
 {
-    self->config->vertsource = source;
+    self->config->vertsource = il_string_ref(source);
 }
 
-void ilG_material_fragment(ilG_material* self, il_string source)
+void ilG_material_fragment(ilG_material* self, il_string *source)
 {
-    self->config->fragsource = source;
+    self->config->fragsource = il_string_ref(source);
 }
 
 void ilG_material_name(ilG_material* self, const char* name)
@@ -291,7 +290,7 @@ static ilG_material mtl;
 
 void ilG_material_init()
 {
-    il_string vertex_source, fragment_source;
+    il_string *vertex_source, *fragment_source;
 
     memset(&mtl, 0, sizeof(ilG_material));
     ilG_material_assignId(&mtl);
@@ -300,11 +299,11 @@ void ilG_material_init()
     vertex_source = IL_ASSET_READFILE("shaders/default.vert");
     fragment_source = IL_ASSET_READFILE("shaders/default.frag");
 
-    if (!vertex_source.length) {
+    if (!vertex_source) {
         il_error("Unable to open cube vertex shader");
         return;
     }
-    if (!fragment_source.length) {
+    if (!fragment_source) {
         il_error("Unable to open cube fragment shader");
         return;
     }
