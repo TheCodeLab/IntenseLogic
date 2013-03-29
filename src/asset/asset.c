@@ -88,8 +88,10 @@ static il_string *search_paths(il_string *path)
         *p = 0;
 
         // returns zero on success
-        if (!access(fullpath, R_OK|W_OK))
+        if (!access(fullpath, R_OK|W_OK)) {
+            free(fullpath);
             return il_string_ref(cur->path);
+        }
 
         // try again
         cur = cur->next;
@@ -119,7 +121,16 @@ ilA_asset* ilA_open(il_string *path)
     asset->searchdir = res;
     asset->handle = NULL;
 
-    asset->fullpath = il_string_format("%s/%s", il_StoC(res), il_StoC(path));
+    const char *cres = il_StoC(res), *cpath = il_StoC(path);
+    if (!cres) {
+        asset->fullpath = il_string_ref(path);
+    } else {
+        if (!cpath) {
+            il_error("cpath is null");
+            return NULL;
+        }
+        asset->fullpath = il_string_format("%s/%s", cres, cpath);
+    }
 
     il_string_unref(res);
 
@@ -147,7 +158,12 @@ il_string *ilA_getPath(ilA_asset* self)
 
 FILE* ilA_getHandle(ilA_asset* asset, const char *flags)
 {
-    return fopen(il_StoC(asset->fullpath), flags);
+    const char *cpath = il_StoC(asset->fullpath);
+    if (!cpath) {
+        il_error("cpath is null");
+        return NULL;
+    }
+    return fopen(cpath, flags);
 }
 
 il_string *ilA_readContents(ilA_asset* asset)
