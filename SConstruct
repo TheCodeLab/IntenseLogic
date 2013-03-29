@@ -10,7 +10,7 @@ inputs    = "*.c common/*.c graphics/*.c network/*.c script/*.c asset/*.c"
 platform  = ARGUMENTS.get("platform", "linux")
 
 # flags
-cflags    = "-Wall -Wextra -pedantic -std=c99 -g -DDEBUG"
+cflags    = "-Wall -pedantic -std=c99 -g -DDEBUG -D_POSIX_C_SOURCE=200809"
 linkflags = "-g -L. -Lbuild"
 if platform == "mingw":
     cflags += " -DWIN32"
