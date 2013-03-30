@@ -4,12 +4,11 @@
 #include <string.h>
 
 #include "graphics/glutil.h"
-#include "common/string.h"
 #include "asset/asset.h"
 #include "graphics/context.h"
 #include "graphics/textureunit.h"
 #include "graphics/arrayattrib.h"
-#include "common/log.h"
+#include "util/log.h"
 #include "graphics/drawable3d.h"
 #include "graphics/tracker.h"
 #include "graphics/fragdata.h"
@@ -31,8 +30,8 @@ struct matrixinfo {
 struct ilG_material_config {
     IL_ARRAY(struct textureunit,) texunits;    
     IL_ARRAY(struct matrixinfo,) matrices;
-    il_string vertsource;
-    il_string fragsource;
+    il_string *vertsource;
+    il_string *fragsource;
     const char* attriblocs[ILG_ARRATTR_NUMATTRS];
     const char* fraglocs[ILG_FRAGDATA_NUMATTRS];
 };
@@ -69,9 +68,9 @@ static void mtl_update(ilG_context* context, struct il_positionable* pos, void *
         return;
     }
     if ((mtl->attrs & context->drawable->attrs) != mtl->attrs) {
-        il_log( 1, "Drawable \"%s\" does not have the required attributes to "
-                "be drawn with Material \"%s\"", context->drawable->name, 
-                mtl->name);
+        il_error("Drawable \"%s\" does not have the required attributes to "
+                 "be drawn with Material \"%s\"", context->drawable->name, 
+                 mtl->name);
     }
     unsigned int i;
     for (i = 0; i < mtl->config->matrices.length; i++) {
@@ -99,14 +98,14 @@ ilG_material* ilG_material_new()
     return mtl;
 }
 
-void ilG_material_vertex(ilG_material* self, il_string source) 
+void ilG_material_vertex(ilG_material* self, il_string *source) 
 {
-    self->config->vertsource = source;
+    self->config->vertsource = il_string_ref(source);
 }
 
-void ilG_material_fragment(ilG_material* self, il_string source)
+void ilG_material_fragment(ilG_material* self, il_string *source)
 {
-    self->config->fragsource = source;
+    self->config->fragsource = il_string_ref(source);
 }
 
 void ilG_material_name(ilG_material* self, const char* name)
@@ -147,7 +146,7 @@ void ilG_material_matrix(ilG_material* self, enum ilG_transform type, const char
 int /*failure*/ ilG_material_link(ilG_material* self)
 {
     ilG_testError("Unknown");
-    il_log(3, "Building shader \"%s\"", self->name);
+    il_log("Building shader \"%s\"", self->name);
     self->vertshader = ilG_makeShader(GL_VERTEX_SHADER, self->config->vertsource);
     self->fragshader = ilG_makeShader(GL_FRAGMENT_SHADER, self->config->fragsource);
     self->program = glCreateProgram();
@@ -274,9 +273,9 @@ static void update(ilG_context* context, struct il_positionable* pos, void *ctx)
     (void)ctx;
     if (!ILG_TESTATTR(context->drawable->attrs, ILG_ARRATTR_POSITION) ||
         !ILG_TESTATTR(context->drawable->attrs, ILG_ARRATTR_TEXCOORD)) {
-        il_log( 1, "Drawable \"%s\" does not have the required attributes to "
-                "be drawn with Material \"%s\"", context->drawable->name, 
-                context->material->name);
+        il_error("Drawable \"%s\" does not have the required attributes to "
+                 "be drawn with Material \"%s\"", context->drawable->name, 
+                 context->material->name);
     }
     ilG_bindMVP(glGetUniformLocation(context->material->program, "mvp"), ILG_MVP, context->camera, pos);
 }
@@ -291,7 +290,7 @@ static ilG_material mtl;
 
 void ilG_material_init()
 {
-    il_string vertex_source, fragment_source;
+    il_string *vertex_source, *fragment_source;
 
     memset(&mtl, 0, sizeof(ilG_material));
     ilG_material_assignId(&mtl);
@@ -300,12 +299,12 @@ void ilG_material_init()
     vertex_source = IL_ASSET_READFILE("shaders/default.vert");
     fragment_source = IL_ASSET_READFILE("shaders/default.frag");
 
-    if (!vertex_source.length) {
-        il_log(1, "Unable to open cube vertex shader");
+    if (!vertex_source) {
+        il_error("Unable to open cube vertex shader");
         return;
     }
-    if (!fragment_source.length) {
-        il_log(1, "Unable to open cube fragment shader");
+    if (!fragment_source) {
+        il_error("Unable to open cube fragment shader");
         return;
     }
 

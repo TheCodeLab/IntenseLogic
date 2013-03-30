@@ -9,12 +9,12 @@
 #include "graphics/material.h"
 #include "graphics/texture.h"
 #include "common/array.h"
-#include "common/log.h"
+#include "util/log.h"
 #include "common/positionable.h"
 
 int ilG_trackPositionable(ilG_context* ctx, il_positionable* self)
 {
-#define check_null(n) if(!n) {il_log(1, "Null " #n); return 0; }
+#define check_null(n) if(!n) {il_error("Null " #n); return 0; }
     // make sure we have valid parameters, several bugs have been caught here
     check_null(ctx);
     check_null(self);

@@ -6,8 +6,6 @@
 
 struct evbuffer;
 
-#include "common/string.h"
-
 typedef struct ilN_connection ilN_connection;
 
 ilN_connection * ilN_connection_new();
@@ -15,7 +13,7 @@ ilN_connection * ilN_connection_new();
 int ilN_connection_connect(ilN_connection *, const char * host, unsigned short port);
 int ilN_connection_setSocket(ilN_connection * con, evutil_socket_t fd, int flags);
 int ilN_connection_bind(ilN_connection *, const char * host, unsigned short port);
-int ilN_connection_disconnect(ilN_connection *, il_string reason);
+int ilN_connection_disconnect(ilN_connection *, const char *reason);
 
 const char * ilN_connection_getError(ilN_connection *);
 

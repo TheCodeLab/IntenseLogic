@@ -16,8 +16,8 @@ enum ilG_transform {
 };
 
 struct ilG_material* ilG_material_new();
-void ilG_material_vertex(struct ilG_material*, il_string source);
-void ilG_material_fragment(struct ilG_material*, il_string source);
+void ilG_material_vertex(struct ilG_material*, il_string *source);
+void ilG_material_fragment(struct ilG_material*, il_string *source);
 void ilG_material_name(struct ilG_material*, const char* name);
 void ilG_material_arrayAttrib(struct ilG_material*, unsigned long attrib, const char *location);
 void ilG_material_fragData(struct ilG_material*, unsigned long attrib, const char *location);

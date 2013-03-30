@@ -10,7 +10,7 @@ inputs    = "*.c common/*.c graphics/*.c network/*.c script/*.c asset/*.c"
 platform  = ARGUMENTS.get("platform", "linux")
 
 # flags
-cflags    = "-Wall -Wextra -pedantic -std=c99 -g -DDEBUG"
+cflags    = "-Wall -pedantic -std=c99 -g -DDEBUG -D_POSIX_C_SOURCE=200809"
 linkflags = "-g -L. -Lbuild"
 if platform == "mingw":
     cflags += " -DWIN32"
@@ -26,10 +26,10 @@ if platform == "osx":
 lib_dirs = ["/usr/lib", "/usr/local/lib"]
 
 libs = {
-    "osx":   ["ilmath", "m", "png"],
-    "mingw": ["ilmath", "mingw32", "libevent", "ws2_32", "glfw", "glew32", "opengl32", "png", "z", "lua51", "mowgli-2"],
-    "arch":  ["ilmath", "m", "png"],
-    "linux": ["ilmath", "m", "png"]
+    "osx":   ["ilmath", "ilutil", "m", "png"],
+    "mingw": ["ilmath", "ilutil", "mingw32", "libevent", "ws2_32", "glfw", "glew32", "opengl32", "png", "z", "lua51", "mowgli-2"],
+    "arch":  ["ilmath", "ilutil", "m", "png"],
+    "linux": ["ilmath", "ilutil", "m", "png"]
 }
 
 pkg_libs = {
@@ -57,6 +57,8 @@ Export("platform")
 Export("env")
 libilmath = SConscript("src/math/SConscript", platform=platform, env=env)
 Export("libilmath")
+libilutil = SConscript("src/util/SConscript", platform=platform, env=env)
+Export("libilutil")
 SConscript("test/SConscript", platform=platform, env=env)
 
 # get sources
@@ -79,5 +81,6 @@ prog = env.Program(target  = build_dir + "/" + output,
                    LIBPATH = lib_dirs,
                    CPPPATH = src_dir)
 Depends(prog, libilmath)
+Depends(prog, libilutil)
 Default(prog)
 

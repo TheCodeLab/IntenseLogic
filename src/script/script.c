@@ -2,8 +2,8 @@
 
 #include <string.h>
 
-#include "common/log.h"
-#include "common/string.h"
+#include "util/log.h"
+#include "util/ilstring.h"
 
 int ilS_script_wrap(lua_State* L, ilS_script* s);
 
@@ -16,14 +16,14 @@ static int print(lua_State* L)
     res = lua_getinfo(L, "nSl", &ar);
     if (!res) return -1;
 
-    if (3 > il_loglevel) return 0;
-
-    fprintf(il_logfile, "%s:%d (%s): %s\n",
-            ar.short_src,
-            ar.currentline,
-            ar.name,
-            lua_tostring(L, -1)
-           );
+    il_log_real(
+        ar.short_src,
+        ar.currentline,
+        ar.name,
+        3,
+        "%s",
+        lua_tostring(L, -1)
+    );
 
     return 0;
 }
@@ -58,31 +58,31 @@ ilS_script * ilS_new()
 int ilS_fromAsset(ilS_script* self, ilA_asset * asset)
 {
     if (!self || !asset) return -1;
-    self->filename = il_toC(ilA_getPath(asset));
+    self->filename = il_StoC(ilA_getPath(asset));
     return ilS_fromSource(self, ilA_readContents(asset));
 }
 
 struct reader_ctx {
     int loaded;
-    il_string source;
+    il_string *source;
 };
 static const char * reader(lua_State* L, void * data, size_t * size)
 {
     (void)L;
     struct reader_ctx * ctx = (struct reader_ctx*)data;
     if (ctx->loaded) return NULL;
-    *size = ctx->source.length;
+    *size = ctx->source->length;
     ctx->loaded = 1;
-    return ctx->source.data;
+    return ctx->source->data;
 }
 
-int ilS_fromSource(ilS_script* self, il_string source)
+int ilS_fromSource(ilS_script* self, il_string *source)
 {
-    if (!self || !source.length) return -1;
-    self->source = source;
+    if (!self || !source) return -1;
+    self->source = il_string_ref(source);
     struct reader_ctx data;
     data.loaded = 0;
-    data.source = source;
+    data.source = il_string_ref(source);
     char * chunkname = NULL;
     if (self->filename) {
         chunkname = malloc(strlen(self->filename) + 2);
@@ -114,13 +114,13 @@ int ilS_fromSource(ilS_script* self, il_string source)
 
 int ilS_fromFile(ilS_script* self, const char * filename)
 {
-    return ilS_fromAsset(self, ilA_open(il_fromC((char*)filename)));
+    return ilS_fromAsset(self, ilA_open(il_string_new(filename, strlen(filename))));
 }
 
 int ilS_run(ilS_script* self)
 {
     self->running = 1;
-    il_log(3, "Running script %s", self->filename);
+    il_log("Running script %s", self->filename);
     int res = lua_pcall(self->L, 0, 0, self->ehandler);
     if (res) {
         self->err = lua_tolstring(self->L, -1, &self->errlen);

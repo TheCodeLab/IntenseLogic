@@ -8,13 +8,13 @@
 #include <lualib.h>
 #include <lauxlib.h>
 
-#include "common/string.h"
+#include "util/ilstring.h"
 #include "asset/asset.h"
 
 void ilS_init();
 
 typedef struct ilS_script {
-  il_string source;
+  il_string *source;
   const char * filename;
   int running;
   lua_State * L;
@@ -36,7 +36,7 @@ typedef struct ilS_script {
 
 ilS_script * ilS_new();
 int ilS_fromAsset(ilS_script*, ilA_asset * asset);
-int ilS_fromSource(ilS_script*, il_string source);
+int ilS_fromSource(ilS_script*, il_string *source);
 int ilS_fromFile(ilS_script*, const char * filename);
 int ilS_run(ilS_script*);
 
