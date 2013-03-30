@@ -2,8 +2,6 @@
 
 #include <stdlib.h>
 
-#include "common/log.h"
-
 il_positionable * il_positionable_new()
 {
     //if (!parent) return NULL;
@@ -25,7 +23,6 @@ void il_positionable_translate(il_positionable* pos, float x, float y, float z)
 {
     il_vec3 res = il_vec3_set(NULL, x, y, z);
     res = il_vec3_rotate(res, pos->rotation, res);
-    il_log(5, "%f %f %f -> %f %f %f", x, y, z, res[0], res[1], res[2]);
     pos->position = il_vec3_add(pos->position, res, pos->position);
     il_vec3_free(res);
 }

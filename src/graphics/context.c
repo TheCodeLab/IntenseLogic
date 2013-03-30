@@ -2,7 +2,7 @@
 
 #include <stdlib.h>
 
-#include "common/log.h"
+#include "util/log.h"
 #include "graphics/glutil.h"
 
 ilG_context* ilG_context_new(int w, int h)
@@ -59,8 +59,7 @@ ilG_context* ilG_context_new(int w, int h)
             case GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS:       status_str = "GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS";         break;
             default:                                            status_str = "???";                                             break;
         }
-        il_log(0, "Unable to create framebuffer for context: %s", status_str);
-        abort();
+        il_fatal("Unable to create framebuffer for context: %s", status_str);
     }
 
     return ctx;

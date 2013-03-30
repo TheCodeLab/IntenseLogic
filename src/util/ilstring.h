@@ -1,6 +1,7 @@
-local ffi = require "ffi";
+#ifndef ILU_STRING_H
+#define ILU_STRING_H
 
-ffi.cdef [[
+#include <stdlib.h>
 
 typedef struct il_string {
     size_t length, capacity, canary;
@@ -20,15 +21,8 @@ int il_string_cmp(const il_string *a, const il_string *b);
 int il_string_byte(const il_string *s, int pos);
 il_string *il_string_format(const char *fmt, ...);
 
-]]
+#define il_l il_string_static
+#define il_StoC(s) il_string_cstring(s, NULL)
 
-local ilstring = {}
-
-function ilstring.create(s)
-    return ffi.C.il_string_new(s, #s)
-end
-
-setmetatable(ilstring, {__call = function(self, ...) return ilstring.create(...) end})
-
-return ilstring;
+#endif
 

@@ -3,7 +3,7 @@
 
 #include <GL/glew.h>
 
-#include "common/string.h"
+#include "util/ilstring.h"
 #include "graphics/light.h"
 #include "graphics/glutil.h"
 
@@ -30,8 +30,8 @@ typedef struct ilG_material {
 ilG_material* ilG_material_default;
 
 ilG_material* ilG_material_new();
-void ilG_material_vertex(ilG_material*, il_string source);
-void ilG_material_fragment(ilG_material*, il_string source);
+void ilG_material_vertex(ilG_material*, il_string *source);
+void ilG_material_fragment(ilG_material*, il_string *source);
 void ilG_material_name(ilG_material*, const char* name);
 void ilG_material_arrayAttrib(ilG_material*, unsigned long attrib, const char *location);
 void ilG_material_fragData(ilG_material*, unsigned long attrib, const char *location);

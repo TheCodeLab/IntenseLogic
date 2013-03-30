@@ -1,7 +1,6 @@
 #include "common/base.h"
 #include "common/input.h"
 #include "common/event.h"
-#include "common/log.h"
 
 #include "graphics/graphics.h"
 #include "network/network.h"

@@ -3,8 +3,7 @@
 
 #include <GL/glew.h>
 
-#include "common/string.h"
-#include "common/log.h"
+#include "util/ilstring.h"
 #include "common/positionable.h"
 #include "graphics/camera.h"
 #include "math/matrix.h"
@@ -18,7 +17,7 @@ void ilG_testError_(const char *file, int line, const char *func,
   __func__, __VA_ARGS__);
 #define IL_GRAPHICS_TESTERROR ilG_testError
 
-GLuint ilG_makeShader(GLenum type, il_string source);
+GLuint ilG_makeShader(GLenum type, il_string *source);
 int /*failure*/ ilG_linkProgram(GLuint program);
 
 enum ilG_transform {

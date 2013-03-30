@@ -3,10 +3,12 @@
 #include <stdlib.h>
 #include <GL/glew.h>
 #include <stdarg.h>
+#include <stdio.h>
 
 #include "math/matrix.h"
 #include "graphics/camera.h"
 #include "common/positionable.h"
+#include "util/log.h"
 
 const char * ilG_strerror(GLenum err)
 {
@@ -48,35 +50,24 @@ void ilG_testError_(const char *file, int line, const char *func,
 {
     GLenum err;
     if ((err = glGetError()) != GL_NO_ERROR) {
-        fprintf(il_logfile, "%s:%i (%s) %s: ",
-                il_prettifyFile(file),
-                line,
-                func,
-                il_loglevel_tostring(1)
-               );
-
         va_list ap;
         va_start(ap, fmt);
-        vfprintf(il_logfile, fmt, ap);
+        int len = vsnprintf(NULL, 0, fmt, ap);
+        char buf[len+1];
+        vsnprintf(buf, len+1, fmt, ap);
         va_end(ap);
-
-        fprintf(il_logfile, ": %s (%i)",
-                ilG_strerror(err),
-                err
-               );
-
-        fputc('\n', il_logfile);
+        il_error("%s: %s (%i)", buf, ilG_strerror(err), err);
     }
 }
 
-GLuint ilG_makeShader(GLenum type, il_string source)
+GLuint ilG_makeShader(GLenum type, il_string *source)
 {
     IL_GRAPHICS_TESTERROR("Unknown");
 
     GLuint shader = glCreateShader(type);
     IL_GRAPHICS_TESTERROR("Unable to create shader");
 
-    glShaderSource(shader, 1, (const GLchar**)&source.data, (GLint*)&source.length);
+    glShaderSource(shader, 1, (const GLchar**)&source->data, (const GLint*)&source->length);
     IL_GRAPHICS_TESTERROR("Unable to set shader source");
 
     glCompileShader(shader);
@@ -88,11 +79,11 @@ GLuint ilG_makeShader(GLenum type, il_string source)
     if (len > 1) {
         char * str = calloc(1, len);
         glGetShaderInfoLog(shader, len, NULL, str);
-        il_log(status == GL_TRUE? 4 : 1,
-                      "%s Shader info log: \n"
-                      "---- BEGIN SHADER INFO LOG ----\n"
-                      "%s\n"
-                      "---- END SHADER INFO LOG ----\n", type == GL_VERTEX_SHADER? "Vertex" : "Fragment", str);
+        if (status == GL_TRUE) {
+            il_debug("%s Shader info log: %s", type == GL_VERTEX_SHADER? "Vertex" : "Fragment", str);
+        } else {
+            il_error("%s Shader info log: %s", type == GL_VERTEX_SHADER? "Vertex" : "Fragment", str);
+        }
         free(str);
         if (status == GL_FALSE) {
             return 0;
@@ -104,7 +95,7 @@ GLuint ilG_makeShader(GLenum type, il_string source)
 
 int ilG_linkProgram(GLuint program)
 {
-    il_log(3, "Linking program");
+    il_log("Linking program");
     glLinkProgram(program);
     IL_GRAPHICS_TESTERROR("Unable to link program");
 
@@ -114,10 +105,11 @@ int ilG_linkProgram(GLuint program)
     if (len > 1) {
         char * str = calloc(1, len);
         glGetProgramInfoLog(program, len, NULL, str);
-        il_log(status == GL_TRUE? 4 : 1, "Program info log: \n"
-                      "---- BEGIN PROGRAM INFO LOG ----\n"
-                      "%s\n"
-                      "---- END PROGRAM INFO LOG ----\n", str);
+        if (status == GL_TRUE) {
+            il_debug("Program info log: %s", str);
+        } else {
+            il_error("Program info log: %s", str);
+        }
         free(str);
         if (status == GL_FALSE) {
             return 1;
@@ -132,10 +124,11 @@ int ilG_linkProgram(GLuint program)
     if (len > 1) {
         char * str = calloc(1, len);
         glGetProgramInfoLog(program, len, NULL, str);
-        il_log(status == GL_TRUE? 4 : 1, "Program info log: \n"
-                      "---- BEGIN PROGRAM INFO LOG ----\n"
-                      "%s\n"
-                      "---- END PROGRAM INFO LOG ----\n", str);
+        if (status == GL_TRUE) {
+            il_debug("Program info log: %s", str);
+        } else {
+            il_error("Program info log: %s", str);
+        }
         free(str);
         if (status == GL_FALSE) {
             return 1;
@@ -194,6 +187,9 @@ void ilG_bindMVP(GLint location, enum ilG_transform filter, const ilG_camera * c
 {
     ilG_testError("Unknown");
     il_mat mat = ilG_computeMVP(filter, camera, object);
+    if (!mat) {
+        return;
+    }
     // I really resorted to this to try tracking down a bug with rendering
     /*char *camera_pos = il_vec4_print(camera->positionable->position, NULL, 0),
          *camera_rot = il_quat_print(camera->positionable->rotation, NULL, 0),

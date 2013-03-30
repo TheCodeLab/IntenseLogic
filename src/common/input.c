@@ -5,7 +5,6 @@
 #include <GL/glew.h>
 #include <GL/glfw.h>
 
-#include "common/log.h"
 #include "common/event.h"
 
 void ilI_init()

@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include "docopt.inc"
 #include "common/common.h"
+#include "util/log.h"
 #include <GL/glfw.h>
 #include <event2/event.h>
 #include <string.h>
@@ -11,7 +12,7 @@ static void update(ilE_event * ev, void * ctx)
     (void)ev;
     (void)ctx;
     glfwPollEvents();
-    il_log(5, "tick");
+    il_debug("tick");
 }
 
 int running = 1;
@@ -26,18 +27,7 @@ int main(int argc, char **argv)
 {
     DocoptArgs args = docopt(argc, argv, 1, "0.0pre-alpha");
 
-#if defined(WIN32) && !defined(DEBUG)
-    il_logfile = fopen("nul", "w");
-#else
-    il_logfile = fopen("/dev/null", "w");
-#endif
-
-#ifdef DEBUG
-    il_logfile = stdout;
-    il_loglevel = IL_COMMON_LOGNOTICE;
-#endif
-
-    il_log(3, "Initialising engine.");
+    il_log("Initialising engine.");
 
     // search path priority (lower to highest):
     // defaults, config files, environment variables, command line options
@@ -51,27 +41,27 @@ int main(int argc, char **argv)
 
         token = strtok_r(str, ":", &saveptr);
         while(token) {
-            ilA_registerReadDir(il_fromC(token), 3);
+            ilA_registerReadDir(il_string_new(token, strlen(token)), 3);
             token = strtok_r(NULL, ":", &saveptr);
         }
     } else {
         // reasonable defaults
-        ilA_registerReadDir(il_fromC((char*)"."), 4);
-        ilA_registerReadDir(il_fromC((char*)"config"), 4);
-        ilA_registerReadDir(il_fromC((char*)"shaders"), 4);
+        ilA_registerReadDir(il_string_new(".",       -1), 4);
+        ilA_registerReadDir(il_string_new("config",  -1), 4);
+        ilA_registerReadDir(il_string_new("shaders", -1), 4);
     }
-    il_log(3, "Asset paths loaded");
+    il_log("Asset paths loaded");
 
-    if (args.logfile){
+    /*if (args.logfile){
         il_logfile = fopen(args.logfile, "a");
     }
 
     if (args.verbose){
         il_loglevel = atoi(args.verbose);
-    }
+    }*/
 
     if (args.path){
-        ilA_registerReadDir(il_fromC(args.path), 1);
+        ilA_registerReadDir(il_string_new(args.path, strlen(args.path)), 1);
     }
 
     // I have no idea why I have to use this piece of code
@@ -92,7 +82,7 @@ int main(int argc, char **argv)
     }
 
     // main loop
-    il_log(3, "Starting main loop");
+    il_log("Starting main loop");
     ilE_loop();
 
     // shutdown code (only reached after receiving a IL_BASE_SHUTDOWN event)

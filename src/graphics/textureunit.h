@@ -1,7 +1,7 @@
 #ifndef ILG_TEXTUREUNIT_H
 #define ILG_TEXTUREUNIT_H
 
-#include "common/log.h"
+#include "util/log.h"
 
 // 64 units per type
 #define ILG_TUNIT_NONE          (0)
@@ -21,7 +21,7 @@
         if ((unit) > (context)->num_active)     \
             (context)->num_active = (unit);     \
     } else {                                    \
-        il_log(1, "Not enough texture units!"); \
+        il_error("Not enough texture units!"); \
     }
 
 #endif
