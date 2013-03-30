@@ -49,6 +49,18 @@ ilA_path* ilA_path_chars(const char *path)
     return ilA_path_string(il_string_new(path, strlen(path)+1));
 }
 
+ilA_path* ilA_path_copy(ilA_path *self)
+{
+    ilA_path* p = calloc(1, sizeof(ilA_path));
+    p->path = il_string_ref(self->path);
+    p->nodes = mowgli_list_create();
+    mowgli_node_t *n;
+    MOWGLI_LIST_FOREACH(n, self->nodes->head) {
+        mowgli_node_add(il_string_ref(n->data), mowgli_node_create(), self->nodes);
+    }
+    return p;
+}
+
 ilA_path* ilA_path_cwd()
 {
     char buf[4096];
@@ -107,7 +119,32 @@ int ilA_path_cmp(const ilA_path* a, const ilA_path* b)
     return 0;
 }
 
-ilA_path* ilA_path_concat(const ilA_path* a, const ilA_path* b);
-void ilA_path_relativeTo(ilA_path* self, const ilA_path* path);
+ilA_path* ilA_path_concat(const ilA_path* a, const ilA_path* b)
+{
+    il_string *path = il_string_copy(a->path); 
+    if (!il_string_cat(path, b->path)) {
+        il_error("Failed to concatenate paths");
+        return NULL;
+    }
+    ilA_path* p = ilA_path_string(path);
+    il_string_unref(path);
+    return p;
+}
+
+ilA_path* ilA_path_relativeTo(const ilA_path* a, const ilA_path* b)
+{
+    if (ilA_path_cmp(b,a) != -1) {
+        return NULL;
+    }
+    ilA_path* p = calloc(1, sizeof(ilA_path));
+    p->nodes = mowgli_list_create();
+    mowgli_node_t *n;
+    MOWGLI_LIST_FOREACH(n, b->nodes->head) {} // skip the stuff we don't want
+    MOWGLI_LIST_FOREACH(n, n) {
+        mowgli_node_add(il_string_ref(n->data), mowgli_node_create(), p->nodes);
+    }
+    p->path = ilA_path_tostr(p);
+    return p;
+}
 
 
