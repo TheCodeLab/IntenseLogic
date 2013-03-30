@@ -212,7 +212,7 @@ int il_string_cat(il_string *self, const il_string *str)
            str_len = strnlen(str->data, str->length),
            len = selflen + str_len;
     if (len >= self->capacity) {
-        il_string_resize(self, len + 1);
+        il_string_resize(self, len >= self->capacity*2? len+1 : self->capacity*2);
     }
     strncpy(self->data + selflen, str->data, str_len);
     return 1;
