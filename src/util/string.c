@@ -27,12 +27,23 @@ il_string *il_string_new(const char *s, int len)
     il_string *str = calloc(1, sizeof(il_string));
     size_t nlen;
     if (len < 0) {
-        nlen = strlen(s);
-    } else {
+        if (s) {
+            nlen = strlen(s);
+        } else {
+            nlen = 0;
+        }
+    } else if (s) {
         nlen = strnlen(s, len);
+    } else {
+        nlen = 0;
     }
-    str->length = str->capacity = nlen<(size_t)len? nlen+1 : nlen;
-    str->start = str->data = strdup(s);
+    str->length = str->capacity = nlen<len? nlen+1 : nlen;
+    if (s) {
+        str->start = str->data = strdup(s);
+    } else {
+        str->start = str->data = calloc(1, 64);
+        str->capacity = 64;
+    }
     str->canary = compute_canary(str);
     str->refs = calloc(1, sizeof(int));
     *str->refs = 1;
@@ -72,6 +83,25 @@ char *il_string_cstring(const il_string *s, size_t *len)
         buf[size] = 0;
     }
     return buf;
+}
+
+int il_string_resize(il_string *self, size_t size)
+{
+    if (!il_string_verify(self)) {
+        return 0;
+    }
+    if (!size) {
+        size = self->capacity > 32? self->capacity * 2 : 64;
+    }
+    if (size < self->capacity) {
+        return 1;
+    }
+    char *buf = calloc(1, size);
+    memcpy(buf, self->data, size);
+    free(self->data);
+    self->data = self->start = buf;
+    self->capacity = size;
+    return 1;
 }
 
 int il_string_verify(const il_string *s)
@@ -175,4 +205,25 @@ il_string *il_string_format(const char *fmt, ...)
     va_end(ap);
     return str;
 }
+
+int il_string_cat(il_string *self, const il_string *str)
+{
+    size_t selflen = strnlen(self->data, self->length),
+           str_len = strnlen(str->data, str->length),
+           len = selflen + str_len;
+    if (len >= self->capacity) {
+        il_string_resize(self, len + 1);
+    }
+    strncpy(self->data + selflen, str->data, str_len);
+    return 1;
+}
+
+int il_string_catchars(il_string *self, const char *chars)
+{
+    il_string *str = il_string_new(chars, strlen(chars)+1);
+    int res = il_string_cat(self, str);
+    il_string_unref(str);
+    return res;
+}
+
 
