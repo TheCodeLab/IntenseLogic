@@ -7,12 +7,12 @@
 
 typedef struct ilA_path {
     il_string *path;
-    char *nodeptr;
     mowgli_list_t *nodes;
 } ilA_path;
 
 ilA_path* ilA_path_string(il_string *path);
 ilA_path* ilA_path_chars(const char *path);
+ilA_path* ilA_path_cwd();
 void ilA_path_free(ilA_path* self);
 il_string *ilA_path_tostr(const ilA_path* self);
 int ilA_path_cmp(const ilA_path* a, const ilA_path* b);
