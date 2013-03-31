@@ -145,7 +145,7 @@ static ilA_node *union_lookup(ilA_dir* self, const ilA_path *path)
     ilA_node *res;
     MOWGLI_LIST_FOREACH(node, ctx->dirs->head) {
         ilA_dir *dir = node->data;
-        res = ilA_node_lookup(path, dir);
+        res = ilA_node_lookup(dir, path);
         if (res) {
             return res;
         }
@@ -200,7 +200,7 @@ ilA_node *prefix_lookup(ilA_dir *self, const ilA_path *path)
     if (!p) {
         return NULL;
     }
-    return ilA_node_lookup(p, ctx->dir);
+    return ilA_node_lookup(ctx->dir, p);
 }
 
 ilA_dir *ilA_node_prefix(ilA_dir *dir, const ilA_path *path)
@@ -218,8 +218,13 @@ ilA_dir *ilA_node_prefix(ilA_dir *dir, const ilA_path *path)
     return d;
 }
 
-ilA_node *ilA_node_lookup(const ilA_path *path, ilA_dir* dir)
+ilA_node *ilA_node_lookup(ilA_dir* dir, const ilA_path *path)
 {
     return dir->lookup(dir, path);
+}
+
+void *ilA_node_contents(ilA_file* file, size_t *size)
+{
+    return file->contents(file, size);
 }
 
