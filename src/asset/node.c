@@ -72,14 +72,14 @@ static void *stdio_contents(ilA_file* self, size_t *size)
 }
 
 char *strdup(const char*);
-ilA_file *ilA_node_stdio_file(const char *path, enum ilA_file_mode mode)
+ilA_file *ilA_node_stdio_file(const ilA_path *path, enum ilA_file_mode mode)
 {
     ilA_file *f = calloc(1, sizeof(ilA_file));
     f->node.type = ILA_NODE_FILE;
     f->node.impl = "stdio";
     f->mode = mode;
     struct stdio_ctx *ctx = calloc(1, sizeof(struct stdio_ctx));
-    ctx->path = strdup(path);
+    ctx->path = ilA_path_tochars(path);
     f->node.user = ctx;
     f->node.free = stdio_free;
     f->contents = stdio_contents;
@@ -88,37 +88,36 @@ ilA_file *ilA_node_stdio_file(const char *path, enum ilA_file_mode mode)
 
 static void dir_free(ilA_node *self)
 {
-    free(self->user);
+    ilA_path_free(self->user);
     free(self);
 }
 
-static ilA_node* dir_lookup(ilA_dir* self, const char *path)
+static ilA_node* dir_lookup(ilA_dir* self, const ilA_path *path)
 {
     struct stat s;
-    char *buf = malloc(strlen(path) + strlen(self->node.user) + 2);
-    strcpy(buf, self->node.user);
-    strcat(buf, "/");
-    strcat(buf, path);
-    if (stat(path, &s) != 0) {
+    ilA_path *full = ilA_path_concat(self->node.user, path);
+    char *buf = ilA_path_tochars(full);
+    if (stat(buf, &s) != 0) {
         return NULL;
     }
     ilA_node* node;
     if (S_ISDIR(s.st_mode)) {
-        node = &ilA_node_stdio_dir(buf)->node;
+        node = &ilA_node_stdio_dir(full)->node;
     } else {
-        node = &ilA_node_stdio_file(buf, 0)->node;
+        node = &ilA_node_stdio_file(full, 0)->node;
     }
     free(buf);
+    ilA_path_free(full);
     return node;
 }
 
-ilA_dir *ilA_node_stdio_dir(const char *path)
+ilA_dir *ilA_node_stdio_dir(const ilA_path *path)
 {
     ilA_dir *d = calloc(1, sizeof(ilA_dir));
     d->node.type = ILA_NODE_DIR;
     d->node.impl = "stdio";
     d->node.free = dir_free;
-    d->node.user = strdup(path);
+    d->node.user = ilA_path_copy(path);
     d->lookup = dir_lookup;
     return d;
 }
@@ -139,7 +138,7 @@ static void union_free(ilA_node* self)
     free(self);
 }
 
-static ilA_node *union_lookup(ilA_dir* self, const char *path)
+static ilA_node *union_lookup(ilA_dir* self, const ilA_path *path)
 {
     mowgli_node_t *node;
     struct union_ctx *ctx = self->node.user;
@@ -181,29 +180,30 @@ ilA_dir *ilA_node_union(ilA_dir *a, ilA_dir *b)
 }
 
 struct prefix_ctx {
-    char *prefix;
+    ilA_path *prefix;
     ilA_dir *dir;
 };
 
 void prefix_free(ilA_node *self)
 {
     struct prefix_ctx *ctx = self->user;
-    free(ctx->prefix);
+    ilA_path_free(ctx->prefix);
     ilA_node_unref(ctx->dir);
     free(ctx);
     free(self);
 }
 
-ilA_node *prefix_lookup(ilA_dir *self, const char *path)
+ilA_node *prefix_lookup(ilA_dir *self, const ilA_path *path)
 {
     struct prefix_ctx *ctx = self->node.user;
-    if (strncmp(path, ctx->prefix, strlen(ctx->prefix)) == 0) {
-        return ilA_node_lookup(path + strlen(ctx->prefix), ctx->dir);
+    ilA_path *p = ilA_path_relativeTo(path, ctx->prefix);
+    if (!p) {
+        return NULL;
     }
-    return NULL;
+    return ilA_node_lookup(p, ctx->dir);
 }
 
-ilA_dir *ilA_node_prefix(ilA_dir *dir, const char *path)
+ilA_dir *ilA_node_prefix(ilA_dir *dir, const ilA_path *path)
 {
     ilA_dir *d = calloc(1, sizeof(ilA_dir));
     d->node.type = ILA_NODE_DIR;
@@ -212,13 +212,13 @@ ilA_dir *ilA_node_prefix(ilA_dir *dir, const char *path)
     d->lookup = prefix_lookup;
     struct prefix_ctx *ctx = calloc(1, sizeof(struct prefix_ctx));
     d->node.user = ctx;
-    ctx->prefix = strdup(path);
+    ctx->prefix = ilA_path_copy(path);
     ctx->dir = dir;
     ilA_node_ref(dir);
     return d;
 }
 
-ilA_node *ilA_node_lookup(const char *path, ilA_dir* dir)
+ilA_node *ilA_node_lookup(const ilA_path *path, ilA_dir* dir)
 {
     return dir->lookup(dir, path);
 }
