@@ -45,7 +45,8 @@ ilA_file *ilA_node_stdio_file(const ilA_path *path, enum ilA_file_mode mode);
 ilA_dir *ilA_node_stdio_dir(const ilA_path *path);
 ilA_dir *ilA_node_union(ilA_dir *a, ilA_dir *b);
 ilA_dir *ilA_node_prefix(ilA_dir *dir, const ilA_path *path);
-ilA_node *ilA_node_lookup(const ilA_path *path, ilA_dir* dir);
+ilA_node *ilA_node_lookup(ilA_dir* dir, const ilA_path *path);
+void *ilA_node_contents(ilA_file* file, size_t *size);
 
 #endif
 
