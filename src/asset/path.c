@@ -49,14 +49,14 @@ ilA_path* ilA_path_chars(const char *path)
     return ilA_path_string(il_string_new(path, strlen(path)+1));
 }
 
-ilA_path* ilA_path_copy(ilA_path *self)
+ilA_path* ilA_path_copy(const ilA_path *self)
 {
     ilA_path* p = calloc(1, sizeof(ilA_path));
     p->path = il_string_ref(self->path);
     p->nodes = mowgli_list_create();
     mowgli_node_t *n;
     MOWGLI_LIST_FOREACH(n, self->nodes->head) {
-        mowgli_node_add(il_string_ref(n->data), mowgli_node_create(), self->nodes);
+        mowgli_node_add(il_string_ref(n->data), mowgli_node_create(), p->nodes);
     }
     return p;
 }
@@ -96,6 +96,14 @@ il_string *ilA_path_tostr(const ilA_path* self)
         }
     }
     return str;
+}
+
+char *ilA_path_tochars(const ilA_path* self)
+{
+    il_string *s = ilA_path_tostr(self);
+    char *buf = il_string_cstring(s, NULL);
+    il_string_unref(s);
+    return buf;
 }
 
 int ilA_path_cmp(const ilA_path* a, const ilA_path* b)
