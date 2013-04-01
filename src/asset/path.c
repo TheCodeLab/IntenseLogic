@@ -24,23 +24,23 @@ ilA_path* ilA_path_string(il_string *path)
         p = calloc(1, sizeof(ilA_path));
     }
     p->path = il_string_ref(path);
-    p->nodes = mowgli_list_create();
-    char *s, *ptr, *end;
-    size_t len, size;
-    for (s = ptr = il_string_cstring(path, &size); s; s = strchr(s, '/'), end = strchr(s, '/')) {
+    //p->nodes = mowgli_list_create();
+    const char *s, *ptr, *end, *ptrend = path->data + path->length;
+    size_t len;
+    for (s = ptr = path->data; s; s = memchr(s, '/', ptrend-s), end = memchr(s, '/', ptrend-s)) {
         if (!end) {
-            end = s + size;
+            end = s + path->length;
         }
         len = end - s;
         if (strncmp(s, ".", len) == 0) {
             continue;
         } else if (strncmp(s, "..", len) == 0) {
-            mowgli_node_delete(p->nodes->tail, p->nodes);
+            il_string_unref(p->nodes.data[p->nodes.length-1]);
+            --p->nodes.length;
         } else {
-            mowgli_node_add(il_string_sub(path, ptr - s, len), mowgli_node_create(), p->nodes);
+            IL_APPEND(p->nodes, il_string_sub(path, ptr - s, len));
         }
     }
-    free(ptr);
     return p;
 }
 
@@ -53,10 +53,10 @@ ilA_path* ilA_path_copy(const ilA_path *self)
 {
     ilA_path* p = calloc(1, sizeof(ilA_path));
     p->path = il_string_ref(self->path);
-    p->nodes = mowgli_list_create();
-    mowgli_node_t *n;
-    MOWGLI_LIST_FOREACH(n, self->nodes->head) {
-        mowgli_node_add(il_string_ref(n->data), mowgli_node_create(), p->nodes);
+    //p->nodes = mowgli_list_create();
+    unsigned i;
+    for (i = 0; i < self->nodes.length; i++) {
+        IL_APPEND(p->nodes, il_string_ref(self->nodes.data[i]));
     }
     return p;
 }
@@ -75,23 +75,21 @@ ilA_path* ilA_path_cwd()
 void ilA_path_free(ilA_path* self)
 {
     il_string_unref(self->path);
-    mowgli_node_t *n, *tn;
-    MOWGLI_LIST_FOREACH_SAFE(n, tn, self->nodes->head) {
-        il_string_unref(n->data);
-        mowgli_node_delete(n, self->nodes);
-        mowgli_node_free(n);
+    unsigned i;
+    for (i = 0; self->nodes.length; i++) {
+        il_string_unref(self->nodes.data[i]);
     }
-    mowgli_list_free(self->nodes);
+    IL_FREE(self->nodes);
 }
 
 il_string *ilA_path_tostr(const ilA_path* self)
 {
     il_string *str = il_string_new(NULL, 0), *temp;
-    mowgli_node_t *n;
-    MOWGLI_LIST_FOREACH(n, self->nodes->head) {
-        temp = n->data;
+    unsigned i;
+    for (i = 0; i < self->nodes.length; i++) {
+        temp = self->nodes.data[i];
         il_string_cat(str, temp);
-        if (n->next) {
+        if (i+1 < self->nodes.length) {
             il_string_catchars(str, "/");
         }
     }
@@ -108,20 +106,17 @@ char *ilA_path_tochars(const ilA_path* self)
 
 int ilA_path_cmp(const ilA_path* a, const ilA_path* b)
 {
-    mowgli_node_t *an, *bn = b->nodes->head;
+    unsigned i;
     il_string *as, *bs;
-    MOWGLI_LIST_FOREACH(an, a->nodes->head) {
-        if (!bn) {
-            break;
-        }
-        as = an->data;
-        bs = bn->data;
+    unsigned min = a->nodes.length > b->nodes.length? b->nodes.length : a->nodes.length;
+    for (i = 0; i < min; i++)  {
+        as = a->nodes.data[i];
+        bs = b->nodes.data[i];
         if (il_string_cmp(as, bs) != 0) {
             return 1;
         }
-        bn = bn->next;
     }
-    if (a->nodes->count < b->nodes->count) {
+    if (a->nodes.length < b->nodes.length) {
         return -1;
     }
     return 0;
@@ -145,11 +140,10 @@ ilA_path* ilA_path_relativeTo(const ilA_path* a, const ilA_path* b)
         return NULL;
     }
     ilA_path* p = calloc(1, sizeof(ilA_path));
-    p->nodes = mowgli_list_create();
-    mowgli_node_t *n;
-    MOWGLI_LIST_FOREACH(n, b->nodes->head) {} // skip the stuff we don't want
-    MOWGLI_LIST_FOREACH(n, n) {
-        mowgli_node_add(il_string_ref(n->data), mowgli_node_create(), p->nodes);
+    //p->nodes = mowgli_list_create();
+    unsigned i;
+    for (i = b->nodes.length; i < a->nodes.length; i++) {
+        IL_APPEND(p->nodes, il_string_ref(a->nodes.data[i]));
     }
     p->path = ilA_path_tostr(p);
     return p;

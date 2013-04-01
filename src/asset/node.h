@@ -33,7 +33,10 @@ typedef struct ilA_file {
 
 typedef struct ilA_dir {
     ilA_node node;
-    ilA_node *(*lookup)(struct ilA_dir* self, const ilA_path *path);
+    ilA_node        *(*lookup)(struct ilA_dir* self, const ilA_path *path);
+    ilA_file        *(*create)(struct ilA_dir* self, const ilA_path *path);
+    struct ilA_dir  *(*mkdir) (struct ilA_dir* self, const ilA_path *path);
+    void             (*delete)(struct ilA_dir* self, const ilA_path *path);
 } ilA_dir;
 
 #define ILA_FILE(node) ((ilA_file*)(node->type == ILA_NODE_FILE? node : NULL))
