@@ -8,7 +8,7 @@
 #include <dirent.h>
 #include <string.h>
 
-#include <mowgli.h>
+//#include <mowgli.h>
 
 ilA_node *ilA_node_ref(void* ptr) 
 {
@@ -123,28 +123,28 @@ ilA_dir *ilA_node_stdio_dir(const ilA_path *path)
 }
 
 struct union_ctx {
-    mowgli_list_t *dirs;
+    IL_ARRAY(ilA_dir*,) dirs;
 };
 
 static void union_free(ilA_node* self)
 {
     struct union_ctx *ctx = self->user;
-    mowgli_node_t *node;
-    MOWGLI_LIST_FOREACH(node, ctx->dirs->head) {
-        ilA_node_unref(node->data);
+    unsigned i;
+    for (i = 0; i < ctx->dirs.length; i++) {
+        ilA_node_unref(ctx->dirs.data[i]);
     }
-    mowgli_list_free(ctx->dirs);
+    IL_FREE(ctx->dirs);
     free(ctx);
     free(self);
 }
 
 static ilA_node *union_lookup(ilA_dir* self, const ilA_path *path)
 {
-    mowgli_node_t *node;
     struct union_ctx *ctx = self->node.user;
     ilA_node *res;
-    MOWGLI_LIST_FOREACH(node, ctx->dirs->head) {
-        ilA_dir *dir = node->data;
+    unsigned i;
+    for (i = 0; i < ctx->dirs.length; i++) {
+        ilA_dir *dir = ctx->dirs.data[i];
         res = ilA_node_lookup(dir, path);
         if (res) {
             return res;
@@ -157,10 +157,10 @@ ilA_dir *ilA_node_union(ilA_dir *a, ilA_dir *b)
 {
     if (strcmp(a->node.impl, "union") == 0) {
         ilA_node_ref(&b->node);
-        mowgli_node_add(b, mowgli_node_create(), ((struct union_ctx*)a->node.user)->dirs);
+        IL_APPEND(((struct union_ctx*)a->node.user)->dirs, b);
     } else if (strcmp(b->node.impl, "union") == 0) {
         ilA_node_ref(&a->node);
-        mowgli_node_add_head(a, mowgli_node_create(), ((struct union_ctx*)b->node.user)->dirs);
+        IL_APPEND(((struct union_ctx*)b->node.user)->dirs, a);
     } else {
         ilA_node_ref(&a->node);
         ilA_node_ref(&b->node);
@@ -173,9 +173,9 @@ ilA_dir *ilA_node_union(ilA_dir *a, ilA_dir *b)
     d->lookup = union_lookup;
     struct union_ctx *ctx = calloc(1, sizeof(struct union_ctx));
     d->node.user = ctx;
-    ctx->dirs = mowgli_list_create();
-    mowgli_node_add(a, mowgli_node_create(), ctx->dirs);
-    mowgli_node_add(b, mowgli_node_create(), ctx->dirs);
+    //ctx->dirs = mowgli_list_create();
+    IL_APPEND(ctx->dirs, a);
+    IL_APPEND(ctx->dirs, b);
     return d;
 }
 

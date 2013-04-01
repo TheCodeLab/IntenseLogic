@@ -1,13 +1,14 @@
 #ifndef ILA_PATH_H
 #define ILA_PATH_H
 
-#include <mowgli.h>
+//#include <mowgli.h>
 
 #include "util/ilstring.h"
+#include "util/array.h"
 
 typedef struct ilA_path {
     il_string *path;
-    mowgli_list_t *nodes;
+    IL_ARRAY(il_string*,) nodes;
 } ilA_path;
 
 ilA_path* ilA_path_string(il_string *path);
