@@ -140,6 +140,7 @@ static void context_setup()
 #ifdef DEBUG
     if (GLEW_ARB_debug_output) {
         glDebugMessageCallbackARB((GLDEBUGPROCARB)&error_cb, NULL);
+        glEnable(GL_DEBUG_OUTPUT);
         il_log("ARB_debug_output present, enabling advanced errors");
         IL_GRAPHICS_TESTERROR("glDebugMessageCallbackARB()");
     } else
