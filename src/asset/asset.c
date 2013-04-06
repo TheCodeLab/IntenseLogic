@@ -8,7 +8,7 @@
 #include <time.h>
 #include <png.h>
 
-#include "uthash.h"
+#include "util/uthash.h"
 #include "util/log.h"
 
 struct ilA_asset {
