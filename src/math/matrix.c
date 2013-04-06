@@ -173,12 +173,12 @@ il_mat il_mat_rotate(const il_quat q, il_mat m)
     m[12 + c] /= f;
 }*/
 
-static void subtractrow(il_mat m, int src, int dst, float f)
+static void addrow(il_mat m, int src, int dst, float f)
 {
-    m[dst*4 + 0] -= m[src*4 + 0] * f;
-    m[dst*4 + 1] -= m[src*4 + 1] * f;
-    m[dst*4 + 2] -= m[src*4 + 2] * f;
-    m[dst*4 + 3] -= m[src*4 + 3] * f;
+    m[dst*4 + 0] += m[src*4 + 0] * f;
+    m[dst*4 + 1] += m[src*4 + 1] * f;
+    m[dst*4 + 2] += m[src*4 + 2] * f;
+    m[dst*4 + 3] += m[src*4 + 3] * f;
 }
 
 static void swaprow(il_mat m, int src, int dst)
@@ -197,13 +197,14 @@ il_mat il_mat_invert(const il_mat a, il_mat res)
 #ifdef IL_SSE
 
 #else
-    //il_mat m = il_mat_copy(a);
-    memcpy(res, a, sizeof(float)*16);
+    il_mat A = il_mat_copy(a);
+    //memcpy(res, a, sizeof(float)*16);
+    res = il_mat_identity(res);
     int i, j, k;
     for (i = 0; i < 3; i++) {
         int p = -1;
         for (k = i; k < 4; k++) {
-            if (a[p*4+i] != 0.f) {
+            if (A[k*4+i] != 0.f) {
                 p = k;
                 break;
             }
@@ -213,119 +214,26 @@ il_mat il_mat_invert(const il_mat a, il_mat res)
         }
         if (p != i) {
             swaprow(res, p, i);
+            swaprow(A,   p, i);
         }
-        for (j = 0; j < 4; j++) {
-            float m = a[j*4+i] / a[i*5];
-            subtractrow(res, j, i, m);
+        for (j = i+1; j < 4; j++) {
+            float m = res[j*4+i] / res[i*5];
+            addrow(res, i, j, m);
+            addrow(A,   i, j, m);
         }
     }
-    if (res[15] == 0.f) { // ???
-        return NULL;
+    if (res[15] == 0.f) {
+        return NULL; // can't do backwards substitution
     }
-    return res;
-    /*float Coef00 = a[2*4 + 2] * a[3*4 + 3] - a[2*4 + 3] * a[3*4 + 2];
-    float Coef02 = a[2*4 + 1] * a[3*4 + 3] - a[2*4 + 3] * a[3*4 + 1];
-    float Coef03 = a[2*4 + 1] * a[3*4 + 2] - a[2*4 + 2] * a[3*4 + 1];
-    float Coef04 = a[1*4 + 2] * a[3*4 + 3] - a[1*4 + 3] * a[3*4 + 2];
-    float Coef06 = a[1*4 + 1] * a[3*4 + 3] - a[1*4 + 3] * a[3*4 + 1];
-    float Coef07 = a[1*4 + 1] * a[3*4 + 2] - a[1*4 + 2] * a[3*4 + 1];
-    float Coef08 = a[1*4 + 2] * a[2*4 + 3] - a[1*4 + 3] * a[2*4 + 2];
-    float Coef10 = a[1*4 + 1] * a[2*4 + 3] - a[1*4 + 3] * a[2*4 + 1];
-    float Coef11 = a[1*4 + 1] * a[2*4 + 2] - a[1*4 + 2] * a[2*4 + 1];
-    float Coef12 = a[0*4 + 2] * a[3*4 + 3] - a[0*4 + 3] * a[3*4 + 2];
-    float Coef14 = a[0*4 + 1] * a[3*4 + 3] - a[0*4 + 3] * a[3*4 + 1];
-    float Coef15 = a[0*4 + 1] * a[3*4 + 2] - a[0*4 + 2] * a[3*4 + 1];
-    float Coef16 = a[0*4 + 2] * a[2*4 + 3] - a[0*4 + 3] * a[2*4 + 2];
-    float Coef18 = a[0*4 + 1] * a[2*4 + 3] - a[0*4 + 3] * a[2*4 + 1];
-    float Coef19 = a[0*4 + 1] * a[2*4 + 2] - a[0*4 + 2] * a[2*4 + 1];
-    float Coef20 = a[0*4 + 2] * a[1*4 + 3] - a[0*4 + 3] * a[1*4 + 2];
-    float Coef22 = a[0*4 + 1] * a[1*4 + 3] - a[0*4 + 3] * a[1*4 + 1];
-    float Coef23 = a[0*4 + 1] * a[1*4 + 2] - a[0*4 + 2] * a[1*4 + 1];
-
-    il_vec4 SignA = il_vec4_set(NULL, +1, -1, +1, -1);
-    il_vec4 SignB = il_vec4_set(NULL, -1, +1, -1, +1);
-
-    il_vec4 Fac0 = il_vec4_set(NULL, Coef00, Coef00, Coef02, Coef03);
-    il_vec4 Fac1 = il_vec4_set(NULL, Coef04, Coef04, Coef06, Coef07);
-    il_vec4 Fac2 = il_vec4_set(NULL, Coef08, Coef08, Coef10, Coef11);
-    il_vec4 Fac3 = il_vec4_set(NULL, Coef12, Coef12, Coef14, Coef15);
-    il_vec4 Fac4 = il_vec4_set(NULL, Coef16, Coef16, Coef18, Coef19);
-    il_vec4 Fac5 = il_vec4_set(NULL, Coef20, Coef20, Coef22, Coef23);
-
-    il_vec4 Vec0 = il_vec4_set(NULL, a[0*4 + 1], a[0*4 + 0], a[0*4 + 0], a[0*4 + 0]);
-    il_vec4 Vec1 = il_vec4_set(NULL, a[1*4 + 1], a[1*4 + 0], a[1*4 + 0], a[1*4 + 0]);
-    il_vec4 Vec2 = il_vec4_set(NULL, a[2*4 + 1], a[2*4 + 0], a[2*4 + 0], a[2*4 + 0]);
-    il_vec4 Vec3 = il_vec4_set(NULL, a[3*4 + 1], a[3*4 + 0], a[3*4 + 0], a[3*4 + 0]);
-
-    il_vec4 v1f0 = il_vec4_mul(Vec1, Fac0, NULL);
-    il_vec4 v0f0 = il_vec4_mul(Vec0, Fac0, NULL);
-    il_vec4 v0f1 = il_vec4_mul(Vec0, Fac1, NULL);
-    il_vec4 v0f2 = il_vec4_mul(Vec0, Fac2, NULL);
-
-    il_vec4 v2f1 = il_vec4_mul(Vec2, Fac1, NULL);
-    il_vec4 v2f3 = il_vec4_mul(Vec2, Fac3, NULL);
-    il_vec4 v1f3 = il_vec4_mul(Vec1, Fac3, NULL);
-    il_vec4 v1f4 = il_vec4_mul(Vec1, Fac4, NULL);
-
-    il_vec4 v3f2 = il_vec4_mul(Vec3, Fac2, NULL);
-    il_vec4 v3f4 = il_vec4_mul(Vec3, Fac4, NULL);
-    il_vec4 v3f5 = il_vec4_mul(Vec3, Fac5, NULL);
-    il_vec4 v2f5 = il_vec4_mul(Vec2, Fac5, NULL);
-
-    il_vec4_free(Fac0);
-    il_vec4_free(Fac1);
-    il_vec4_free(Fac2);
-    il_vec4_free(Fac3);
-    il_vec4_free(Fac4);
-
-    Vec0 = il_vec4_sub(v1f0, v2f1, Vec0);
-    Vec1 = il_vec4_sub(v0f0, v2f3, Vec1);
-    Vec2 = il_vec4_sub(v0f1, v1f3, Vec2);
-    Vec3 = il_vec4_sub(v0f2, v1f4, Vec3);
-
-    Vec0 = il_vec4_add(Vec0, v3f2, Vec0);
-    Vec1 = il_vec4_add(Vec1, v3f4, Vec1);
-    Vec2 = il_vec4_add(Vec2, v3f5, Vec2);
-    Vec3 = il_vec4_add(Vec3, v2f5, Vec3);
-
-    Vec0 = il_vec4_mul(SignA, Vec0, Vec0);
-    Vec1 = il_vec4_mul(SignB, Vec1, Vec1);
-    Vec2 = il_vec4_mul(SignA, Vec2, Vec2);
-    Vec3 = il_vec4_mul(SignB, Vec3, Vec3);
-
-    il_vec4_free(SignA);
-    il_vec4_free(SignB);
-    il_vec4_free(v1f0);
-    il_vec4_free(v0f0);
-    il_vec4_free(v0f1);
-    il_vec4_free(v0f2);
-    il_vec4_free(v2f1);
-    il_vec4_free(v2f3);
-    il_vec4_free(v1f3);
-    il_vec4_free(v1f4);
-    il_vec4_free(v3f2);
-    il_vec4_free(v3f4);
-    il_vec4_free(v3f5);
-    il_vec4_free(v2f5);
-
-    res = il_mat_set(res, Vec0, Vec1, Vec2, Vec3);
-
-    il_vec4_free(Vec0);
-    il_vec4_free(Vec1);
-    il_vec4_free(Vec2);
-    il_vec4_free(Vec3);
-
-    il_vec4 Row0 = il_vec4_set(NULL, res[0], res[1], res[2], res[3]);
-    il_vec4 a_col0 = il_vec4_set(NULL, a[0], a[4], a[8], a[12]);
-
-    float Determinant = il_vec4_dot(a_col0, Row0);
-
-    il_vec4_free(Row0);
-    il_vec4_free(a_col0);
-
-    int i;
-    for (i = 0; i < 16; i++) {
-        res[i] /= Determinant;
+    float x[4];
+    // x_n = b[n] / a_nn
+    // x_i = (a_i(n+1) - sum(j=i+1, n, a_ij x_j)) / a_ii; for each i = n-1 .. 1
+    /*for (i = 3; 0; i--) {
+        float sum = 0.f;
+        for (j = i+1; 4; j++) {
+            sum += a[i*4+j] * x[j];
+        }
+        x[i] = b[i] - sum;
     }*/
 #endif
     return res;
