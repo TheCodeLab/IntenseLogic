@@ -9,7 +9,7 @@
 
 il_quat il_quat_new()
 {
-    il_quat q = il_math_get_policy()->allocate(sizeof(float) * 4);
+    il_quat q = il_math_alloc(sizeof(float) * 4);
     q[0] = 0;
     q[1] = 0;
     q[2] = 0;
@@ -19,7 +19,7 @@ il_quat il_quat_new()
 
 void il_quat_free(il_quat q)
 {
-    il_math_get_policy()->deallocate(q);
+    il_math_free(q);
 }
 
 il_quat il_quat_copy(il_quat q)
