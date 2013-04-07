@@ -2,9 +2,7 @@
 #define ILU_LOG_H
 
 #include <string.h>
-//#include <mowgli.h>
-
-extern void mowgli_log_prefix_real(const char *file, int line, const char *func, const char *prefix, const char *fmt, ...);
+#include <stdio.h>
 
 const char *il_log_prefixes[5];
 
@@ -13,7 +11,9 @@ const char *il_log_prefixes[5];
 
 #define il_log_real(file, line, func, lvl, ...) \
     if (il_can_log(file, lvl)) { \
-        mowgli_log_prefix_real(file, line, func, il_log_prefixes[lvl], __VA_ARGS__); \
+        char buf[4096]; \
+        snprintf(buf, 4096, __VA_ARGS__); \
+        fprintf(stderr, "(%s:%i %s): %s%s\n", file, line, func, il_log_prefixes[lvl], buf);\
     }
 
 #define il_debug(...)      il_log_real(il_prettifyFile(__FILE__), __LINE__, __func__, 4, __VA_ARGS__)
