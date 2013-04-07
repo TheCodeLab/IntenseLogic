@@ -13,7 +13,6 @@ List of Dependencies:
 * libevent2
 * libpng
 * LuaJIT (Lua 5.1)
-* libmowgli-2
 
 See the Wiki for help building.
 
