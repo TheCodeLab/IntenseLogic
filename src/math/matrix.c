@@ -4,6 +4,7 @@
 #include <string.h>
 #include <xmmintrin.h>
 #include <math.h>
+#include <assert.h>
 
 // SSE code copied from GLM which is under the MIT license: http://glm.g-truc.net/copying.txt
 
@@ -17,7 +18,7 @@ il_mat il_mat_new()
 
 void il_mat_free(il_mat m)
 {
-    il_math_get_policy()->deallocate(m);     
+    il_math_get_policy()->deallocate(m);
 }
 
 il_mat il_mat_copy(il_mat m)
@@ -189,6 +190,14 @@ static void swaprow(il_mat m, int src, int dst)
     memcpy(m + 4*src,   r,          sizeof(r));
 }
 
+static void mulrow(il_mat m, int col, float f)
+{
+    m[col*4 + 0] *= f;
+    m[col*4 + 1] *= f;
+    m[col*4 + 2] *= f;
+    m[col*4 + 3] *= f;
+}
+
 static float* getcolumn(const il_mat m, int c, float *res)
 {
     res[0] = m[0 + c];
@@ -254,7 +263,6 @@ static float *substitute(const il_mat a, const float *b, float *x)
     }
 
     return x;
-
 }
 
 il_mat il_mat_invert(const il_mat a, il_mat res)
@@ -264,9 +272,40 @@ il_mat il_mat_invert(const il_mat a, il_mat res)
         res = il_mat_new();
         allocated = 1;
     }
+    il_mat a2 = il_mat_copy(a);
+    //il_mat A = il_mat_copy(a);
+    res = il_mat_identity(res);
 #ifdef IL_SSE
 
 #else
+    // for every column ..
+    for (int col = 0; col < 4; ++col) {
+        float diagonalfield = a2[col*4+col];
+        // make sure that we don't have a weird matrix with a zero on the diagonal
+        // TODO if this assert trips, time to do PROPER triangulization I guess
+        // possible approach: go hunting for a column where this field is nonzero and swap it for the current column
+        // but for now ..
+        assert(fabs(diagonalfield) >= 0.001);
+        // for every row ..
+        for (int row = 0; row < 4; ++row) {
+        // if it's not on the diagonal ..
+        if (row != col) {
+            float field = a2[row*4+col];
+            // bring this field to 0 by subtracting the row that's on the diagonal for this column
+            addrow(a2, /* src */ col, /* dst */ row, /* factor */ -field/diagonalfield);
+            // do the same to identity
+            addrow(res,/* src */ col, /* dst */ row, /* factor */ -field/diagonalfield);
+            }
+        }
+        // and finally, bring the diagonal to 1
+        mulrow(a2, col, 1/diagonalfield);
+        mulrow(res,col, 1/diagonalfield);
+    }
+    // Success! Because a2 is now id, res is now a2^-1. Math is fun!
+/*#ifdef IL_SSE
+
+#else
+    il_mat a2 = il_mat_copy(a);
     il_mat id = il_mat_identity(NULL);
     int n;
     float col[4];
@@ -288,8 +327,30 @@ il_mat il_mat_invert(const il_mat a, il_mat res)
         res[12 + n] = x[3];
         //memcpy(res, x, sizeof(float) * 4);
         free(x);
+    }*/
+    /*il_mat id = il_mat_identity(NULL);
+    int n;
+    il_mat m = il_mat_mul(A, res, NULL);
+    for (n = 0; n < 16; n++) {
+        float diff = m[n] - id[n];
+        if (diff < -0.01 || diff > 0.01) {
+            printf("inversion went bad\nmat: ");
+            for (n = 0; n < 16; n++) {
+                printf("%f ", A[n]);
+            }
+            printf("\nres: ");
+            for (n = 0; n < 16; n++) {
+                printf("%f ", res[n]);
+            }
+            printf("\n");
+            return NULL;//break;
+        }
     }
-    il_mat_free(id);
+    printf("inversion successful\n");*/
+    //il_mat_free(id);
+    //il_mat_free(A);
+    il_mat_free(a2);
+    //il_mat_free(m);
 #endif
     return res;
 }
