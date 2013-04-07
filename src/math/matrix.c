@@ -4,6 +4,7 @@
 #include <string.h>
 #include <xmmintrin.h>
 #include <math.h>
+#include <assert.h>
 
 // SSE code copied from GLM which is under the MIT license: http://glm.g-truc.net/copying.txt
 
@@ -17,7 +18,7 @@ il_mat il_mat_new()
 
 void il_mat_free(il_mat m)
 {
-    il_math_get_policy()->deallocate(m);     
+    il_math_get_policy()->deallocate(m);
 }
 
 il_mat il_mat_copy(il_mat m)
@@ -165,20 +166,12 @@ il_mat il_mat_rotate(const il_quat q, il_mat m)
     return m;
 }
 
-/*static void dividecol(il_mat m, int c, float f)
+static void addrow(il_mat m, int src, int dst, float f)
 {
-    m[0  + c] /= f;
-    m[4  + c] /= f;
-    m[8  + c] /= f;
-    m[12 + c] /= f;
-}*/
-
-static void subtractrow(il_mat m, int src, int dst, float f)
-{
-    m[dst*4 + 0] -= m[src*4 + 0] * f;
-    m[dst*4 + 1] -= m[src*4 + 1] * f;
-    m[dst*4 + 2] -= m[src*4 + 2] * f;
-    m[dst*4 + 3] -= m[src*4 + 3] * f;
+    m[dst*4 + 0] += m[src*4 + 0] * f;
+    m[dst*4 + 1] += m[src*4 + 1] * f;
+    m[dst*4 + 2] += m[src*4 + 2] * f;
+    m[dst*4 + 3] += m[src*4 + 3] * f;
 }
 
 static void swaprow(il_mat m, int src, int dst)
@@ -189,144 +182,83 @@ static void swaprow(il_mat m, int src, int dst)
     memcpy(m + 4*src,   r,          sizeof(r));
 }
 
+static void mulrow(il_mat m, int col, float f)
+{
+    m[col*4 + 0] *= f;
+    m[col*4 + 1] *= f;
+    m[col*4 + 2] *= f;
+    m[col*4 + 3] *= f;
+}
+
 il_mat il_mat_invert(const il_mat a, il_mat res)
 {
+    int allocated = 0;
     if (!res) {
         res = il_mat_new();
+        allocated = 1;
     }
+    il_mat a2 = il_mat_copy(a);
+    //il_mat A = il_mat_copy(a);
+    res = il_mat_identity(res);
 #ifdef IL_SSE
 
 #else
-    //il_mat m = il_mat_copy(a);
-    memcpy(res, a, sizeof(float)*16);
-    int i, j, k;
-    for (i = 0; i < 3; i++) {
-        int p = -1;
-        for (k = i; k < 4; k++) {
-            if (a[p*4+i] != 0.f) {
-                p = k;
-                break;
+    // for every column ..
+    for (int col = 0; col < 4; ++col) {
+        float diagonalfield = a2[col*4+col];
+        // if we have a weird matrix with zero on the diagonal ..
+        float eps = 0.0001;
+        if (fabs(diagonalfield) < eps) {
+            // SIIIGH.
+            // Okay, let's go hunting for a row with a better diagonal to use
+            // keep in mind, row swapping is also a linear operation!
+            for (int row = 0; row < 4; ++row) if (row != col) if (fabs(a2[row*4+col]) >= eps) {
+                swaprow(a2, row, col);
+                swaprow(res,row, col);
+            }
+            diagonalfield = a2[col*4+col]; // recompute
+            // if it still fails, we probably have a denatured matrix and are proper fucked.
+            assert(fabs(diagonalfield) >= eps);
+        }
+        // for every row ..
+        for (int row = 0; row < 4; ++row) {
+            // if it's not on the diagonal ..
+            if (row != col) {
+                float field = a2[row*4+col];
+                // bring this field to 0 by subtracting the row that's on the diagonal for this column
+                addrow(a2, /* src */ col, /* dst */ row, /* factor */ -field/diagonalfield);
+                // do the same to identity
+                addrow(res,/* src */ col, /* dst */ row, /* factor */ -field/diagonalfield);
             }
         }
-        if (p == -1) {
-            return NULL;
-        }
-        if (p != i) {
-            swaprow(res, p, i);
-        }
-        for (j = 0; j < 4; j++) {
-            float m = a[j*4+i] / a[i*5];
-            subtractrow(res, j, i, m);
+        // and finally, bring the diagonal to 1
+        mulrow(a2, col, 1/diagonalfield);
+        mulrow(res,col, 1/diagonalfield);
+    }
+    // Success! Because a2 is now id, res is now a2^-1. Math is fun!
+    /*il_mat id = il_mat_identity(NULL);
+    int n;
+    il_mat m = il_mat_mul(A, res, NULL);
+    for (n = 0; n < 16; n++) {
+        float diff = m[n] - id[n];
+        if (diff < -0.01 || diff > 0.01) {
+            printf("inversion went bad\nmat: ");
+            for (n = 0; n < 16; n++) {
+                printf("%f ", A[n]);
+            }
+            printf("\nres: ");
+            for (n = 0; n < 16; n++) {
+                printf("%f ", res[n]);
+            }
+            printf("\n");
+            return NULL;//break;
         }
     }
-    if (res[15] == 0.f) { // ???
-        return NULL;
-    }
-    return res;
-    /*float Coef00 = a[2*4 + 2] * a[3*4 + 3] - a[2*4 + 3] * a[3*4 + 2];
-    float Coef02 = a[2*4 + 1] * a[3*4 + 3] - a[2*4 + 3] * a[3*4 + 1];
-    float Coef03 = a[2*4 + 1] * a[3*4 + 2] - a[2*4 + 2] * a[3*4 + 1];
-    float Coef04 = a[1*4 + 2] * a[3*4 + 3] - a[1*4 + 3] * a[3*4 + 2];
-    float Coef06 = a[1*4 + 1] * a[3*4 + 3] - a[1*4 + 3] * a[3*4 + 1];
-    float Coef07 = a[1*4 + 1] * a[3*4 + 2] - a[1*4 + 2] * a[3*4 + 1];
-    float Coef08 = a[1*4 + 2] * a[2*4 + 3] - a[1*4 + 3] * a[2*4 + 2];
-    float Coef10 = a[1*4 + 1] * a[2*4 + 3] - a[1*4 + 3] * a[2*4 + 1];
-    float Coef11 = a[1*4 + 1] * a[2*4 + 2] - a[1*4 + 2] * a[2*4 + 1];
-    float Coef12 = a[0*4 + 2] * a[3*4 + 3] - a[0*4 + 3] * a[3*4 + 2];
-    float Coef14 = a[0*4 + 1] * a[3*4 + 3] - a[0*4 + 3] * a[3*4 + 1];
-    float Coef15 = a[0*4 + 1] * a[3*4 + 2] - a[0*4 + 2] * a[3*4 + 1];
-    float Coef16 = a[0*4 + 2] * a[2*4 + 3] - a[0*4 + 3] * a[2*4 + 2];
-    float Coef18 = a[0*4 + 1] * a[2*4 + 3] - a[0*4 + 3] * a[2*4 + 1];
-    float Coef19 = a[0*4 + 1] * a[2*4 + 2] - a[0*4 + 2] * a[2*4 + 1];
-    float Coef20 = a[0*4 + 2] * a[1*4 + 3] - a[0*4 + 3] * a[1*4 + 2];
-    float Coef22 = a[0*4 + 1] * a[1*4 + 3] - a[0*4 + 3] * a[1*4 + 1];
-    float Coef23 = a[0*4 + 1] * a[1*4 + 2] - a[0*4 + 2] * a[1*4 + 1];
-
-    il_vec4 SignA = il_vec4_set(NULL, +1, -1, +1, -1);
-    il_vec4 SignB = il_vec4_set(NULL, -1, +1, -1, +1);
-
-    il_vec4 Fac0 = il_vec4_set(NULL, Coef00, Coef00, Coef02, Coef03);
-    il_vec4 Fac1 = il_vec4_set(NULL, Coef04, Coef04, Coef06, Coef07);
-    il_vec4 Fac2 = il_vec4_set(NULL, Coef08, Coef08, Coef10, Coef11);
-    il_vec4 Fac3 = il_vec4_set(NULL, Coef12, Coef12, Coef14, Coef15);
-    il_vec4 Fac4 = il_vec4_set(NULL, Coef16, Coef16, Coef18, Coef19);
-    il_vec4 Fac5 = il_vec4_set(NULL, Coef20, Coef20, Coef22, Coef23);
-
-    il_vec4 Vec0 = il_vec4_set(NULL, a[0*4 + 1], a[0*4 + 0], a[0*4 + 0], a[0*4 + 0]);
-    il_vec4 Vec1 = il_vec4_set(NULL, a[1*4 + 1], a[1*4 + 0], a[1*4 + 0], a[1*4 + 0]);
-    il_vec4 Vec2 = il_vec4_set(NULL, a[2*4 + 1], a[2*4 + 0], a[2*4 + 0], a[2*4 + 0]);
-    il_vec4 Vec3 = il_vec4_set(NULL, a[3*4 + 1], a[3*4 + 0], a[3*4 + 0], a[3*4 + 0]);
-
-    il_vec4 v1f0 = il_vec4_mul(Vec1, Fac0, NULL);
-    il_vec4 v0f0 = il_vec4_mul(Vec0, Fac0, NULL);
-    il_vec4 v0f1 = il_vec4_mul(Vec0, Fac1, NULL);
-    il_vec4 v0f2 = il_vec4_mul(Vec0, Fac2, NULL);
-
-    il_vec4 v2f1 = il_vec4_mul(Vec2, Fac1, NULL);
-    il_vec4 v2f3 = il_vec4_mul(Vec2, Fac3, NULL);
-    il_vec4 v1f3 = il_vec4_mul(Vec1, Fac3, NULL);
-    il_vec4 v1f4 = il_vec4_mul(Vec1, Fac4, NULL);
-
-    il_vec4 v3f2 = il_vec4_mul(Vec3, Fac2, NULL);
-    il_vec4 v3f4 = il_vec4_mul(Vec3, Fac4, NULL);
-    il_vec4 v3f5 = il_vec4_mul(Vec3, Fac5, NULL);
-    il_vec4 v2f5 = il_vec4_mul(Vec2, Fac5, NULL);
-
-    il_vec4_free(Fac0);
-    il_vec4_free(Fac1);
-    il_vec4_free(Fac2);
-    il_vec4_free(Fac3);
-    il_vec4_free(Fac4);
-
-    Vec0 = il_vec4_sub(v1f0, v2f1, Vec0);
-    Vec1 = il_vec4_sub(v0f0, v2f3, Vec1);
-    Vec2 = il_vec4_sub(v0f1, v1f3, Vec2);
-    Vec3 = il_vec4_sub(v0f2, v1f4, Vec3);
-
-    Vec0 = il_vec4_add(Vec0, v3f2, Vec0);
-    Vec1 = il_vec4_add(Vec1, v3f4, Vec1);
-    Vec2 = il_vec4_add(Vec2, v3f5, Vec2);
-    Vec3 = il_vec4_add(Vec3, v2f5, Vec3);
-
-    Vec0 = il_vec4_mul(SignA, Vec0, Vec0);
-    Vec1 = il_vec4_mul(SignB, Vec1, Vec1);
-    Vec2 = il_vec4_mul(SignA, Vec2, Vec2);
-    Vec3 = il_vec4_mul(SignB, Vec3, Vec3);
-
-    il_vec4_free(SignA);
-    il_vec4_free(SignB);
-    il_vec4_free(v1f0);
-    il_vec4_free(v0f0);
-    il_vec4_free(v0f1);
-    il_vec4_free(v0f2);
-    il_vec4_free(v2f1);
-    il_vec4_free(v2f3);
-    il_vec4_free(v1f3);
-    il_vec4_free(v1f4);
-    il_vec4_free(v3f2);
-    il_vec4_free(v3f4);
-    il_vec4_free(v3f5);
-    il_vec4_free(v2f5);
-
-    res = il_mat_set(res, Vec0, Vec1, Vec2, Vec3);
-
-    il_vec4_free(Vec0);
-    il_vec4_free(Vec1);
-    il_vec4_free(Vec2);
-    il_vec4_free(Vec3);
-
-    il_vec4 Row0 = il_vec4_set(NULL, res[0], res[1], res[2], res[3]);
-    il_vec4 a_col0 = il_vec4_set(NULL, a[0], a[4], a[8], a[12]);
-
-    float Determinant = il_vec4_dot(a_col0, Row0);
-
-    il_vec4_free(Row0);
-    il_vec4_free(a_col0);
-
-    int i;
-    for (i = 0; i < 16; i++) {
-        res[i] /= Determinant;
-    }*/
+    printf("inversion successful\n");*/
+    //il_mat_free(id);
+    //il_mat_free(A);
+    il_mat_free(a2);
+    //il_mat_free(m);
 #endif
     return res;
 }
