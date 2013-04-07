@@ -25,6 +25,9 @@ const struct il_allocator {
 
 void *il_alloc(const il_allocator *self, size_t size)
 {
+    if (!self) {
+        self = &il_default_alloc;
+    }
     return self->alloc(self->user, size);
 }
 
@@ -35,6 +38,9 @@ void *il_calloc(const il_allocator *self, size_t nmemb, size_t size)
 
 void *il_realloc(const il_allocator *self, void *ptr, size_t oldsize, size_t newsize)
 {
+    if (!self) {
+        self = &il_default_alloc;
+    }
     void *new = self->alloc(self->user, newsize);
     memcpy(new, ptr, oldsize);
     self->free(self->user, ptr);
@@ -43,6 +49,9 @@ void *il_realloc(const il_allocator *self, void *ptr, size_t oldsize, size_t new
 
 void il_free(const il_allocator *self, void *ptr)
 {
+    if (!self) {
+        self = &il_default_alloc;
+    }
     self->free(self->user, ptr);
 }
 

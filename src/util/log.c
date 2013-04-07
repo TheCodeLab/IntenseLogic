@@ -1,6 +1,9 @@
 #include "log.h"
 
-#include <mowgli.h>
+//#include <mowgli.h>
+
+#include "util/alloc.h"
+#include "util/uthash.h"
 
 const char *il_log_prefixes[] = {
     "fatal: ",
@@ -10,37 +13,41 @@ const char *il_log_prefixes[] = {
     "debug: "
 };
 
-
-mowgli_patricia_t *dict = NULL;
+struct module {
+    char *name;
+    int level;
+    UT_hash_handle hh;
+} *modules = NULL;
 
 int il_can_log(const char *file, int level)
 {
-    if (!dict) {
+    if (!modules) {
         return level <= 3;
     }
     char *s = strdup(file);
     if (strchr(s, '/')) {
         *strchr(s, '/') = 0;
     }
-    int *mlevel = mowgli_patricia_retrieve(dict, s);
+    struct module* mod;
+    HASH_FIND_STR(modules, s, mod);
     free(s);
-    if (!mlevel) {
+    if (!mod) {
         return level <= 3;
     } else {
-        return level <= *mlevel;
+        return level <= mod->level;
     }
 }
 
 void il_log_toggle(const char *module, int level)
 {
-    if (!dict) {
-        dict = mowgli_patricia_create(NULL);
+    struct module *mod = il_alloc(NULL, sizeof(struct module));
+    mod->level = level;
+    mod->name = strdup(module);
+    struct module *old;
+    HASH_REPLACE_STR(modules, name, mod, old);
+    if (old) {
+        free(old->name);
+        il_free(NULL, old);
     }
-    int *data;
-    if ((data = mowgli_patricia_delete(dict, module)) == NULL) {
-        data = calloc(1, sizeof(int));
-    }
-    *data = level;
-    mowgli_patricia_add(dict, module, data);
 }
 
