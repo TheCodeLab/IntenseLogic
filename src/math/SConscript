@@ -16,10 +16,10 @@ sources = []
 for module in Split(inputs) :
     sources.extend(Glob(module))
 
-objects = ilmath.Object(source = sources)
+#objects = ilmath.Object(source = sources)
 
-libilmath = ilmath.StaticLibrary(target = build_dir + "/" + output, 
-                              source = objects)
+libilmath = ilmath.SharedLibrary(target = build_dir + "/" + output, 
+                                 source = sources) #objects)
 
 Return("libilmath")
 

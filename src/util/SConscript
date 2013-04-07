@@ -16,10 +16,8 @@ sources = []
 for module in Split(inputs) :
     sources.extend(Glob(module))
 
-objects = util.Object(source = sources)
-
-libilutil= util.StaticLibrary(target = build_dir + "/" + output, 
-                              source = objects)
+libilutil= util.SharedLibrary(target = build_dir + "/" + output, 
+                              source = sources)
 
 Return("libilutil")
 

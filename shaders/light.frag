@@ -39,8 +39,8 @@ void main()
     float daf = 1;//length(pos - position) / radius;
     vec3 norm = texture(normal, gl_FragCoord.xy).xyz;
 
-    out_Color = vec3(length(pos - position)/radius);
-    //out_Color = calc_diffuse(pos, norm, light_dir, daf); //+ calc_specular(pos, norm, light_dir, daf);
+    //out_Color = vec3(length(pos - position)/radius);
+    out_Color = calc_diffuse(pos, norm, light_dir, daf); //+ calc_specular(pos, norm, light_dir, daf);
 
     if (length(pos - position) < 1) {
         out_Color = vec3(1, 0, 0);
