@@ -26,10 +26,10 @@ if platform == "osx":
 lib_dirs = ["/usr/lib", "/usr/local/lib"]
 
 libs = {
-    "osx":   ["ilmath", "ilutil", "m", "png"],
-    "mingw": ["ilmath", "ilutil", "mingw32", "libevent", "ws2_32", "glfw", "glew32", "opengl32", "png", "z", "lua51", "mowgli-2"],
-    "arch":  ["ilmath", "ilutil", "m", "png"],
-    "linux": ["ilmath", "ilutil", "m", "png"]
+    "osx":   ["m", "png"],
+    "mingw": ["mingw32", "libevent", "ws2_32", "glfw", "glew32", "opengl32", "png", "z", "lua51", "mowgli-2"],
+    "arch":  ["m", "png"],
+    "linux": ["m", "png"]
 }
 
 pkg_libs = {
@@ -74,6 +74,8 @@ handle.close()
 
 # generate object files
 objects = env.Object(source = sources)
+
+env.Append(LINKFLAGS=["-lilutil", "-lilmath"])
 
 # link program
 prog = env.Program(target  = build_dir + "/" + output,
