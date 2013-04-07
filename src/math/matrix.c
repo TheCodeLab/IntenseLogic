@@ -166,14 +166,6 @@ il_mat il_mat_rotate(const il_quat q, il_mat m)
     return m;
 }
 
-/*static void dividecol(il_mat m, int c, float f)
-{
-    m[0  + c] /= f;
-    m[4  + c] /= f;
-    m[8  + c] /= f;
-    m[12 + c] /= f;
-}*/
-
 static void addrow(il_mat m, int src, int dst, float f)
 {
     m[dst*4 + 0] += m[src*4 + 0] * f;
@@ -198,73 +190,6 @@ static void mulrow(il_mat m, int col, float f)
     m[col*4 + 3] *= f;
 }
 
-static float* getcolumn(const il_mat m, int c, float *res)
-{
-    res[0] = m[0 + c];
-    res[1] = m[4 + c];
-    res[2] = m[8 + c];
-    res[3] = m[12 + c];
-    return res;
-}
-
-static il_mat eliminate(const il_mat a, il_mat a2, il_mat res)
-{
-    if (!res) {
-        res = il_mat_copy(a);
-    } else {
-        memcpy(res, a, sizeof(float)*16);
-    }
-    int i, j, k;
-
-    for (i = 0; i < 3; i++) {
-        int p = -1;
-        for (k = i; k < 4; k++) {
-            if (res[k*4+i] != 0.f) {
-                p = k;
-                break;
-            }
-        }
-        if (p == -1) {
-            return NULL;
-        }
-        if (p != i) {
-            swaprow(res, p, i);
-            if (a2) {
-                swaprow(a2, p, i);
-            }
-        }
-        for (j = i+1; j < 4; j++) {
-            float m = res[j*4+i] / res[i*5];
-            addrow(res, i, j, m);
-            if (a2) {
-                addrow(a2, i, j, m);
-            }
-        }
-    }
-    return res;
-}
-
-static float *substitute(const il_mat a, const float *b, float *x)
-{
-    int i, j;
-    // backwards substitution
-    if (a[15] == 0.f) {
-        return NULL; // not possible
-    }
-    // x_n = b[n] / a_nn
-    x[3] = b[3] / a[15];
-    // x_i = (a_i(n+1) - sum(j=i+1, n, a_ij x_j)) / a_ii; for each i = n-1 .. 1
-    for (i = 2; i >= 0; i--) {
-        float sum = 0.f;
-        for (j = i+1; j < 4; j++) {
-            sum += a[i*4+j] * x[j];
-        }
-        x[i] = b[i] - sum;
-    }
-
-    return x;
-}
-
 il_mat il_mat_invert(const il_mat a, il_mat res)
 {
     int allocated = 0;
@@ -281,20 +206,29 @@ il_mat il_mat_invert(const il_mat a, il_mat res)
     // for every column ..
     for (int col = 0; col < 4; ++col) {
         float diagonalfield = a2[col*4+col];
-        // make sure that we don't have a weird matrix with a zero on the diagonal
-        // TODO if this assert trips, time to do PROPER triangulization I guess
-        // possible approach: go hunting for a column where this field is nonzero and swap it for the current column
-        // but for now ..
-        assert(fabs(diagonalfield) >= 0.001);
+        // if we have a weird matrix with zero on the diagonal ..
+        float eps = 0.0001;
+        if (fabs(diagonalfield) < eps) {
+            // SIIIGH.
+            // Okay, let's go hunting for a row with a better diagonal to use
+            // keep in mind, row swapping is also a linear operation!
+            for (int row = 0; row < 4; ++row) if (row != col) if (fabs(a2[row*4+col]) >= eps) {
+                swaprow(a2, row, col);
+                swaprow(res,row, col);
+            }
+            diagonalfield = a2[col*4+col]; // recompute
+            // if it still fails, we probably have a denatured matrix and are proper fucked.
+            assert(fabs(diagonalfield) >= eps);
+        }
         // for every row ..
         for (int row = 0; row < 4; ++row) {
-        // if it's not on the diagonal ..
-        if (row != col) {
-            float field = a2[row*4+col];
-            // bring this field to 0 by subtracting the row that's on the diagonal for this column
-            addrow(a2, /* src */ col, /* dst */ row, /* factor */ -field/diagonalfield);
-            // do the same to identity
-            addrow(res,/* src */ col, /* dst */ row, /* factor */ -field/diagonalfield);
+            // if it's not on the diagonal ..
+            if (row != col) {
+                float field = a2[row*4+col];
+                // bring this field to 0 by subtracting the row that's on the diagonal for this column
+                addrow(a2, /* src */ col, /* dst */ row, /* factor */ -field/diagonalfield);
+                // do the same to identity
+                addrow(res,/* src */ col, /* dst */ row, /* factor */ -field/diagonalfield);
             }
         }
         // and finally, bring the diagonal to 1
@@ -302,32 +236,6 @@ il_mat il_mat_invert(const il_mat a, il_mat res)
         mulrow(res,col, 1/diagonalfield);
     }
     // Success! Because a2 is now id, res is now a2^-1. Math is fun!
-/*#ifdef IL_SSE
-
-#else
-    il_mat a2 = il_mat_copy(a);
-    il_mat id = il_mat_identity(NULL);
-    int n;
-    float col[4];
-    il_mat A = eliminate(a, id, NULL);
-    
-    for (n = 0; n < 4; n++) {
-        getcolumn(id, n, col);
-        float *x = substitute(A, col, calloc(4, sizeof(float)));
-        if (!x) {
-            if (allocated) {
-                il_mat_free(res);
-            }
-            res = NULL;
-            break;
-        }
-        res[0  + n] = x[0];
-        res[4  + n] = x[1];
-        res[8  + n] = x[2];
-        res[12 + n] = x[3];
-        //memcpy(res, x, sizeof(float) * 4);
-        free(x);
-    }*/
     /*il_mat id = il_mat_identity(NULL);
     int n;
     il_mat m = il_mat_mul(A, res, NULL);

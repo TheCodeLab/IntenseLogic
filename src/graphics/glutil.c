@@ -177,6 +177,7 @@ il_mat ilG_computeMVP(enum ilG_transform filter, const ilG_camera* camera, const
         il_mat_free(mat1);
     }
     if (filter & ILG_INVERSE) {
+        //printf("filter %i camera<%p> object<%p>\n", filter, camera, object);
         mvp = il_mat_invert(mvp, mvp);
     }
     
