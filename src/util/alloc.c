@@ -77,7 +77,7 @@ static void aligned_free(void* ptr)
 
 static void *alloc_aligned(void *user, size_t size)
 {
-    return aligned_alloc(size, *(int*)user);
+    return aligned_alloc(*(int*)user, size);
 }
 
 static void free_aligned(void *user, void *ptr)
@@ -88,6 +88,9 @@ static void free_aligned(void *user, void *ptr)
 
 il_allocator* il_allocator_aligned(const il_allocator *allocator, size_t alignment)
 {
+    if (!allocator) {
+        allocator = &il_default_alloc;
+    }
     int *user = allocator->alloc(allocator->user, sizeof(int));
     *user = alignment;
     return il_allocator_new(allocator, alloc_aligned, free_aligned, user);

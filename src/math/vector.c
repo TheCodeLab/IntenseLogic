@@ -13,24 +13,24 @@
 
 il_vec4 il_vec4_new()
 {
-    il_vec4 v = il_math_get_policy()->allocate(sizeof(float) * 4);
+    il_vec4 v = il_math_alloc(sizeof(float) * 4);
     return v;
 }
 
 il_vec2 il_vec2_new()
 {
-    il_vec2 v = il_math_get_policy()->allocate(sizeof(double) * 2);
+    il_vec2 v = il_math_alloc(sizeof(double) * 2);
     return v;
 }
 
 void il_vec4_free(il_vec4 vec)
 {
-    il_math_get_policy()->deallocate(vec);
+    il_math_free(vec);
 }
 
 void il_vec2_free(il_vec2 vec)
 {
-    il_math_get_policy()->deallocate(vec);
+    il_math_free(vec);
 }
 
 il_vec4 il_vec4_copy(il_vec4 vec)

@@ -12,13 +12,13 @@
 
 il_mat il_mat_new()
 {
-    il_mat m = il_math_get_policy()->allocate(sizeof(float) * 16);
+    il_mat m = il_math_alloc(sizeof(float) * 16);
     return m;
 }
 
 void il_mat_free(il_mat m)
 {
-    il_math_get_policy()->deallocate(m);
+    il_math_free(m);
 }
 
 il_mat il_mat_copy(il_mat m)
