@@ -224,3 +224,6 @@ build/
 gmon.out
 *.pyc
 *.dblite
+*.os
+*.patch
+.clang_complete
