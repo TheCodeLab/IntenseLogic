@@ -53,14 +53,14 @@ int inversionTest()
     int success = 1;
     il_mat ident = il_mat_identity(NULL);
     for (i = 0; i < 16; i++) {
-        float diff = mat[i] - ident[i];
-        final[i] = diff;
+        float diff = final[i] - ident[i];
+        ident[i] = diff;
         if (diff > 0.001 || diff < -0.001) {
             success = 0;
         }
     }
     printf("Matrix diff:\n");
-    print_matrix(final);
+    print_matrix(ident);
     return success;
 }
 

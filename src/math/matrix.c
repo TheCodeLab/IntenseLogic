@@ -189,22 +189,28 @@ static void swaprow(il_mat m, int src, int dst)
     memcpy(m + 4*src,   r,          sizeof(r));
 }
 
-il_mat il_mat_invert(const il_mat a, il_mat res)
+static float* getcolumn(const il_mat m, int c, float *res)
+{
+    res[0] = m[0 + c];
+    res[1] = m[4 + c];
+    res[2] = m[8 + c];
+    res[3] = m[12 + c];
+    return res;
+}
+
+static il_mat eliminate(const il_mat a, il_mat a2, il_mat res)
 {
     if (!res) {
-        res = il_mat_new();
+        res = il_mat_copy(a);
+    } else {
+        memcpy(res, a, sizeof(float)*16);
     }
-#ifdef IL_SSE
-
-#else
-    il_mat A = il_mat_copy(a);
-    //memcpy(res, a, sizeof(float)*16);
-    res = il_mat_identity(res);
     int i, j, k;
+
     for (i = 0; i < 3; i++) {
         int p = -1;
         for (k = i; k < 4; k++) {
-            if (A[k*4+i] != 0.f) {
+            if (res[k*4+i] != 0.f) {
                 p = k;
                 break;
             }
@@ -214,27 +220,76 @@ il_mat il_mat_invert(const il_mat a, il_mat res)
         }
         if (p != i) {
             swaprow(res, p, i);
-            swaprow(A,   p, i);
+            if (a2) {
+                swaprow(a2, p, i);
+            }
         }
         for (j = i+1; j < 4; j++) {
             float m = res[j*4+i] / res[i*5];
             addrow(res, i, j, m);
-            addrow(A,   i, j, m);
+            if (a2) {
+                addrow(a2, i, j, m);
+            }
         }
     }
-    if (res[15] == 0.f) {
-        return NULL; // can't do backwards substitution
+    return res;
+}
+
+static float *substitute(const il_mat a, const float *b, float *x)
+{
+    int i, j;
+    // backwards substitution
+    if (a[15] == 0.f) {
+        return NULL; // not possible
     }
-    float x[4];
     // x_n = b[n] / a_nn
+    x[3] = b[3] / a[15];
     // x_i = (a_i(n+1) - sum(j=i+1, n, a_ij x_j)) / a_ii; for each i = n-1 .. 1
-    /*for (i = 3; 0; i--) {
+    for (i = 2; i >= 0; i--) {
         float sum = 0.f;
-        for (j = i+1; 4; j++) {
+        for (j = i+1; j < 4; j++) {
             sum += a[i*4+j] * x[j];
         }
         x[i] = b[i] - sum;
-    }*/
+    }
+
+    return x;
+
+}
+
+il_mat il_mat_invert(const il_mat a, il_mat res)
+{
+    int allocated = 0;
+    if (!res) {
+        res = il_mat_new();
+        allocated = 1;
+    }
+#ifdef IL_SSE
+
+#else
+    il_mat id = il_mat_identity(NULL);
+    int n;
+    float col[4];
+    il_mat A = eliminate(a, id, NULL);
+    
+    for (n = 0; n < 4; n++) {
+        getcolumn(id, n, col);
+        float *x = substitute(A, col, calloc(4, sizeof(float)));
+        if (!x) {
+            if (allocated) {
+                il_mat_free(res);
+            }
+            res = NULL;
+            break;
+        }
+        res[0  + n] = x[0];
+        res[4  + n] = x[1];
+        res[8  + n] = x[2];
+        res[12 + n] = x[3];
+        //memcpy(res, x, sizeof(float) * 4);
+        free(x);
+    }
+    il_mat_free(id);
 #endif
     return res;
 }
