@@ -22,6 +22,7 @@ typedef struct ilN_state {
     int kbps, kb_used;
     int total_sent, total_received;
     struct timeval ttl, timeout, last_msg;
+    // TODO: array of types, array of objects; both pointing to as-of-yet-unwritten object code
 } ilN_state;
 
 #endif
