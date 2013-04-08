@@ -59,6 +59,8 @@ libilutil = SConscript("src/util/SConscript", platform=platform, env=env)
 Export("libilutil")
 libilmath = SConscript("src/math/SConscript", platform=platform, env=env)
 Export("libilmath")
+libilnetwork = SConscript("src/network/SConscript", platform=platform, env=env)
+Export("libilnetwork")
 SConscript("test/SConscript", platform=platform, env=env)
 
 # get sources
@@ -83,6 +85,7 @@ prog = env.Program(target  = build_dir + "/" + output,
                    LIBPATH = lib_dirs,
                    CPPPATH = src_dir)
 Depends(prog, libilmath)
+Depends(prog, libilnetwork)
 Depends(prog, libilutil)
 Default(prog)
 
