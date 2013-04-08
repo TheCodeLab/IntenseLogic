@@ -1,0 +1,25 @@
+import os
+
+output    = "libilnetwork"
+src_dir   = "#src/network"
+build_dir = "#build"
+inputs    = "*.c"
+
+Import("platform", "env", "libilutil")
+
+ilnet = env.Clone()
+
+ilnet.Append(CPPPATH = src_dir)
+
+sources = []
+for module in Split(inputs) :
+    sources.extend(Glob(module))
+
+#objects = ilmath.Object(source = sources)
+
+libilnetwork = ilnet.SharedLibrary(target = build_dir + "/" + output, 
+                                   source = sources) #objects)
+Depends(libilnetwork, libilutil)
+
+Return("libilnetwork")
+
