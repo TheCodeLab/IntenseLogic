@@ -1,7 +1,11 @@
 #version 140
 
 //uniform LightBlock {
+<<<<<<< HEAD
     uniform vec3 position;//[1024]; // world space
+=======
+    uniform vec3 position;//[1024]; // world
+>>>>>>> Some lighting work
     uniform vec3 color;//[1024];
     uniform float radius;//[1024];
 //};
@@ -10,7 +14,11 @@ uniform sampler2DRect depth; // screen space
 uniform sampler2DRect normal; // world space
 uniform sampler2DRect diffuse;
 uniform sampler2DRect specular;
+<<<<<<< HEAD
 uniform vec3 camera; // world space
+=======
+uniform vec3 camera; // world
+>>>>>>> Some lighting work
 uniform mat4 mvp;
 uniform mat4 ivp;
 

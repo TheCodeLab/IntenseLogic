@@ -68,6 +68,7 @@ c.camera = camera()
 c.camera.projection_matrix = matrix.perspective(75, 4/3, 2, 1000).ptr
 c.camera.positionable.position = vector3(0, -5, -25).ptr
 c.camera.sensitivity = .01
+<<<<<<< HEAD
 c.camera.movespeed = vector3(1,1,1).ptr
 local l = light()---5, -5, -5, 50, 0, 0, 1.0) -- x y z radius r g b
 l.positionable.position = vector3(-5, -5, -5).ptr
@@ -75,6 +76,13 @@ l.radius = 50
 l.color = vector3(0, 0, 1).ptr
 l:add(c.ptr)
 --[[local sig = positionable();
+=======
+c.camera.movespeed = vector3(1,1,1)
+local l = light(-5, -5, -5, 500, 0, 0, 1.0) -- x y z radius r g b
+print(l.positionable)
+l:add(c)
+local sig = positionable();
+>>>>>>> Some lighting work
 w:add(sig)
 sig.position = vector3(-5, -5, -5).ptr
 sig.drawable = drawable.box;
