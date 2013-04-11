@@ -7,6 +7,7 @@
 
 #include "util/array.h"
 #include "network/packet.h"
+#include "common/base.h"
 
 typedef struct ilN_state {
     unsigned char received[65536/8];
@@ -22,7 +23,8 @@ typedef struct ilN_state {
     int kbps, kb_used;
     int total_sent, total_received;
     struct timeval ttl, timeout, last_msg;
-    // TODO: array of types, array of objects; both pointing to as-of-yet-unwritten object code
+    IL_ARRAY(il_base*,) objects;
+    IL_ARRAY(il_type*,) types;
 } ilN_state;
 
 #endif
