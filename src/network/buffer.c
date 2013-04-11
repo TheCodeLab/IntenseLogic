@@ -58,6 +58,21 @@ void ilN_buf_align(ilN_buf* self)
     }
 }
 
+int ilN_buf_tell(ilN_buf *self)
+{
+    return self->byte*8 + self->bit;
+}
+
+int ilN_buf_seek(ilN_buf *self, unsigned int pos)
+{
+    self->byte = pos/8;
+    self->bit = pos%8;
+    if (self->byte >= self->buf.length) {
+       return 0;
+    }
+    return 1; 
+}
+
 // writes val to the current byte, up to bits, returning the number written
 static int write_bits(ilN_buf* self, int val, int bits) // assumes 8-bit bytes, horrible right
 {
@@ -103,9 +118,9 @@ void ilN_buf_writes(ilN_buf* self, const il_string *s)
     ilN_buf_in(self, s->data, s->length);
 }
 
-void ilN_buf_writec(ilN_buf* self, const char *s)
+void ilN_buf_writec(ilN_buf* self, const char *s, size_t len)
 {
-    ilN_buf_in(self, s, strlen(s));
+    ilN_buf_in(self, s, strnlen(s, len));
 }
 
 static int ilN_buf_check(ilN_buf *self, size_t bytes)
@@ -187,5 +202,4 @@ char* ilN_buf_readc(ilN_buf* self, size_t len)
     memcpy(buf, self->buf.data + self->byte, len);
     return buf;
 }
-
 
