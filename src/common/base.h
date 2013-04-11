@@ -48,6 +48,8 @@ void *il_metadata_get(void* obj, const char *key);
 void *il_metadata_set(void *obj, const char *key, void *data);
 size_t il_sizeof(void* obj);
 il_type *il_typeof(void *obj);
+il_base *il_new(il_type *type);
+const char *il_name(il_type *type);
 
 #endif
 
