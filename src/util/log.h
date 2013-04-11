@@ -4,7 +4,7 @@
 #include <string.h>
 #include <stdio.h>
 
-const char *il_log_prefixes[5];
+extern const char *il_log_prefixes[5];
 
 #define il_prettifyFile(name) \
   (strstr(name, "src/")?strstr(name, "src/")+4:name)
