@@ -9,7 +9,7 @@ Import("platform", "env", "libilutil")
 
 ilnet = env.Clone()
 
-ilnet.Append(CPPPATH = src_dir)
+ilnet.Append(CPPPATH = src_dir, LINKFLAGS="-lilutil")
 
 sources = []
 for module in Split(inputs) :

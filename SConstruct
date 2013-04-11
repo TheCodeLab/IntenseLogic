@@ -59,7 +59,7 @@ libilutil = SConscript("src/util/SConscript", platform=platform, env=env)
 Export("libilutil")
 libilmath = SConscript("src/math/SConscript", platform=platform, env=env)
 Export("libilmath")
-libilnetwork = SConscript("src/network/SConscript", platform=platform, env=env)
+libilnetwork = SConscript("src/network/SConscript", platform=platform, env=env, libilutil=libilutil)
 Export("libilnetwork")
 SConscript("test/SConscript", platform=platform, env=env)
 

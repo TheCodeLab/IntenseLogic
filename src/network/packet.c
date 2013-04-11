@@ -43,7 +43,7 @@ ilN_packet *ilN_packet_deserialize(const unsigned char *data, size_t size)
         p->object = ilN_buf_readu32(buf);
     }
     int pos = ilN_buf_tell(buf);
-    p->length = size - pos;
+    p->length = size - pos/8;
     p->data = (unsigned char*)ilN_buf_readc(buf, p->length);
     ilN_buf_free(buf);
     return p;

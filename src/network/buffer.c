@@ -29,7 +29,7 @@ void ilN_buf_in(ilN_buf* self, const void *data, size_t size)
         IL_RESIZE(self->buf);
     }
     memcpy(self->buf.data + self->byte, data, size);
-    self->byte += size;
+    //self->byte += size;
     self->buf.length += size;
 }
 
@@ -138,7 +138,7 @@ static int read_bits(ilN_buf *self, uint64_t *v, int off, int bits)
     byte >>= self->bit;
     byte &= (1<<bits)-1;
     byte <<= off;
-    *v &= byte;
+    *v |= byte;
     int n = 8-self->bit;
     self->bit += bits>n? n : bits;
     if (self->bit > 7) {
