@@ -22,6 +22,7 @@ typedef struct il_base il_base;
 typedef struct il_type il_type;
 
 typedef il_base *(*il_base_new_fn)(struct il_type*);
+typedef il_base *(*il_base_copy_fn)(struct il_base*);
 typedef void (*il_base_free_fn)(struct il_base*);
 
 struct il_type {
@@ -35,6 +36,7 @@ struct il_base {
     il_base_metadata *metadata;
     size_t size;
     il_base_free_fn destructor;
+    il_base_copy_fn copy;
     il_base *gc_next;
     IL_ARRAY(il_base**,) weak_refs;
     il_type *type;
