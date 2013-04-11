@@ -27,5 +27,15 @@ typedef struct ilN_state {
     IL_ARRAY(il_type*,) types;
 } ilN_state;
 
+#define ilN_getbit(a, b) ((a[b/8]&(b%8))>>(b%8)) /*get the byte which contains 
+                                                   b, & it so it only contains 
+                                                   that bit, then shift that 
+                                                   bit to the least significant
+                                                   side */
+#define ilN_setbit(a, b, v) (\
+        a[b/8] &= ~(1<<(b%8)),     /*clear bit b of any value*/\
+        a[b/8] |= ((v!=0)<<(b%8))) /*make sure v is either 1 or 0, other 
+                                     values would screw it up*/
+
 #endif
 
