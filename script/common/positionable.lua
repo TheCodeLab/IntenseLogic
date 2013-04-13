@@ -8,20 +8,20 @@ local vector3 = require "vector3";
 local quaternion = require "quaternion"
 
 require "scalar_defs"
-require "memory"
+require "base"
 
 ffi.cdef [[
 
 typedef struct il_positionable {
-  il_vec3 position;
-  il_quat rotation;
-  il_vec3 size;
-  il_vec3 velocity;
-  il_GC gc;
-  struct timeval last_update;
-  struct ilG_drawable3d* drawable;
-  struct ilG_material* material;
-  struct ilG_texture* texture;
+    il_base base;
+    il_vec3 position;
+    il_quat rotation;
+    il_vec3 size;
+    il_vec3 velocity;
+    struct timeval last_update;
+    struct ilG_drawable3d* drawable;
+    struct ilG_material* material;
+    struct ilG_texture* texture;
 } il_positionable;
 
 il_positionable * il_positionable_new();
