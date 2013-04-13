@@ -96,3 +96,16 @@ const char *il_name(il_type *type)
     return type->name;
 }
 
+const void *il_cast(il_type* T, const char *to)
+{
+    il_typeclass *tc;
+    HASH_FIND_STR(T->typeclasses, to, tc);
+    return tc;
+}
+
+void il_impl(il_type* T, const char *name, void *impl)
+{
+    il_typeclass *tc = impl;
+    HASH_ADD_STR(T->typeclasses, name, tc);
+}
+

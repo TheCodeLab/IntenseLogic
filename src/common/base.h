@@ -18,6 +18,12 @@ typedef struct il_base_metadata {
     UT_hash_handle hh;
 } il_base_metadata;
 
+#define il_typeclass_header const char *name; UT_hash_handle hh
+
+typedef struct il_typeclass {
+    il_typeclass_header;
+} il_typeclass;
+
 typedef struct il_base il_base;
 typedef struct il_type il_type;
 
@@ -26,6 +32,7 @@ typedef il_base *(*il_base_copy_fn)(struct il_base*);
 typedef void (*il_base_free_fn)(struct il_base*);
 
 struct il_type {
+    il_typeclass *typeclasses;
     il_base_metadata* metadata;
     il_base_new_fn create;
     const char *name;
@@ -52,6 +59,8 @@ size_t il_sizeof(void* obj);
 il_type *il_typeof(void *obj);
 il_base *il_new(il_type *type);
 const char *il_name(il_type *type);
+const void *il_cast(il_type* T, const char *to);
+void il_impl(il_type* T, const char *name, void *impl);
 
 #endif
 
