@@ -5,13 +5,15 @@
 
 #include "common/memory.h"
 #include "common/array.h"
+#include "common/base.h"
 
 struct il_positionable;
 struct ilG_context;
 
+extern il_type il_world_type;
+
 typedef struct il_world {
-    il_GC gc;
-    unsigned int id;
+    il_base base;
     IL_ARRAY(struct il_positionable*,) objects;
     struct ilG_context* context;
 } il_world;

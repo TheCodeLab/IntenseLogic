@@ -1,5 +1,7 @@
 local ffi = require "ffi";
 
+require "base"
+
 local context;
 
 ffi.cdef [[
@@ -7,10 +9,12 @@ ffi.cdef [[
 struct il_world* il_world_new();
 
 typedef struct il_world {
-    unsigned int id;
-    unsigned refs;
-    size_t nobjects;
-    struct il_positionable** objects;
+    il_base base;
+    struct {
+        struct il_positionable* data;
+        size_t length;
+        size_t capacity;
+    } objects;
     struct ilG_context* context;
 } il_world;
 
