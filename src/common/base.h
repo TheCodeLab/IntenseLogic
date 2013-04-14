@@ -18,6 +18,7 @@ enum il_metadatatype {
     IL_INT,
     IL_FLOAT,
     IL_METADATA,
+    IL_OBJECT,
 };
 
 typedef struct il_metadata {
@@ -62,7 +63,7 @@ struct il_base {
 void *il_ref(void *obj);
 void il_unref(void* obj);
 void *il_metadata_get(void *md, const char *key, size_t *size, enum il_metadatatype *tag);
-void il_metadata_set(void *md, const char *key, const void *data, size_t size, enum il_metadatatype tag);
+void il_metadata_set(void *md, const char *key, void *data, size_t size, enum il_metadatatype tag);
 size_t il_sizeof(void* obj);
 il_type *il_typeof(void *obj);
 il_base *il_new(il_type *type);
