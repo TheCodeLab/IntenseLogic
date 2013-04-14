@@ -27,15 +27,23 @@ void *il_metadata_get(void *md, const char *key, size_t *size, enum il_metadatat
         if (tag) {
             *tag = entry->tag;
         }
+        if (entry->tag == IL_OBJECT) {
+            return il_ref(entry->value);
+        }
         return entry->value;
     }
     return NULL;
 }
 
-void il_metadata_set(void *md, const char *key, const void *data, size_t size, enum il_metadatatype tag)
+void il_metadata_set(void *md, const char *key, void *data, size_t size, enum il_metadatatype tag)
 {
-    void *buf = malloc(size);
-    memcpy(buf, data, size);
+    void *buf;
+    if (tag == IL_OBJECT) {
+        buf = il_ref(data);
+    } else {
+        void *buf = malloc(size);
+        memcpy(buf, data, size);
+    }
     // HASH_REPLACE_STR (head,keyfield_name, item_ptr, replaced_item_ptr)
     il_metadata *entry;
     HASH_FIND_STR((il_metadata*)md, key, entry);
@@ -49,7 +57,20 @@ void il_metadata_set(void *md, const char *key, const void *data, size_t size, e
     entry->key = strdup(key);
     entry->value = buf;
     entry->tag = tag;
-    entry->size = size;
+    switch(tag) {
+        case IL_INT:
+            entry->size = sizeof(int);
+        case IL_FLOAT:
+            entry->size = sizeof(float);
+        case IL_METADATA:
+            entry->size = sizeof(il_metadata);
+        case IL_OBJECT:
+            entry->size = il_sizeof(buf);
+        case IL_VOID:
+        case IL_STRING:
+        default:
+            entry->size = size;
+    }
     il_metadata *obj = md;
     HASH_ADD_STR(obj, key, entry);
 }
