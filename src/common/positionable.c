@@ -18,7 +18,7 @@ static il_base *positionable_new(il_type *t)
 
 il_type il_positionable_type = {
     .typeclasses = NULL,
-    .metadata = NULL,
+    .storage = NULL,
     .create = positionable_new,
     .name = "il.positionable"
 };

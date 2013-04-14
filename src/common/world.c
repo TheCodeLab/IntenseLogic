@@ -21,7 +21,7 @@ static il_base *world_new(il_type* t)
 
 il_type il_world_type = {
     .typeclasses = NULL,
-    .metadata = NULL,
+    .storage = NULL,
     .create = world_new,
     .name = "il.world"
 };
