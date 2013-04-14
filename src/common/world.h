@@ -3,7 +3,6 @@
 
 #include <stdlib.h>
 
-#include "common/memory.h"
 #include "common/array.h"
 #include "common/base.h"
 

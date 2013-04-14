@@ -1,11 +1,8 @@
 #include "heightmap.h"
 
-#include "common/memory.h"
-
 struct il_heightmap {
     unsigned int width, height;
     float *data;
-    il_GC gc;
 };
 
 il_heightmap* il_heightmap_new()
