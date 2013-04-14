@@ -15,67 +15,50 @@ void il_unref(void* obj)
     }
 }
 
-void *il_metadata_get(void* obj, const char *key)
+void *il_metadata_get(void *md, const char *key, size_t *size, enum il_metadatatype *tag)
 {
     // HASH_FIND_STR (head, key_ptr, item_ptr)
-    il_base_metadata *entry;
-    HASH_FIND_STR(((il_base*)obj)->metadata, key, entry);
+    il_metadata *entry;
+    HASH_FIND_STR((il_metadata*)md, key, entry);
     if (entry) {
+        if (size) {
+            *size = entry->size;
+        }
+        if (tag) {
+            *tag = entry->tag;
+        }
         return entry->value;
     }
     return NULL;
 }
 
-void *il_metadata_set(void *obj, const char *key, void *data)
+void il_metadata_set(void *md, const char *key, const void *data, size_t size, enum il_metadatatype tag)
 {
+    void *buf = malloc(size);
+    memcpy(buf, data, size);
     // HASH_REPLACE_STR (head,keyfield_name, item_ptr, replaced_item_ptr)
-    il_base_metadata *entry;
-    HASH_FIND_STR(((il_base*)obj)->metadata, key, entry);
+    il_metadata *entry;
+    HASH_FIND_STR((il_metadata*)md, key, entry);
     if (entry) {
         void *old = entry->value;
-        entry->value = data;
-        return old;
+        entry->value = buf;
+        free(old);
+        return;
     }
-    entry = calloc(1, sizeof(il_base_metadata));
-    entry->key = key;
-    entry->value = data;
-    HASH_ADD_STR(((il_base*)obj)->metadata, key, entry);
-    return NULL;
-}
-
-void *il_type_metadata_get(void* obj, const char *key)
-{
-    // HASH_FIND_STR (head, key_ptr, item_ptr)
-    il_base_metadata *entry;
-    HASH_FIND_STR(((il_type*)obj)->metadata, key, entry);
-    if (entry) {
-        return entry->value;
-    }
-    return NULL;
-}
-
-void *il_type_metadata_set(void *obj, const char *key, void *data)
-{
-    // HASH_REPLACE_STR (head,keyfield_name, item_ptr, replaced_item_ptr)
-    il_base_metadata *entry;
-    HASH_FIND_STR(((il_type*)obj)->metadata, key, entry);
-    if (entry) {
-        void *old = entry->value;
-        entry->value = data;
-        return old;
-    }
-    entry = calloc(1, sizeof(il_base_metadata));
-    entry->key = key;
-    entry->value = data;
-    HASH_ADD_STR(((il_base*)obj)->metadata, key, entry);
-    return NULL;
+    entry = calloc(1, sizeof(il_metadata));
+    entry->key = strdup(key);
+    entry->value = buf;
+    entry->tag = tag;
+    entry->size = size;
+    il_metadata *obj = md;
+    HASH_ADD_STR(obj, key, entry);
 }
 
 size_t il_sizeof(void* obj)
 {
     size_t size = ((il_base*)obj)->size;
     if (size < sizeof(il_base)) {
-        il_warning("Size of il_base<%p> is abnormal: %zu", obj, size);
+        il_warning("Size of %s<%p> is abnormal: %zu", ((il_base*)obj)->type->name, obj, size);
         size = sizeof(il_base);
     }
     return size;
