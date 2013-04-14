@@ -12,11 +12,21 @@
 
 #define IL_BASE_TICK_LENGTH (50000) // 50 000 microseconds (1/20 of a second)
 
-typedef struct il_base_metadata {
-    const char *key;
+enum il_metadatatype {
+    IL_VOID,
+    IL_STRING,
+    IL_INT,
+    IL_FLOAT,
+    IL_METADATA,
+};
+
+typedef struct il_metadata {
+    char *key;
+    enum il_metadatatype tag;
+    size_t size;
     void *value;
     UT_hash_handle hh;
-} il_base_metadata;
+} il_metadata;
 
 #define il_typeclass_header const char *name; UT_hash_handle hh
 
@@ -33,14 +43,14 @@ typedef void (*il_base_free_fn)(struct il_base*);
 
 struct il_type {
     il_typeclass *typeclasses;
-    il_base_metadata* metadata;
+    il_metadata* metadata;
     il_base_new_fn create;
     const char *name;
 };
 
 struct il_base {
     int refs;
-    il_base_metadata *metadata;
+    il_metadata *metadata;
     size_t size;
     il_base_free_fn destructor;
     il_base_copy_fn copy;
@@ -51,10 +61,8 @@ struct il_base {
 
 void *il_ref(void *obj);
 void il_unref(void* obj);
-void *il_metadata_get(void* obj, const char *key);
-void *il_metadata_set(void *obj, const char *key, void *data);
-void *il_type_metadata_get(void* obj, const char *key);
-void *il_type_metadata_set(void *obj, const char *key, void *data);
+void *il_metadata_get(void *md, const char *key, size_t *size, enum il_metadatatype *tag);
+void il_metadata_set(void *md, const char *key, const void *data, size_t size, enum il_metadatatype tag);
 size_t il_sizeof(void* obj);
 il_type *il_typeof(void *obj);
 il_base *il_new(il_type *type);
