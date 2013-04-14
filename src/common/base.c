@@ -15,11 +15,11 @@ void il_unref(void* obj)
     }
 }
 
-void *il_metadata_get(void *md, const char *key, size_t *size, enum il_metadatatype *tag)
+void *il_storage_get(void *md, const char *key, size_t *size, enum il_storagetype *tag)
 {
     // HASH_FIND_STR (head, key_ptr, item_ptr)
-    il_metadata *entry;
-    HASH_FIND_STR((il_metadata*)md, key, entry);
+    il_storage *entry;
+    HASH_FIND_STR((il_storage*)md, key, entry);
     if (entry) {
         if (size) {
             *size = entry->size;
@@ -35,7 +35,7 @@ void *il_metadata_get(void *md, const char *key, size_t *size, enum il_metadatat
     return NULL;
 }
 
-void il_metadata_set(void *md, const char *key, void *data, size_t size, enum il_metadatatype tag)
+void il_storage_set(void *md, const char *key, void *data, size_t size, enum il_storagetype tag)
 {
     void *buf;
     if (tag == IL_OBJECT) {
@@ -45,15 +45,15 @@ void il_metadata_set(void *md, const char *key, void *data, size_t size, enum il
         memcpy(buf, data, size);
     }
     // HASH_REPLACE_STR (head,keyfield_name, item_ptr, replaced_item_ptr)
-    il_metadata *entry;
-    HASH_FIND_STR((il_metadata*)md, key, entry);
+    il_storage *entry;
+    HASH_FIND_STR((il_storage*)md, key, entry);
     if (entry) {
         void *old = entry->value;
         entry->value = buf;
         free(old);
         return;
     }
-    entry = calloc(1, sizeof(il_metadata));
+    entry = calloc(1, sizeof(il_storage));
     entry->key = strdup(key);
     entry->value = buf;
     entry->tag = tag;
@@ -63,7 +63,7 @@ void il_metadata_set(void *md, const char *key, void *data, size_t size, enum il
         case IL_FLOAT:
             entry->size = sizeof(float);
         case IL_METADATA:
-            entry->size = sizeof(il_metadata);
+            entry->size = sizeof(il_storage);
         case IL_OBJECT:
             entry->size = il_sizeof(buf);
         case IL_VOID:
@@ -71,7 +71,7 @@ void il_metadata_set(void *md, const char *key, void *data, size_t size, enum il
         default:
             entry->size = size;
     }
-    il_metadata *obj = md;
+    il_storage *obj = md;
     HASH_ADD_STR(obj, key, entry);
 }
 
