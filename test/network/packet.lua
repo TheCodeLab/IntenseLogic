@@ -5,8 +5,8 @@ local lib = ffi.load("build/libilnetwork.so", true)
 ffi.cdef [[
 
 struct timeval {
-    int tv_sec;
-    int tv_usec;
+    long tv_sec;
+    long tv_usec;
 };
 
 typedef struct ilN_packet {
@@ -15,6 +15,7 @@ typedef struct ilN_packet {
     uint16_t ack;
     uint8_t flags;
     uint8_t channel;
+    uint16_t event;
     uint32_t object;
     uint32_t type;
     uint16_t length;
@@ -34,8 +35,8 @@ function print_packet(p)
         s = s .. string.format(" <type:%u>", p.type)
     end
     s = s.." <data:"
-    for i=1, p.length do
-        s = s .. string.format("%x", p.data[i])
+    for i=0, p.length-1 do
+        --s = s .. string.format("%x", p.data[i])
     end
     s = s..">"
     print(s)

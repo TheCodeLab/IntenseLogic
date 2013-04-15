@@ -18,6 +18,7 @@ typedef struct ilN_packet {
     uint16_t ack;
     uint8_t flags;
     uint8_t channel;
+    uint16_t event;
     uint32_t object;
     uint32_t type;
     uint16_t length;
