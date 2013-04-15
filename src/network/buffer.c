@@ -132,15 +132,16 @@ static int ilN_buf_check(ilN_buf *self, size_t bytes)
     return 1;
 }
 
-static int read_bits(ilN_buf *self, uint64_t *v, int off, int bits)
+static int read_bits(ilN_buf *self, uint64_t *v, int bits)
 {
-    int byte = self->buf.data[self->byte];
-    byte >>= self->bit;
-    byte &= (1<<bits)-1;
-    byte <<= off;
-    *v |= byte;
     int n = 8-self->bit;
-    self->bit += bits>n? n : bits;
+    int s = bits>n? n : bits;
+    uint64_t byte = self->buf.data[self->byte];
+    byte >>= self->bit;
+    byte &= (1<<s)-1;
+    *v <<= s;
+    *v |= byte;
+    self->bit += s;
     if (self->bit > 7) {
         self->bit = 0;
         self->byte++;
@@ -161,7 +162,7 @@ uint64_t ilN_buf_readu(ilN_buf* self, int size)
     int bit = 0;
     uint64_t val = 0;
     while (bit < size) {
-        bit += read_bits(self, &val, bit, size-bit);
+        bit += read_bits(self, &val, size-bit);
     }
     return val;
 }
@@ -200,6 +201,7 @@ char* ilN_buf_readc(ilN_buf* self, size_t len)
     ilN_buf_align(self);
     char *buf = malloc(len + 1);
     memcpy(buf, self->buf.data + self->byte, len);
+    self->byte += len;
     return buf;
 }
 
