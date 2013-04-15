@@ -11,8 +11,6 @@ struct timeval {
 
 typedef struct ilN_packet {
     struct timeval arrival;
-    uint16_t seq;
-    uint16_t ack;
     uint8_t flags;
     uint8_t channel;
     uint16_t event;
@@ -28,7 +26,7 @@ ilN_packet *ilN_packet_deserialize(const unsigned char *data, size_t size);
 ]]
 
 function print_packet(p)
-    s = string.format("<seq:%u> <ack:%u> <flags:%x> <channel:%u>", p.seq, p.ack, p.flags, p.channel)
+    s = string.format("<flags:%x> <channel:%u>", p.seq, p.ack, p.flags, p.channel)
     if p.object > 0 then
         s = s .. string.format(" <object:%u>", p.object)
     elseif p.type > 0 then
