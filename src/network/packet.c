@@ -5,8 +5,6 @@
 unsigned char *ilN_packet_serialize(const ilN_packet* self, size_t *size)
 {
     ilN_buf *buf = ilN_buf_new();
-    ilN_buf_writeu16(buf, self->seq);
-    ilN_buf_writeu16(buf, self->ack);
     uint8_t flags = self->flags;
     if (self->object) {
         flags |= ILN_PACKET_OBJECT;
@@ -34,8 +32,6 @@ ilN_packet *ilN_packet_deserialize(const unsigned char *data, size_t size)
     ilN_packet *p = calloc(1, sizeof(ilN_packet));
     ilN_buf *buf = ilN_buf_new();
     ilN_buf_in(buf, data, size);
-    p->seq = ilN_buf_readu16(buf);
-    p->ack = ilN_buf_readu16(buf);
     p->flags = ilN_buf_readu8(buf);
     p->channel = ilN_buf_readu8(buf);
     p->event = ilN_buf_readu16(buf);

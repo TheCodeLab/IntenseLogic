@@ -14,8 +14,6 @@ enum ilN_packetflags {
 
 typedef struct ilN_packet {
     struct timeval arrival;
-    uint16_t seq;
-    uint16_t ack;
     uint8_t flags;
     uint8_t channel;
     uint16_t event;
