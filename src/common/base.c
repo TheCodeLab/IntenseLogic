@@ -10,9 +10,35 @@ void *il_ref(void *obj)
 
 void il_unref(void* obj)
 {
-    if (--((il_base*)obj)->refs < 1) {
+    il_base *base = obj;
+    if (--base->refs < 1) {
+        int i;
+        for (i = 0; i < base->weak_refs.length; i++) {
+            *base->weak_refs.data[i] = NULL; // clear all the weak references
+        }
         ((il_base*)obj)->destructor(obj);
     }
+}
+
+void il_weakref(void *obj, void **ptr)
+{
+    il_base *base = obj;
+    IL_APPEND(base->weak_refs, (il_base**)ptr);
+    *ptr = obj;
+}
+
+void il_weakunref(void *obj, void **ptr)
+{
+    il_base *base = obj;
+    int i;
+    for (i = 0; i < base->weak_refs.length; i++) {
+        if (base->weak_refs.data[i] == (il_base**)ptr) {
+            base->weak_refs.data[i] = base->weak_refs.data[base->weak_refs.length-1];
+            base->weak_refs.length--;
+            break;
+        }
+    }
+    *ptr = NULL;
 }
 
 void *il_storage_get(void *md, const char *key, size_t *size, enum il_storagetype *tag)

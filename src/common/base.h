@@ -62,6 +62,8 @@ struct il_base {
 
 void *il_ref(void *obj);
 void il_unref(void* obj);
+void il_weakref(void *obj, void **ptr);
+void il_weakunref(void *obj, void **ptr);
 void *il_storage_get(void *md, const char *key, size_t *size, enum il_storagetype *tag);
 void il_storage_set(void *md, const char *key, void *data, size_t size, enum il_storagetype tag);
 size_t il_sizeof(void* obj);
