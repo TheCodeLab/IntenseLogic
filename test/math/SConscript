@@ -13,9 +13,12 @@ sources = []
 for module in Split(inputs) :
     sources.extend(Glob(src_dir + "/" + module))
 
-objects = env.Object(source = sources)
+testenv = env.Clone()
+testenv.Append(LIBS=["-lilmath","-lilutil","-lm"])
 
-mathtest = env.Program(target = build_dir + "/" + output, 
+objects = testenv.Object(source = sources)
+
+mathtest = testenv.Program(target = build_dir + "/" + output, 
                        source = objects)
 Depends(mathtest, libilmath)
 

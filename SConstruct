@@ -1,5 +1,6 @@
 import os
 import support.docopt_c
+import string
 
 # defs
 output    = "il"
@@ -41,17 +42,11 @@ pkg_libs = {
 
 # link libs
 VariantDir(build_dir, src_dir, duplicate = 0)
-env = Environment(CCFLAGS = cflags, LINKFLAGS = linkflags)
+env = Environment(CCFLAGS = cflags, LINKFLAGS = string.split(linkflags, " "))
 if 'CC' in os.environ:
     env['CC'] = os.environ['CC']
 
 env.Append(CPPPATH = [src_dir])
-
-for lib in pkg_libs[platform] :
-    env.ParseConfig("pkg-config " + lib + " --cflags --libs")
-
-#for lib in libs[platform] :
-env.Append(LIBS = libs[platform])
 
 Export("platform")
 Export("env")
@@ -78,6 +73,9 @@ handle.close()
 objects = env.Object(source = sources)
 
 env.Append(LINKFLAGS=["-lilutil", "-lilmath", "-lilnetwork"])
+env.Append(LIBS = libs[platform])
+for lib in pkg_libs[platform] :
+    env.ParseConfig("pkg-config " + lib + " --cflags --libs")
 
 # link program
 prog = env.Program(target  = build_dir + "/" + output,
