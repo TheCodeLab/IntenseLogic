@@ -13,6 +13,7 @@ void ilN_buf_in(ilN_buf* self, const void *data, size_t size);
 unsigned char *ilN_buf_out(ilN_buf* self, size_t *size);
 void ilN_buf_clear(ilN_buf* self);
 void ilN_buf_align(ilN_buf* self);
+void ilN_buf_makeRoom(ilN_buf* self, int bytes);
 int ilN_buf_tell(ilN_buf *self);
 int ilN_buf_seek(ilN_buf *self, unsigned int pos);
 void ilN_buf_writei(ilN_buf* self, int64_t i, int size);
