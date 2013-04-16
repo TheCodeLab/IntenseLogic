@@ -63,7 +63,8 @@ elseif arg[1] == "-e" then
     p.event = tonumber(arg[4])
     p.object = tonumber(arg[5])
     p.type = tonumber(arg[6])
-    --p.data = arg[7]
+    p.data = ffi.cast("unsigned char*",arg[7])
+    p.length = #arg[7]
     local res = lib.ilN_packet_serialize(ffi.cast("ilN_packet*",p), ffi.cast("size_t*",n))
     local s = ""
     local i = 0
