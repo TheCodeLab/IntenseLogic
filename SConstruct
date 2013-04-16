@@ -77,7 +77,7 @@ handle.close()
 # generate object files
 objects = env.Object(source = sources)
 
-env.Append(LINKFLAGS=["-lilutil", "-lilmath"])
+env.Append(LINKFLAGS=["-lilutil", "-lilmath", "-lilnetwork"])
 
 # link program
 prog = env.Program(target  = build_dir + "/" + output,
