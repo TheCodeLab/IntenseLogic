@@ -21,7 +21,9 @@ unsigned char *ilN_packet_serialize(const ilN_packet* self, size_t *size)
     } else if (self->type) {
         ilN_buf_writeu32(buf, self->type);
     }
-    ilN_buf_writec(buf, (const char*)self->data, self->length);
+    if (self->data) {
+        ilN_buf_writec(buf, (const char*)self->data, self->length);
+    }
     unsigned char *data = ilN_buf_out(buf, size);
     ilN_buf_free(buf);
     return data;

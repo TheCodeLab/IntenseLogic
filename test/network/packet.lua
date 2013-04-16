@@ -55,6 +55,23 @@ elseif arg[1] == "-f" then
     local packet = lib.ilN_packet_deserialize(contents, #contents)
     print_packet(packet)
 elseif arg[1] == "-e" then
-    -- TODO: packet serializing
+    assert(#arg == 7, "Usage: "..arg[0].." flags channel event object type [data]")
+    local n = ffi.new("size_t[1]")
+    local p = ffi.new("ilN_packet")
+    p.flags = tonumber(arg[2])
+    p.channel = tonumber(arg[3])
+    p.event = tonumber(arg[4])
+    p.object = tonumber(arg[5])
+    p.type = tonumber(arg[6])
+    --p.data = arg[7]
+    local res = lib.ilN_packet_serialize(ffi.cast("ilN_packet*",p), ffi.cast("size_t*",n))
+    local s = ""
+    local i = 0
+    print("length: "..tostring(n[0]))
+    while i<n[0] do
+        s = s..string.format(" %x", res[i])
+        i = i+1
+    end
+    print(s)
 end
 

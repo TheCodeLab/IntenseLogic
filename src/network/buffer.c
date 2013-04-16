@@ -24,10 +24,7 @@ void ilN_buf_free(ilN_buf* self)
 void ilN_buf_in(ilN_buf* self, const void *data, size_t size)
 {
     ilN_buf_align(self);
-    size_t old = self->buf.capacity;
-    while (size + old > self->buf.capacity) {
-        IL_RESIZE(self->buf);
-    }
+    ilN_buf_makeRoom(self, size);
     memcpy(self->buf.data + self->byte, data, size);
     //self->byte += size;
     self->buf.length += size;
@@ -58,6 +55,14 @@ void ilN_buf_align(ilN_buf* self)
     }
 }
 
+void ilN_buf_makeRoom(ilN_buf* self, int bytes)
+{
+    while (self->byte + bytes + (self->bit>0) >= self->buf.capacity) {
+        IL_RESIZE(self->buf);
+    }
+    self->buf.length += bytes;
+}
+
 int ilN_buf_tell(ilN_buf *self)
 {
     return self->byte*8 + self->bit;
@@ -76,18 +81,18 @@ int ilN_buf_seek(ilN_buf *self, unsigned int pos)
 // writes val to the current byte, up to bits, returning the number written
 static int write_bits(ilN_buf* self, int val, int bits) // assumes 8-bit bytes, horrible right
 {
+    int n = 8-self->bit;
+    bits = bits>n? n : bits;
     unsigned char byte = val;
     byte &= (1<<bits)-1;
     byte <<= self->bit;
     self->buf.data[self->byte] |= byte;
-    int n = 8-self->bit;
     self->bit = self->bit + bits;
-    int bump = self->bit > 7;
-    if (bump) {
+    if (self->bit > 7) {
         self->byte++;
         self->bit = 0;
     }
-    return n;
+    return bits;
 }
 
 void ilN_buf_writei(ilN_buf* self, int64_t i, int size)
@@ -97,9 +102,10 @@ void ilN_buf_writei(ilN_buf* self, int64_t i, int size)
 
 void ilN_buf_writeu(ilN_buf* self, uint64_t i, int size)
 {
+    ilN_buf_makeRoom(self, size/8);
     int bit = 0;
     while (bit < size) {
-        bit += write_bits(self, i>>bit, 64-bit);
+        bit += write_bits(self, i>>(size-bit-8), size-bit);
     }
 }
 
@@ -116,17 +122,20 @@ void ilN_buf_writed(ilN_buf* self, double d)
 void ilN_buf_writes(ilN_buf* self, const il_string *s)
 {
     ilN_buf_in(self, s->data, s->length);
+    self->byte += s->length;
 }
 
 void ilN_buf_writec(ilN_buf* self, const char *s, size_t len)
 {
-    ilN_buf_in(self, s, strnlen(s, len));
+    size_t size = strnlen(s, len);
+    ilN_buf_in(self, s, size);
+    self->byte += size;
 }
 
 static int ilN_buf_check(ilN_buf *self, size_t bytes)
 {
     if (self->buf.length < bytes + self->byte) {
-        il_error("Not enough space in buffer<%p> for operation: %zu bytes needed, %zu available", self, bytes, self->buf.length - self->byte);
+        il_error("Not enough space in buffer<%p> for operation: %zu bytes needed, %zu available", (void*)self, bytes, self->buf.length - self->byte);
         return 0;
     }
     return 1;

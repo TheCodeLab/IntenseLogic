@@ -6,10 +6,8 @@
 #include <stdint.h>
 
 enum ilN_packetflags {
-    ILN_PACKET_SYNC      = 1,
-    ILN_PACKET_RESET     = 2,
-    ILN_PACKET_TYPE      = 4, // reserved by serializer, don't set it manually
-    ILN_PACKET_OBJECT    = 8, // reserved by serializer, don't set it manually
+    ILN_PACKET_TYPE      = 1, // reserved by serializer, don't set it manually
+    ILN_PACKET_OBJECT    = 2, // reserved by serializer, don't set it manually
 };
 
 typedef struct ilN_packet {
