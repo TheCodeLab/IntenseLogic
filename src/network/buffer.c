@@ -27,7 +27,7 @@ void ilN_buf_in(ilN_buf* self, const void *data, size_t size)
     ilN_buf_makeRoom(self, size);
     memcpy(self->buf.data + self->byte, data, size);
     //self->byte += size;
-    self->buf.length += size;
+    //self->buf.length += size;
 }
 
 unsigned char *ilN_buf_out(ilN_buf* self, size_t *size)
