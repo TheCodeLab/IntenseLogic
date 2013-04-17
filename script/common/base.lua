@@ -1,3 +1,7 @@
+---
+-- Provides the basis of the IL object system.
+-- @author tiffany
+
 local ffi = require "ffi"
 
 ffi.cdef [[
@@ -88,6 +92,25 @@ ffi.metatype("il_base", {
     end
 })
 
+--- Creates a new type.
+-- Has a bit of fun with syntax. Doesn't actually take 2 arguments, it returns a function which takes the second argument. Example: 
+--
+--    local my_type = base.type "my_type" {
+--        constructor = function(self, ...)
+--            print("construction!")
+--        end,
+--        destructor = function(self)
+--            print("destruction!")
+--        end,
+--        __index = function(t,k)
+--            print("__index!")
+--        end,
+--        struct = "some_ffi_structure"
+--    }
+--
+-- @tparam string name The name of the type
+-- @tparam tab cons The construction table of the type
+-- @treturn cdata The type object
 function base.type(name)
     return function(cons)
         per_class[name] = cons
@@ -110,11 +133,17 @@ function base.type(name)
     end
 end
 
+--- Returns the type object that corresponds to the given object
+-- @tparam base v The value to get the type of
+-- @treturn type The type object
 function base.typeof(v)
     assert(ffi.istype("il_base*", v) or ffi.istype("il_base", v))
     return ffi.C.il_typeof(v)
 end
 
+--- Creates a new instance of a type
+-- @tparam type T The type object
+-- @treturn base
 function base.create(T)
     assert(ffi.istype("il_type*", T) or ffi.istype("il_type", T))
     return ffi.C.il_new(T)

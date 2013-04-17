@@ -1,3 +1,6 @@
+---
+-- Provides functions for working with vec3 types
+-- @author tiffany
 local ffi = require "ffi"
 
 require "scalar_defs"
@@ -30,8 +33,12 @@ local vector4
 
 local vector3 = {}
 
+--- FFI ctype
 vector3.type = ffi.typeof "il_vec3"
 
+--- Returns whether the parameter is a vec3
+-- @tparam vec3 obj
+-- @treturn bool
 function vector3.check(obj)
     return type(obj) == "table" and obj.T == "vec3" and ffi.istype(vector3.type, obj.ptr)
 end
@@ -98,6 +105,7 @@ local function gc(obj)
     ffi.C.il_vec4_free(obj.ptr);
 end
 
+--- Wraps the vec3 with a metatable
 function vector3.wrap(ptr)
     local obj = {}
     obj.ptr = ptr;
@@ -106,16 +114,29 @@ function vector3.wrap(ptr)
     return obj;
 end
 
+--- Computes the dot product of two vec3s
+-- @tparam vec3 a
+-- @tparam vec3 b
+-- @treturn vec3
 function vector3.dot(a,b)
     assert(vector3.check(a) and vector3.check(b))
     return ffi.C.il_vec3_dot(a.ptr, b.ptr)
 end
 
+--- Computes the cross product of two vec3s
+-- @tparam vec3 a
+-- @tparam vec3 b
+-- @treturn vec3
 function vector3.cross(a,b)
     assert(vector3.check(a) and vector3.check(b))
     return vector3.wrap(ffi.C.il_vec3_cross(a.ptr, b.ptr))
 end
 
+--- Creates a new vec3
+-- @tparam ?number x
+-- @tparam ?number y
+-- @tparam ?number z
+-- @treturn vec3
 function vector3.create(x, y, z)
     if type(x) == "number" and not y then
         return vector3.wrap(ffi.C.il_vec4_set(nil, x, x, x, 1.0))
