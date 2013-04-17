@@ -13,7 +13,7 @@ typedef struct UT_hash_handle {
    unsigned hashv;                   /* result of hash-fcn(key)        */
 } UT_hash_handle;
 
-enum il_metadatatype {
+enum il_storagetype {
     IL_VOID,
     IL_STRING,
     IL_INT,
@@ -22,7 +22,7 @@ enum il_metadatatype {
     IL_OBJECT,
 };
 
-struct il_base_metadata;
+struct il_storage;
 
 typedef struct il_typeclass {
     const char *name; 
@@ -38,14 +38,14 @@ typedef void (*il_base_free_fn)(struct il_base*);
 
 struct il_type {
     il_typeclass *typeclasses;
-    struct il_base_metadata* metadata;
+    struct il_storage* storage;
     il_base_new_fn create;
     const char *name;
 };
 
 struct il_base {
     int refs;
-    struct il_base_metadata *metadata;
+    struct il_storage *storage;
     size_t size;
     il_base_free_fn destructor;
     il_base_copy_fn copy;
@@ -60,6 +60,8 @@ struct il_base {
 
 void *il_ref(void *obj);
 void il_unref(void* obj);
+void il_weakref(void *obj, void **ptr);
+void il_weakunref(void *obj, void **ptr);
 void *il_metadata_get(void *md, const char *key, size_t *size, enum il_metadatatype *tag);
 void il_metadata_set(void *md, const char *key, void *data, size_t size, enum il_metadatatype tag);
 size_t il_sizeof(void* obj);
@@ -70,4 +72,55 @@ const void *il_cast(il_type* T, const char *to);
 void il_impl(il_type* T, const char *name, void *impl);
 
 ]]
+
+local base = {}
+
+local per_class = {}
+
+ffi.metatype("il_base", {
+    __index = function(t,k)
+        local pc = per_class[t.type.name]
+        if pc and pc.__index then
+            local res = pc.__index(t,k)
+            if res then return res end
+        end
+        return base[k]
+    end
+})
+
+function base.type(name)
+    return function(cons)
+        per_class[name] = cons
+        local T = ffi.new("il_type")
+        T.name = name
+        T.create = function(...)
+            local v = ffi.new(cons.struct or "il_base")
+            ffi.cdata(v, ffi.C.il_unref)
+            v.destructor = function(v)
+                if cons.destructor then
+                    cons.destructor(v)
+                end
+            end
+            if cons.constructor then
+                cons.constructor(v, ...)
+            end
+            return v
+        end
+        return T
+    end
+end
+
+function base.typeof(v)
+    assert(ffi.istype("il_base*", v) or ffi.istype("il_base", v))
+    return ffi.C.il_typeof(v)
+end
+
+function base.create(T)
+    assert(ffi.istype("il_type*", T) or ffi.istype("il_type", T))
+    return ffi.C.il_new(T)
+end
+
+setmetatable(base, {__call=function(self,...) return base.create(...) end})
+
+return base
 
