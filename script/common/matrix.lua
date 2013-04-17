@@ -68,11 +68,13 @@ end
 
 --- Produces a translation using the provided vector
 -- The matrix provided is:
--- 1 0 0 x
--- 0 1 0 y
--- 0 0 1 z
--- 0 0 0 w
--- @tparam vec4 Translation vector
+--
+--     1 0 0 x
+--     0 1 0 y
+--     0 0 1 z
+--     0 0 0 w
+--
+-- @tparam vec4 v Translation vector
 -- @treturn matrix Translation matrix
 function matrix.translate(v)
     assert(vector4.check(v))
@@ -81,11 +83,13 @@ end
 
 --- Produces a scaling matrix using the provided vector
 -- The matrix provided is:
--- x 0 0 0
--- 0 y 0 0
--- 0 0 z 0
--- 0 0 0 w
--- @tparam vec4 Scaling vector
+--
+--     x 0 0 0
+--     0 y 0 0
+--     0 0 z 0
+--     0 0 0 w
+--
+-- @tparam vec4 v Scaling vector
 -- @treturn matrix Scaling matrix
 function matrix.scale(v)
     assert(vector4.check(v))
