@@ -33,6 +33,7 @@ static int height = 600;
 //static il_world* world;
 //static il_keymap * keymap;
 static ilG_context* context = NULL;
+ilE_registry *ilG_registry;
 
 void ilG_context_setActive(ilG_context* self)
 {
@@ -159,6 +160,7 @@ static void event_setup()
     ilE_register(il_registry, "shutdown", ILE_DONTCARE, ILE_MAIN, &quit, NULL);
     int hz = glfwGetWindowParam(GLFW_REFRESH_RATE);
     struct timeval tv;
+    tv.tv_sec = 0;
     tv.tv_usec = hz>0? 1000000.0/hz : 1000000.0/60;
     ilE_globaltimer(ilG_registry, "tick", 0, NULL, tv); // kick off the draw loop
 }

@@ -3,7 +3,7 @@
 
 #include "common/event.h"
 
-ilE_registry *ilG_registry;
+extern ilE_registry *ilG_registry;
 
 void ilG_init();
 
