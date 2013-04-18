@@ -16,7 +16,6 @@ typedef struct ilG_camera {
 
 ilG_camera* ilG_camera_new(struct il_positionable * parent);
 
-void ilG_camera_setEgoCamKeyHandlers(ilG_camera* camera, struct il_keymap * keymap);
 void ilG_camera_setMovespeed(ilG_camera* camera, il_vec3 movespeed, float radians_per_pixel);
 
 #endif

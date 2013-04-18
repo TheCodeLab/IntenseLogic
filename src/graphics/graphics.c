@@ -51,19 +51,21 @@ void ilG_texture_init();
 static void GLFWCALL key_cb(int key, int action)
 {
     il_debug("Key %c", key);
-    if (action == GLFW_PRESS)
-        ilE_pushnew(il_queue, IL_INPUT_KEYDOWN, sizeof(int), &key);
-    else
-        ilE_pushnew(il_queue, IL_INPUT_KEYUP, sizeof(int), &key);
+    if (action == GLFW_PRESS) {
+        ilE_globalevent(il_registry, "input.keydown", sizeof(int), &key);
+    } else {
+        ilE_globalevent(il_registry, "input.keyup", sizeof(int), &key);
+    }
 }
 
 static void GLFWCALL mouse_cb(int button, int action)
 {
     il_debug("Mouse %i", button);
-    if (action == GLFW_PRESS)
-        ilE_pushnew(il_queue, IL_INPUT_MOUSEDOWN, sizeof(int), &button);
-    else
-        ilE_pushnew(il_queue, IL_INPUT_MOUSEUP, sizeof(int), &button);
+    if (action == GLFW_PRESS) {
+        ilE_globalevent(il_registry, "input.mousedown", sizeof(int), &button);
+    } else {
+        ilE_globalevent(il_registry, "input.mouseup", sizeof(int), &button);
+    }
 }
 
 static void GLFWCALL mousemove_cb(int x, int y)
@@ -75,7 +77,7 @@ static void GLFWCALL mousemove_cb(int x, int y)
     };
     last_x = x;
     last_y = y;
-    ilE_pushnew(il_queue, IL_INPUT_MOUSEMOVE, sizeof(ilI_mouseMove), &mousemove);
+    ilE_globalevent(il_registry, "input.mosemove", sizeof(ilI_mouseMove), &mousemove);
 }
 
 static void GLFWCALL mousewheel_cb(int pos)
@@ -84,7 +86,7 @@ static void GLFWCALL mousewheel_cb(int pos)
     (ilI_mouseWheel) {
         0, pos
     };
-    ilE_pushnew(il_queue, IL_INPUT_MOUSEWHEEL, sizeof(ilI_mouseWheel), &mousewheel);
+    ilE_globalevent(il_registry, "input.mousewheel", sizeof(ilI_mouseWheel), &mousewheel);
 }
 
 static void context_setup()
@@ -152,13 +154,13 @@ static void context_setup()
 
 static void event_setup()
 {
-    //ilG_queue = ilE_queue_new();
-    ilE_register(il_queue, IL_GRAPHICS_TICK, ILE_DONTCARE, (ilE_callback)&global_draw, NULL);
-    ilE_register(il_queue, IL_BASE_SHUTDOWN, ILE_DONTCARE, (ilE_callback)&quit, NULL);
+    ilG_registry = ilE_registry_new();
+    ilE_register(ilG_registry, "tick", ILE_DONTCARE, ILE_MAIN, &global_draw, NULL);
+    ilE_register(il_registry, "shutdown", ILE_DONTCARE, ILE_MAIN, &quit, NULL);
     int hz = glfwGetWindowParam(GLFW_REFRESH_RATE);
-    struct timeval *tv = calloc(1, sizeof(struct timeval));
-    tv->tv_usec = hz>0? 1000000.0/hz : 1000000.0/60;
-    ilE_timer(il_queue, ilE_new(IL_GRAPHICS_TICK, 0, NULL), tv); // kick off the draw loop
+    struct timeval tv;
+    tv.tv_usec = hz>0? 1000000.0/hz : 1000000.0/60;
+    ilE_globaltimer(ilG_registry, "tick", 0, NULL, tv); // kick off the draw loop
 }
 
 void ilG_init()
@@ -365,7 +367,7 @@ static void draw()
 {
     if (!context) {
         il_fatal("Nothing to render.");
-        ilE_pushnew(il_queue, IL_BASE_SHUTDOWN, 0, NULL);
+        ilE_globalevent(il_registry, "shutdown", 0, NULL);
         return;
     }
     il_debug("Rendering frame");
@@ -418,10 +420,11 @@ static void fullscreenTexture()
     ilG_testError("Error drawing fullscreen quad");
 }
 
-static void global_draw()
+static void global_draw(const ilE_registry* registry, const char *name, size_t size, const void *data, void * ctx)
 {
+    (void)registry, (void)name, (void)size, (void)data, (void)ctx;
     if (!glfwGetWindowParam(GLFW_OPENED)) {
-        ilE_pushnew(il_queue, IL_BASE_SHUTDOWN, 0, NULL);
+        ilE_globalevent(il_registry, "shutdown", 0, NULL);
         return;
     }
     //il_log(3, "Drawing window");
@@ -515,8 +518,9 @@ static GLvoid error_cb(GLenum source, GLenum type, GLuint id, GLenum severity,
             sseverity, message);
 }
 
-static void quit()
+static void quit(const ilE_registry* registry, const char *name, size_t size, const void *data, void * ctx)
 {
+    (void)registry, (void)name, (void)size, (void)data, (void)ctx;
     glfwTerminate();
 }
 

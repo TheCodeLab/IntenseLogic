@@ -96,17 +96,16 @@ sig.texture = texture.default;
 sig:track(c)]]
 
 local first_mouse = true
-function mousemove(q, ev)
+function mousemove(reg, name, x, y)
     if first_mouse then first_mouse = false return end
     if input.isButtonSet(0) == 0 then return end -- TODO: Make this work
-    local x, y = ev:unpack()
     local yaw = quaternion(vector3(0, 1, 0), x * c.camera.sensitivity)
     local pitch = quaternion(vector3(1, 0, 0), y * c.camera.sensitivity)
     local rot = c.camera.positionable.rotation * yaw * pitch
     c.camera.positionable.rotation = rot
 end
 
-function tick(q, ev)
+function tick(reg, name)
     --print "tick"
     local x = input.isKeySet("D") - input.isKeySet("A")
     local z = input.isKeySet("W") - input.isKeySet("S")
@@ -122,6 +121,6 @@ function tick(q, ev)
     c.camera.positionable.rotation = c.camera.positionable.rotation * bank
 end
 
-event.register(event.mainqueue, 1, tick); -- tick
-event.register(event.mainqueue, 7, mousemove) -- mousemove
+event.register(event.registry, "tick", tick)
+event.register(event.registry, "input.mousemove", mousemove)
 

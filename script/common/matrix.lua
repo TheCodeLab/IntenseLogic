@@ -40,7 +40,7 @@ end
 --- Wraps a cdata with a metatable
 -- @param ptr Pointer to cdata
 -- @treturn tab Wrapper table
-local function matrix.wrap(ptr)
+function matrix.wrap(ptr)
     local obj = {}
     obj.ptr = ptr
     setmetatable(obj, {__index=matrix, __mul=mul, __unm=unm});

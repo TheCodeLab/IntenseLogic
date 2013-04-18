@@ -7,10 +7,9 @@
 #include <event2/event.h>
 #include <string.h>
 
-static void update(ilE_event * ev, void * ctx)
+static void update(const ilE_registry* registry, const char *name, size_t size, const void *data, void * ctx)
 {
-    (void)ev;
-    (void)ctx;
+    (void)registry, (void)name, (void)size, (void)data, (void)ctx;
     glfwPollEvents();
     il_debug("tick");
 }
@@ -73,9 +72,9 @@ int main(int argc, char **argv)
     // initialise engine
     il_init(args);
 
-    ilE_register(il_queue, IL_BASE_TICK, ILE_BEFORE, (ilE_callback)&update, NULL);
+    ilE_register(il_registry, "tick", ILE_BEFORE, ILE_ANY, &update, NULL);
     // finished initialising, send startup event
-    ilE_pushnew(il_queue, IL_BASE_STARTUP, 0, NULL);
+    ilE_globalevent(il_registry, "startup", 0, NULL);
 
     if (args.run) {
         ilS_loadfile(args.run);

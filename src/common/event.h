@@ -3,14 +3,12 @@
 
 #include <stdint.h>
 #include <stddef.h>
+#include <sys/time.h>
 
-#define ilE_pushnew(q, e, s, d) ilE_push(q, ilE_new(e,s,d))
+struct il_type;
+struct il_base;
 
-struct timeval;
-
-typedef struct ilE_queue ilE_queue;
-
-typedef struct ilE_event ilE_event;
+typedef struct ilE_registry ilE_registry;
 
 enum ilE_behaviour {
     ILE_DONTCARE,
@@ -19,23 +17,31 @@ enum ilE_behaviour {
     ILE_OVERRIDE
 };
 
-ilE_queue* il_queue;
+enum ilE_threading {
+    ILE_ANY,
+    ILE_MAIN,
+    ILE_TLS,
+};
 
-typedef void(*ilE_callback)(const ilE_queue*, const ilE_event*, void * ctx);
+typedef void(*ilE_callback)(const ilE_registry* registry, const char *name, size_t size, const void *data, void * ctx);
 
-ilE_queue* ilE_queue_new();
+ilE_registry* ilE_registry_new();
 
-ilE_event* ilE_new(uint16_t eventid, uint8_t size, void * data);
+void ilE_registry_forward(ilE_registry *from, ilE_registry *to);
 
-uint16_t ilE_getID(const ilE_event* event);
+void ilE_globalevent(   ilE_registry* registry, const char *name, size_t size, const void *data);
+void ilE_typeevent  (   struct il_type* type,   const char *name, size_t size, const void *data);
+void ilE_objectevent(   struct il_base* base,   const char *name, size_t size, const void *data);
 
-const void * ilE_getData(const ilE_event* event, size_t *size);
+void ilE_globaltimer(   ilE_registry* registry, const char *name, size_t size, const void *data, struct timeval tv);
+void ilE_typetimer  (   struct il_type* type,   const char *name, size_t size, const void *data, struct timeval tv);
+void ilE_objecttimer(   struct il_base* base,   const char *name, size_t size, const void *data, struct timeval tv);
 
-int ilE_push(ilE_queue* queue, ilE_event* event);
+int ilE_register(ilE_registry* registry, const char *name, enum ilE_behaviour behaviour, enum ilE_threading threads, ilE_callback callback, void * ctx);
 
-int ilE_timer(ilE_queue* queue, ilE_event* event, struct timeval * interval);
+void ilE_dumpHooks(ilE_registry *registry);
 
-int ilE_register(ilE_queue* queue, uint16_t eventid, enum ilE_behaviour behaviour, ilE_callback callback, void * ctx);
+extern ilE_registry* il_registry;
 
 #endif
 

@@ -5,10 +5,7 @@
 
 #include "util/array.h"
 #include "util/uthash.h"
-
-#define IL_BASE_STARTUP   (0)
-#define IL_BASE_TICK      (1)
-#define IL_BASE_SHUTDOWN  (2)
+#include "common/event.h"
 
 #define IL_BASE_TICK_LENGTH (50000) // 50 000 microseconds (1/20 of a second)
 
@@ -47,6 +44,7 @@ struct il_type {
     il_storage* storage;
     il_base_new_fn create;
     const char *name;
+    ilE_registry *registry;
 };
 
 struct il_base {
@@ -58,6 +56,7 @@ struct il_base {
     il_base *gc_next;
     IL_ARRAY(il_base**,) weak_refs;
     il_type *type;
+    ilE_registry *registry;
 };
 
 void *il_ref(void *obj);
