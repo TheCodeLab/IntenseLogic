@@ -6,6 +6,8 @@ local ffi = require "ffi"
 
 ffi.cdef [[
 
+struct ilE_registry;
+
 typedef struct UT_hash_handle {
    struct UT_hash_table *tbl;
    void *prev;                       /* prev element in app order      */
@@ -45,6 +47,7 @@ struct il_type {
     struct il_storage* storage;
     il_base_new_fn create;
     const char *name;
+    struct ilE_registry *registry;
 };
 
 struct il_base {
@@ -60,6 +63,7 @@ struct il_base {
         size_t capacity;
     } weak_refs;
     il_type *type;
+    struct ilE_registry *registry;
 };
 
 void *il_ref(void *obj);

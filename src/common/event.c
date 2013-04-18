@@ -9,13 +9,17 @@
 #include "common/base.h"
 #include "util/log.h"
 #include "common/array.h"
+#include "util/uthash.h"
+
+static struct event_base *ilE_base;
+ilE_registry *il_registry;
 
 enum flags {
     LIFETIME_INFINITE = 1
 };
 
 struct ilE_event {
-    uint16_t id;
+    char *name;
     uint8_t size;
     uint8_t flags;
     char data[];
@@ -24,188 +28,239 @@ struct ilE_event {
 struct callback {
     ilE_callback callback;
     enum ilE_behaviour behaviour;
+    enum ilE_threading threading;
     void * ctx;
 };
 
-struct callbackContainer {
-    uint16_t id;
+struct callbacks {
+    char *name;
     IL_ARRAY(struct callback, callback_array) arr;
+    UT_hash_handle hh;
 };
 
-struct ilE_queue {
-    struct event_base * base;
-    IL_ARRAY(struct callbackContainer, callbackContainer_array) callbacks;
+struct ilE_registry {
+    struct callbacks *callbacks;
+    ilE_registry *parent;
 };
 
 struct dispatch_ctx {
-    ilE_event* ev;
-    ilE_queue* queue;
+    struct ilE_event *ev;
+    ilE_registry *registry;
 };
 
 static void dispatch(evutil_socket_t fd, short events, void *ctx)
 {
     (void)fd;
     (void)events;
-    ilE_event* ev = ((struct dispatch_ctx*)ctx)->ev;
-    ilE_queue* queue = ((struct dispatch_ctx*)ctx)->queue;
+    struct ilE_event* ev = ((struct dispatch_ctx*)ctx)->ev;
+    ilE_registry* registry = ((struct dispatch_ctx*)ctx)->registry;
     unsigned i;
     // figure out which entry in our callbacks array array is for this event
-    struct callbackContainer* container = NULL;
+    struct callbacks* callbacks = NULL;
 
-    il_debug("Dispatch: %i", ev->id);
-    for (i = 0; i < queue->callbacks.length; i++) {
-        if (queue->callbacks.data[i].id == ev->id) {
-            container = &queue->callbacks.data[i];
-            break;
+    il_debug("Dispatch: %s", ev->name);
+    while (registry) {
+        HASH_FIND_STR(registry->callbacks, ev->name, callbacks);
+        if (!callbacks) { // no handlers
+            registry = registry->parent;
+            continue; //return;
         }
-    }
-
-    if (!container) { // no handlers
-        return;
-    }
-
-    for (i = 0; i < container->arr.length; i++) { // call the callbacks
-        // TODO: dispatch to worker threads
-        if (container->arr.data[i].callback) {
-            container->arr.data[i].callback(queue, ev, container->arr.data[i].ctx);
+        for (i = 0; i < callbacks->arr.length; i++) { // call the callbacks
+            // TODO: dispatch to worker threads
+            if (callbacks->arr.data[i].callback) {
+                callbacks->arr.data[i].callback(registry, ev->name, ev->size, &ev->data, callbacks->arr.data[i].ctx);
+            }
         }
+        registry = registry->parent;
     }
-
     if (!(ev->flags & LIFETIME_INFINITE)) {
-        free(ev); // one off event, don't leak
+        free(ev->name); // one off event, don't leak
+        free(ev);
+        free(ctx);
     }
 }
 
-ilE_queue* ilE_queue_new()
+ilE_registry* ilE_registry_new()
 {
-    ilE_queue* q = calloc(sizeof(ilE_queue), 1);
-    q->base = event_base_new();
+    ilE_registry* q = calloc(1, sizeof(ilE_registry));
     return q;
 }
 
-ilE_event* ilE_new(uint16_t eventid, uint8_t size, void * data)
+void ilE_registry_forward(ilE_registry *from, ilE_registry *to)
 {
-    ilE_event * ev = calloc(1, sizeof(ilE_event) + size);
-    ev->id = eventid;
-    ev->size = size;
-    if (data)
-        memcpy(&ev->data, data, size);
-    return ev;
+    from->parent = to;
 }
 
-uint16_t ilE_getID(const ilE_event* event)
+static int push(ilE_registry* registry, const char *name, size_t size, const void *data)
 {
-    return event->id;
-}
-
-const void * ilE_getData(const ilE_event* event, size_t *size)
-{
-    if (size) {
-        *size = event->size;
-    }
-    return &event->data;
-}
-
-int ilE_push(ilE_queue* queue, ilE_event* event)
-{
-    if (event == NULL) return -1;
+    struct ilE_event *event = calloc(1, sizeof(struct ilE_event));
     struct dispatch_ctx * ctx = calloc(sizeof(struct dispatch_ctx), 1);
+    event->name = strdup(name);
+    if (size > 255) {
+        return 0;
+    }
+    event->size = size;
+    memcpy(&event->data, data, size);
     ctx->ev = event;
-    ctx->queue = queue;
-    struct event * ev = event_new(queue->base, -1, 0, 
-        &dispatch, ctx);
+    ctx->registry = registry;
+    struct event * ev = event_new(ilE_base, -1, 0, &dispatch, ctx);
     int res = event_add(ev, NULL);
-    if (res != 0) return -1;
+    if (res != 0) return 0;
     event_active(ev, 0, 0);
-    return 0;
+    return 1;
 }
 
-int ilE_timer(ilE_queue* queue, ilE_event* event, struct timeval * interval)
+static int timer(ilE_registry* registry, const char *name, size_t size, const void *data, struct timeval interval)
 {
     int res;
     struct event * ev;
-
+    struct ilE_event *event = calloc(1, sizeof(struct ilE_event));
+    event->name = strdup(name);
+    if (size > 255) {
+        return 0;
+    }
+    event->size = size;
+    memcpy(&event->data, data, size);
+    event->flags = LIFETIME_INFINITE;
     struct dispatch_ctx * ctx = calloc(sizeof(struct dispatch_ctx), 1);
     ctx->ev = event;
-    ctx->queue = queue;
-
-    event->flags |= LIFETIME_INFINITE;
-    ev = event_new(queue->base, -1, EV_TIMEOUT|EV_PERSIST, &dispatch, ctx);
-    res = event_add(ev, interval);
-    if (res != 0) return -1;
+    ctx->registry = registry;
+    ev = event_new(ilE_base, -1, EV_TIMEOUT|EV_PERSIST, &dispatch, ctx);
+    struct timeval *tv = calloc(1, sizeof(struct timeval));
+    *tv = interval;
+    res = event_add(ev, tv);
+    if (res != 0) {
+        return 0;
+    }
     event_active(ev, 0, 0);
 
-    return 0;
+    return 1;
 }
 
-int ilE_register(ilE_queue* queue, uint16_t eventid, enum ilE_behaviour behaviour, ilE_callback callback, void * ctx)
+void ilE_globalevent(ilE_registry* registry, const char *name, size_t size, const void *data)
 {
-    unsigned i;
-    struct callbackContainer* container = NULL;
-    struct callback cb = {callback, behaviour, ctx};
-
-    for (i = 0; i < queue->callbacks.length; i++) {
-        if (queue->callbacks.data[i].id == eventid) {
-            container = &queue->callbacks.data[i];
-            break;
-        }
+    if (!registry || !name) {
+        return;
     }
+    push(registry, name, size, data);
+}
 
-    if (container == NULL) {
-        IL_INDEXORZERO(queue->callbacks, queue->callbacks.length, container);
-        container->id = eventid;
+void ilE_typeevent(il_type* type, const char *name, size_t size, const void *data)
+{
+    if (!type || !type->registry || !name) { 
+        return;
+    }
+    push(type->registry, name, size, data);
+}
+
+void ilE_objectevent(il_base* base, const char *name, size_t size, const void *data)
+{
+    if (!base || !base->registry || !name) {
+        return;
+    }
+    push(base->registry, name, size, data);
+}
+
+void ilE_globaltimer(ilE_registry* registry, const char *name, size_t size, const void *data, struct timeval tv)
+{
+    if (!registry || !name) {
+        return;
+    }
+    timer(registry, name, size, data, tv);
+}
+
+void ilE_typetimer(il_type* type, const char *name, size_t size, const void *data, struct timeval tv)
+{
+    if (!type || !type->registry || !name) {
+        return;
+    }
+    timer(type->registry, name, size, data, tv);
+}
+
+void ilE_objecttimer(il_base* base, const char *name, size_t size, const void *data, struct timeval tv)
+{
+    if (!base || !base->registry || !name) {
+        return;
+    }
+    timer(base->registry, name, size, data, tv);
+}
+
+
+int ilE_register(ilE_registry* registry, const char *name, enum ilE_behaviour behaviour, enum ilE_threading threads, ilE_callback callback, void * ctx)
+{
+    struct callbacks* callbacks = NULL;
+    struct callback cb = {callback, behaviour, threads, ctx};
+
+    HASH_FIND_STR(registry->callbacks, name, callbacks);
+
+    if (callbacks == NULL) {
+        callbacks = calloc(1, sizeof(struct callbacks));
+        callbacks->name = strdup(name);
+        HASH_ADD_STR(registry->callbacks, name, callbacks);
     }
 
     if (behaviour == ILE_OVERRIDE) {
-        container->arr.length = 0;
+        callbacks->arr.length = 0;
     }
 
     if (behaviour == ILE_BEFORE) {
-        if (container->arr.length < 1) {
-            IL_SET(container->arr, 0, cb); // FIRST!!11!!!!1
+        if (callbacks->arr.length < 1) {
+            IL_SET(callbacks->arr, 0, cb); // first
         } else {
-            if (container->arr.data[0].behaviour == ILE_DONTCARE) {
+            if (callbacks->arr.data[0].behaviour == ILE_DONTCARE) {
                 // move the first element to the last spot so we can get at it
-                IL_APPEND(container->arr, container->arr.data[0]);
+                IL_APPEND(callbacks->arr, callbacks->arr.data[0]);
             } else {
                 // we shift the entire list to the right
                 struct callback * unused;
-                IL_INDEXORZERO(container->arr, container->arr.length, unused);
-                memmove(&container->arr.data[1], &container->arr.data[0], sizeof(struct callback) * (container->arr.length-1));
-                IL_SET(container->arr, 0, cb);
+                IL_INDEXORZERO(callbacks->arr, callbacks->arr.length, unused);
+                memmove(&callbacks->arr.data[1], &callbacks->arr.data[0], sizeof(struct callback) * (callbacks->arr.length-1));
+                IL_SET(callbacks->arr, 0, cb);
             }
         }
     } else {
         // can be appended
-        IL_APPEND(container->arr, cb);
+        IL_APPEND(callbacks->arr, cb);
     }
 
     return 0;
 }
 
-void shutdown_callback(ilE_event* ev)
+void shutdown_callback(const ilE_registry* registry, const char *name, size_t size, const void *data, void * ctx)
 {
-    (void)ev;
+    (void)registry, (void)name, (void)size, (void)data, (void)ctx;
     il_log("Shutting down.");
-    event_base_loopbreak(il_queue->base);
+    event_base_loopbreak(ilE_base);
 }
 
 void ilE_init()
 {
-    il_queue = ilE_queue_new();
-
-    ilE_event * tick = ilE_new(IL_BASE_TICK, 0, NULL);
-    struct timeval * tv = calloc(1, sizeof(struct timeval));
-    *tv = (struct timeval) {
+    ilE_base = event_base_new();
+    il_registry = ilE_registry_new();
+    struct timeval tv = (struct timeval) {
         0, IL_BASE_TICK_LENGTH
     };
-    ilE_timer(il_queue, tick, tv);
-
-    ilE_register(il_queue, IL_BASE_SHUTDOWN, ILE_BEFORE, (ilE_callback)&shutdown_callback, NULL);
+    ilE_globaltimer(il_registry, "tick", 0, NULL, tv);
+    ilE_register(il_registry, "shutdown", ILE_BEFORE, ILE_ANY, &shutdown_callback, NULL);
 }
 
 void ilE_loop()
 {
-    event_base_loop(il_queue->base, 0);
+    event_base_loop(ilE_base, 0);
+}
+
+void ilE_dumpHooks(ilE_registry *registry)
+{
+    struct callbacks *callbacks;
+    int i;
+    fprintf(stderr, "Registry dump of registry %p:\n", registry);
+    for (callbacks = registry->callbacks; callbacks != NULL; callbacks = callbacks->hh.next) {
+        fprintf(stderr, "Callbacks for event %s:\n", callbacks->name);
+        for (i = 0; i < callbacks->arr.length; i++) {
+            struct callback *cb = &callbacks->arr.data[i];
+            fprintf(stderr, "\tfunc<%p> behaviour:%u threading:%u ctx<%p>\n", cb->callback, cb->behaviour, cb->threading, cb->ctx);
+        }
+    }
+    fprintf(stderr, "End of registry dump.\n");
 }
 

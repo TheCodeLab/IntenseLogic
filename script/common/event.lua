@@ -1,15 +1,16 @@
 local ffi = require "ffi"
 
+require "base"
+
 ffi.cdef [[
 
 //////////////////////////////////////////////////////////////////////////////
 // event.h
 
-struct timeval;
+struct il_type;
+struct il_base;
 
-typedef struct ilE_queue ilE_queue;
-
-typedef struct ilE_event ilE_event;
+typedef struct ilE_registry ilE_registry;
 
 enum ilE_behaviour {
     ILE_DONTCARE,
@@ -18,23 +19,31 @@ enum ilE_behaviour {
     ILE_OVERRIDE
 };
 
-ilE_queue* il_queue;
+enum ilE_threading {
+    ILE_ANY,
+    ILE_MAIN,
+    ILE_TLS,
+};
 
-typedef void(*ilE_callback)(const ilE_queue*, const ilE_event*, void * ctx);
+typedef void(*ilE_callback)(const ilE_registry* registry, const char *name, size_t size, const void *data, void * ctx);
 
-ilE_queue* ilE_queue_new();
+ilE_registry* ilE_registry_new();
 
-ilE_event* ilE_new(uint16_t eventid, uint8_t size, void * data);
+void ilE_registry_forward(ilE_registry *from, ilE_registry *to);
 
-uint16_t ilE_getID(const ilE_event* event);
+void ilE_globalevent(   ilE_registry* registry, const char *name, size_t size, const void *data);
+void ilE_typeevent  (   struct il_type* type,   const char *name, size_t size, const void *data);
+void ilE_objectevent(   struct il_base* base,   const char *name, size_t size, const void *data);
 
-void * ilE_getData(const ilE_event* event, size_t *size);
+void ilE_globaltimer(   ilE_registry* registry, const char *name, size_t size, const void *data, struct timeval tv);
+void ilE_typetimer  (   struct il_type* type,   const char *name, size_t size, const void *data, struct timeval tv);
+void ilE_objecttimer(   struct il_base* base,   const char *name, size_t size, const void *data, struct timeval tv);
 
-int ilE_push(ilE_queue* queue, ilE_event* event);
+int ilE_register(ilE_registry* registry, const char *name, enum ilE_behaviour behaviour, enum ilE_threading threads, ilE_callback callback, void * ctx);
 
-int ilE_timer(ilE_queue* queue, ilE_event* event, struct timeval * interval);
+void ilE_dumpHooks(ilE_registry *registry);
 
-int ilE_register(ilE_queue* queue, uint16_t eventid, enum ilE_behaviour behaviour, ilE_callback callback, void * ctx);
+extern ilE_registry* il_registry;
 
 //////////////////////////////////////////////////////////////////////////////
 // input.h
@@ -51,60 +60,61 @@ typedef struct ilI_mouseWheel {
 
 local event = {}
 
-event.type = ffi.typeof "ilE_event*";
-
-local function index(t, k)
-    if k == "id" then
-        return ffi.C.ilE_getID(t.ptr);
-    end
-    return event[k];
-end
-
-local function newindex(t, k, v)
-    error("Invalid key \""..tostring(k).."\" in event")
-end
-
-function event.wrap(ptr)
-    local obj = {}
-    obj.ptr = ptr;
-    setmetatable(obj, {__index = index, __newindex=newindex});
-    return obj;
-end
-
-function event.wrap_queue(ptr)
+function event.wrap_registry(ptr)
     local obj = {}
     obj.ptr = ptr;
     setmetatable(obj, {__index = event})
     return obj;
 end
-event.mainqueue = event.wrap_queue(ffi.C.il_queue);
+event.registry = event.wrap_registry(ffi.C.il_registry);
 
-function event.unpack(ev)
-    assert(type(ev) == "table" and ffi.istype(event.type, ev.ptr), "Expected event");
-    if getmetatable(ev).__unpack then
-        return getmetatable(ev).__unpack(ev);
+local unpackers = {}
+
+function event.setUnpacker(registry, name, fn)
+    unpackers[tostring(ffi.cast("void*", registry.ptr)) .. name] = fn
+end
+
+local function nilUnpacker()
+    return nil
+end
+event.setUnpacker(event.registry, "startup", nilUnpacker)
+event.setUnpacker(event.registry, "tick", nilUnpacker)
+event.setUnpacker(event.registry, "shutdown", nilUnpacker)
+
+local function intUnpacker(size, data)
+    return ffi.cast("int", data)
+end
+event.setUnpacker(event.registry, "input.keydown", intUnpacker)
+event.setUnpacker(event.registry, "input.keyup", intUnpacker)
+event.setUnpacker(event.registry, "input.mousedown", intUnpacker)
+event.setUnpacker(event.registry, "input.mouseup", intUnpacker)
+
+local function mousemoveUnpacker(size, data)
+    local s = ffi.cast("ilI_mouseMove*", data);
+    return s.x, s.y
+end
+event.setUnpacker(event.registry, "input.mousemove", mousemoveUnpacker)
+
+local function mousewheelUnpacker(size, data)
+    local s = ffi.cast("ilI_mouseWheel*", data);
+    return s.y, s.x;
+end
+event.setUnpacker(event.registry, "input.mousehweel", mousewheelUnpacker)
+
+function event.unpack(registry, name, size, data)
+    local key = tostring(ffi.cast("void*", registry)) .. name
+    if unpackers[key] then
+        return unpackers[key](size, data);
     end
-    if ev.id == 0 or ev.id == 1 or ev.id == 2 or ev.id == 9 then -- startup, tick, shutdown, graphics tick
-        return nil;
-    elseif ev.id >= 3 and ev.id <= 6 then -- keydown, keyup, mousedown, mouseup
-        return ffi.cast("int", ffi.C.ilE_getData(ev.ptr, nil));
-    elseif ev.id == 7 then -- mousemove
-        local s = ffi.cast("ilI_mouseMove*", ffi.C.ilE_getData(ev.ptr, nil));
-        return s.x, s.y
-    elseif ev.id == 8 then -- mousewheel
-        local s = ffi.cast("ilI_mouseWheel*", ffi.C.ilE_getData(ev.ptr, nil));
-        return s.y, s.x;
-    end
-    error "Unable to decompose event"
+    return size, data;
 end
 
 local callbacks = {}
 
-function lua_dispatch(queue, ev, ctx)
-    local id = ffi.C.ilE_getID(ev);
-    local key = tostring(ffi.cast("void*", queue));
-    for i = 1, #callbacks[key][id] do
-        local res, err = pcall(callbacks[key][id][i], queue, event.wrap(ev));
+function lua_dispatch(registry, name, size, data, ctx)
+    local key = tostring(ffi.cast("void*", registry));
+    for i = 1, #callbacks[key][name] do
+        local res, err = pcall(callbacks[key][name][i], registry, name, event.wrap(registry, name, size, data));
         -- TODO: get proper error propogation when we 'escape' protected calling by being a callback from C
         if not res then
             print(err)
@@ -113,22 +123,22 @@ function lua_dispatch(queue, ev, ctx)
     end
 end
 
-function event.register(queue, id, fn)
-    assert(type(queue) == "table" and ffi.istype("ilE_queue*", queue.ptr), "Expected queue");
-    assert(type(id) == "number", "Expected number");
+function event.register(registry, name, fn)
+    assert(type(registry) == "table" and ffi.istype("ilE_registry*", registry.ptr), "Expected registry");
+    assert(type(name) == "string", "Expected string");
     assert(type(fn) == "function", "Expected function");
 
-    local key = tostring(ffi.cast("void*", queue.ptr));
+    local key = tostring(ffi.cast("void*", registry.ptr));
 
     if not callbacks[key] then
         callbacks[key] = {}
     end
-    if not callbacks[key][id] then
-        callbacks[key][id] = {}
-        ffi.C.ilE_register(queue.ptr, id, ffi.C.ILE_DONTCARE, lua_dispatch, nil);
+    if not callbacks[key][name] then
+        callbacks[key][name] = {}
+        ffi.C.ilE_register(registry.ptr, name, ffi.C.ILE_DONTCARE, ffi.C.ILE_ANY, lua_dispatch, nil);
     end
 
-    callbacks[key][id][#callbacks[key][id] + 1] = fn;
+    callbacks[key][name][#callbacks[key][name] + 1] = fn;
 end
 
 return event;

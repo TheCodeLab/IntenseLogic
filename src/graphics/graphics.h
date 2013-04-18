@@ -3,9 +3,7 @@
 
 #include "common/event.h"
 
-#define IL_GRAPHICS_TICK    (9)
-
-//ilE_queue* ilG_queue;
+ilE_registry *ilG_registry;
 
 void ilG_init();
 
