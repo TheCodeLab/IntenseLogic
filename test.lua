@@ -106,7 +106,7 @@ function mousemove(reg, name, x, y)
 end
 
 function tick(reg, name)
-    print "tick"
+    --print "tick"
     local x = input.isKeySet("D") - input.isKeySet("A")
     local z = input.isKeySet("W") - input.isKeySet("S")
     local y = input.isKeySet("R") - input.isKeySet("F")

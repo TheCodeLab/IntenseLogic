@@ -114,7 +114,7 @@ local callbacks = {}
 function lua_dispatch(registry, name, size, data, ctx)
     local key = tostring(ffi.cast("void*", registry));
     name = ffi.string(name)
-    print(registry, name, size, data, ctx)
+    --print(registry, name, size, data, ctx)
     if not callbacks[key] or not callbacks[key][name] then return end
     for i = 1, #callbacks[key][name] do
         local res, err = pcall(callbacks[key][name][i], registry, name, event.unpack(registry, name, size, data));
