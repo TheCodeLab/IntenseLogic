@@ -60,7 +60,12 @@ static void dispatch(evutil_socket_t fd, short events, void *ctx)
 
     il_debug("Dispatch: %s", ev->name);
     while (registry) {
-        HASH_FIND_STR(registry->callbacks, ev->name, callbacks);
+        //HASH_FIND_STR(registry->callbacks, ev->name, callbacks);
+        for (callbacks = registry->callbacks; callbacks; callbacks = callbacks->hh.next) { // TODO: remove when UThash problem is fixed
+            if (strcmp(callbacks->name, ev->name) == 0) {
+                break;
+            }
+        }
         if (!callbacks) { // no handlers
             registry = registry->parent;
             continue; //return;
@@ -68,6 +73,7 @@ static void dispatch(evutil_socket_t fd, short events, void *ctx)
         for (i = 0; i < callbacks->arr.length; i++) { // call the callbacks
             // TODO: dispatch to worker threads
             if (callbacks->arr.data[i].callback) {
+                printf("func<%p> registry<%p> name<%s> size<%u> data<%p> ctx<%p>\n", callbacks->arr.data[i].callback, registry, ev->name, ev->size, &ev->data, callbacks->arr.data[i].ctx);
                 callbacks->arr.data[i].callback(registry, ev->name, ev->size, &ev->data, callbacks->arr.data[i].ctx);
             }
         }
@@ -125,9 +131,10 @@ static int timer(ilE_registry* registry, const char *name, size_t size, const vo
     struct dispatch_ctx * ctx = calloc(sizeof(struct dispatch_ctx), 1);
     ctx->ev = event;
     ctx->registry = registry;
-    ev = event_new(ilE_base, -1, EV_TIMEOUT|EV_PERSIST, &dispatch, ctx);
+    ev = event_new(ilE_base, -1, EV_PERSIST, &dispatch, ctx);
     struct timeval *tv = calloc(1, sizeof(struct timeval));
-    *tv = interval;
+    tv->tv_sec = interval.tv_sec;
+    tv->tv_usec = interval.tv_usec;
     res = event_add(ev, tv);
     if (res != 0) {
         return 0;
@@ -191,7 +198,12 @@ int ilE_register(ilE_registry* registry, const char *name, enum ilE_behaviour be
     struct callbacks* callbacks = NULL;
     struct callback cb = {callback, behaviour, threads, ctx};
 
-    HASH_FIND_STR(registry->callbacks, name, callbacks);
+    //HASH_FIND_STR(registry->callbacks, name, callbacks);
+    for (callbacks = registry->callbacks; callbacks; callbacks = callbacks->hh.next) { // TODO: remove when UThash problem is fixed
+        if (strcmp(callbacks->name, name) == 0) {
+            break;
+        }
+    }
 
     if (callbacks == NULL) {
         callbacks = calloc(1, sizeof(struct callbacks));
