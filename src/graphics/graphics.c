@@ -78,7 +78,7 @@ static void GLFWCALL mousemove_cb(int x, int y)
     };
     last_x = x;
     last_y = y;
-    ilE_globalevent(il_registry, "input.mosemove", sizeof(ilI_mouseMove), &mousemove);
+    ilE_globalevent(il_registry, "input.mousemove", sizeof(ilI_mouseMove), &mousemove);
 }
 
 static void GLFWCALL mousewheel_cb(int pos)

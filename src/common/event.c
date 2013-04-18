@@ -73,7 +73,7 @@ static void dispatch(evutil_socket_t fd, short events, void *ctx)
         for (i = 0; i < callbacks->arr.length; i++) { // call the callbacks
             // TODO: dispatch to worker threads
             if (callbacks->arr.data[i].callback) {
-                printf("func<%p> registry<%p> name<%s> size<%u> data<%p> ctx<%p>\n", callbacks->arr.data[i].callback, registry, ev->name, ev->size, &ev->data, callbacks->arr.data[i].ctx);
+                //printf("func<%p> registry<%p> name<%s> size<%u> data<%p> ctx<%p>\n", callbacks->arr.data[i].callback, registry, ev->name, ev->size, &ev->data, callbacks->arr.data[i].ctx);
                 callbacks->arr.data[i].callback(registry, ev->name, ev->size, &ev->data, callbacks->arr.data[i].ctx);
             }
         }
