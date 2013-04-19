@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "common/array.h"
+#include "util/array.h"
 #include "graphics/context.h"
 #include "common/positionable.h"
 

@@ -8,7 +8,7 @@
 
 #include "common/base.h"
 #include "util/log.h"
-#include "common/array.h"
+#include "util/array.h"
 #include "util/uthash.h"
 
 static struct event_base *ilE_base;

@@ -3,7 +3,7 @@
 
 #include <stdlib.h>
 
-#include "common/array.h"
+#include "util/array.h"
 #include "common/base.h"
 
 struct il_positionable;

@@ -12,7 +12,7 @@
 #include "graphics/drawable3d.h"
 #include "graphics/tracker.h"
 #include "graphics/fragdata.h"
-#include "common/array.h"
+#include "util/array.h"
 #include "asset/asset.h"
 
 struct textureunit {

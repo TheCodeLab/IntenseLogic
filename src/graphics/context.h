@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <GL/glew.h>
 
-#include "common/array.h"
+#include "util/array.h"
 #include "graphics/light.h"
 
 typedef struct ilG_context {
