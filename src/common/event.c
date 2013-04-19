@@ -60,12 +60,7 @@ static void dispatch(evutil_socket_t fd, short events, void *ctx)
 
     il_debug("Dispatch: %s", ev->name);
     while (registry) {
-        //HASH_FIND_STR(registry->callbacks, ev->name, callbacks);
-        for (callbacks = registry->callbacks; callbacks; callbacks = callbacks->hh.next) { // TODO: remove when UThash problem is fixed
-            if (strcmp(callbacks->name, ev->name) == 0) {
-                break;
-            }
-        }
+        HASH_FIND_STR(registry->callbacks, ev->name, callbacks);
         if (!callbacks) { // no handlers
             registry = registry->parent;
             continue; //return;
@@ -198,17 +193,12 @@ int ilE_register(ilE_registry* registry, const char *name, enum ilE_behaviour be
     struct callbacks* callbacks = NULL;
     struct callback cb = {callback, behaviour, threads, ctx};
 
-    //HASH_FIND_STR(registry->callbacks, name, callbacks);
-    for (callbacks = registry->callbacks; callbacks; callbacks = callbacks->hh.next) { // TODO: remove when UThash problem is fixed
-        if (strcmp(callbacks->name, name) == 0) {
-            break;
-        }
-    }
+    HASH_FIND_STR(registry->callbacks, name, callbacks);
 
     if (callbacks == NULL) {
         callbacks = calloc(1, sizeof(struct callbacks));
         callbacks->name = strdup(name);
-        HASH_ADD_STR(registry->callbacks, name, callbacks);
+        HASH_ADD_KEYPTR(hh, registry->callbacks, name, strlen(name), callbacks);
     }
 
     if (behaviour == ILE_OVERRIDE) {
