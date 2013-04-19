@@ -41,12 +41,16 @@ void il_weakunref(void *obj, void **ptr)
     *ptr = NULL;
 }
 
-void *il_storage_get(void *md, const char *key, size_t *size, enum il_storagetype *tag)
+void *il_storage_get(il_storage **md, const char *key, size_t *size, enum il_storagetype *tag)
 {
     // HASH_FIND_STR (head, key_ptr, item_ptr)
     il_storage *entry;
-    HASH_FIND_STR((il_storage*)md, key, entry);
+    HASH_FIND_STR(*md, key, entry);
     if (entry) {
+        /*printf("get: %p@%zu, tag %u, name %s\n", entry->value, entry->size, entry->tag, key);
+        if (entry->tag == IL_STRING) {
+            printf("contents: %s\n", entry->value);
+        }*/
         if (size) {
             *size = entry->size;
         }
@@ -61,47 +65,80 @@ void *il_storage_get(void *md, const char *key, size_t *size, enum il_storagetyp
     return NULL;
 }
 
-void il_storage_set(void *md, const char *key, void *data, size_t size, enum il_storagetype tag)
+void il_storage_set(il_storage **md, const char *key, void *data, size_t size, enum il_storagetype tag)
 {
+    switch(tag) {
+        case IL_INT:
+            size = sizeof(int);
+            break;
+        case IL_FLOAT:
+            size = sizeof(float);
+            break;
+        case IL_STORAGE:
+            size = sizeof(il_storage);
+            break;
+        case IL_OBJECT:
+            size = il_sizeof(data);
+            break;
+        case IL_STRING:
+            size = strnlen(data, size);
+            break;
+        case IL_VOID:
+        default:
+            break;
+    }
     void *buf;
     if (tag == IL_OBJECT) {
         buf = il_ref(data);
     } else {
-        void *buf = malloc(size);
+        buf = malloc(size);
         memcpy(buf, data, size);
     }
+    /*printf("set: %p@%zu tag %u key %s\n", buf, size, tag, key);
+    if (tag == IL_STRING) {
+        printf("contents: %s\n", buf);
+    }*/
     // HASH_REPLACE_STR (head,keyfield_name, item_ptr, replaced_item_ptr)
     il_storage *entry;
-    HASH_FIND_STR((il_storage*)md, key, entry);
+    HASH_FIND_STR(*md, key, entry);
     if (entry) {
         void *old = entry->value;
-        entry->value = buf;
-        free(old);
-        return;
+        if (entry->tag == IL_OBJECT) {
+            il_unref(entry->value);
+        } else {
+            free(old);
+        }
+    } else {
+        entry = calloc(1, sizeof(il_storage));
     }
-    entry = calloc(1, sizeof(il_storage));
     entry->key = strdup(key);
     entry->value = buf;
     entry->tag = tag;
-    switch(tag) {
-        case IL_INT:
-            entry->size = sizeof(int);
-        case IL_FLOAT:
-            entry->size = sizeof(float);
-        case IL_STORAGE:
-            entry->size = sizeof(il_storage);
-        case IL_OBJECT:
-            entry->size = il_sizeof(buf);
-        case IL_VOID:
-        case IL_STRING:
-        default:
-            entry->size = size;
-    }
-    il_storage *obj = md;
-    HASH_ADD_STR(obj, key, entry);
+    entry->size = size;
+    HASH_ADD_KEYPTR(hh, *md, key, strlen(key), entry);
 }
 
-size_t il_sizeof(void* obj)
+void *il_type_get(il_type* self, const char *key, size_t *size, enum il_storagetype *tag)
+{
+    return il_storage_get(&self->storage, key, size, tag);
+}
+
+void il_type_set(il_type* self, const char *key, void *data, size_t size, enum il_storagetype tag)
+{
+    il_storage_set(&self->storage, key, data, size, tag);
+}
+
+void *il_base_get(il_base* self, const char *key, size_t *size, enum il_storagetype *tag)
+{
+    return il_storage_get(&self->storage, key, size, tag);
+}
+
+void il_base_set(il_base* self, const char *key, void *data, size_t size, enum il_storagetype tag)
+{
+    il_storage_set(&self->storage, key, data, size, tag);
+}
+
+size_t il_sizeof(const void* obj)
 {
     size_t size = ((il_base*)obj)->size;
     if (size < sizeof(il_base)) {
