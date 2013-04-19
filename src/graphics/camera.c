@@ -4,12 +4,6 @@
 #include <GL/glew.h>
 #include <GL/glfw.h>
 
-#include "common/keymap.h"
-#include "common/event.h"
-#include "common/base.h"
-#include "common/input.h"
-#include "common/keymap.h"
-#include "util/log.h"
 #include "common/positionable.h"
 
 ilG_camera* ilG_camera_new(il_positionable * parent)
