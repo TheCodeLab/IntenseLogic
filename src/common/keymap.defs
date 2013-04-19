@@ -1,8 +1,0 @@
-// section##_##name in config struct
-// CFG(section, name, default)
-CFG(camera, forward, "W")
-CFG(camera, backward, "S")
-CFG(camera, left, "A")
-CFG(camera, right, "D")
-CFG(camera, up, "R")
-CFG(camera, down, "F")
