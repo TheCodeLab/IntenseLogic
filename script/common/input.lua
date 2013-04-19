@@ -7,15 +7,13 @@ int ilI_isButtonSet(int button);
 
 void ilI_grabMouse(int mode);
 
-int il_keymap_getkey(const char* key);
-
 ]]
 
 local input = {}
 
 function input.isKeySet(key)
     if type(key) == "string" then
-        key = ffi.C.il_keymap_getkey(key);
+        key = string.byte(key)--key = ffi.C.il_keymap_getkey(key);
     end
     return ffi.C.ilI_isKeySet(key)
 end
