@@ -1,5 +1,6 @@
 ---
 -- Provides the basis of the IL object system.
+-- See examples/item.lua and examples/itemTest.lua for usage examples.
 -- @author tiffany
 
 local ffi = require "ffi"

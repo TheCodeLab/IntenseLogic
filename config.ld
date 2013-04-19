@@ -1,0 +1,8 @@
+file        = 'script'
+project     = 'IntenseLogic'
+title       = 'IntenseLogic Lua API Reference'
+format      = 'markdown'
+dir         = 'doc'
+description = 'Reference documentation for the IntenseLogic Lua API.'
+readme      = 'README.md'
+examples    = 'examples'
