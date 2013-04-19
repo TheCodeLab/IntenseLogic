@@ -88,7 +88,7 @@ void il_storage_set(void *md, const char *key, void *data, size_t size, enum il_
             entry->size = sizeof(int);
         case IL_FLOAT:
             entry->size = sizeof(float);
-        case IL_METADATA:
+        case IL_STORAGE:
             entry->size = sizeof(il_storage);
         case IL_OBJECT:
             entry->size = il_sizeof(buf);
