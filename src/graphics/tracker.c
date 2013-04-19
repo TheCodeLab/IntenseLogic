@@ -8,7 +8,7 @@
 #include "graphics/drawable3d.h"
 #include "graphics/material.h"
 #include "graphics/texture.h"
-#include "common/array.h"
+#include "util/array.h"
 #include "util/log.h"
 #include "common/positionable.h"
 
