@@ -68,7 +68,6 @@ c.camera = camera()
 c.camera.projection_matrix = matrix.perspective(75, 4/3, 2, 1000).ptr
 c.camera.positionable.position = vector3(0, -5, -25).ptr
 c.camera.sensitivity = .01
-<<<<<<< HEAD
 c.camera.movespeed = vector3(1,1,1).ptr
 local l = light()---5, -5, -5, 50, 0, 0, 1.0) -- x y z radius r g b
 l.positionable.position = vector3(-5, -5, -5).ptr
@@ -76,19 +75,27 @@ l.radius = 50
 l.color = vector3(0, 0, 1).ptr
 l:add(c.ptr)
 --[[local sig = positionable();
-=======
-c.camera.movespeed = vector3(1,1,1)
-local l = light(-5, -5, -5, 500, 0, 0, 1.0) -- x y z radius r g b
-print(l.positionable)
-l:add(c)
-local sig = positionable();
->>>>>>> Some lighting work
 w:add(sig)
 sig.position = vector3(-5, -5, -5).ptr
 sig.drawable = drawable.box;
 sig.material = material.default;
 sig.texture = texture.default;
 sig:track(c.ptr)]]
+local plain = material()
+plain:vertex(io.open("shaders/plain.vert","r"):read "*a")
+plain:fragment(io.open("shaders/plain.frag", "r"):read "*a")
+plain:name "Plain material"
+plain:arrayAttrib("position", "in_Position")
+plain:matrix("MVP", "mvp")
+plain:link()
+local ico = positionable()
+w:add(ico)
+ico.position = vector3(-10, 0, 0)
+ico.drawable = drawable.icosahedron
+ico.material = plain --material.default;
+ico.texture = texture.default;
+ico:track(c)
+>>>>>>> Add a position-only shader and draw an icosahedron
 
 local first_mouse = true
 function mousemove(reg, name, x, y)
