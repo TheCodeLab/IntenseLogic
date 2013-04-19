@@ -5,6 +5,8 @@
 
 local ffi = require "ffi"
 
+local event
+
 ffi.cdef [[
 
 struct ilE_registry;
@@ -280,6 +282,27 @@ function base.set(v, name, val)
     else
         ffi.C.il_storage_set(v, name, ptr, size, t)
     end
+end
+
+--- Fires an event for the given base or type
+-- @see event.event
+function base.event(self, name, ...)
+    event = event or require "event"
+    event.event(self.registry, name, ...)
+end
+
+--- Sets a timer for the given base or type
+-- @see event.timer
+function base.timer(self, name, ...)
+    event = event or require "event"
+    event.timer(self.registry, name, ...)
+end
+
+--- Registers a hook for the given base or type
+-- @see event.register
+function base.register(self, name, fn)
+    event = event or require "event"
+    event.register(self.registry, name, fn)
 end
     
 setmetatable(base, {__call=function(self,...) return base.create(...) end})
