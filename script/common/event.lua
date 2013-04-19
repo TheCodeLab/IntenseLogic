@@ -1,3 +1,7 @@
+--- Event API
+-- Provides a mechanism for binding and firing events in the engine.
+-- @author tiffany
+
 local ffi = require "ffi"
 
 require "base"
@@ -60,18 +64,61 @@ typedef struct ilI_mouseWheel {
 
 local event = {}
 
-function event.wrap_registry(ptr)
-    local obj = {}
-    obj.ptr = ptr;
-    setmetatable(obj, {__index = event})
-    return obj;
+ffi.metatype("ilE_registry", {
+    __index = function(t,k) return event[k] end
+})
+
+event.registry = ffi.C.il_registry;
+
+local packers = {}
+
+--- Sets a function to convert its arguments into a void* and a size_t to pass to the engine
+-- @tparam registry registry The registry to hook this packer for
+-- @tparam string name The name of the event to pack
+-- @tparam func fn A function which takes arbitrary args and returns a cdata<void*> and a size_t
+function event.setPacker(registry, name, fn)
+    packers[tostring(ffi.cast("void*", registry))..name] = fn
 end
-event.registry = event.wrap_registry(ffi.C.il_registry);
+
+--- Fires off an event
+-- @tparam registry registry The registry (and all that registry's parents) to send the event to
+-- @tparam string name The event to fire
+-- @param ... Data to pass with the event
+function event.event(registry, name, ...)
+    local data, size = packers[tostring(ffi.cast("void*", registry))..name](...)
+    ffi.C.ilE_globalevent(registry, name, size, data);
+end
+
+--- Creates a new timer
+-- The timer will fire off an event, with the same data, each interval
+-- @tparam registry registry The registry to attach the timer to
+-- @tparam string name The name of the event the timer will fire
+-- @param interval Interval in seconds, as a {sec=number,usec=number}, or as a {sec,usec}
+-- @param ... Data to pass with the event
+function event.timer(registry, name, interval, ...)
+    local tv = ffi.new("struct timeval")
+    if type(interval) == "number" then -- floating point number in seconds
+        tv.tv_sec = math.floor(interval)
+        tv.tv_usec = interval - math.floor(interval)
+    elseif type(interval) == "table" then -- table of second/usecond
+        tv.tv_sec = interval[1] or interval.sec
+        tv.tv_usec = interval[2] or interval.usec
+    else
+        error "Unknown time format for timer"
+    end
+    local data, size = packers[tostring(ffi.cast("void*", registry))..name](...)
+    ffi.C.ilE_globalevent(registry, name, size, data, tv)
+end
 
 local unpackers = {}
 
+--- Registers an unpacker
+-- Converts from the engine's representation to the Lua representation
+-- @tparam registry registry The registry to register this unpacker for
+-- @tparam string name The name of the event to unpack
+-- @tparam func fn The function to call
 function event.setUnpacker(registry, name, fn)
-    unpackers[tostring(ffi.cast("void*", registry.ptr)) .. name] = fn
+    unpackers[tostring(ffi.cast("void*", registry)) .. name] = fn
 end
 
 local function nilUnpacker()
@@ -101,6 +148,12 @@ local function mousewheelUnpacker(size, data)
 end
 event.setUnpacker(event.registry, "input.mousehweel", mousewheelUnpacker)
 
+--- Unpacks an event from native format
+-- @tparam registry registry The registry the event came from
+-- @tparam string name The name of the event
+-- @tparam size_t size The size of the data
+-- @tparam cdata<void*> data The value associated with the event
+-- @return Returns the size and data if it was unsuccessful, otherwise returns a value based on the type of the event.
 function event.unpack(registry, name, size, data)
     local key = tostring(ffi.cast("void*", registry)) .. name
     if unpackers[key] then
@@ -126,19 +179,23 @@ function lua_dispatch(registry, name, size, data, ctx)
     end
 end
 
+--- Registers an event to be called when an event fires
+-- @tparam registry registry The registry to watch
+-- @tparam string name The name of the event to watch for
+-- @tparam func fn The function to call
 function event.register(registry, name, fn)
-    assert(type(registry) == "table" and ffi.istype("ilE_registry*", registry.ptr), "Expected registry");
+    assert(ffi.istype("ilE_registry", registry), "Expected registry");
     assert(type(name) == "string", "Expected string");
     assert(type(fn) == "function", "Expected function");
 
-    local key = tostring(ffi.cast("void*", registry.ptr));
+    local key = tostring(ffi.cast("void*", registry));
 
     if not callbacks[key] then
         callbacks[key] = {}
     end
     if not callbacks[key][name] then
         callbacks[key][name] = {}
-        ffi.C.ilE_register(registry.ptr, name, ffi.C.ILE_DONTCARE, ffi.C.ILE_ANY, lua_dispatch, nil);
+        ffi.C.ilE_register(registry, name, ffi.C.ILE_DONTCARE, ffi.C.ILE_ANY, lua_dispatch, nil);
     end
 
     callbacks[key][name][#callbacks[key][name] + 1] = fn;
