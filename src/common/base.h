@@ -14,7 +14,7 @@ enum il_storagetype {
     IL_STRING,
     IL_INT,
     IL_FLOAT,
-    IL_METADATA,
+    IL_STORAGE,
     IL_OBJECT,
 };
 

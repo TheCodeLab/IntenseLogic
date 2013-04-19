@@ -70,8 +70,8 @@ void *il_ref(void *obj);
 void il_unref(void* obj);
 void il_weakref(void *obj, void **ptr);
 void il_weakunref(void *obj, void **ptr);
-void *il_metadata_get(void *md, const char *key, size_t *size, enum il_metadatatype *tag);
-void il_metadata_set(void *md, const char *key, void *data, size_t size, enum il_metadatatype tag);
+void *il_storage_get(void *md, const char *key, size_t *size, enum il_storagetype *tag);
+void il_storage_set(void *md, const char *key, void *data, size_t size, enum il_storagetype tag);
 size_t il_sizeof(void* obj);
 il_type *il_typeof(void *obj);
 il_base *il_new(il_type *type);
@@ -85,15 +85,45 @@ local base = {}
 
 local per_class = {}
 
-ffi.metatype("il_base", {
-    __index = function(t,k)
-        local pc = per_class[t.type.name]
-        if pc and pc.__index then
-            local res = pc.__index(t,k)
+local function metafun(name, def)
+    return function(t, ...)
+        local tname = ffi.string(t.type.name)
+        local pc = per_class[tname]
+        if pc and pc[name] then
+            local res = pc[name](t, ...)
             if res then return res end
         end
-        return base[k]
+        if def then
+            return def(t, ...)
+        end
     end
+end
+
+local metatypes = {"__call", "__le", "__lt", "__eq", "__len", "__concat", "__unm", "__pow", "__mod", "__div", "__mul", "__sub", "__add"}
+local mt = {
+    __index = metafun("__index", function(t,k) return base.get(t.storage, k) or base[k] end),
+    __newindex = metafun("__newindex", function(t,k,v) base.set(t.storage, k, v) end)
+}
+for _, v in pairs(metatypes) do
+    mt[v] = metafun(v)
+end
+ffi.metatype("il_base", mt)
+
+ffi.metatype("il_type", {
+    __call = function(t)
+        return t.create(t)
+    end,
+    __index = function(t,k)
+        return t.storage:get(k) or base[k]
+    end,
+    __newindex = function(t,k,v)
+        t.storage:set(k,v)
+    end
+})
+
+ffi.metatype("struct il_storage", {
+    __index = function(t,k) return base.get(t,k) or base[k] end,
+    __newindex = base.set
 })
 
 --- Creates a new type.
@@ -109,7 +139,7 @@ ffi.metatype("il_base", {
 --        __index = function(t,k)
 --            print("__index!")
 --        end,
---        struct = "some_ffi_structure"
+--        struct = "some_ffi_structure" -- is either a name of a structure or a ctype of one
 --    }
 --
 -- @tparam string name The name of the type
@@ -120,16 +150,17 @@ function base.type(name)
         per_class[name] = cons
         local T = ffi.new("il_type")
         T.name = name
-        T.create = function(...)
+        T.create = function(_)
             local v = ffi.new(cons.struct or "il_base")
-            ffi.cdata(v, ffi.C.il_unref)
+            v.type = T
+            ffi.gc(v, ffi.C.il_unref)
             v.destructor = function(v)
                 if cons.destructor then
                     cons.destructor(v)
                 end
             end
             if cons.constructor then
-                cons.constructor(v, ...)
+                cons.constructor(v)
             end
             return v
         end
@@ -153,6 +184,67 @@ function base.create(T)
     return ffi.C.il_new(T)
 end
 
+--- Returns a value from a storage type
+-- @tparam storage v The storage object
+-- @tparam string name The key to retrieve
+-- @return Associated value, converted to a lua-compatible type
+function base.get(v, name)
+    assert(ffi.istype("struct il_storage", v), "Expected storage")
+    assert(type(name) == "string", "Expected string")
+    local tag = ffi.new("enum il_storagetype[1]");
+    local size = ffi.new("size_t[1]")
+    local data = ffi.C.il_storage_get(v, name, ffi.cast("size_t*", size), ffi.cast("enum il_storagetype*", tag))
+    tag = tag[0]
+    size = size[0]
+    if tag == "IL_STRING" then
+        return ffi.string(data, size)
+    elseif tag == "IL_INT" then
+        assert(size == ffi.sizeof("int"))
+        return tonumber(ffi.cast("int*", data)[0])
+    elseif tag == "IL_FLOAT" then
+        assert(size == ffi.sizeof("float"))
+        return ffi.cast("float*", data)[0]
+    elseif tag == "IL_STORAGE" then
+        assert(size == ffi.sizeof("il_storage"))
+        return ffi.cast("il_storage*", data)
+    elseif tag == "IL_OBJECT" then
+        assert(size >= ffi.sizeof("il_base"))
+        return ffi.cast("il_base*", data)
+    elseif tag == "IL_VOID" then
+        return data, size
+    else
+        error "Unknown tag in storage"
+    end
+end
+
+--- Sets a value in a key storage
+-- @tparam storage v The storage
+-- @tparam string name The key
+-- @param val The value to convert to a storage-compatible type
+function base.set(v, name, val)
+    assert(ffi.istype("struct il_storage", v), "Expected storage")
+    assert(type(name) == "string", "Expected string")
+    local t
+    if ffi.istype("struct il_storage", val) then
+        t = "IL_STORAGE"
+    elseif ffi.istype("il_base", val) then
+        t = "IL_OBJECT"
+    else
+        t = ({string="IL_STRING", number="IL_FLOAT"})[type(val)]
+    end
+    if not t then error("Unknown type") end
+    local size = ({IL_STRING=#val, IL_FLOAT=ffi.sizeof("float"), IL_STORAGE=ffi.sizeof("struct il_storage"), IL_OBJECT=val.size})[t]
+    local ptr
+    if t == "IL_STRING" then
+        ptr = ffi.cast("char*", val)
+    elseif t == "IL_FLOAT" then
+        ptr = ffi.new("float[1]", val)
+    elseif t == "IL_STORAGE" or t == "IL_OBJECT" then
+        ptr = val
+    end
+    ffi.C.il_storage_set(v, name, ptr, size, t)
+end
+    
 setmetatable(base, {__call=function(self,...) return base.create(...) end})
 
 return base
