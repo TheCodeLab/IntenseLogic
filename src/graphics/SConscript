@@ -3,7 +3,7 @@ import os
 output    = "libilgraphics"
 src_dir   = "#src/graphics"
 build_dir = "#build"
-inputs    = "*.c"
+inputs    = "*.c api/*.c"
 
 Import("platform")
 Import("env")
