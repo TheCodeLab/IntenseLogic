@@ -61,7 +61,7 @@ void ilG_vbo_beginVertex(ilG_vbo *self)
     while (self->vertices.length > self->vertices.capacity) {
         IL_RESIZE(self->vertices);
     }
-    self->current = self->vertices.data[self->vertices.length-1];
+    self->current = &self->vertices.data[self->vertices.length-1];
 }
 
 void ilG_vbo_position(ilG_vbo *self, il_vec3 position)
