@@ -1,4 +1,4 @@
-package.path = package.path..";script/?.lua;script/graphics/?.lua;script/common/?.lua"
+package.path = package.path..";script/?.lua;script/graphics/?.lua;script/common/?.lua;script/util/?.lua;script/math/?.lua"
 
 require "strict"
 
