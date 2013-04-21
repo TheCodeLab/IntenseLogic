@@ -76,7 +76,7 @@ handle.close()
 # generate object files
 objects = env.Object(source = sources)
 
-env.Append(LINKFLAGS=["-lilutil", "-lilmath", "-lilnetwork", "-lilcommon", "-lilgraphics"])
+env.Append(LINKFLAGS=["-lilcommon", "-lilutil"])
 env.Append(LIBS = libs[platform])
 for lib in pkg_libs[platform] :
     env.ParseConfig("pkg-config " + lib + " --cflags --libs")
@@ -86,10 +86,10 @@ prog = env.Program(target  = build_dir + "/" + output,
                    source  = objects,
                    LIBPATH = lib_dirs,
                    CPPPATH = src_dir)
-Depends(prog, libilmath)
-Depends(prog, libilnetwork)
+#Depends(prog, libilmath)
+#Depends(prog, libilnetwork)
 Depends(prog, libilutil)
 Depends(prog, libilcommon)
-Depends(prog, libilgraphics)
+#Depends(prog, libilgraphics)
 Default(prog)
 

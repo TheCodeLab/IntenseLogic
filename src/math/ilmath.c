@@ -20,7 +20,11 @@ void il_math_free(void *ptr)
     if (!il_math_allocator) {
         il_math_allocator = il_allocator_aligned(NULL, 16);
     }
-    return il_free(il_math_allocator, ptr);
+    il_free(il_math_allocator, ptr);
 }
 
+int il_bootstrap(int argc, char **argv)
+{
+    return 1;
+}
 

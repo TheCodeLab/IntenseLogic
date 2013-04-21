@@ -165,7 +165,7 @@ static void event_setup()
     ilE_globaltimer(ilG_registry, "tick", 0, NULL, tv); // kick off the draw loop
 }
 
-void ilG_init()
+int il_bootstrap(int argc, char **argv)
 {
     /*keymap = calloc(1, sizeof(il_keymap));
     il_keymap_defaults(keymap);
@@ -191,6 +191,8 @@ void ilG_init()
         
     // register events
     event_setup();
+
+    return 1;
 }
 
 static void draw_geometry()

@@ -16,7 +16,7 @@ int il_loadmod(const char *name, int argc, char **argv)
     il_bootstrap_fn func = (il_bootstrap_fn)dlsym(handle, "il_bootstrap");
     const char *error = dlerror();
     if (error) {
-        fprintf(stderr, "Failed to load symbol il_boostrap from %s: %s\n", name, error);
+        fprintf(stderr, "Failed to load symbol: %s\n", error);
         return 0;
     }
     int res = func(argc, argv);
