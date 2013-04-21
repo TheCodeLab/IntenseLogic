@@ -27,10 +27,10 @@ if platform == "osx":
 lib_dirs = ["/usr/lib", "/usr/local/lib"]
 
 libs = {
-    "osx":   ["m", "png"],
+    "osx":   ["m", "png", "dl"],
     "mingw": ["mingw32", "ws2_32", "glfw", "glew32", "opengl32", "png", "z", "lua51"],
-    "arch":  ["m", "png"],
-    "linux": ["m", "png"]
+    "arch":  ["m", "png", "dl"],
+    "linux": ["m", "png", "dl"]
 }
 
 pkg_libs = {
