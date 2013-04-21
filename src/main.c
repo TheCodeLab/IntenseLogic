@@ -1,20 +1,11 @@
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include "docopt.inc"
 #include "common/common.h"
-#include "util/log.h"
-#include <GL/glfw.h>
-#include <event2/event.h>
 #include <string.h>
-
-static void update(const ilE_registry* registry, const char *name, size_t size, const void *data, void * ctx)
-{
-    (void)registry, (void)name, (void)size, (void)data, (void)ctx;
-    glfwPollEvents();
-    il_debug("tick");
-}
-
-int running = 1;
+#include <dirent.h>
+#include "loader.h"
 
 void ilE_loop();
 
@@ -24,14 +15,15 @@ char *strtok_r(char *str, const char *delim, char **saveptr);
 
 int main(int argc, char **argv)
 {
-    DocoptArgs args = docopt(argc, argv, 1, "0.0pre-alpha");
+    fprintf(stderr, "MAIN: Initializing engine.\n");
 
-    il_log("Initialising engine.");
+    DocoptArgs args = docopt(argc, argv, 1, "0.0pre-alpha");
 
     // search path priority (lower to highest):
     // defaults, config files, environment variables, command line options
 
     // read environment variables
+    // TODO: Move this into asset's bootstrap
     char *path = getenv("IL_PATH");
     if (path) {
         char *saveptr = NULL;
@@ -49,7 +41,7 @@ int main(int argc, char **argv)
         ilA_registerReadDir(il_string_new("config",  -1), 4);
         ilA_registerReadDir(il_string_new("shaders", -1), 4);
     }
-    il_log("Asset paths loaded");
+    //il_log("Asset paths loaded");
 
     /*if (args.logfile){
         il_logfile = fopen(args.logfile, "a");
@@ -69,10 +61,21 @@ int main(int argc, char **argv)
     WSAStartup(0x101, &WSAData);
 #endif
 
-    // initialise engine
-    il_init(args);
+    // TODO: windows
+    DIR *dir = opendir("modules"); // TODO: more robust module loader
+    struct dirent entry, *result;
+    while (!readdir_r(dir, &entry, &result) && result) {
+        if (strcmp(result->d_name + strlen(result->d_name) - 3, ".so") != 0) {
+            // assume it's not a shared library
+            continue;
+        }
+        char buf[512];
+        snprintf(buf, 512, "modules/%s", result->d_name);
+        il_loadmod(buf, argc, argv);
+    }
+    closedir(dir);
 
-    ilE_register(il_registry, "tick", ILE_BEFORE, ILE_ANY, &update, NULL);
+    // TODO: move to common bootstrap
     // finished initialising, send startup event
     ilE_globalevent(il_registry, "startup", 0, NULL);
 
@@ -81,10 +84,8 @@ int main(int argc, char **argv)
     }
 
     // main loop
-    il_log("Starting main loop");
+    fprintf(stderr, "MAIN: Starting main loop\n");
     ilE_loop();
-
-    // shutdown code (only reached after receiving a IL_BASE_SHUTDOWN event)
 
     return 0;
 }
