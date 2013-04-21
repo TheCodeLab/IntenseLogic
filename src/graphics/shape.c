@@ -178,6 +178,7 @@ static struct ilG_shape box, cylinder, icosahedron, plane;
 
 void ilG_shape_init()
 {
+    printf("whee~\n");
     GLuint vao[4], vbo[4], ibo[4];
     int i;
     

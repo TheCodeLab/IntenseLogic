@@ -83,7 +83,18 @@ int main(int argc, char **argv)
     ilE_globalevent(il_registry, "startup", 0, NULL);
 
     if (args.run) {
-        ilS_loadfile(args.run);
+        ilS_script *s = ilS_new();
+        ilS_fromFile(s, "script/bootstrap.lua");
+        int res = ilS_run(s);
+        if (res != 0) {
+            fprintf(stderr, "%s\n", s->err);
+            return 1;
+        }
+        ilS_fromFile(s, args.run);
+        res = ilS_run(s);
+        if (res != 0) {
+            fprintf(stderr, "%s\n", s->err);
+        }
     }
 
     // main loop

@@ -19,10 +19,10 @@ local function wrap(ptr)
 end
 drawable.wrap = wrap;
 
-drawable.box = wrap(ffi.C.ilG_box);
-drawable.cylinder = wrap(ffi.C.ilG_cylinder);
-drawable.icosahedron = wrap(ffi.C.ilG_icosahedron);
-drawable.plane = wrap(ffi.C.ilG_plane);
+drawable.box = wrap(modules.graphics.ilG_box);
+drawable.cylinder = wrap(modules.graphics.ilG_cylinder);
+drawable.icosahedron = wrap(modules.graphics.ilG_icosahedron);
+drawable.plane = wrap(modules.graphics.ilG_plane);
 
 return drawable;
 

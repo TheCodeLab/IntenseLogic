@@ -5,6 +5,7 @@
 
 int il_loadmod(const char *name, int argc, char **argv)
 {
+    fprintf(stderr, "*** Loading module %s\n", name);
     // TODO: windows
     dlerror();
     void *handle = dlopen(name, RTLD_LAZY | RTLD_GLOBAL);
@@ -20,6 +21,6 @@ int il_loadmod(const char *name, int argc, char **argv)
         return 0;
     }
     int res = func(argc, argv);
-    dlclose(handle);
+    //dlclose(handle); // TODO: find a way of keeping the libraries loaded without leaking them
     return res;
 }
