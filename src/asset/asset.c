@@ -32,9 +32,33 @@ struct SearchPath {
 struct SearchPath *first;
 il_string *writedir;
 
-void ilA_init()
+int il_bootstrap(int argc, char **argv)
 {
+    // read environment variables
+    char *path = getenv("IL_PATH");
+    if (path) {
+        char *saveptr = NULL;
+        char *str = strdup(path);
+        char *token;
 
+        token = strtok_r(str, ":", &saveptr);
+        while(token) {
+            ilA_registerReadDir(il_string_new(token, strlen(token)), 3);
+            token = strtok_r(NULL, ":", &saveptr);
+        }
+    } else {
+        // reasonable defaults
+        ilA_registerReadDir(il_string_new(".",       -1), 4);
+        ilA_registerReadDir(il_string_new("config",  -1), 4);
+        ilA_registerReadDir(il_string_new("shaders", -1), 4);
+    }
+
+    // TODO: Parse command line flags
+    /*if (args.path){
+        ilA_registerReadDir(il_string_new(args.path, strlen(args.path)), 1);
+    }*/
+
+    return 1;
 }
 
 void ilA_setWriteDir(il_string *path)

@@ -227,3 +227,5 @@ gmon.out
 *.os
 *.patch
 .clang_complete
+modules
+
