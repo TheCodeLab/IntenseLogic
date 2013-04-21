@@ -7,7 +7,7 @@ output    = "il"
 src_dir   = "#src"
 build_dir = "build"
 cli_file  = "src/il.docopt"
-inputs    = "*.c graphics/*.c script/*.c asset/*.c"
+inputs    = "*.c script/*.c asset/*.c"
 platform  = ARGUMENTS.get("platform", "linux")
 
 # flags
@@ -56,6 +56,8 @@ libilmath = SConscript("src/math/SConscript", platform=platform, env=env)
 Export("libilmath")
 libilcommon = SConscript("src/common/SConscript", platform=platform, env=env, libilutil=libilutil, libilmath=libilmath)
 Export("libilcommon")
+libilgraphics = SConscript("src/graphics/SConscript", platform=platform, env=env, libilutil=libilutil, libilmath=libilmath, libilcommon=libilcommon)
+Export("libilgraphics")
 libilnetwork = SConscript("src/network/SConscript", platform=platform, env=env, libilutil=libilutil)
 Export("libilnetwork")
 SConscript("test/SConscript", platform=platform, env=env)
@@ -74,7 +76,7 @@ handle.close()
 # generate object files
 objects = env.Object(source = sources)
 
-env.Append(LINKFLAGS=["-lilutil", "-lilmath", "-lilnetwork", "-lilcommon"])
+env.Append(LINKFLAGS=["-lilutil", "-lilmath", "-lilnetwork", "-lilcommon", "-lilgraphics"])
 env.Append(LIBS = libs[platform])
 for lib in pkg_libs[platform] :
     env.ParseConfig("pkg-config " + lib + " --cflags --libs")
@@ -88,5 +90,6 @@ Depends(prog, libilmath)
 Depends(prog, libilnetwork)
 Depends(prog, libilutil)
 Depends(prog, libilcommon)
+Depends(prog, libilgraphics)
 Default(prog)
 
