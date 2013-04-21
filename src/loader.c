@@ -33,9 +33,13 @@ int il_loadmod(const char *name, int argc, char **argv)
     }
     int res = func(argc, argv);
     struct module *mod = calloc(1, sizeof(struct module));
-    mod->name = strdup(name);
+    mod->name = strdup(strrchr(name,'/')+1); // remove path component
+    char *p = strchr(mod->name, '.'); // remove extension
+    if (p) {
+        *p = 0;
+    }
     mod->handle = handle;
-    HASH_ADD_KEYPTR(hh, il_loaded, mod->name, strlen(name), mod);
+    HASH_ADD_KEYPTR(hh, il_loaded, mod->name, strlen(mod->name), mod);
     return res;
 }
 

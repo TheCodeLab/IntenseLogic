@@ -178,10 +178,7 @@ typedef struct {
     int version;
     /* options with arguments */
     char *run;
-    char *logfile;
     char *path;
-    char *threads;
-    char *verbose;
     /* special */
     char *usage_pattern;
     char *help_message;
@@ -191,35 +188,30 @@ char *help_message =
 "IntenseLogic - game engine\n"
 "\n"
 "Usage:\n"
-"    il [--run=SCRIPT] [--logfile=FILE] [--path=PATH]\n"
+"    il [--run=SCRIPT] [--path=PATH]\n"
 "    il -h | --help | --version\n"
 "\n"
 "Options:\n"
 "  -h, --help             Show this screen.\n"
 "  -r, --run SCRIPT       Runs script\n"
-"  -l, --logfile	FILE     Sets the file to print output to\n"
-"  -p, --path PATH        Adds an asset search path\n"
-"  -t, --threads NUM      Sets the number of worker threads\n"
-"  -v, --verbose	LEVEL    Sets the verbosity level [default: 4]\n"
+"  -p, --path PATH        Module path\n"
+"\n"
 "";
 
 char *usage_pattern =
 "Usage:\n"
-"    il [--run=SCRIPT] [--logfile=FILE] [--path=PATH]\n"
+"    il [--run=SCRIPT] [--path=PATH]\n"
 "    il -h | --help | --version";
 
 DocoptArgs docopt(int argc, char *argv[], bool help, char *version) {
     DocoptArgs args = {
-        0, 0, NULL, NULL, NULL, NULL, "4",
+        0, 0, NULL, NULL,
         usage_pattern, help_message
     };
     Element options[] = {
         {Option, {"-h", "--help", 0, 0, NULL}},
         {Option, {"-r", "--run", 1, 0, NULL}},
-        {Option, {"-l", "--logfile", 1, 0, NULL}},
         {Option, {"-p", "--path", 1, 0, NULL}},
-        {Option, {"-t", "--threads", 1, 0, NULL}},
-        {Option, {"-v", "--verbose", 1, 0, NULL}},
         {Option, {NULL, "--version", 0, 0, NULL}},
         {None}
     };
@@ -242,14 +234,8 @@ DocoptArgs docopt(int argc, char *argv[], bool help, char *version) {
             args.version = o->option.value;
         }  else if (o->option.argument && strcmp(o->option.olong, "--run") == 0) {
             args.run = o->option.argument;
-        } else if (o->option.argument && strcmp(o->option.olong, "--logfile") == 0) {
-            args.logfile = o->option.argument;
         } else if (o->option.argument && strcmp(o->option.olong, "--path") == 0) {
             args.path = o->option.argument;
-        } else if (o->option.argument && strcmp(o->option.olong, "--threads") == 0) {
-            args.threads = o->option.argument;
-        } else if (o->option.argument && strcmp(o->option.olong, "--verbose") == 0) {
-            args.verbose = o->option.argument;
         }
         o = &options[++i];
     }

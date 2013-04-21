@@ -1,13 +1,11 @@
 IntenseLogic - game engine
 
 Usage:
-    il [--run=SCRIPT] [--logfile=FILE] [--path=PATH]
+    il [--run=SCRIPT] [--path=PATH]
     il -h | --help | --version
 
 Options:
   -h, --help             Show this screen.
   -r, --run SCRIPT       Runs script
-  -l, --logfile	FILE     Sets the file to print output to
-  -p, --path PATH        Adds an asset search path
-  -t, --threads NUM      Sets the number of worker threads
-  -v, --verbose	LEVEL    Sets the verbosity level [default: 4]
+  -p, --path PATH        Module path
+

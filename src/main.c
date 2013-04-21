@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <dirent.h>
+#include <errno.h>
 
 #include "docopt.inc"
 #include "loader.h"
@@ -26,7 +27,15 @@ int main(int argc, char **argv)
 #endif
 
     // TODO: windows
-    DIR *dir = opendir("modules"); // TODO: more robust module loader
+    const char *modpath = "modules";
+    if (args.path) {
+        modpath = args.path;
+    }
+    DIR *dir = opendir(modpath); // TODO: more robust module loader
+    if (!dir) {
+        fprintf(stderr, "Failed to open modules directory: %s\n", strerror(errno));
+        return 1;
+    }
     struct dirent entry, *result;
     while (!readdir_r(dir, &entry, &result) && result) {
         if (strcmp(result->d_name + strlen(result->d_name) - 3, ".so") != 0) {
@@ -34,7 +43,7 @@ int main(int argc, char **argv)
             continue;
         }
         char buf[512];
-        snprintf(buf, 512, "modules/%s", result->d_name);
+        snprintf(buf, 512, "%s/%s", modpath, result->d_name);
         il_loadmod(buf, argc, argv);
     }
     closedir(dir);
@@ -57,7 +66,7 @@ int main(int argc, char **argv)
     // main loop
     fprintf(stderr, "MAIN: Starting main loop\n");
     void (*loop)();
-    loop = (void(*)())il_getsym("modules/libilcommon.so", "ilE_loop");
+    loop = (void(*)())il_getsym("libilcommon", "ilE_loop");
     loop();
 
     return 0;
