@@ -5,6 +5,4 @@
 
 extern ilE_registry *ilG_registry;
 
-void ilG_init();
-
 #endif

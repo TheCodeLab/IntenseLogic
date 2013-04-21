@@ -1,5 +1,3 @@
-package.path = package.path..";script/?.lua;script/graphics/?.lua;script/common/?.lua;script/util/?.lua;script/math/?.lua"
-
 require "strict"
 
 local script = require "script"
@@ -17,16 +15,6 @@ local event = require "event"
 local input = require "input"
 local quaternion = require "quaternion"
 local light = require "light"
-
-local oldprint=print
-function _G.print(...)
-    local t = {...}
-    local s = tostring(t[1])
-    for i = 2, #t do
-        s = s.."\t"..tostring(t[i])
-    end
-    oldprint(s)
-end
 
 local w = world();
 local c = context(800, 600);

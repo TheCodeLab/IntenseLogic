@@ -30,8 +30,6 @@
 
 static int width = 800;
 static int height = 600;
-//static il_world* world;
-//static il_keymap * keymap;
 static ilG_context* context = NULL;
 ilE_registry *ilG_registry;
 
@@ -167,9 +165,6 @@ static void event_setup()
 
 int il_bootstrap(int argc, char **argv)
 {
-    /*keymap = calloc(1, sizeof(il_keymap));
-    il_keymap_defaults(keymap);
-    il_keymap_parse("keymap.ini", keymap);*/
     // setup our shader directory
     ilA_registerReadDir(il_string_new("shaders", strlen("shaders")),0);
 

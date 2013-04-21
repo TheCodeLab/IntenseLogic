@@ -89,15 +89,16 @@ int ilS_fromSource(ilS_script* self, il_string *source)
         sprintf(chunkname, "@%s", self->filename);
     }
 
-    if (!self->L)
+    if (!self->L) {
         self->L = luaL_newstate();
-    luaL_openlibs(self->L);
+        luaL_openlibs(self->L);
 
-    lua_pushcfunction(self->L, &print);
-    lua_setglobal(self->L, "print");
+        lua_pushcfunction(self->L, &print);
+        lua_setglobal(self->L, "print");
 
-    lua_pushcfunction(self->L, &traceback);
-    self->ehandler = lua_gettop(self->L);
+        lua_pushcfunction(self->L, &traceback);
+        self->ehandler = lua_gettop(self->L);
+    }
 
 #if LUA_VERSION_NUM == 502
     int res = lua_load(self->L, &reader, &data, chunkname, NULL);
