@@ -1,0 +1,27 @@
+import os
+
+output    = "libilcommon"
+src_dir   = "#src/common"
+build_dir = "#build"
+inputs    = "*.c"
+
+Import("platform")
+Import("env")
+Import("libilutil")
+Import("libilmath")
+
+common = env.Clone()
+
+common.Append(CPPPATH = src_dir)
+
+sources = []
+for module in Split(inputs) :
+    sources.extend(Glob(module))
+
+libilcommon = common.SharedLibrary(target = build_dir + "/" + output, 
+                                   source = sources)
+Depends(libilcommon, libilutil)
+Depends(libilcommon, libilmath)
+
+Return("libilcommon")
+
