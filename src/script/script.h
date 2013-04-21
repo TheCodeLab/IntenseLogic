@@ -8,19 +8,17 @@
 #include <lualib.h>
 #include <lauxlib.h>
 
-#include "util/ilstring.h"
-#include "asset/asset.h"
-
-void ilS_init();
+//#include "util/ilstring.h"
 
 typedef struct ilS_script {
-  il_string *source;
-  const char * filename;
+  //char *source;
+  //size_t source_len;
+  char *filename;
   int running;
   lua_State * L;
   int ehandler;
   size_t errlen;
-  const char * err;
+  char * err;
 } ilS_script;
 
 #define ilS_loadfile(f) {   \
@@ -35,9 +33,10 @@ typedef struct ilS_script {
 }
 
 ilS_script * ilS_new();
-int ilS_fromAsset(ilS_script*, ilA_asset * asset);
-int ilS_fromSource(ilS_script*, il_string *source);
-int ilS_fromFile(ilS_script*, const char * filename);
-int ilS_run(ilS_script*);
+void ilS_free(ilS_script* self);
+//int ilS_fromAsset(ilS_script* self, ilA_asset * asset);
+int ilS_fromSource(ilS_script* self, const char *source, size_t len);
+int ilS_fromFile(ilS_script* self, const char * filename);
+int ilS_run(ilS_script* self);
 
 #endif

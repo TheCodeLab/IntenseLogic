@@ -7,7 +7,7 @@ output    = "il"
 src_dir   = "#src"
 build_dir = "build"
 cli_file  = "src/il.docopt"
-inputs    = "*.c script/*.c asset/*.c"
+inputs    = "*.c script/*.c"
 platform  = ARGUMENTS.get("platform", "linux")
 
 # flags
@@ -27,16 +27,16 @@ if platform == "osx":
 lib_dirs = ["/usr/lib", "/usr/local/lib"]
 
 libs = {
-    "osx":   ["m", "png", "dl"],
-    "mingw": ["mingw32", "ws2_32", "glfw", "glew32", "opengl32", "png", "z", "lua51"],
-    "arch":  ["m", "png", "dl"],
-    "linux": ["m", "png", "dl"]
+    "osx":   ["dl"],
+    "mingw": ["mingw32", "lua51"],
+    "arch":  ["dl"],
+    "linux": ["dl"]
 }
 
 pkg_libs = {
-    "osx":   ["libglfw", "glew", "luajit"],
-    "arch":  ["libglfw", "glew", "luajit", "gl"],
-    "linux": ["gl", "glfw", "glew", "luajit"],
+    "osx":   ["luajit"],
+    "arch":  ["luajit"],
+    "linux": ["luajit"],
     "mingw": []
 }
 
@@ -56,6 +56,7 @@ libilmath = SConscript("src/math/SConscript", platform=platform, env=env)
 Export("libilmath")
 libilcommon = SConscript("src/common/SConscript", platform=platform, env=env, libilutil=libilutil, libilmath=libilmath)
 Export("libilcommon")
+libilasset = SConscript("src/asset/SConscript", platform=platform, env=env, libilutil=libilutil, libilmath=libilmath, libilcommon=libilcommon)
 libilgraphics = SConscript("src/graphics/SConscript", platform=platform, env=env, libilutil=libilutil, libilmath=libilmath, libilcommon=libilcommon)
 Export("libilgraphics")
 libilnetwork = SConscript("src/network/SConscript", platform=platform, env=env, libilutil=libilutil)
@@ -76,7 +77,7 @@ handle.close()
 # generate object files
 objects = env.Object(source = sources)
 
-env.Append(LINKFLAGS=["-lilcommon", "-lilutil"])
+#env.Append(LINKFLAGS=["-lilutil"])
 env.Append(LIBS = libs[platform])
 for lib in pkg_libs[platform] :
     env.ParseConfig("pkg-config " + lib + " --cflags --libs")
