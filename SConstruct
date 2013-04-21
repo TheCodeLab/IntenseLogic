@@ -28,15 +28,15 @@ lib_dirs = ["/usr/lib", "/usr/local/lib"]
 
 libs = {
     "osx":   ["m", "png"],
-    "mingw": ["mingw32", "libevent", "ws2_32", "glfw", "glew32", "opengl32", "png", "z", "lua51"],
+    "mingw": ["mingw32", "ws2_32", "glfw", "glew32", "opengl32", "png", "z", "lua51"],
     "arch":  ["m", "png"],
     "linux": ["m", "png"]
 }
 
 pkg_libs = {
-    "osx":   ["libevent", "libglfw", "glew", "luajit"],
-    "arch":  ["libevent", "libglfw", "glew", "luajit", "gl"],
-    "linux": ["libevent", "gl", "glfw", "glew", "luajit"],
+    "osx":   ["libglfw", "glew", "luajit"],
+    "arch":  ["libglfw", "glew", "luajit", "gl"],
+    "linux": ["gl", "glfw", "glew", "luajit"],
     "mingw": []
 }
 
