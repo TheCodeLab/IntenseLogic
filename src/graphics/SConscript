@@ -1,0 +1,29 @@
+import os
+
+output    = "libilgraphics"
+src_dir   = "#src/graphics"
+build_dir = "#build"
+inputs    = "*.c"
+
+Import("platform")
+Import("env")
+Import("libilutil")
+Import("libilmath")
+Import("libilcommon")
+
+graphics = env.Clone()
+
+graphics.Append(CPPPATH = src_dir)
+
+sources = []
+for module in Split(inputs) :
+    sources.extend(Glob(module))
+
+libilgraphics = graphics.SharedLibrary(target = build_dir + "/" + output, 
+                                       source = sources)
+Depends(libilgraphics, libilutil)
+Depends(libilgraphics, libilmath)
+Depends(libilgraphics, libilcommon)
+
+Return("libilgraphics")
+
