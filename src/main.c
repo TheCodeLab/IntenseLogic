@@ -1,11 +1,14 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include "docopt.inc"
-#include "common/common.h"
 #include <string.h>
 #include <dirent.h>
+
+#include "docopt.inc"
 #include "loader.h"
+#include "asset/asset.h"
+#include "common/event.h"
+#include "script/script.h"
 
 void ilE_loop();
 

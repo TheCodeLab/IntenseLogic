@@ -3,13 +3,10 @@
 void ilE_init();
 void ilI_init();
 
-void il_init()
+int il_bootstrap(int argc, char **argv)
 {
     ilE_init();
     ilI_init();
-    ilG_init();
-    ilN_init();
-    /* ilP_init(); */
-    ilA_init();
+    return 1;
 }
 
