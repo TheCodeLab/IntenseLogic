@@ -40,14 +40,15 @@ int il_can_log(const char *file, int level)
 
 void il_log_toggle(const char *module, int level)
 {
-    struct module *mod = il_alloc(NULL, sizeof(struct module));
+    struct module *mod;
+    HASH_FIND_STR(modules, module, mod);
+    if (mod) {
+        free(mod->name);
+        il_free(NULL, mod);
+    }
+    mod = il_alloc(NULL, sizeof(struct module));
     mod->level = level;
     mod->name = strdup(module);
-    struct module *old;
-    HASH_REPLACE_STR(modules, name, mod, old);
-    if (old) {
-        free(old->name);
-        il_free(NULL, old);
-    }
+    HASH_ADD_KEYPTR(hh, modules, module, strlen(module), mod);
 }
 
