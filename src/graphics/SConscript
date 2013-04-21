@@ -15,6 +15,19 @@ graphics = env.Clone()
 
 graphics.Append(CPPPATH = src_dir)
 
+pkg_libs = {
+    "osx":   ["libglfw", "glew"],
+    "arch":  ["libglfw", "glew", "gl"],
+    "linux": ["gl", "glfw", "glew"],
+}
+
+if platform=="mingw":
+    graphics.Append(LIBS=["glfw", "glew32", "opengl32", "png", "z"])
+else:
+    for lib in pkg_libs[platform]:
+        graphics.ParseConfig("pkg-config " + lib + " --cflags --libs")
+
+
 sources = []
 for module in Split(inputs) :
     sources.extend(Glob(module))

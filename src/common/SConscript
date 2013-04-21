@@ -14,6 +14,11 @@ common = env.Clone()
 
 common.Append(CPPPATH = src_dir)
 
+if platform=="mingw":
+    common.Append(LIBS=["libevent"])
+else:
+    common.ParseConfig("pkg-config libevent --libs --cflags")
+
 sources = []
 for module in Split(inputs) :
     sources.extend(Glob(module))
