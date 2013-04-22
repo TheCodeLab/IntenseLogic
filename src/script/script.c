@@ -132,6 +132,7 @@ int ilS_fromFile(ilS_script* self, const char * filename)
     FILE *f = fopen(filename, "r");
     int res = fread(contents, 1, s.st_size, f);
     contents[res] = 0;
+    self->filename = strdup(filename);
     return ilS_fromSource(self, contents, res);
 }
 

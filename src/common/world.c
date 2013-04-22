@@ -19,7 +19,7 @@ il_type il_world_type = {
     .typeclasses = NULL,
     .storage = NULL,
     .constructor = world_init,
-    .name = "il.world",
+    .name = "il.common.world",
     .size = sizeof(il_world)
 };
 

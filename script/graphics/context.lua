@@ -45,7 +45,7 @@ local function index(t,k)
     elseif k == "camera" then
         return t.ptr.camera
     elseif k == "world" then
-        return world.wrap(t.ptr.world)
+        return t.ptr.world
     end
     return context[k];
 end
@@ -53,11 +53,11 @@ end
 local function newindex(t, k, v)
     --assert(type(v) == "table");
     if k == "world" then
-        assert(ffi.istype("struct il_world*", v.ptr), "Attempt to assign non-world to world");
-        t.ptr.world = v.ptr;
+        assert(ffi.istype("il_world*", v) or ffi.istype("il_base*", v) and v.type and ffi.string(v.type.name)=="il.common.world", "Attempt to assign non-world to world")
+        t.ptr.world = v;
         return;
     elseif k == "camera" then
-        assert(ffi.istype("il_base*", v) and v.type and ffi.string(v.type.name)=="il.graphics.camera", "Attempt to assign non-camera to camera");
+        assert(ffi.istype("ilG_camera*", v) or ffi.istype("il_base*", v) and v.type and ffi.string(v.type.name)=="il.graphics.camera", "Attempt to assign non-camera to camera");
         t.ptr.camera = ffi.cast("ilG_camera*", v);
         return;
     end

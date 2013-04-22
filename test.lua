@@ -19,7 +19,7 @@ local light = require "light"
 local w = world();
 local c = context(800, 600);
 c.world = w;
-w.context = c;
+w.context = c.ptr;
 c:setActive();
 local m;
 local t = texture()
@@ -57,13 +57,13 @@ else
     m = mesh "teapot.obj"
     local width = 3
     for i = 0, width*width*width-1 do
-        local box = positionable();
-        w:add(box);
-        box.drawable = m; --drawable.box;
-        box.material = mtl;
+        local box = positionable()
+        w:add(box.ptr)
+        box.drawable = m --drawable.box
+        box.material = mtl
         box.texture = t
         box.position = vector3(i % width, math.floor((i%(width*width)) / width), math.floor(i/(width*width))) * vector3(15, 15, 15)
-        box:track(c);
+        box:track(c)
         --print(box.position)
     end
 end

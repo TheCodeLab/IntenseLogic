@@ -29,6 +29,7 @@ enum il_storagetype {
     IL_FLOAT,
     IL_STORAGE,
     IL_OBJECT,
+    IL_LUA,
 };
 
 struct il_storage;
@@ -97,7 +98,7 @@ local per_class = {}
 
 local function metafun(name, def)
     return function(t, ...)
-        local pc = per_class[ffi.string(t.type.name)]
+        local pc = per_class[ffi.string(base.typeof(t).name)]
         if pc and pc[name] then
             local res = pc[name](t, ...)
             if res then return res end
@@ -109,18 +110,18 @@ local function metafun(name, def)
 end
 
 local metatypes = {"__call", "__le", "__lt", "__eq", "__len", "__concat", "__unm", "__pow", "__mod", "__div", "__mul", "__sub", "__add"}
-local mt = {
+base.metatable = {
     __index = metafun("__index", function(t,k)
-        local pc = per_class[ffi.string(t.type.name)]
+        local pc = per_class[ffi.string(base.typeof(t).name)]
         if pc and pc[k] then return pc[k] end
-        return base.get(t, k) or base[k] 
+        return base.get(t, k) or base.get(base.typeof(t), k) or base[k] 
     end),
     __newindex = metafun("__newindex", function(t,k,v) base.set(t, k, v) end)
 }
 for _, v in pairs(metatypes) do
-    mt[v] = metafun(v)
+    base.metatable[v] = metafun(v)
 end
-ffi.metatype("il_base", mt)
+ffi.metatype("il_base", base.metatable)
 
 ffi.metatype("il_type", {
     __call = function(t, ...)
@@ -128,7 +129,11 @@ ffi.metatype("il_type", {
         if pc and pc.__call then
             return pc.__call(t, ...)
         end
-        return t.create(t)
+        local v = t.create(t)
+        if t.struct then
+            return ffi.cast(t.struct.."*", v)
+        end
+        return v
     end,
     __index = function(t,k)
         local pc = per_class[ffi.string(t.name)]
@@ -195,7 +200,7 @@ end
 -- @tparam base v The value to get the type of
 -- @treturn type The type object
 function base.typeof(v)
-    assert(ffi.istype("il_base*", v) or ffi.istype("il_base", v))
+    --assert(ffi.istype("il_base*", v) or ffi.istype("il_base", v))
     return ffi.C.il_typeof(v)
 end
 
@@ -218,12 +223,10 @@ function base.get(v, name)
     local tag = ffi.new("enum il_storagetype[1]");
     local size = ffi.new("size_t[1]")
     local data
-    if ffi.istype("il_base", v) then
-        data = ffi.C.il_base_get(v, name, size, tag)
-    elseif ffi.istype("il_type", v) then
+    if ffi.istype("il_type", v) then
         data = ffi.C.il_type_get(v, name, size, tag)
     else
-        data = ffi.C.il_storage_get(v, name, size, tag)
+        data = ffi.C.il_base_get(ffi.cast("il_base*",v), name, size, tag)--data = ffi.C.il_storage_get(v, name, size, tag)
     end
     --local data = ffi.C.il_storage_get(v, name, ffi.cast("size_t*", size), ffi.cast("enum il_storagetype*", tag))
     --print("got "..tostring(data).."@"..tostring(size[0]).." "..tostring(tag[0]))
@@ -243,6 +246,10 @@ function base.get(v, name)
     elseif tag == "IL_OBJECT" then
         assert(size >= ffi.sizeof("il_base"))
         return ffi.cast("il_base*", data)
+    elseif tag == "IL_LUA" then
+        assert(size == ffi.sizeof("int"))
+        local int = ffi.cast("int*", data)
+        return debug.getregistry()[tonumber(int[0])]
     elseif tag == "IL_VOID" then
         if size == 0 then
             return nil
@@ -268,6 +275,7 @@ function base.set(v, name, val)
         t = "IL_OBJECT"
     else
         t = ({string="IL_STRING", number="IL_FLOAT"})[type(val)]
+        if not t then t = "IL_LUA" end
     end
     if not t then error("Unknown type") end
     local size = 0
@@ -279,15 +287,18 @@ function base.set(v, name, val)
         ptr = ffi.cast("char*", val)
     elseif t == "IL_FLOAT" then
         ptr = ffi.new("float[1]", val)
+        size = ffi.sizeof("float")
     elseif t == "IL_STORAGE" or t == "IL_OBJECT" then
         ptr = val
+    elseif t == "IL_LUA" then
+        table.insert(debug.getregistry(), val)
+        ptr = ffi.new("int[1]", #debug.getregistry())
+        size = ffi.sizeof("int")
     end
-    if ffi.istype("il_base", v) then
-        ffi.C.il_base_set(v, name, ptr, size, t)
-    elseif ffi.istype("il_type", v) then
+    if ffi.istype("il_type", v) then
         ffi.C.il_type_set(v, name, ptr, size, t)
     else
-        ffi.C.il_storage_set(v, name, ptr, size, t)
+        ffi.C.il_base_set(ffi.cast("il_base*",v), name, ptr, size, t)
     end
 end
 
