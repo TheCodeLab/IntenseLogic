@@ -79,6 +79,8 @@ void *il_type_get(il_type* self, const char *key, size_t *size, enum il_storaget
 void il_type_set(il_type* self, const char *key, void *data, size_t size, enum il_storagetype tag);
 void *il_base_get(il_base* self, const char *key, size_t *size, enum il_storagetype *tag);
 void il_base_set(il_base* self, const char *key, void *data, size_t size, enum il_storagetype tag);
+struct ilE_registry *il_base_registry(il_base *self);
+struct ilE_registry *il_type_registry(il_type *self);
 size_t il_sizeof(void* obj);
 il_type *il_typeof(void *obj);
 il_base *il_new(il_type *type);
@@ -288,21 +290,34 @@ end
 -- @see event.event
 function base.event(self, name, ...)
     event = event or require "event"
-    event.event(self.registry, name, ...)
+    if ffi.istype("il_base", self) then
+        event.event(ffi.C.ilE_base_registry(self), name, ...)
+    elseif ffi.istype("il_type", self) then
+        event.event(ffi.C.ilE_type_registry(self), name, ...)
+    end
 end
 
 --- Sets a timer for the given base or type
 -- @see event.timer
 function base.timer(self, name, ...)
     event = event or require "event"
-    event.timer(self.registry, name, ...)
+    if ffi.istype("il_base", self) then
+        event.timer(ffi.C.ilE_base_registry(self), name, ...)
+    elseif ffi.istype("il_type", self) then
+        event.timer(ffi.C.ilE_type_registry(self), name, ...)
+    end
+
 end
 
 --- Registers a hook for the given base or type
 -- @see event.register
 function base.register(self, name, fn)
     event = event or require "event"
-    event.register(self.registry, name, fn)
+    if ffi.istype("il_base", self) then
+        event.register(ffi.C.ilE_base_registry(self), name, fn)
+    elseif ffi.istype("il_type", self) then
+        event.register(ffi.C.ilE_type_registry(self), name, fn)
+    end
 end
     
 setmetatable(base, {__call=function(self,...) return base.create(...) end})

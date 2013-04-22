@@ -138,6 +138,22 @@ void il_base_set(il_base* self, const char *key, void *data, size_t size, enum i
     il_storage_set(&self->storage, key, data, size, tag);
 }
 
+ilE_registry *il_base_registry(il_base *self)
+{
+    if (!self->registry) {
+        self->registry = ilE_registry_new();
+    }
+    return self->registry;
+}
+
+ilE_registry *il_type_registry(il_type *self)
+{
+    if (!self->registry) {
+        self->registry = ilE_registry_new();
+    }
+    return self->registry;
+}
+
 size_t il_sizeof(const void* obj)
 {
     size_t size = ((il_base*)obj)->size;
