@@ -324,9 +324,9 @@ static void draw_lights()
     }
     context->material->bind(context, context->material->bind_ctx);
     glUniform3f(glGetUniformLocation(context->material->program, "camera"), 
-            context->camera->positionable->position[0], 
-            context->camera->positionable->position[1],
-            context->camera->positionable->position[2]);
+            context->camera->positionable.position[0], 
+            context->camera->positionable.position[1],
+            context->camera->positionable.position[2]);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_RECTANGLE, context->fbtextures[0]);
     glActiveTexture(GL_TEXTURE0 + 1);

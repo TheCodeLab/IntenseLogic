@@ -176,7 +176,7 @@ function base.type(name)
         T.name = name
         T.parent = cons.parent
         T.size = ffi.sizeof(cons.struct or "il_base")
-        T.create = function(v)
+        T.constructor = function(v)
             ffi.gc(v, ffi.C.il_unref)
             v.destructor = function(v)
                 if cons.destructor then
@@ -186,7 +186,6 @@ function base.type(name)
             if cons.constructor then
                 cons.constructor(v)
             end
-            return v
         end
         return T
     end

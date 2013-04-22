@@ -67,11 +67,12 @@ else
         --print(box.position)
     end
 end
-c.camera = camera(positionable(w));
-c.camera.projection_matrix = matrix.perspective(75, 4/3, 2, 1000);
-c.camera.positionable.position = vector3(0, -5, -25);
+
+c.camera = camera()
+c.camera.projection_matrix = matrix.perspective(75, 4/3, 2, 1000).ptr
+c.camera.positionable.position = vector3(0, -5, -25).ptr
 c.camera.sensitivity = .01
-c.camera.movespeed = vector3(1,1,1)
+c.camera.movespeed = vector3(1,1,1).ptr
 --[[local l = light(-5, -5, -5, 50, 0, 0, 1.0) -- x y z radius r g b
 print(l.positionable)
 l:add(c)
@@ -89,8 +90,8 @@ function mousemove(reg, name, x, y)
     if input.isButtonSet(0) == 0 then return end -- TODO: Make this work
     local yaw = quaternion(vector3(0, 1, 0), x * c.camera.sensitivity)
     local pitch = quaternion(vector3(1, 0, 0), y * c.camera.sensitivity)
-    local rot = c.camera.positionable.rotation * yaw * pitch
-    c.camera.positionable.rotation = rot
+    local rot = quaternion.wrap(c.camera.positionable.rotation) * yaw * pitch
+    c.camera.positionable.rotation = rot.ptr
 end
 
 function tick(reg, name)
@@ -99,14 +100,14 @@ function tick(reg, name)
     local z = input.isKeySet("W") - input.isKeySet("S")
     local y = input.isKeySet("R") - input.isKeySet("F")
     local r = input.isKeySet("Q") - input.isKeySet("E")
-    local v = vector3(x,y,z) * c.camera.movespeed
+    local v = vector3(x,y,z) * vector3.wrap(c.camera.movespeed)
     --print("r", c.camera.positionable.rotation)
     --print("v", v)
-    v = v * c.camera.positionable.rotation
+    v = v * quaternion.wrap(c.camera.positionable.rotation)
     --print("v'", v)
-    c.camera.positionable.position = c.camera.positionable.position + v
+    c.camera.positionable.position = (vector3.wrap(c.camera.positionable.position) + v).ptr
     local bank = quaternion(vector3(0, 0, 1), r * c.camera.sensitivity)
-    c.camera.positionable.rotation = c.camera.positionable.rotation * bank
+    c.camera.positionable.rotation = (quaternion.wrap(c.camera.positionable.rotation) * bank).ptr
 end
 
 event.register(event.registry, "tick", tick)

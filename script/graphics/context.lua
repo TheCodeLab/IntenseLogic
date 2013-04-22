@@ -43,7 +43,7 @@ local function index(t,k)
     elseif k == "texture" then
         return texture.wrap(t.ptr.texture)
     elseif k == "camera" then
-        return camera.wrap(t.ptr.camera)
+        return t.ptr.camera
     elseif k == "world" then
         return world.wrap(t.ptr.world)
     end
@@ -51,14 +51,14 @@ local function index(t,k)
 end
 
 local function newindex(t, k, v)
-    assert(type(v) == "table");
+    --assert(type(v) == "table");
     if k == "world" then
         assert(ffi.istype("struct il_world*", v.ptr), "Attempt to assign non-world to world");
         t.ptr.world = v.ptr;
         return;
     elseif k == "camera" then
-        assert(ffi.istype("struct ilG_camera*", v.ptr), "Attempt to assign non-camera to camera");
-        t.ptr.camera = v.ptr;
+        assert(ffi.istype("il_base*", v) and v.type and ffi.string(v.type.name)=="il.graphics.camera", "Attempt to assign non-camera to camera");
+        t.ptr.camera = ffi.cast("ilG_camera*", v);
         return;
     end
     error("Invalid key \""..tostring(k).."\" in context");
