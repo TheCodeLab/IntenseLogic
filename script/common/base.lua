@@ -41,22 +41,23 @@ typedef struct il_typeclass {
 typedef struct il_base il_base;
 typedef struct il_type il_type;
 
-typedef il_base *(*il_base_new_fn)(struct il_type*);
-typedef il_base *(*il_base_copy_fn)(struct il_base*);
-typedef void (*il_base_free_fn)(struct il_base*);
+typedef void (*il_base_init_fn)(il_base*);
+typedef il_base *(*il_base_copy_fn)(il_base*);
+typedef void (*il_base_free_fn)(il_base*);
 
 struct il_type {
     il_typeclass *typeclasses;
-    struct il_storage* storage;
-    il_base_new_fn create;
+    struct il_storage *storage;
+    il_base_init_fn constructor;
     const char *name;
     struct ilE_registry *registry;
+    size_t size;
+    il_type *parent;
 };
 
 struct il_base {
     int refs;
     struct il_storage *storage;
-    size_t size;
     il_base_free_fn destructor;
     il_base_copy_fn copy;
     il_base *gc_next;
@@ -81,7 +82,7 @@ void *il_base_get(il_base* self, const char *key, size_t *size, enum il_storaget
 void il_base_set(il_base* self, const char *key, void *data, size_t size, enum il_storagetype tag);
 struct ilE_registry *il_base_registry(il_base *self);
 struct ilE_registry *il_type_registry(il_type *self);
-size_t il_sizeof(void* obj);
+size_t il_sizeof(const il_type* self);
 il_type *il_typeof(void *obj);
 il_base *il_new(il_type *type);
 const char *il_name(il_type *type);
@@ -132,10 +133,10 @@ ffi.metatype("il_type", {
     __index = function(t,k)
         local pc = per_class[ffi.string(t.name)]
         if pc and pc[k] then return pc[k] end
-        return t.storage:get(k) or base[k]
+        return base.get(t, k) or base[k]
     end,
     __newindex = function(t,k,v)
-        t.storage:set(k,v)
+        base.set(t,k,v)
     end
 })
 
@@ -148,7 +149,8 @@ ffi.metatype("struct il_storage", {
 -- Has a bit of fun with syntax. Doesn't actually take 2 arguments, it returns a function which takes the second argument. Example: 
 --
 --    local my_type = base.type "my_type" {
---        constructor = function(self, ...)
+--        parent = my_other_type,
+--        constructor = function(self)
 --            print("construction!")
 --        end,
 --        destructor = function(self)
@@ -160,6 +162,10 @@ ffi.metatype("struct il_storage", {
 --        struct = "some_ffi_structure" -- is either a name of a structure or a ctype of one
 --    }
 --
+-- __call maybe be overridden if arguments to the type constructor are 
+-- preferable (as there are no arguments to the constructor in the C code). 
+-- See the examples for how to do this.
+--
 -- @tparam string name The name of the type
 -- @tparam tab cons The construction table of the type
 -- @treturn cdata The type object
@@ -168,9 +174,9 @@ function base.type(name)
         per_class[name] = cons
         local T = ffi.new("il_type")
         T.name = name
-        T.create = function(_)
-            local v = ffi.new(cons.struct or "il_base")
-            v.type = T
+        T.parent = cons.parent
+        T.size = ffi.sizeof(cons.struct or "il_base")
+        T.create = function(v)
             ffi.gc(v, ffi.C.il_unref)
             v.destructor = function(v)
                 if cons.destructor then

@@ -2,30 +2,26 @@
 
 #include <stdlib.h>
 
-static il_base *positionable_new(il_type *t)
+static void positionable_init(il_base *self)
 {
-    (void)t;
-    il_positionable * p = calloc(1,sizeof(il_positionable));
-    p->base.refs = 1;
-    p->base.size = sizeof(il_positionable);
-    p->base.type = &il_positionable_type;
+    il_positionable * p = (il_positionable*)self;
     p->position = il_vec3_new();
     p->size = il_vec3_set(NULL, 1, 1, 1);
     p->rotation = il_quat_set(NULL, 0, 0, 0, 1);
     p->velocity = il_vec3_new();
-    return &p->base;
 }
 
 il_type il_positionable_type = {
     .typeclasses = NULL,
     .storage = NULL,
-    .create = positionable_new,
-    .name = "il.positionable"
+    .constructor = positionable_init,
+    .name = "il.positionable",
+    .size = sizeof(il_positionable)
 };
 
 il_positionable * il_positionable_new()
 {
-    return (il_positionable*)il_positionable_type.create(&il_positionable_type);
+    return (il_positionable*)il_new(&il_positionable_type);
 }
 
 void il_positionable_translate(il_positionable* pos, float x, float y, float z)
