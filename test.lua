@@ -59,11 +59,11 @@ else
     for i = 0, width*width*width-1 do
         local box = positionable()
         w:add(box.ptr)
-        box.drawable = m --drawable.box
-        box.material = mtl
-        box.texture = t
-        box.position = vector3(i % width, math.floor((i%(width*width)) / width), math.floor(i/(width*width))) * vector3(15, 15, 15)
-        box:track(c)
+        box.drawable = m.ptr --drawable.box
+        box.material = mtl.ptr
+        box.texture = t.ptr
+        box.position = (vector3(i % width, math.floor((i%(width*width)) / width), math.floor(i/(width*width))) * vector3(15, 15, 15)).ptr
+        box:track(c.ptr)
         --print(box.position)
     end
 end
