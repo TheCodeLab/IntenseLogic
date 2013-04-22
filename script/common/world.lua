@@ -22,10 +22,10 @@ extern il_type il_world_type;
 
 ]]
 
-ffi.metatype("il_world", base.metatable)
+base.wrap "il.common.world" {
+    add = ffi.C.il_world_add,
+    struct = "il_world"
+}
 
-local T = ffi.C.il_world_type
-T.struct = "il_world"
-T.add = ffi.C.il_world_add
 return ffi.C.il_world_type
 

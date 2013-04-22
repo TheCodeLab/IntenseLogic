@@ -150,6 +150,17 @@ ffi.metatype("struct il_storage", {
     __newindex = base.set
 })
 
+--- Wraps an existing type
+-- Similar to base.type, but instead of creating a new type and returning it, it sets an existing type's per-class data like base.type does for new types
+function base.wrap(name)
+    return function(cons)
+        per_class[name] = cons
+        if cons.struct then
+            ffi.metatype(cons.struct, base.metatable)
+        end
+    end
+end
+
 --- Creates a new type.
 -- Has a bit of fun with syntax. Doesn't actually take 2 arguments, it returns a function which takes the second argument. Example: 
 --
@@ -176,7 +187,7 @@ ffi.metatype("struct il_storage", {
 -- @treturn cdata The type object
 function base.type(name)
     return function(cons)
-        per_class[name] = cons
+        base.wrap(name)(cons)
         local T = ffi.new("il_type")
         T.name = name
         T.parent = cons.parent
