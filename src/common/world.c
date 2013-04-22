@@ -9,26 +9,23 @@ struct il_worldIterator {
     size_t n;
 };
 
-static il_base *world_new(il_type* t)
+static void world_init(il_base *self)
 {
-    (void)t;
-    il_world * w = calloc(1, sizeof(il_world));
-    w->base.refs = 1;
-    w->base.type = &il_world_type;
-    w->base.size = sizeof(il_world);
-    return &w->base;
+    il_world * w = (il_world*)self;
+    (void)w;
 }
 
 il_type il_world_type = {
     .typeclasses = NULL,
     .storage = NULL,
-    .create = world_new,
-    .name = "il.world"
+    .constructor = world_init,
+    .name = "il.world",
+    .size = sizeof(il_world)
 };
 
 il_world* il_world_new()
 {
-    return (il_world*)il_world_type.create(&il_world_type);
+    return (il_world*)il_new(&il_world_type);
 }
 
 void il_world_add(il_world* self, il_positionable* pos)

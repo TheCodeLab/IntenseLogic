@@ -154,12 +154,15 @@ ilE_registry *il_type_registry(il_type *self)
     return self->registry;
 }
 
-size_t il_sizeof(const void* obj)
+size_t il_sizeof(const il_type* self)
 {
-    size_t size = ((il_base*)obj)->size;
+    size_t size = self->size;
     if (size < sizeof(il_base)) {
-        il_warning("Size of %s<%p> is abnormal: %zu", ((il_base*)obj)->type->name, obj, size);
+        il_warning("Size of type %s is abnormally small: %zu bytes, should be at least %zu bytes", self->name, size, sizeof(il_base));
         size = sizeof(il_base);
+    } else if (self->parent && size < self->parent->size) {
+        il_warning("Size of type %s is abnormally small: %zu bytes, parent type is %zu bytes", self->name, size, self->parent->size);
+        size = self->parent->size;
     }
     return size;
 }
@@ -171,7 +174,15 @@ il_type *il_typeof(void *obj)
 
 il_base *il_new(il_type *type)
 {
-    return type->create(type);
+    il_base *obj = calloc(1, il_sizeof(type));
+    obj->refs = 1;
+    obj->type = type;
+    il_type *cur = type;
+    while(cur) {
+        cur->constructor(obj);
+        cur = cur->parent;
+    }
+    return obj;
 }
 
 const char *il_name(il_type *type)

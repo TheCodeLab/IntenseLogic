@@ -35,22 +35,23 @@ typedef struct il_typeclass {
 typedef struct il_base il_base;
 typedef struct il_type il_type;
 
-typedef il_base *(*il_base_new_fn)(struct il_type*);
+typedef void (*il_base_init_fn)(struct il_base*);
 typedef il_base *(*il_base_copy_fn)(struct il_base*);
 typedef void (*il_base_free_fn)(struct il_base*);
 
 struct il_type {
     il_typeclass *typeclasses;
     il_storage *storage;
-    il_base_new_fn create;
+    il_base_init_fn constructor;
     const char *name;
     ilE_registry *registry;
+    size_t size;
+    il_type *parent;
 };
 
 struct il_base {
     int refs;
     il_storage *storage;
-    size_t size;
     il_base_free_fn destructor;
     il_base_copy_fn copy;
     il_base *gc_next;
@@ -71,7 +72,7 @@ void *il_base_get(il_base* self, const char *key, size_t *size, enum il_storaget
 void il_base_set(il_base* self, const char *key, void *data, size_t size, enum il_storagetype tag);
 ilE_registry *il_base_registry(il_base *self);
 ilE_registry *il_type_registry(il_type *self);
-size_t il_sizeof(const void* obj);
+size_t il_sizeof(const il_type *self);
 il_type *il_typeof(void *obj);
 il_base *il_new(il_type *type);
 const char *il_name(il_type *type);
