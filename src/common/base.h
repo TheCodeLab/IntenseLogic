@@ -16,6 +16,7 @@ enum il_storagetype {
     IL_FLOAT,
     IL_STORAGE,
     IL_OBJECT,
+    IL_LUA,
 };
 
 typedef struct il_storage {

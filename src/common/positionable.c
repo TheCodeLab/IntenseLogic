@@ -15,7 +15,7 @@ il_type il_positionable_type = {
     .typeclasses = NULL,
     .storage = NULL,
     .constructor = positionable_init,
-    .name = "il.positionable",
+    .name = "il.common.positionable",
     .size = sizeof(il_positionable)
 };
 
