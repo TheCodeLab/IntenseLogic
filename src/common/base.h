@@ -69,6 +69,8 @@ void *il_type_get(il_type* self, const char *key, size_t *size, enum il_storaget
 void il_type_set(il_type* self, const char *key, void *data, size_t size, enum il_storagetype tag);
 void *il_base_get(il_base* self, const char *key, size_t *size, enum il_storagetype *tag);
 void il_base_set(il_base* self, const char *key, void *data, size_t size, enum il_storagetype tag);
+ilE_registry *il_base_registry(il_base *self);
+ilE_registry *il_type_registry(il_type *self);
 size_t il_sizeof(const void* obj);
 il_type *il_typeof(void *obj);
 il_base *il_new(il_type *type);
