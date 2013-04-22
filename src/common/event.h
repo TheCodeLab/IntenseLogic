@@ -23,6 +23,12 @@ enum ilE_threading {
     ILE_TLS,
 };
 
+enum ilE_fdevent {
+    ILE_READ = 1,
+    ILE_READASARG = 2, // Reads the ready data from the file descriptor and passes it to callbacks; ONLY USE IF O_NONBLOCK IS SET!
+    ILE_WRITE = 4,
+};
+
 typedef void(*ilE_callback)(const ilE_registry* registry, const char *name, size_t size, const void *data, void * ctx);
 
 ilE_registry* ilE_registry_new();
@@ -36,6 +42,8 @@ void ilE_objectevent(   struct il_base* base,   const char *name, size_t size, c
 void ilE_globaltimer(   ilE_registry* registry, const char *name, size_t size, const void *data, struct timeval tv);
 void ilE_typetimer  (   struct il_type* type,   const char *name, size_t size, const void *data, struct timeval tv);
 void ilE_objecttimer(   struct il_base* base,   const char *name, size_t size, const void *data, struct timeval tv);
+
+void ilE_watchfd(ilE_registry* registry, const char *name, int fd, int what);
 
 int ilE_register(ilE_registry* registry, const char *name, enum ilE_behaviour behaviour, enum ilE_threading threads, ilE_callback callback, void * ctx);
 
