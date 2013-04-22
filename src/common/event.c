@@ -5,6 +5,8 @@
 #include <time.h>
 #include <sys/time.h>
 #include <event2/event.h>
+#include <event2/buffer.h>
+#include <unistd.h>
 
 #include "common/base.h"
 #include "util/log.h"
@@ -46,6 +48,7 @@ struct ilE_registry {
 struct dispatch_ctx {
     struct ilE_event *ev;
     ilE_registry *registry;
+    int read_fd;
 };
 
 static void dispatch(evutil_socket_t fd, short events, void *ctx)
@@ -54,9 +57,25 @@ static void dispatch(evutil_socket_t fd, short events, void *ctx)
     (void)events;
     struct ilE_event* ev = ((struct dispatch_ctx*)ctx)->ev;
     ilE_registry* registry = ((struct dispatch_ctx*)ctx)->registry;
+    int read_fd = ((struct dispatch_ctx*)ctx)->read_fd;
+    void *data = &ev->data;
+    size_t size = ev->size;
     unsigned i;
     // figure out which entry in our callbacks array array is for this event
     struct callbacks* callbacks = NULL;
+
+    if (read_fd) {
+        struct evbuffer *evbuf = evbuffer_new();
+        int res;
+        do {
+            char buf[4096];
+            res = read(fd, buf, 4096);
+            evbuffer_add(evbuf, buf, res);
+        } while(res);
+        data = malloc(size = evbuffer_get_length(evbuf));
+        evbuffer_remove(evbuf, data, size);
+        evbuffer_free(evbuf);
+    }
 
     il_debug("Dispatch: %s", ev->name);
     while (registry) {
@@ -69,7 +88,7 @@ static void dispatch(evutil_socket_t fd, short events, void *ctx)
             // TODO: dispatch to worker threads
             if (callbacks->arr.data[i].callback) {
                 //printf("func<%p> registry<%p> name<%s> size<%u> data<%p> ctx<%p>\n", callbacks->arr.data[i].callback, registry, ev->name, ev->size, &ev->data, callbacks->arr.data[i].ctx);
-                callbacks->arr.data[i].callback(registry, ev->name, ev->size, &ev->data, callbacks->arr.data[i].ctx);
+                callbacks->arr.data[i].callback(registry, ev->name, size, data, callbacks->arr.data[i].ctx);
             }
         }
         registry = registry->parent;
@@ -94,7 +113,7 @@ void ilE_registry_forward(ilE_registry *from, ilE_registry *to)
 
 static int push(ilE_registry* registry, const char *name, size_t size, const void *data)
 {
-    struct ilE_event *event = calloc(1, sizeof(struct ilE_event));
+    struct ilE_event *event = calloc(1, sizeof(struct ilE_event) + size);
     struct dispatch_ctx * ctx = calloc(sizeof(struct dispatch_ctx), 1);
     event->name = strdup(name);
     if (size > 255) {
@@ -115,7 +134,7 @@ static int timer(ilE_registry* registry, const char *name, size_t size, const vo
 {
     int res;
     struct event * ev;
-    struct ilE_event *event = calloc(1, sizeof(struct ilE_event));
+    struct ilE_event *event = calloc(1, sizeof(struct ilE_event) + size);
     event->name = strdup(name);
     if (size > 255) {
         return 0;
@@ -137,6 +156,21 @@ static int timer(ilE_registry* registry, const char *name, size_t size, const vo
     event_active(ev, 0, 0);
 
     return 1;
+}
+
+void ilE_watchfd(ilE_registry* registry, const char *name, int fd, int what)
+{
+    short events = 
+        ((what & ILE_READ || what & ILE_READASARG)? EV_READ : 0) |
+        ((what & ILE_WRITE)? EV_WRITE : 0);
+    struct ilE_event *event = calloc(1, sizeof(struct ilE_event));
+    struct dispatch_ctx * ctx = calloc(sizeof(struct dispatch_ctx), 1);
+    event->name = strdup(name);
+    ctx->ev = event;
+    ctx->registry = registry;
+    ctx->read_fd = (what & ILE_READASARG) != 0;
+    struct event * ev = event_new(ilE_base, fd, events, &dispatch, ctx);
+    event_add(ev, NULL);
 }
 
 void ilE_globalevent(ilE_registry* registry, const char *name, size_t size, const void *data)
