@@ -1,7 +1,10 @@
 #include "network.h"
 
-void ilN_init()
+void il_bootstrap(int argc, char **argv)
 {
-
+#ifdef WIN32
+    WSADATA WSAData;
+    WSAStartup(0x101, &WSAData);
+#endif
 }
 

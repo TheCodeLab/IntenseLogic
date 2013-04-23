@@ -4,37 +4,37 @@
 #include <string.h>
 #include <dirent.h>
 #include <errno.h>
+#include <unistd.h>
+#include <getopt.h>
 
-#include "docopt.inc"
+//#include "docopt.inc"
 #include "loader.h"
-#include "common/event.h"
 #include "script/script.h"
+#include "util/array.h" // entirely in preprocessor, so it's fine
 
-char *strdup(const char *str);
+#define OPTIONS \
+    OPT('m', "modules", required_argument, "Adds a directory to look for modules") \
+    OPT('r', "run", required_argument, "Runs a Lua script")
+const char *optstring = "m:r:";
 
-char *strtok_r(char *str, const char *delim, char **saveptr);
+#define OPT(s, l, a, h) {l, a, NULL, s},
+struct option longopts[] = {
+    OPTIONS
+};
+#undef OPT
 
-int main(int argc, char **argv)
+#define OPT(s, l, a, h) h,
+const char *help[] = {
+    OPTIONS
+};
+#undef OPT
+
+static void load_modules(const char *path, int argc, char **argv)
 {
-    fprintf(stderr, "MAIN: Initializing engine.\n");
-
-    DocoptArgs args = docopt(argc, argv, 1, "0.0pre-alpha");
-
-#ifdef WIN32
-    // I have no idea
-    WSADATA WSAData;
-    WSAStartup(0x101, &WSAData);
-#endif
-
     // TODO: windows
-    const char *modpath = "modules";
-    if (args.path) {
-        modpath = args.path;
-    }
-    DIR *dir = opendir(modpath); // TODO: more robust module loader
+    DIR *dir = opendir(path);
     if (!dir) {
         fprintf(stderr, "Failed to open modules directory: %s\n", strerror(errno));
-        return 1;
     }
     struct dirent entry, *result;
     while (!readdir_r(dir, &entry, &result) && result) {
@@ -43,30 +43,64 @@ int main(int argc, char **argv)
             continue;
         }
         char buf[512];
-        snprintf(buf, 512, "%s/%s", modpath, result->d_name);
+        snprintf(buf, 512, "%s/%s", path, result->d_name);
         il_loadmod(buf, argc, argv);
     }
     closedir(dir);
+}
 
-    if (args.run) {
-        ilS_script *s = ilS_new();
-        ilS_fromFile(s, "script/bootstrap.lua");
-        int res = ilS_run(s);
-        if (res != 0) {
-            fprintf(stderr, "%s\n", s->err);
-            return 1;
-        }
-        ilS_fromFile(s, args.run);
-        res = ilS_run(s);
-        if (res != 0) {
-            fprintf(stderr, "%s\n", s->err);
+int main(int argc, char **argv)
+{
+    fprintf(stderr, "MAIN: Initializing engine.\n");
+
+    IL_ARRAY(char*,) scripts = {0};
+
+    int opt, idx, has_modules = 0;
+    opterr = 0; // we don't want to print an error if another package uses an option
+    while ((opt = getopt_long(argc, argv, optstring, longopts, &idx)) != -1) {
+        switch(opt) {
+            case 'm':
+                load_modules(optarg, argc, argv);
+                has_modules = 1;
+                break;
+            case 'r':
+                IL_APPEND(scripts, strdup(optarg));
+                break;
+            case '?':
+            default:
+                break;
         }
     }
+
+    if (!has_modules) {
+        load_modules("modules", argc, argv); // default path
+    }
+    
+    ilS_script *s = ilS_new();
+    ilS_fromFile(s, "script/bootstrap.lua");
+    int res = ilS_run(s);
+    if (res != 0) {
+        fprintf(stderr, "MAIN: %s\n", s->err);
+        return 1;
+    }
+    int i;
+    for (i = 0; i < scripts.length; i++) {
+        ilS_fromFile(s, scripts.data[i]);
+        free(scripts.data[i]);
+        res = ilS_run(s);
+        if (res != 0) {
+            fprintf(stderr, "MAIN: %s\n", s->err);
+        }
+    }
+    IL_FREE(scripts);
 
     // main loop
     fprintf(stderr, "MAIN: Starting main loop\n");
     void (*loop)();
     loop = (void(*)())il_getsym("libilcommon", "ilE_loop");
+    if (!loop) {
+        return 1;
+    }
     loop();
 
     return 0;
