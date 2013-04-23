@@ -43,7 +43,6 @@ mtl:fragData("accumulation", "out_Ambient")
 mtl:fragData("diffuse", "out_Diffuse")
 mtl:fragData("specular", "out_Specular")
 mtl:link()
-print(mtl);
 if false then
     m = mesh "minecraft.obj"
     print(m.ptr)

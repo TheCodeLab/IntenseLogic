@@ -1,5 +1,5 @@
 import os
-import support.docopt_c
+#import support.docopt_c
 import string
 
 # defs
@@ -70,9 +70,9 @@ for module in Split(inputs) :
 
 # generate docopt
 #handle = open(src_dir + "/docopt.inc", "w")
-handle = open("src/docopt.inc", "w")
-handle.write(support.docopt_c.output(cli_file))
-handle.close()
+#handle = open("src/docopt.inc", "w")
+#handle.write(support.docopt_c.output(cli_file))
+#handle.close()
 
 # generate object files
 objects = env.Object(source = sources)

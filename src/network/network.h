@@ -3,6 +3,4 @@
 
 //#include "packets.h"
 
-void ilN_init();
-
 #endif
