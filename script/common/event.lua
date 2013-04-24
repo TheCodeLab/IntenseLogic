@@ -4,7 +4,7 @@
 
 local ffi = require "ffi"
 
-require "base"
+require "common.base"
 
 ffi.cdef [[
 

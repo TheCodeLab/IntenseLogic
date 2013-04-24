@@ -1,9 +1,9 @@
 local ffi = require "ffi"
 
-require "scalar_defs"
+require "math.scalar_defs"
 
-local positionable = require "positionable"
-local vector3 = require "vector3"
+local positionable = require "common.positionable"
+local vector3 = require "math.vector3"
 
 ffi.cdef [[
 

@@ -1,6 +1,6 @@
-local ffi = require "ffi";
+local ffi = require "ffi"
 
-local ilstring = require "ilstring"
+local ilstring = require "util.ilstring"
 
 ffi.cdef [[
 

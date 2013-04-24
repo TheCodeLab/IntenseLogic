@@ -1,6 +1,6 @@
 local ffi = require "ffi"
 
-require "scalar_defs"
+require "math.scalar_defs"
 
 local vector3-- = require "vector3"
 
@@ -26,7 +26,7 @@ local quaternion = {}
 quaternion.type = ffi.typeof("il_quat");
 
 function index(t,k)
-    vector3 = vector3 or require "vector3"
+    vector3 = vector3 or require "math.vector3"
     if k == "x" then
         return t.ptr[0]
     elseif k == "y" then
@@ -48,7 +48,7 @@ function index(t,k)
 end
 
 function newindex(t, k, v)
-    vector3 = vector3 or require "vector3"
+    vector3 = vector3 or require "math.vector3"
     if k == "x" or k == "y" or k == "z" or k == "w" then
         assert(type(v) == "number")
         t.ptr[({x=0, y=1, z=2, w=3})[k]] = v
@@ -65,7 +65,7 @@ function newindex(t, k, v)
 end
 
 function mul(a, b)
-    vector3 = vector3 or require "vector3"
+    vector3 = vector3 or require "math.vector3"
     if quaternion.check(b) then
         return quaternion.wrap(ffi.C.il_quat_mul(a.ptr, b.ptr, nil))
     elseif vector3.check(b) then
@@ -100,7 +100,7 @@ function quaternion.check(obj)
 end
 
 function quaternion.create(...)
-    vector3 = vector3 or require "vector3"
+    vector3 = vector3 or require "math.vector3"
     local args = {...};
     if #args == 3 then -- YPR
         assert(type(args[1]) == "number" and type(args[2]) == "number" and type(args[3]) == "number")

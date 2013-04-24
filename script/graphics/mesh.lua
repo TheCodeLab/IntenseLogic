@@ -1,6 +1,6 @@
 local ffi = require "ffi"
 
-local drawable = require "drawable"
+local drawable = require "graphics.drawable"
 
 ffi.cdef [[
 

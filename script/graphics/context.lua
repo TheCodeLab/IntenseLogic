@@ -1,9 +1,9 @@
-local ffi = require "ffi";
-local drawable = require "drawable"
-local material = require "material"
-local texture = require "texture"
-local camera;
-local world; --require "world"
+local ffi       = require "ffi"
+local drawable  = require "graphics.drawable"
+local material  = require "graphics.material"
+local texture   = require "graphics.texture"
+local camera
+local world --require "world"
 
 ffi.cdef[[
 
@@ -34,8 +34,8 @@ void ilG_context_setActive(ilG_context*);
 local context = {};
 
 local function index(t,k)
-    world = world or require "world"
-    camera = camera or require "camera"
+    world = world or require "common.world"
+    camera = camera or require "graphics.camera"
     if k == "drawable" then 
         return drawable.wrap(t.ptr.drawable)
     elseif k == "material" then

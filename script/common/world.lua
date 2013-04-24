@@ -1,6 +1,6 @@
 local ffi = require "ffi";
 
-local base = require "base"
+local base = require "common.base"
 
 local context;
 
