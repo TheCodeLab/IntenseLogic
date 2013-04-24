@@ -44,9 +44,18 @@ static int traceback (lua_State *L) {
 
 ilS_script * ilS_new()
 {
-    ilS_script* s = calloc(1, sizeof(ilS_script));
+    ilS_script* self = calloc(1, sizeof(ilS_script));
 
-    return s;
+    self->L = luaL_newstate();
+    luaL_openlibs(self->L);
+
+    lua_pushcfunction(self->L, &print);
+    lua_setglobal(self->L, "print");
+
+    lua_pushcfunction(self->L, &traceback);
+    self->ehandler = lua_gettop(self->L);
+
+    return self;
 }
 
 /*int ilS_fromAsset(ilS_script* self, ilA_asset * asset)
@@ -86,17 +95,6 @@ int ilS_fromSource(ilS_script* self, const char *source, size_t len)
         sprintf(chunkname, "@%s", self->filename);
     }
 
-    if (!self->L) {
-        self->L = luaL_newstate();
-        luaL_openlibs(self->L);
-
-        lua_pushcfunction(self->L, &print);
-        lua_setglobal(self->L, "print");
-
-        lua_pushcfunction(self->L, &traceback);
-        self->ehandler = lua_gettop(self->L);
-    }
-
 #if LUA_VERSION_NUM == 502
     int res = lua_load(self->L, &reader, &data, chunkname, NULL);
 #else
@@ -122,6 +120,24 @@ void ilS_free(ilS_script* self)
         lua_close(self->L);
     }
     free(self);
+}
+
+// borrowed from http://stackoverflow.com/a/4156038/2103698 and converted to C
+int ilS_addPath(ilS_script* self, const char* path)
+{
+    lua_State *L = self->L;
+    lua_getglobal(L, "package");
+    lua_getfield(L, -1, "path"); // get field "path" from table at top of stack (-1)
+    size_t cur_size;
+    const char *cur_path = lua_tolstring(L, -1, &cur_size); // grab path string from top of stack
+    char *newpath = calloc(1, cur_size + 1 + strlen(path) + 7); // string + / + string + /?.lua\0
+    sprintf(newpath, "%s;%s/?.lua", cur_path, path);
+    lua_pop(L, 1); // get rid of the string on the stack we just pushed on line 5
+    lua_pushstring(L, newpath); // push the new one
+    free(newpath);
+    lua_setfield(L, -2, "path"); // set the field "path" in table at -2 with value at top of stack
+    lua_pop(L, 1); // get rid of package table from top of stack
+    return 0; // all done!
 }
 
 int ilS_fromFile(ilS_script* self, const char * filename)
