@@ -296,8 +296,8 @@ void ilG_material_init()
     ilG_material_assignId(&mtl);
     mtl.name = "Default";
 
-    vertex_source = IL_ASSET_READFILE("shaders/default.vert");
-    fragment_source = IL_ASSET_READFILE("shaders/default.frag");
+    vertex_source = IL_ASSET_READFILE("default.vert");
+    fragment_source = IL_ASSET_READFILE("default.frag");
 
     if (!vertex_source) {
         il_error("Unable to open cube vertex shader");
