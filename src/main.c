@@ -14,12 +14,14 @@
 
 #define OPTIONS \
     OPT('m', "modules", required_argument, "Adds a directory to look for modules") \
-    OPT('r', "run", required_argument, "Runs a Lua script")
+    OPT('r', "run",     required_argument, "Runs a Lua script") \
+    OPT(0,   "scripts", required_argument, "Adds a directory to look for scripts")
 static const char *optstring = "m:r:";
 
 #define OPT(s, l, a, h) {l, a, NULL, s},
 static struct option longopts[] = {
     OPTIONS
+    {0, 0, NULL, 0}
 };
 #undef OPT
 
@@ -54,13 +56,21 @@ int main(int argc, char **argv)
     fprintf(stderr, "MAIN: Initializing engine.\n");
 
     IL_ARRAY(char*,) scripts = {0};
+    IL_ARRAY(char*,) script_paths = {0};
+    IL_ARRAY(char*,) module_paths = {0};
 
-    int opt, idx, has_modules = 0;
+    int opt, idx, has_modules = 0, has_scripts = 0;
     opterr = 0; // we don't want to print an error if another package uses an option
     while ((opt = getopt_long(argc, argv, optstring, longopts, &idx)) != -1) {
         switch(opt) {
+            case 0:
+                if (strcmp(longopts[idx].name, "scripts") == 0) {
+                    IL_APPEND(script_paths, strdup(optarg));
+                    has_scripts = 1;
+                }
+                break;
             case 'm':
-                load_modules(optarg, argc, argv);
+                IL_APPEND(module_paths, strdup(optarg));
                 has_modules = 1;
                 break;
             case 'r':
@@ -75,15 +85,41 @@ int main(int argc, char **argv)
     if (!has_modules) {
         load_modules("modules", argc, argv); // default path
     }
+    int i;
+    for (i = 0; i < module_paths.length; i++) {
+        load_modules(module_paths.data[i], argc, argv);
+        free(module_paths.data[i]);
+    }
+    IL_FREE(module_paths);
+
+    if (!has_scripts) {
+        IL_APPEND(script_paths, "script");
+    }
     
     ilS_script *s = ilS_new();
-    ilS_fromFile(s, "script/bootstrap.lua");
+    for (i = 0; i < script_paths.length; i++) {
+        ilS_addPath(s, script_paths.data[i]);
+    }
+    int found_bootstrap = 0;
+    for (i = 0; i < script_paths.length; i++) {
+        char path[strlen(script_paths.data[i]) + strlen("/bootstrap.lua") + 1];
+        sprintf(path, "%s/bootstrap.lua", script_paths.data[i]);
+        if (!access(path, F_OK)) { // returns 0 on success
+            ilS_fromFile(s, path);
+            found_bootstrap = 1;
+            break;
+        }
+    }
+    if (!found_bootstrap) {
+        fprintf(stderr, "MAIN: Could not find bootstrap.lua\n");
+        return 1;
+    }
     int res = ilS_run(s);
     if (res != 0) {
         fprintf(stderr, "MAIN: %s\n", s->err);
         return 1;
     }
-    int i;
+    int j;
     for (i = 0; i < scripts.length; i++) {
         ilS_fromFile(s, scripts.data[i]);
         free(scripts.data[i]);
@@ -92,6 +128,10 @@ int main(int argc, char **argv)
             fprintf(stderr, "MAIN: %s\n", s->err);
         }
     }
+    for (i = 0; i < script_paths.length; i++) {
+        free(script_paths.data[i]);
+    }
+    IL_FREE(script_paths);
     IL_FREE(scripts);
 
     // main loop

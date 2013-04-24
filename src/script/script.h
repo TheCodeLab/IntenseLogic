@@ -34,6 +34,7 @@ typedef struct ilS_script {
 
 ilS_script * ilS_new();
 void ilS_free(ilS_script* self);
+int ilS_addPath(ilS_script* self, const char *path);
 //int ilS_fromAsset(ilS_script* self, ilA_asset * asset);
 int ilS_fromSource(ilS_script* self, const char *source, size_t len);
 int ilS_fromFile(ilS_script* self, const char * filename);
