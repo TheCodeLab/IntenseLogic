@@ -3,7 +3,7 @@
 -- @author tiffany
 local ffi = require "ffi"
 
-require "scalar_defs"
+require "math.scalar_defs"
 
 ffi.cdef [[
 

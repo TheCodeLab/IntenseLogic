@@ -1,5 +1,5 @@
 local ffi = require "ffi"
-require "scalar_defs"
+require "math.scalar_defs"
 
 local quaternion;
 local vector3;
@@ -44,7 +44,7 @@ local mul = c_wrap(ffi.C.il_vec4_mul)
 local div = c_wrap(ffi.C.il_vec4_div)
 
 local function index(t, k)
-    vector3 = vector3 or require "vector3"
+    vector3 = vector3 or require "math.vector3"
     if k == "len" or k == "length" then
         return ffi.C.il_vec4_len(t.ptr)
     elseif k == "vec3" then

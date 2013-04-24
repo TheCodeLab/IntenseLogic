@@ -1,6 +1,6 @@
 local ffi = require "ffi"
 
-local tunit = require "textureunit"
+local tunit = require "graphics.textureunit"
 
 ffi.cdef [[
 

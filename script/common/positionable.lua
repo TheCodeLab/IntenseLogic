@@ -1,14 +1,14 @@
-local ffi = require "ffi"
-local drawable = require "drawable"
-local material = require "material"
-local texture = require "texture"
-local world = require "world"
-local context = require "context"
-local vector3 = require "vector3"
-local quaternion = require "quaternion"
-local base = require "base"
+local ffi           = require "ffi"
+local drawable      = require "graphics.drawable"
+local material      = require "graphics.material"
+local texture       = require "graphics.texture"
+local world         = require "common.world"
+local context       = require "graphics.context"
+local vector3       = require "math.vector3"
+local quaternion    = require "math.quaternion"
+local base          = require "common.base"
 
-require "scalar_defs"
+require "math.scalar_defs"
 
 ffi.cdef [[
 

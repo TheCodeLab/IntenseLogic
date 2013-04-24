@@ -3,8 +3,8 @@
 -- @author tiffany
 local ffi = require "ffi"
 
-require "scalar_defs"
-require "vector4"
+require "math.scalar_defs"
+require "math.vector4"
 
 ffi.cdef [[
 

@@ -1,20 +1,20 @@
 require "strict"
 
-local script = require "script"
-local drawable = require "drawable";
-local context  = require "context";
-local texture  = require "texture";
-local material = require "material";
-local camera   = require "camera";
-local positionable = require "positionable"
-local world = require "world"
-local matrix = require "matrix"
-local vector3 = require "vector3"
-local mesh = require "mesh"
-local event = require "event"
-local input = require "input"
-local quaternion = require "quaternion"
-local light = require "light"
+local script        = require "script"
+local drawable      = require "graphics.drawable"
+local context       = require "graphics.context"
+local texture       = require "graphics.texture"
+local material      = require "graphics.material"
+local camera        = require "graphics.camera"
+local positionable  = require "common.positionable"
+local world         = require "common.world"
+local matrix        = require "math.matrix"
+local vector3       = require "math.vector3"
+local mesh          = require "graphics.mesh"
+local event         = require "common.event"
+local input         = require "common.input"
+local quaternion    = require "math.quaternion"
+local light         = require "graphics.light"
 
 local w = world();
 local c = context(800, 600);
