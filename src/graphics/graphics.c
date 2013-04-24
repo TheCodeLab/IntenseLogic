@@ -6,6 +6,8 @@
 #include <GL/glew.h>
 #include <GL/glfw.h>
 #include <math.h>
+#include <unistd.h>
+#include <getopt.h>
 
 #include "graphics/camera.h"
 #include "common/event.h"
@@ -27,6 +29,24 @@
 #include "graphics/arrayattrib.h"
 #include "graphics/textureunit.h"
 #include "graphics/fragdata.h"
+
+#define OPTIONS \
+    OPT(0,   "shaders", required_argument, "Adds a directory to look for shaders") \
+    OPT('w', "width",   required_argument, "Sets the window width") \
+    OPT('h', "height",  required_argument, "Sets the window height")
+static const char *optstring = "w:h:";
+
+#define OPT(s, l, a, h) {l, a, NULL, s},
+static struct option longopts[] = {
+    OPTIONS
+};
+#undef OPT
+
+#define OPT(s, l, a, h) h,
+static const char *help[] = {
+    OPTIONS
+};
+#undef OPT
 
 static int width = 800;
 static int height = 600;
@@ -165,8 +185,31 @@ static void event_setup()
 
 int il_bootstrap(int argc, char **argv)
 {
-    // setup our shader directory
-    ilA_registerReadDir(il_string_new("shaders", strlen("shaders")),0);
+    int opt, idx, has_shaders = 0;
+    opterr = 0; // we don't want to print an error if another package uses an option
+    while ((opt = getopt_long(argc, argv, optstring, longopts, &idx)) != -1) {
+        switch(opt) {
+            case 0:
+                if (strcmp(longopts[idx].name, "shaders") == 0) {
+                    ilA_registerReadDir(il_string_new(optarg, strlen(optarg)), 0);
+                    has_shaders = 1;
+                }
+                break;
+            case 'w':
+                width = atoi(optarg);
+                break;
+            case 'h':
+                height = atoi(optarg);
+                break;
+            case '?':
+            default:
+                break;
+        }
+    }
+    if (!has_shaders) {
+        // guess at the location of our shaders
+        ilA_registerReadDir(il_string_new("shaders", strlen("shaders")),0);
+    }
 
     // Setup GL context (glfw, glew, etc.)
     context_setup();

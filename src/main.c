@@ -15,16 +15,16 @@
 #define OPTIONS \
     OPT('m', "modules", required_argument, "Adds a directory to look for modules") \
     OPT('r', "run", required_argument, "Runs a Lua script")
-const char *optstring = "m:r:";
+static const char *optstring = "m:r:";
 
 #define OPT(s, l, a, h) {l, a, NULL, s},
-struct option longopts[] = {
+static struct option longopts[] = {
     OPTIONS
 };
 #undef OPT
 
 #define OPT(s, l, a, h) h,
-const char *help[] = {
+static const char *help[] = {
     OPTIONS
 };
 #undef OPT
