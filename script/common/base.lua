@@ -316,7 +316,7 @@ end
 --- Fires an event for the given base or type
 -- @see event.event
 function base.event(self, name, ...)
-    event = event or require "event"
+    event = event or require "common.event"
     if ffi.istype("il_base", self) then
         event.event(ffi.C.ilE_base_registry(self), name, ...)
     elseif ffi.istype("il_type", self) then
@@ -327,7 +327,7 @@ end
 --- Sets a timer for the given base or type
 -- @see event.timer
 function base.timer(self, name, ...)
-    event = event or require "event"
+    event = event or require "common.event"
     if ffi.istype("il_base", self) then
         event.timer(ffi.C.ilE_base_registry(self), name, ...)
     elseif ffi.istype("il_type", self) then
@@ -339,7 +339,7 @@ end
 --- Registers a hook for the given base or type
 -- @see event.register
 function base.register(self, name, fn)
-    event = event or require "event"
+    event = event or require "common.event"
     if ffi.istype("il_base", self) then
         event.register(ffi.C.ilE_base_registry(self), name, fn)
     elseif ffi.istype("il_type", self) then

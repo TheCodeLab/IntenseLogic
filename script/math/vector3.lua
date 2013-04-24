@@ -56,7 +56,7 @@ local oldmul = c_wrap(ffi.C.il_vec4_mul)
 local div = c_wrap(ffi.C.il_vec4_div)
 
 local function mul(a,b)
-    quaternion = quaternion or require "quaternion"
+    quaternion = quaternion or require "math.quaternion"
     if quaternion.check(b) then
         return vector3.wrap(ffi.C.il_vec3_rotate(a.ptr, b.ptr, nil))
     else
@@ -76,7 +76,7 @@ local function index(t, k)
     elseif k == "normal" then
         return vector3.wrap(ffi.C.il_vec3_normal(t.ptr, nil))
     elseif k == "vec4" then
-        vector4 = vector4 or require "vector4"
+        vector4 = vector4 or require "math.vector4"
         return vector4.wrap(ffi.C.il_vec3_to_vec4(t.ptr, nil))
     end
     return vector3[k]

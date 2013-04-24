@@ -1,5 +1,3 @@
-package.path = package.path..";script/?.lua;script/graphics/?.lua;script/common/?.lua;script/util/?.lua;script/math/?.lua"
-
 local oldprint=print
 function _G.print(...)
     local t = {...}
