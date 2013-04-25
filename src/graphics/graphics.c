@@ -250,20 +250,10 @@ static void draw_geometry()
 
         ilG_bindable_swap(&drawable, (void**)&context->drawable, ilG_trackGetDrawable(iter));
         ilG_bindable_swap(&material, (void**)&context->material, ilG_trackGetMaterial(iter));
-        if (context->texture != ilG_trackGetTexture(iter)) {
-            if (context->texture && context->texture->unbind)
-                context->texture->unbind(context, 
-                    context->texture->unbind_ctx);
-            context->texture = ilG_trackGetTexture(iter);
-            if (context->texture && context->texture->bind)
-                context->texture->bind(context, 
-                    context->texture->bind_ctx);
-        }
+        ilG_bindable_swap(&texture,  (void**)&context->texture,  ilG_trackGetTexture(iter));
 
-        if (context->texture && context->texture->update)
-            context->texture->update(context, pos, 
-                context->texture->update_ctx);
         ilG_bindable_action(material, context->material);
+        ilG_bindable_action(texture,  context->texture);
         ilG_bindable_action(drawable, context->drawable);
     }
     context->drawable = NULL;

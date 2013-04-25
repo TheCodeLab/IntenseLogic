@@ -1,54 +1,45 @@
 #include "texture.h"
 
 #include <stdlib.h>
+#include <string.h>
 #include <GL/glew.h>
 
 #include "asset/asset.h"
 #include "asset/texture.h"
 #include "graphics/tracker.h"
 #include "graphics/context.h"
-#include "graphics/textureunit.h"
 #include "util/log.h"
+#include "graphics/bindable.h"
 
-struct texture_ctx {
-    struct ilG_material* mtl;
-    struct texture_unit {
-        int used;
-        GLuint tex;
-        GLenum mode;
-    } units[ILG_TUNIT_NUMUNITS];
-};
-
-static void texture_update(ilG_context* context, struct il_positionable* pos, void *user)
+static void texture_update(void *obj)
 {
-    (void)pos;
     unsigned int i;
-    struct texture_ctx *ctx = user;
+    ilG_texture *tex = obj;
 
-    if (ctx->mtl == context->material) return;
-    ctx->mtl = context->material;
-    for (i = 0; i < context->num_active; i++) {
-        if (ctx->units[context->texunits[i]].used) {
+    if (tex->last_mtl == tex->context->material) {
+        return;
+    }
+    tex->last_mtl = tex->context->material;
+    for (i = 0; i < tex->context->num_active; i++) {
+        if (tex->units[tex->context->texunits[i]].used) {
             glActiveTexture(i);
-            glBindTexture(ctx->units[context->texunits[i]].mode, ctx->units[context->texunits[i]].tex);
+            glBindTexture(tex->units[tex->context->texunits[i]].mode, tex->units[tex->context->texunits[i]].tex);
         }
     }
 }
 
-ilG_texture* ilG_texture_new()
+static void texture_init(void *obj)
 {
-    ilG_texture *tex = calloc(1, sizeof(ilG_texture));
-    struct texture_ctx *ctx = calloc(1, sizeof(struct texture_ctx));
-    tex->update = &texture_update;
-    tex->bind_ctx = 
-    tex->update_ctx = 
-    tex->unbind_ctx = ctx;
+    ilG_texture *tex = obj;
     tex->name = "Unnamed";
     ilG_texture_assignId(tex);
-    return tex;
 }
 
-char *strdup(const char*);
+void ilG_texture_setContext(ilG_texture* self, struct ilG_context *context)
+{
+    self->context = context;
+}
+
 void ilG_texture_setName(ilG_texture* self, const char *name)
 {
     self->name = strdup(name);
@@ -62,8 +53,7 @@ void ilG_texture_fromfile(ilG_texture* self, unsigned unit, const char *name)
 
 void ilG_texture_fromasset(ilG_texture* self, unsigned unit, ilA_asset* asset)
 {
-    struct texture_ctx *ctx = self->update_ctx;
-    ctx->units[unit] = (struct texture_unit) {
+    self->units[unit] = (ilG_textureunit) {
         .used = 1,
         .tex = ilA_assetToTexture(asset),
         .mode = GL_TEXTURE_2D
@@ -72,9 +62,7 @@ void ilG_texture_fromasset(ilG_texture* self, unsigned unit, ilA_asset* asset)
 
 void ilG_texture_fromGL(ilG_texture* self, unsigned unit, GLenum target, GLuint tex)
 {
-    struct texture_ctx *ctx = self->update_ctx;
-
-    ctx->units[unit] = (struct texture_unit) {
+    self->units[unit] = (ilG_textureunit) {
         .used = 1,
         .tex = tex,
         .mode = target
@@ -85,7 +73,6 @@ void ilG_texture_fromdata(ilG_texture* self, unsigned unit, GLenum target,
     GLenum internalformat, unsigned width, unsigned height, unsigned depth, GLenum format, 
     GLenum type, void *data)
 {
-    struct texture_ctx *ctx = self->update_ctx;
     GLuint tex;
 
     glGenTextures(target, &tex);
@@ -124,7 +111,7 @@ void ilG_texture_fromdata(ilG_texture* self, unsigned unit, GLenum target,
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 
-    ctx->units[unit] = (struct texture_unit) {
+    self->units[unit] = (ilG_textureunit) {
         .used = 1,
         .tex = tex,
         .mode = target
@@ -133,45 +120,39 @@ void ilG_texture_fromdata(ilG_texture* self, unsigned unit, GLenum target,
 
 GLuint ilG_texture_getTex(ilG_texture* self, unsigned unit, GLenum *target)
 {
-    struct texture_ctx *ctx = self->update_ctx;
-
     if (target) {
-        *target = ctx->units[unit].mode;
+        *target = self->units[unit].mode;
     }
-    return ctx->units[unit].tex;
+    return self->units[unit].tex;
 }
 
 void ilG_texture_setFilter(ilG_texture* self, unsigned unit, GLenum min_filter, GLenum mag_filter)
 {
-    struct texture_ctx *ctx = self->update_ctx;
-
-    glBindTexture(ctx->units[unit].mode, ctx->units[unit].tex);
+    glBindTexture(self->units[unit].mode, self->units[unit].tex);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, mag_filter);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, min_filter);
 }
 
-static ilG_texture def;
-static struct texture_ctx defctx;
+il_type ilG_texture_type = {
+    .typeclasses = NULL,
+    .storage = NULL,
+    .constructor = texture_init,
+    .name = "il.graphics.texture",
+    .registry = NULL,
+    .size = sizeof(ilG_texture),
+    .parent = NULL
+};
+
+ilG_bindable texture_bindable = {
+    .name = "il.graphics.bindable",
+    .hh = {0},
+    .bind = NULL,
+    .action = texture_update,
+    .unbind = NULL
+};
 
 void ilG_texture_init()
 {
-    // 1x1 white texture for now I guess
-    static const unsigned char data[] = {
-        255, 255, 255, 255
-    };
-
-    def.name = "Default Texture";
-    glGenTextures(1, &defctx.units[ILG_TUNIT_COLOR0].tex);
-    glBindTexture(GL_TEXTURE_2D, defctx.units[ILG_TUNIT_COLOR0].tex);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, 
-        GL_UNSIGNED_BYTE, data);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    def.update = &texture_update;
-    def.bind_ctx =
-    def.update_ctx =
-    def.unbind_ctx = &defctx;
-    ilG_texture_default = &def;
-    ilG_texture_assignId(ilG_texture_default);
+    il_impl(&ilG_texture_type, &texture_bindable);
 }
 
