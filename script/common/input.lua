@@ -1,3 +1,4 @@
+--- Input functions
 local ffi = require "ffi"
 
 ffi.cdef [[
@@ -11,6 +12,7 @@ void ilI_grabMouse(int mode);
 
 local input = {}
 
+--- Returns whether the given key code is being pressed
 function input.isKeySet(key)
     if type(key) == "string" then
         key = string.byte(key)--key = ffi.C.il_keymap_getkey(key);
@@ -18,10 +20,12 @@ function input.isKeySet(key)
     return ffi.C.ilI_isKeySet(key)
 end
 
+--- Returns whether the given mouse button is down
 function input.isButtonSet(button)
     return ffi.C.ilI_isButtonSet(button)
 end
 
+--- Sets whether or not the window should be grabbing the mouse and receiving relative mouse motions
 function input.grabMouse(mode)
     ffi.C.ilI_grabMouse(mode)
 end
