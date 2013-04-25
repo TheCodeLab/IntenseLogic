@@ -172,17 +172,25 @@ il_type *il_typeof(void *obj)
     return ((il_base*) obj)->type;
 }
 
-il_base *il_new(il_type *type)
+void *il_new(il_type *type)
 {
     il_base *obj = calloc(1, il_sizeof(type));
-    obj->refs = 1;
-    obj->type = type;
+    il_init(type, obj);
+    return obj;
+}
+
+void il_init(il_type *type, void *obj)
+{
+    il_base *base = obj;
+    base->refs = 1;
+    base->type = type;
     il_type *cur = type;
     while(cur) {
-        cur->constructor(obj);
+        if (cur->constructor) {
+            cur->constructor(base);
+        }
         cur = cur->parent;
     }
-    return obj;
 }
 
 const char *il_name(il_type *type)
@@ -197,9 +205,9 @@ const void *il_cast(il_type* T, const char *to)
     return tc;
 }
 
-void il_impl(il_type* T, const char *name, void *impl)
+void il_impl(il_type* T, void *impl)
 {
     il_typeclass *tc = impl;
-    HASH_ADD_STR(T->typeclasses, name, tc);
+    HASH_ADD_KEYPTR(hh, T->typeclasses, tc->name, strlen(tc->name), tc);
 }
 

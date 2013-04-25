@@ -68,8 +68,9 @@ static void mtl_update(ilG_context* context, struct il_positionable* pos, void *
         return;
     }
     if ((mtl->attrs & context->drawable->attrs) != mtl->attrs) {
-        il_error("Drawable \"%s\" does not have the required attributes to "
-                 "be drawn with Material \"%s\"", context->drawable->name, 
+        il_error("Drawable %s<%p> does not have the required attributes to "
+                 "be drawn with Material \"%s\"", 
+                 il_typeof(context->drawable)->name, context->drawable,
                  mtl->name);
     }
     unsigned int i;
@@ -273,8 +274,9 @@ static void update(ilG_context* context, struct il_positionable* pos, void *ctx)
     (void)ctx;
     if (!ILG_TESTATTR(context->drawable->attrs, ILG_ARRATTR_POSITION) ||
         !ILG_TESTATTR(context->drawable->attrs, ILG_ARRATTR_TEXCOORD)) {
-        il_error("Drawable \"%s\" does not have the required attributes to "
-                 "be drawn with Material \"%s\"", context->drawable->name, 
+        il_error("Drawable %s<%p> does not have the required attributes to "
+                 "be drawn with Material \"%s\"", 
+                 il_typeof(context->drawable)->name, context->drawable,
                  context->material->name);
     }
     ilG_bindMVP(glGetUniformLocation(context->material->program, "mvp"), ILG_MVP, context->camera, pos);

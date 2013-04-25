@@ -29,6 +29,7 @@
 #include "graphics/arrayattrib.h"
 #include "graphics/textureunit.h"
 #include "graphics/fragdata.h"
+#include "graphics/bindable.h"
 
 #define OPTIONS \
     OPT(0,   "shaders", required_argument, "Adds a directory to look for shaders") \
@@ -241,17 +242,10 @@ static void draw_geometry()
     il_positionable* pos = NULL;
     ilG_trackiterator * iter = ilG_trackiterator_new(context);
     gettimeofday(&tv, NULL);
+    const ilG_bindable *drawable = NULL, *material = NULL, *texture = NULL;
 
     while (ilG_trackIterate(iter)) {
-        if (context->drawable != ilG_trackGetDrawable(iter)) {
-            if (context->drawable && context->drawable->unbind)
-                context->drawable->unbind(context, 
-                    context->drawable->unbind_ctx);
-            context->drawable = ilG_trackGetDrawable(iter);
-            if (context->drawable && context->drawable->bind)
-                context->drawable->bind(context, 
-                    context->drawable->bind_ctx);
-        }
+        ilG_bindable_swap(&drawable, (void**)&context->drawable, ilG_trackGetDrawable(iter));
         if (context->material != ilG_trackGetMaterial(iter)) {
             if (context->material && context->material->unbind)
                 context->material->unbind(context, 
@@ -273,18 +267,13 @@ static void draw_geometry()
 
         pos = ilG_trackGetPositionable(iter);
 
-        if (context->drawable && context->drawable->update)
-            context->drawable->update(context, pos, 
-                context->drawable->update_ctx);
         if (context->material && context->material->update)
             context->material->update(context, pos, 
                 context->material->update_ctx);
         if (context->texture && context->texture->update)
             context->texture->update(context, pos, 
                 context->texture->update_ctx);
-
-        if (context->drawable && context->drawable->draw)
-            context->drawable->draw(context, pos, context->drawable->draw_ctx);
+        ilG_bindable_action(drawable, context->drawable);
     }
     context->drawable = NULL;
     context->material = NULL;
@@ -364,9 +353,8 @@ static void draw_lights()
     //glBindBufferBase(GL_UNIFORM_BUFFER, context->lightdata.lights_index, context->lightdata.lights_ubo);
     //glBindBufferBase(GL_UNIFORM_BUFFER, context->lightdata.mvp_index, context->lightdata.mvp_ubo);
     context->drawable = ilG_icosahedron;
-    if (context->drawable->bind) {
-        context->drawable->bind(context, context->drawable->bind_ctx);
-    }
+    const ilG_bindable *drawable = il_cast(il_typeof(context->drawable), "il.graphics.bindable");
+    ilG_bindable_bind(drawable, context->drawable);
     context->material->bind(context, context->material->bind_ctx);
     glUniform3f(glGetUniformLocation(context->material->program, "camera"), 
             context->camera->positionable.position[0], 
@@ -389,16 +377,13 @@ static void draw_lights()
           radius_loc    = glGetUniformLocation(context->material->program, "radius");
     unsigned int i;
     for (i = 0; i < context->lights.length; i++) {
-        if (context->drawable->update) {
-            context->drawable->update(context, context->lights.data[i]->positionable, context->drawable->update_ctx);
-        }
         context->material->update(context, context->lights.data[i]->positionable, context->material->update_ctx);
         il_vec4 pos = context->lights.data[i]->positionable->position;
         glUniform3f(position_loc, pos[0], pos[1], pos[2]);
         il_vec4 col = context->lights.data[i]->color;
         glUniform3f(color_loc, col[0], col[1], col[2]);
         glUniform1f(radius_loc, context->lights.data[i]->radius);
-        context->drawable->draw(context, context->lights.data[i]->positionable, context->drawable->draw_ctx);
+        ilG_bindable_action(drawable, context->drawable);
         //glDrawElements(GL_TRIANGLES, sizeof(indices)/sizeof(GLuint), GL_UNSIGNED_INT, NULL);
     }
     //glDrawElementsInstanced(GL_TRIANGLES, sizeof(indices)/sizeof(GLuint), GL_UNSIGNED_INT, NULL, context->lights.length);

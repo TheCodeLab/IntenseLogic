@@ -9,7 +9,8 @@
 #include "graphics/glutil.h"
 #include "graphics/texture.h"
 #include "graphics/textureunit.h"
-
+// TODO: heightmaps, compatible with the updated object system
+/*
 struct height_ctx {
     GLuint vao, vbo, ibo;
     unsigned int vertices;
@@ -135,4 +136,4 @@ struct ilG_texture* ilG_heightmapTexture(const il_heightmap* self)
     tex->unbind_ctx = ctx;
     return tex;
 }
-
+*/
