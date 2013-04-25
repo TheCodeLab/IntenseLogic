@@ -31,7 +31,7 @@ mtl:vertex(vf:read "*a")
 mtl:fragment(ff:read "*a")
 vf:close()
 ff:close()
-mtl:name "Test material"
+mtl:mtlname "Test material"
 mtl:arrayAttrib("position", "in_Position")
 mtl:arrayAttrib("texcoord", "in_Texcoord")
 mtl:arrayAttrib("normal", "in_Normal")
@@ -42,7 +42,7 @@ mtl:fragData("normal", "out_Normal")
 mtl:fragData("accumulation", "out_Ambient")
 mtl:fragData("diffuse", "out_Diffuse")
 mtl:fragData("specular", "out_Specular")
-mtl:link()
+mtl:link(c)
 if false then
     m = mesh "minecraft.obj"
     print(m.ptr)
@@ -59,7 +59,7 @@ else
         local box = positionable()
         w:add(box.ptr)
         box.drawable = m.ptr --drawable.box
-        box.material = mtl.ptr
+        box.material = mtl
         box.texture = t.ptr
         box.position = (vector3(i % width, math.floor((i%(width*width)) / width), math.floor(i/(width*width))) * vector3(15, 15, 15)).ptr
         box:track(c.ptr)
