@@ -119,7 +119,6 @@ int main(int argc, char **argv)
         fprintf(stderr, "MAIN: %s\n", s->err);
         return 1;
     }
-    int j;
     for (i = 0; i < scripts.length; i++) {
         ilS_fromFile(s, scripts.data[i]);
         free(scripts.data[i]);
@@ -128,9 +127,9 @@ int main(int argc, char **argv)
             fprintf(stderr, "MAIN: %s\n", s->err);
         }
     }
-    for (i = 0; i < script_paths.length; i++) {
+    /*for (i = 0; i < script_paths.length; i++) {
         free(script_paths.data[i]);
-    }
+    }*/ // TODO: stop leaking memory here because of weird segfault bug
     IL_FREE(script_paths);
     IL_FREE(scripts);
 

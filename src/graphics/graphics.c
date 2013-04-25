@@ -187,7 +187,7 @@ static void event_setup()
 int il_bootstrap(int argc, char **argv)
 {
     int opt, idx, has_shaders = 0;
-    opterr = 1; // we don't want to print an error if another package uses an option
+    opterr = 0; // we don't want to print an error if another package uses an option
     optind = 0; // reset getopt
     while ((opt = getopt_long(argc, argv, optstring, longopts, &idx)) != -1) {
         switch(opt) {
