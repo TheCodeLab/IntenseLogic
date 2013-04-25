@@ -1,27 +1,29 @@
+--- A wrapper for meshes
+-- Inherits `graphics.drawable`.
+-- @type mesh
 local ffi = require "ffi"
-
+local base = require "common.base"
 local drawable = require "graphics.drawable"
 
 ffi.cdef [[
 
-struct ilG_drawable3d;
+extern il_type ilG_mesh_type;
 
-struct ilG_obj_mesh;
-
-struct ilG_drawable3d* ilG_mesh_fromObj(struct ilG_obj_mesh * mesh);
-
-struct ilG_drawable3d* ilG_mesh_fromFile(const char *name);
+ilG_drawable3d* ilG_mesh_fromFile(const char *name);
 
 ]]
 
-local mesh = {}
+base.wrap "il.graphics.mesh" {
+    struct = "ilG_drawable3d";
+    --- Creates a mesh from a file
+    -- @function fromFile
+    -- @tparam string name The filename
+    fromFile = ffi.C.ilG_mesh_fromFile;
+    --- Calls `mesh:fromFile`
+    __call = function(self, file)
+        return ffi.C.ilG_mesh_fromFile(file)
+    end;
+}
 
-function mesh.create(filename)
-    assert(type(filename) == "string");
-    return drawable.wrap(ffi.C.ilG_mesh_fromFile(filename));
-end
-
-setmetatable(mesh, {__call = function(self, ...) return mesh.create(...) end})
-
-return mesh;
+return ffi.C.ilG_mesh_type
 

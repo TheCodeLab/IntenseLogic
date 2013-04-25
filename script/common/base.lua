@@ -97,6 +97,7 @@ void il_impl(il_type* T, const char *name, void *impl);
 local base = {}
 
 local per_class = {}
+local set_types = {}
 
 local function metafun(name, def)
     return function(t, ...)
@@ -157,8 +158,9 @@ ffi.metatype("struct il_storage", {
 function base.wrap(name)
     return function(cons)
         per_class[name] = cons
-        if cons.struct then
+        if cons.struct and not set_types[cons.struct] then
             ffi.metatype(cons.struct, base.metatable)
+            set_types[cons.struct] = true
         end
     end
 end
