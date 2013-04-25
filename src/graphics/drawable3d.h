@@ -12,6 +12,7 @@ struct ilG_drawable3d {
     unsigned long long attrs;
     unsigned int id;
     struct ilG_context *context;
+    const char *name;
 };
 
 extern il_type ilG_drawable3d_type;

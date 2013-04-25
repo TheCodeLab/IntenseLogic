@@ -245,16 +245,11 @@ static void draw_geometry()
     const ilG_bindable *drawable = NULL, *material = NULL, *texture = NULL;
 
     while (ilG_trackIterate(iter)) {
+        pos = ilG_trackGetPositionable(iter);
+        context->positionable = pos;
+
         ilG_bindable_swap(&drawable, (void**)&context->drawable, ilG_trackGetDrawable(iter));
-        if (context->material != ilG_trackGetMaterial(iter)) {
-            if (context->material && context->material->unbind)
-                context->material->unbind(context, 
-                    context->material->unbind_ctx);
-            context->material = ilG_trackGetMaterial(iter);
-            if (context->material && context->material->bind)
-                context->material->bind(context, 
-                    context->material->bind_ctx);
-        }
+        ilG_bindable_swap(&material, (void**)&context->material, ilG_trackGetMaterial(iter));
         if (context->texture != ilG_trackGetTexture(iter)) {
             if (context->texture && context->texture->unbind)
                 context->texture->unbind(context, 
@@ -265,14 +260,10 @@ static void draw_geometry()
                     context->texture->bind_ctx);
         }
 
-        pos = ilG_trackGetPositionable(iter);
-
-        if (context->material && context->material->update)
-            context->material->update(context, pos, 
-                context->material->update_ctx);
         if (context->texture && context->texture->update)
             context->texture->update(context, pos, 
                 context->texture->update_ctx);
+        ilG_bindable_action(material, context->material);
         ilG_bindable_action(drawable, context->drawable);
     }
     context->drawable = NULL;
@@ -296,7 +287,7 @@ static void draw_lights()
         ilG_material_matrix(mtl, ILG_INVERSE | ILG_VP, "ivp");
         ilG_material_fragData(mtl, ILG_FRAGDATA_ACCUMULATION, "out_Color");
         ilG_material_matrix(mtl, ILG_MVP, "mvp");
-        if (ilG_material_link(mtl)) {
+        if (ilG_material_link(mtl, context)) {
             abort();
         }
         context->lightdata.material = mtl;
@@ -353,9 +344,10 @@ static void draw_lights()
     //glBindBufferBase(GL_UNIFORM_BUFFER, context->lightdata.lights_index, context->lightdata.lights_ubo);
     //glBindBufferBase(GL_UNIFORM_BUFFER, context->lightdata.mvp_index, context->lightdata.mvp_ubo);
     context->drawable = ilG_icosahedron;
-    const ilG_bindable *drawable = il_cast(il_typeof(context->drawable), "il.graphics.bindable");
+    const ilG_bindable *drawable = il_cast(il_typeof(context->drawable), "il.graphics.bindable"),
+                       *material = il_cast(il_typeof(context->material), "il.graphics.bindable");
     ilG_bindable_bind(drawable, context->drawable);
-    context->material->bind(context, context->material->bind_ctx);
+    ilG_bindable_bind(material, context->material);
     glUniform3f(glGetUniformLocation(context->material->program, "camera"), 
             context->camera->positionable.position[0], 
             context->camera->positionable.position[1],
@@ -377,7 +369,7 @@ static void draw_lights()
           radius_loc    = glGetUniformLocation(context->material->program, "radius");
     unsigned int i;
     for (i = 0; i < context->lights.length; i++) {
-        context->material->update(context, context->lights.data[i]->positionable, context->material->update_ctx);
+        ilG_bindable_action(material, context->material);
         il_vec4 pos = context->lights.data[i]->positionable->position;
         glUniform3f(position_loc, pos[0], pos[1], pos[2]);
         il_vec4 col = context->lights.data[i]->color;
@@ -388,7 +380,8 @@ static void draw_lights()
     }
     //glDrawElementsInstanced(GL_TRIANGLES, sizeof(indices)/sizeof(GLuint), GL_UNSIGNED_INT, NULL, context->lights.length);
     glDisable(GL_BLEND);
-    context->material->unbind(context, context->material->unbind_ctx);
+    ilG_bindable_unbind(drawable, context->drawable);
+    ilG_bindable_unbind(material, context->material);
     ilG_testError("Error drawing lights");
 }
 
@@ -478,7 +471,7 @@ static void global_draw(const ilE_registry* registry, const char *name, size_t s
         ilG_material_arrayAttrib(material, ILG_ARRATTR_POSITION, "in_Position");
         ilG_material_arrayAttrib(material, ILG_ARRATTR_TEXCOORD, "in_Texcoord");
         ilG_material_textureUnit(material, ILG_TUNIT_NONE, "tex");
-        if (ilG_material_link(material)) {
+        if (ilG_material_link(material, context)) {
             abort();
         }
 	ilG_testError("Error creating material");
@@ -499,7 +492,7 @@ static void global_draw(const ilE_registry* registry, const char *name, size_t s
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
     context->material = material;
-    material->bind(context, material->bind_ctx);
+    ilG_bindable_bind(il_cast(il_typeof(material), "il.graphics.bindable"), material);
     // no update() as we don't deal with positionables here
     // setup to do postprocessing
     glActiveTexture(GL_TEXTURE0);
@@ -507,7 +500,7 @@ static void global_draw(const ilE_registry* registry, const char *name, size_t s
     ilG_testError("Error setting up for post processing");
     fullscreenTexture();
     ilG_testError("Error post processing");
-    material->unbind(context, material->unbind_ctx);
+    ilG_bindable_unbind(il_cast(il_typeof(material), "il.graphics.bindable"), material);
     ilG_testError("Error cleaning up shaders");
     glfwSwapBuffers();
 }

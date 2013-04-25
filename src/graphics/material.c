@@ -36,10 +36,9 @@ struct ilG_material_config {
     const char* fraglocs[ILG_FRAGDATA_NUMATTRS];
 };
 
-static void mtl_bind(ilG_context* ctx, void * user)
+static void mtl_bind(void *obj)
 {
-    (void)user;
-    ilG_material* mtl = ctx->material;
+    ilG_material* mtl = obj;
     if (!mtl->valid) { // silently fail so we don't flood the console, the error has already been printed
         return;
     }
@@ -50,53 +49,51 @@ static void mtl_bind(ilG_context* ctx, void * user)
     for (i = 0; i < mtl->config->texunits.length; i++) {
         glUniform1i(mtl->config->texunits.data[i].uniform, i);
         ilG_testError("glUniform1i()");
-        ILG_TUNIT_ACTIVE(ctx, i, mtl->config->texunits.data[i].type);
+        ILG_TUNIT_ACTIVE(mtl->context, i, mtl->config->texunits.data[i].type);
     }
     for (i = 0; i < mtl->config->matrices.length; i++) {
         if (!(mtl->config->matrices.data[i].type & ILG_MODEL)) { 
             // same for any positionable, otherwise it goes in update()
-            ilG_bindMVP(mtl->config->matrices.data[i].uniform, mtl->config->matrices.data[i].type, ctx->camera, NULL);
+            ilG_bindMVP(mtl->config->matrices.data[i].uniform, mtl->config->matrices.data[i].type, mtl->context->camera, NULL);
         }
     }
 }
 
-static void mtl_update(ilG_context* context, struct il_positionable* pos, void *ctx)
+static void mtl_update(void *obj)
 {
-    (void)ctx;
-    ilG_material* mtl = context->material;
+    ilG_material* mtl = obj;
     if (!mtl->valid) {
         return;
     }
-    if ((mtl->attrs & context->drawable->attrs) != mtl->attrs) {
-        il_error("Drawable %s<%p> does not have the required attributes to "
-                 "be drawn with Material \"%s\"", 
-                 il_typeof(context->drawable)->name, context->drawable,
-                 mtl->name);
+    if ((mtl->attrs & mtl->context->drawable->attrs) != mtl->attrs) {
+        il_error("%s<%p> does not have the required attributes to "
+                 "be drawn with %s<%p>", 
+                 il_typeof(mtl->context->drawable)->name, 
+                 mtl->context->drawable,
+                 il_typeof(mtl)->name, mtl);
     }
     unsigned int i;
     for (i = 0; i < mtl->config->matrices.length; i++) {
         if (mtl->config->matrices.data[i].type & ILG_MODEL) {
             // otherwise it was bound in bind()
-            ilG_bindMVP(mtl->config->matrices.data[i].uniform, mtl->config->matrices.data[i].type, context->camera, pos);
+            ilG_bindMVP(mtl->config->matrices.data[i].uniform, mtl->config->matrices.data[i].type, mtl->context->camera, mtl->context->positionable);
         }
     }
 }
 
-static void mtl_unbind(ilG_context* context, void *ctx)
+static void mtl_unbind(void *obj)
 {
-    (void)ctx;
-    context->num_active = 0;
+    ilG_material *mtl = obj;
+    mtl->context->num_active = 0;
 }
 
 char *strdup(const char*);
 
-ilG_material* ilG_material_new()
+static void material_init(void *obj)
 {
-    ilG_material* mtl = calloc(1, sizeof(ilG_material));
+    ilG_material* mtl = obj;
     ilG_material_assignId(mtl);
-    mtl->name = "Unnamed";
     mtl->config = calloc(1, sizeof(struct ilG_material_config));
-    return mtl;
 }
 
 void ilG_material_vertex(ilG_material* self, il_string *source) 
@@ -144,10 +141,11 @@ void ilG_material_matrix(ilG_material* self, enum ilG_transform type, const char
     IL_APPEND(self->config->matrices, mat);
 }
 
-int /*failure*/ ilG_material_link(ilG_material* self)
+int /*failure*/ ilG_material_link(ilG_material* self, ilG_context *ctx)
 {
     ilG_testError("Unknown");
     il_log("Building shader \"%s\"", self->name);
+    self->context = ctx;
     self->vertshader = ilG_makeShader(GL_VERTEX_SHADER, self->config->vertsource);
     self->fragshader = ilG_makeShader(GL_FRAGMENT_SHADER, self->config->fragsource);
     self->program = glCreateProgram();
@@ -182,156 +180,44 @@ int /*failure*/ ilG_material_link(ilG_material* self)
     }
     ilG_testError("Error binding matrices");
 
-    self->bind = &mtl_bind;
-    self->update = &mtl_update;
-    self->unbind = &mtl_unbind;
     self->valid = 1;
     return 0;
 }
 
-/*ilG_material* ilG_material_new(il_string vertsource, il_string fragsource, 
-    const char *name, const char *position, const char *texcoord,
-    const char *normal, const char *mvp, const char **unitlocs, 
-    unsigned long *unittypes, const char *normalOut, const char *ambient, 
-    const char *diffuse, const char *specular, const char *phong)
-{
-    struct generic_material* mtl;
-   
-    mtl = calloc(1, sizeof(struct generic_material));
-    if (name)   mtl->mtl.name = strdup(name);
-    else        mtl->mtl.name = "(null)";
-    il_log(3, "Building shader \"%s\"", mtl->mtl.name);
-    mtl->mtl.vertshader = ilG_makeShader(GL_VERTEX_SHADER, vertsource);
-    mtl->mtl.fragshader = ilG_makeShader(GL_FRAGMENT_SHADER, fragsource);
-    mtl->mtl.program = glCreateProgram();
-    glAttachShader(mtl->mtl.program, mtl->mtl.vertshader);
-    glAttachShader(mtl->mtl.program, mtl->mtl.fragshader);
-    if (position) {
-        glBindAttribLocation(mtl->mtl.program, ILG_ARRATTR_POSITION, position);
-        ILG_SETATTR(mtl->mtl.attrs, ILG_ARRATTR_POSITION);
-    }
-    if (texcoord) {
-        glBindAttribLocation(mtl->mtl.program, ILG_ARRATTR_TEXCOORD, texcoord);
-        ILG_SETATTR(mtl->mtl.attrs, ILG_ARRATTR_TEXCOORD);
-    }
-    if (normal) {
-        glBindAttribLocation(mtl->mtl.program, ILG_ARRATTR_NORMAL, normal);
-        ILG_SETATTR(mtl->mtl.attrs, ILG_ARRATTR_NORMAL);
-    }
-    if (ambient) {
-        glBindFragDataLocation(mtl->mtl.program, ILG_FRAGDATA_ACCUMULATION, ambient);
-    }
-    if (diffuse) {
-        glBindFragDataLocation(mtl->mtl.program, ILG_FRAGDATA_DIFFUSE, diffuse);
-    }
-    if (specular) {
-        glBindFragDataLocation(mtl->mtl.program, ILG_FRAGDATA_SPECULAR, specular);
-    }
-    if (normalOut) {
-        glBindFragDataLocation(mtl->mtl.program, ILG_FRAGDATA_NORMAL, normalOut);
-    }
-    ilG_linkProgram(mtl->mtl.program);
-    unsigned int i = 0;
-    while (unitlocs[i]) {
-        i++;
-    }
-    const char **unitlocs_ = calloc(i+1, sizeof(const char*));
-    unsigned long *unittypes_ = calloc(i, sizeof(unsigned long));
-    memcpy(unittypes_, unittypes, sizeof(unsigned long) * i);
-    unsigned int j;
-    for (j = 0; j < i; j++) {
-        unitlocs_[j] = strdup(unitlocs[j]);
-    }
-    mtl->unitlocs   = unitlocs_;
-    mtl->unittypes  = unittypes_;
-    mtl->mvp        = mvp? strdup(mvp) : NULL;
-    mtl->phong      = phong? strdup(phong) : NULL;
-    mtl->mtl.bind   = &mtl_bind;
-    mtl->mtl.update = &mtl_update;
-    mtl->mtl.unbind = &mtl_unbind;
+il_type ilG_material_type = {
+    .typeclasses = NULL,
+    .storage = NULL,
+    .constructor = material_init,
+    .name = "il.graphics.material",
+    .registry = NULL,
+    .size = sizeof(ilG_material),
+    .parent = NULL
+};
 
-    ilG_material_assignId(&mtl->mtl);
+static ilG_bindable material_bindable = {
+    .name = "il.graphics.bindable",
+    .hh = {0},
+    .bind = mtl_bind,
+    .action = mtl_update,
+    .unbind = mtl_unbind
+};
 
-    return &mtl->mtl;
-}*/
-
-static void bind(ilG_context* context, void *ctx)
-{
-    (void)ctx;
-    ilG_testError("Unknown");
-    glUseProgram(context->material->program);
-    ilG_testError("glUseProgram()");
-
-    GLint loc = glGetUniformLocation(context->material->program, "tex");
-    ilG_testError("glGetUniformLocation()");
-    glUniform1i(loc, 0);
-    ilG_testError("glUniform1i()");
-    ILG_TUNIT_ACTIVE(context, 0, ILG_TUNIT_COLOR0);
-}
-
-static void update(ilG_context* context, struct il_positionable* pos, void *ctx)
-{
-    (void)ctx;
-    if (!ILG_TESTATTR(context->drawable->attrs, ILG_ARRATTR_POSITION) ||
-        !ILG_TESTATTR(context->drawable->attrs, ILG_ARRATTR_TEXCOORD)) {
-        il_error("Drawable %s<%p> does not have the required attributes to "
-                 "be drawn with Material \"%s\"", 
-                 il_typeof(context->drawable)->name, context->drawable,
-                 context->material->name);
-    }
-    ilG_bindMVP(glGetUniformLocation(context->material->program, "mvp"), ILG_MVP, context->camera, pos);
-}
-
-static void unbind(ilG_context* context, void *ctx)
-{
-    (void)ctx;
-    context->num_active = 0;
-}
-
-static ilG_material mtl;
+ilG_material ilG_material_default;
 
 void ilG_material_init()
 {
-    il_string *vertex_source, *fragment_source;
+    il_impl(&ilG_material_type, &material_bindable);
 
-    memset(&mtl, 0, sizeof(ilG_material));
-    ilG_material_assignId(&mtl);
-    mtl.name = "Default";
-
-    vertex_source = IL_ASSET_READFILE("default.vert");
-    fragment_source = IL_ASSET_READFILE("default.frag");
-
-    if (!vertex_source) {
-        il_error("Unable to open cube vertex shader");
-        return;
-    }
-    if (!fragment_source) {
-        il_error("Unable to open cube fragment shader");
-        return;
-    }
-
-    ilG_testError("Unknown error before function");
-
-    mtl.vertshader = ilG_makeShader(GL_VERTEX_SHADER, vertex_source);
-    mtl.fragshader = ilG_makeShader(GL_FRAGMENT_SHADER, fragment_source);
-
-    mtl.program = glCreateProgram();
-    ilG_testError("Unable to create program object");
-
-    glAttachShader(mtl.program, mtl.vertshader);
-    ilG_testError("Unable to attach shader");
-    glAttachShader(mtl.program, mtl.fragshader);
-    ilG_testError("Unable to attach shader");
-
-    glBindAttribLocation(mtl.program, ILG_ARRATTR_POSITION, "in_Position");
-    glBindAttribLocation(mtl.program, ILG_ARRATTR_TEXCOORD, "in_Texcoord");
-
-    ilG_linkProgram(mtl.program);
-
-    mtl.bind = &bind;
-    mtl.update = &update;
-    mtl.unbind = &unbind;
-
-    ilG_material_default = &mtl;
+    /*memset(&ilG_material_default, 0, sizeof(ilG_material));
+    il_init(&ilG_material_type, &ilG_material_default);
+    ilG_material_name(&ilG_material_default, "Default");
+    il_string *vertex = IL_ASSET_READFILE("default.vert"), *fragment = IL_ASSET_READFILE("default.frag");
+    ilG_material_vertex(&ilG_material_default, vertex);
+    ilG_material_fragment(&ilG_material_default, fragment);
+    il_string_unref(vertex);
+    il_string_unref(fragment);
+    ilG_material_arrayAttrib(&ilG_material_default, ILG_ARRATTR_POSITION, "in_Position");
+    ilG_material_arrayAttrib(&ilG_material_default, ILG_ARRATTR_TEXCOORD, "in_Texcoord");
+    ilG_material_link(&ilG_material_default);*/
 }
 

@@ -15,6 +15,7 @@ typedef struct ilG_context {
     struct ilG_texture* texture;
     struct ilG_camera* camera;
     struct il_world* world;
+    struct il_positionable *positionable;
     struct timeval tv;
     unsigned *texunits;
     size_t num_texunits;
