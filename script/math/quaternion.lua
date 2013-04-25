@@ -1,3 +1,5 @@
+--- Quaternion type
+-- @type quaternion
 local ffi = require "ffi"
 
 require "math.scalar_defs"
@@ -23,6 +25,7 @@ float il_quat_dot(const il_quat a);
 
 local quaternion = {}
 
+--- FFI CType of quaternions
 quaternion.type = ffi.typeof("il_quat");
 
 function index(t,k)
@@ -87,6 +90,7 @@ function ts(self)
     return "["..self.ptr[0]..", "..self.ptr[1]..", "..self.ptr[2]..", "..self.ptr[3].."]"
 end
 
+--- Converts a cdata to a quaternion
 function quaternion.wrap(ptr)
     local obj = {}
     obj.ptr = ptr;
@@ -95,10 +99,13 @@ function quaternion.wrap(ptr)
     return obj
 end
 
+--- Tests whether an object is a quaternion
 function quaternion.check(obj)
     return type(obj) == "table" and obj.T == "quat" and ffi.istype(quaternion.type, obj.ptr)
 end
 
+--- Creates a new quaternion
+-- Can be passed YPR, Axis (as vec3) Angle, and Axis (as numbers) Angle.
 function quaternion.create(...)
     vector3 = vector3 or require "math.vector3"
     local args = {...};
