@@ -1,3 +1,6 @@
+--- Wrapper for camera type
+-- Inherits `common.positionable`.
+-- @type camera
 local ffi = require "ffi"
 
 require "math.scalar_defs"

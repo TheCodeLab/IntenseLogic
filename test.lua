@@ -59,7 +59,7 @@ else
     for i = 0, width*width*width-1 do
         local box = positionable()
         w:add(box.ptr)
-        box.drawable = m.ptr --drawable.box
+        box.drawable = m --drawable.box
         box.material = mtl
         box.texture = t
         box.position = (vector3(i % width, math.floor((i%(width*width)) / width), math.floor(i/(width*width))) * vector3(15, 15, 15)).ptr
