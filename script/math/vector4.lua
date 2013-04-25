@@ -1,3 +1,5 @@
+--- 4 dimensional vectors
+-- @type vec4
 local ffi = require "ffi"
 require "math.scalar_defs"
 
@@ -25,6 +27,7 @@ float il_vec4_len(const il_vec4 a);
 
 local vector4 = {}
 
+--- FFI Ctype of vec4
 vector4.type = ffi.typeof "il_vec4"
 
 local function c_wrap(c)
@@ -88,6 +91,7 @@ local function gc(obj)
     ffi.C.il_vec4_free(obj.ptr);
 end
 
+--- Converts a cdata to a vec4
 local function wrap(ptr)
     local obj = {}
     obj.ptr = ptr;
@@ -97,15 +101,19 @@ local function wrap(ptr)
 end
 vector4.wrap = wrap;
 
+--- Tests whether an object is a vec4
 function vector4.check(obj)
     return type(obj) == "table" and obj.T == "vec4" and ffi.istype(vector4.type, obj.ptr)
 end
 
+--- Computes the dot product of two vectors
 function vector4.dot(a,b)
     assert(vector4.check(a) and vector4.check(b))
     return ffi.C.il_vec4_dot(a.ptr, b.ptr)
 end
 
+--- Creates a new vec4 with optional parameters
+-- w is optional; x may be a table
 function vector4.create(x, y, z, w)
     if type(x) == "table" then
         x, y, z, w = unpack(x)
