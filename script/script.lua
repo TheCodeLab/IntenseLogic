@@ -1,3 +1,5 @@
+--- Provides wrappers around the internal script code
+-- @type script
 local ffi=require "ffi";
 
 ffi.cdef[[
@@ -20,6 +22,8 @@ int ilS_run(ilS_script*);
 
 local script = {}
 
+--- Creates a new script
+-- @treturn script The script
 function script.create()
     local ptr = ffi.C.ilS_new();
     local obj = {};
@@ -28,6 +32,8 @@ function script.create()
     return obj;
 end
 
+--- Sets script source using an asset structure
+-- @tparam asset asset The asset
 function script:fromAsset(asset)
     assert(ffi.istype("struct ilA_asset*", asset.ptr), "Expected asset");
     if ffi.C.ilS_fromAsset(self.ptr, asset.ptr) == -1 then
@@ -35,6 +41,8 @@ function script:fromAsset(asset)
     end
 end
 
+--- Sets script source from a string
+-- @tparam string s The source
 function script:fromSource(s)
     assert(type(s) == "string", "Expected string");
     if ffi.C.ilS_fromSource(self.ptr, ffi.C.il_CtoS(s, -1)) == -1 then
@@ -42,6 +50,8 @@ function script:fromSource(s)
     end
 end
 
+--- Sets script source from a file
+-- @tparam string name The file
 function script:fromFile(name)
     assert(type(s) == "string", "Expected string");
     if ffi.C.ilS_fromFile(self, name) == -1 then
@@ -49,6 +59,7 @@ function script:fromFile(name)
     end
 end
 
+--- Runs a script
 function script:run()
     if ffi.C.ilS_run(self) == -1 then
         error("Failed to run script");
