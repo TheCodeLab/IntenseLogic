@@ -1,49 +1,50 @@
 local ffi = require "ffi"
 
+local base = require "common.base"
 local tunit = require "graphics.textureunit"
 
 ffi.cdef [[
 
-struct ilG_texture *ilG_texture_default;
+typedef struct ilG_textureunit {
+    int used;
+    /*GLuint*/ unsigned int tex;
+    /*GLenum*/ unsigned int mode;
+} ilG_textureunit;
 
-struct ilG_texture* ilG_texture_new();
-void ilG_texture_setName(struct ilG_texture* self, const char *name);
-void ilG_texture_fromfile(struct ilG_texture* self, unsigned unit, const char *name);
-void ilG_texture_fromasset(struct ilG_texture* self, unsigned unit, struct ilA_asset* asset);
+typedef struct ilG_texture {
+    il_base base;
+    unsigned int id;
+    char *name;
+    ilG_textureunit units[162]; // ILG_TUNIT_NUMUNITS
+    struct ilG_context *context;
+    struct ilG_material *last_mtl;
+} ilG_texture;
+
+
+extern il_type ilG_texture_type;
+
+void ilG_texture_setContext(ilG_texture* self, struct ilG_context *context);
+void ilG_texture_setName(ilG_texture* self, const char *name);
+void ilG_texture_fromfile(ilG_texture* self, unsigned unit, const char *name);
+void ilG_texture_fromasset(ilG_texture* self, unsigned unit, struct ilA_asset* asset);
 
 ]]
 
-local texture = {}
+base.wrap "il.graphics.texture" {
+    struct = "ilG_texture";
 
-local function wrap(ptr)
-    local obj = {}
-    obj.ptr = ptr;
-    setmetatable(obj, {__index = texture})
-    return obj;
-end
-texture.wrap = wrap
+    setContext = ffi.C.ilG_texture_setContext;
 
-texture.default = wrap(ffi.C.ilG_texture_default);
+    setName = ffi.C.ilG_texture_setName;
 
-function texture:setName(name)
-    ffi.C.ilG_texture_setName(self.ptr, name)
-end
+    fromfile = function(self, unit, name)
+        return ffi.C.ilG_texture_fromfile(self, tunit.toUnit(unit), name)
+    end;
 
-function texture:fromfile(unit, name)
-    assert(type(name) == "string", "Expected string");
-    return wrap(ffi.C.ilG_texture_fromfile(self.ptr, tunit.toUnit(unit), name));
-end
+    fromasset = function(self, unit, asset)
+        return ffi.C.ilG_texture_fromasset(self, tunit.toUnit(unit), asset.ptr)
+    end;
+}
 
-function texture:fromasset(unit, asset)
-    assert(ffi.istype("struct ilA_asset*", asset), "Bad argument #1 to fromasset, expected asset");
-    return wrap(ffi.C.ilG_texture_fromasset(self.ptr, tunit.toUnit(unit), asset.ptr));
-end
-
-function texture.create()
-    return wrap(ffi.C.ilG_texture_new())
-end
-
-setmetatable(texture, {__call = function(self, ...) return texture.create(...) end})
-
-return texture;
+return ffi.C.ilG_texture_type
 

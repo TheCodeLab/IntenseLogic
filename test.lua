@@ -23,6 +23,7 @@ w.context = c.ptr;
 c:setActive();
 local m;
 local t = texture()
+t:setContext(c.ptr)
 t:fromfile("color0", "white-marble-texture.png")
 local vf, ff = io.open("shaders/test.vert", "r"), io.open("shaders/test.frag", "r");
 --local mtl = material(vf:read "*a", ff:read "*a", "test material", "in_Position", "in_Texcoord", "in_Normal", "mvp", {"tex"}, {1}, "out_Normal", "out_Ambient", "out_Diffuse", "out_Specular", "phong");
@@ -60,7 +61,7 @@ else
         w:add(box.ptr)
         box.drawable = m.ptr --drawable.box
         box.material = mtl
-        box.texture = t.ptr
+        box.texture = t
         box.position = (vector3(i % width, math.floor((i%(width*width)) / width), math.floor(i/(width*width))) * vector3(15, 15, 15)).ptr
         box:track(c.ptr)
         --print(box.position)

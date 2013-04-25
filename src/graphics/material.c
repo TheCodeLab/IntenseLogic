@@ -208,6 +208,7 @@ void ilG_material_init()
 {
     il_impl(&ilG_material_type, &material_bindable);
 
+    // TODO: decide what to do with default material; as materials require a context value when being linked, and there may be multiple contexts
     /*memset(&ilG_material_default, 0, sizeof(ilG_material));
     il_init(&ilG_material_type, &ilG_material_default);
     ilG_material_name(&ilG_material_default, "Default");
