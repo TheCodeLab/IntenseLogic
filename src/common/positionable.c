@@ -15,8 +15,11 @@ il_type il_positionable_type = {
     .typeclasses = NULL,
     .storage = NULL,
     .constructor = positionable_init,
+    .destructor = NULL,
+    .copy = NULL,
     .name = "il.common.positionable",
-    .size = sizeof(il_positionable)
+    .size = sizeof(il_positionable),
+    .parent = NULL
 };
 
 il_positionable * il_positionable_new()

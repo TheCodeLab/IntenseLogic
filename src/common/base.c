@@ -16,7 +16,18 @@ void il_unref(void* obj)
         for (i = 0; i < base->weak_refs.length; i++) {
             *base->weak_refs.data[i] = NULL; // clear all the weak references
         }
-        ((il_base*)obj)->destructor(obj);
+        il_type *cur = il_typeof(base);
+        while (cur) {
+            if (cur->destructor) {
+                cur->destructor(obj);
+            }
+            cur = cur->parent;
+        }
+        if (base->free) {
+            base->free(obj);
+        } else {
+            free(obj);
+        }
     }
 }
 

@@ -50,6 +50,8 @@ struct il_type {
     il_typeclass *typeclasses;
     struct il_storage *storage;
     il_base_init_fn constructor;
+    il_base_free_fn destructor;
+    il_base_copy_fn copy;
     const char *name;
     struct ilE_registry *registry;
     size_t size;
@@ -58,9 +60,8 @@ struct il_type {
 
 struct il_base {
     int refs;
+    il_base_free_fn free;
     struct il_storage *storage;
-    il_base_free_fn destructor;
-    il_base_copy_fn copy;
     il_base *gc_next;
     struct {
         il_base** data;
@@ -194,15 +195,12 @@ function base.type(name)
         T.size = ffi.sizeof(cons.struct or "il_base")
         T.constructor = function(v)
             ffi.gc(v, ffi.C.il_unref)
-            v.destructor = function(v)
-                if cons.destructor then
-                    cons.destructor(v)
-                end
-            end
             if cons.constructor then
                 cons.constructor(v)
             end
         end
+        T.destructor = cons.destructor
+        T.copy = cons.copy
         return T
     end
 end

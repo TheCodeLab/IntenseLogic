@@ -9,18 +9,15 @@ struct il_worldIterator {
     size_t n;
 };
 
-static void world_init(void *self)
-{
-    il_world * w = self;
-    (void)w;
-}
-
 il_type il_world_type = {
     .typeclasses = NULL,
     .storage = NULL,
-    .constructor = world_init,
+    .constructor = NULL,
+    .destructor = NULL,
+    .copy = NULL,
     .name = "il.common.world",
-    .size = sizeof(il_world)
+    .size = sizeof(il_world),
+    .parent = NULL
 };
 
 il_world* il_world_new()
