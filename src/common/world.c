@@ -9,9 +9,9 @@ struct il_worldIterator {
     size_t n;
 };
 
-static void world_init(il_base *self)
+static void world_init(void *self)
 {
-    il_world * w = (il_world*)self;
+    il_world * w = self;
     (void)w;
 }
 

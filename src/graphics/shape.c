@@ -7,6 +7,7 @@
 #include "asset/asset.h"
 #include "graphics/glutil.h"
 #include "graphics/drawable3d.h"
+#include "graphics/bindable.h"
 #include "graphics/tracker.h"
 #include "graphics/context.h"
 #include "graphics/arrayattrib.h"
@@ -154,21 +155,18 @@ struct ilG_shape {
     GLsizei count;
 };
 
-static void bind(ilG_context* context, void *ctx)
+static void bind(void *obj)
 {
-    (void)ctx;
-    struct ilG_shape * shape = (struct ilG_shape*)context->drawable;
+    struct ilG_shape * shape = obj;
     glBindVertexArray(shape->vao);
     glBindBuffer(GL_ARRAY_BUFFER, shape->vbo);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, shape->ibo);
     IL_GRAPHICS_TESTERROR("Could not bind drawable");
 }
 
-static void draw(ilG_context* context, il_positionable* pos, void * ctx)
+static void draw(void *obj)
 {
-    (void)ctx;
-    (void)pos;
-    struct ilG_shape * shape = (struct ilG_shape*)context->drawable;
+    struct ilG_shape * shape = obj;
 
     glDrawElements(shape->mode, shape->count, GL_UNSIGNED_SHORT, (GLvoid*)0);
     IL_GRAPHICS_TESTERROR("Could not draw drawable");
@@ -176,31 +174,39 @@ static void draw(ilG_context* context, il_positionable* pos, void * ctx)
 
 static struct ilG_shape box, cylinder, icosahedron, plane;
 
+il_type ilG_shape_type = {
+    .typeclasses = NULL,
+    .storage = NULL,
+    .constructor = NULL,
+    .name = "il.graphics.shape",
+    .registry = NULL,
+    .size = sizeof(struct ilG_shape),
+    .parent = &ilG_drawable3d_type
+};
+
+static ilG_bindable shape_bindable = {
+    .name = "il.graphics.bindable",
+    .hh = {0},
+    .bind = &bind,
+    .action = &draw
+};
+
 void ilG_shape_init()
 {
     GLuint vao[4], vbo[4], ibo[4];
     int i;
+
+    il_impl(&ilG_shape_type, &shape_bindable);
     
     memset(&box,        0, sizeof(struct ilG_shape));
     memset(&cylinder,   0, sizeof(struct ilG_shape));
     memset(&icosahedron,0, sizeof(struct ilG_shape));
     memset(&plane,      0, sizeof(struct ilG_shape));
 
-    box.drawable.name           = "Box Primitive";
-    cylinder.drawable.name      = "Cylinder Primitive";
-    icosahedron.drawable.name   = "Icosahedron Primitive";
-    plane.drawable.name         = "Plane Primitive";
-
-    // assignment is an expression that returns what was assigned
-    box.drawable.draw           =
-    cylinder.drawable.draw      =
-    icosahedron.drawable.draw   = 
-    plane.drawable.draw         = &draw;
-
-    box.drawable.bind           =
-    cylinder.drawable.bind      =
-    icosahedron.drawable.bind   =
-    plane.drawable.bind         = &bind;
+    il_init(&ilG_shape_type, &box);
+    il_init(&ilG_shape_type, &cylinder);
+    il_init(&ilG_shape_type, &icosahedron);
+    il_init(&ilG_shape_type, &plane);
 
     // don't want the wrong error to pop up, has happened before
     IL_GRAPHICS_TESTERROR("Unknown error before this function");

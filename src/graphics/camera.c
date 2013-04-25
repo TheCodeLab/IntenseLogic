@@ -6,9 +6,9 @@
 
 #include "common/positionable.h"
 
-void camera_init(il_base *self)
+void camera_init(void *self)
 {
-    ilG_camera* camera = (ilG_camera*)self;
+    ilG_camera* camera = self;
     camera->projection_matrix = il_mat_identity(NULL);
     camera->sensitivity = 0.002;
 }

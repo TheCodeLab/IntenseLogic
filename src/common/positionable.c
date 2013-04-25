@@ -2,9 +2,9 @@
 
 #include <stdlib.h>
 
-static void positionable_init(il_base *self)
+static void positionable_init(void *self)
 {
-    il_positionable * p = (il_positionable*)self;
+    il_positionable * p = self;
     p->position = il_vec3_new();
     p->size = il_vec3_set(NULL, 1, 1, 1);
     p->rotation = il_quat_set(NULL, 0, 0, 0, 1);
