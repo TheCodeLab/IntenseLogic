@@ -26,4 +26,11 @@ IntenseLogic's design is somewhat modularised, which makes an overview easier.
       |-windows.c   Windows-specific code (mostly for functions from POSIX that MinGW doesn't implement)
       `-il.docopt   Docopt file, for command-line options
 
+## Engine Diagram
+
+ * Ovals represent abstractions, layers, or libraries
+ * Boxes represent modules
+ * Dotted lines represent dynamically loaded libraries, through dlsym or equivalent
+
+![Engine Diagram](http://i.imgur.com/g7KWQaI.png)
 
