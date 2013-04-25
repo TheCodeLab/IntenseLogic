@@ -1,6 +1,7 @@
----
--- Provides the basis of the IL object system.
+--- Provides the basis of the IL object system.
 -- See examples/item.lua and examples/itemTest.lua for usage examples.
+--
+-- All types inheriting from base have access to the methods defined here. All objects are created the same way as well: either with `base:create` or with __call
 -- @author tiffany
 
 local ffi = require "ffi"
@@ -351,7 +352,7 @@ function base.register(self, name, fn)
         event.register(ffi.C.ilE_type_registry(self), name, fn)
     end
 end
-    
+
 setmetatable(base, {__call=function(self,...) return base.create(...) end})
 
 return base
