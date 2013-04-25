@@ -1,3 +1,6 @@
+--- Wrapper for positionables
+-- Uses the IL object system, see `common.base` for more information
+-- @type positionable
 local ffi           = require "ffi"
 local drawable      = require "graphics.drawable"
 local material      = require "graphics.material"
@@ -32,9 +35,15 @@ void ilG_untrackPositionable(struct ilG_context*, struct il_positionable*);
 ]]
 
 base.wrap "il.common.positionable" {
+    --- Sets a positionable to be rendered in a context
+    -- @tparam positionable self The positionable
+    -- @tparam context ctx The context
     track = function(self, ctx)
         ffi.C.ilG_trackPositionable(ctx, self)
     end,
+    --- Unsets a positionable to be rendered in a context
+    -- @tparam positionable self The positionable
+    -- @tparam context ctx The context
     untrack = function(self, ctx)
         ffi.C.ilG_untrackPositionable(ctx, self)
     end,
