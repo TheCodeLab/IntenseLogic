@@ -44,28 +44,17 @@ mtl:fragData("accumulation", "out_Ambient")
 mtl:fragData("diffuse", "out_Diffuse")
 mtl:fragData("specular", "out_Specular")
 mtl:link(c)
-if false then
-    m = mesh "minecraft.obj"
-    print(m.ptr)
-    local minecraft = positionable()
-    w:add(minecraft)
-    minecraft.drawable = m;
-    minecraft.material = mtl;
-    minecraft.texture = texture.default;
-    minecraft:track(c);
-else
-    m = mesh "teapot.obj"
-    local width = 3
-    for i = 0, width*width*width-1 do
-        local box = positionable()
-        w:add(box.ptr)
-        box.drawable = m --drawable.box
-        box.material = mtl
-        box.texture = t
-        box.position = (vector3(i % width, math.floor((i%(width*width)) / width), math.floor(i/(width*width))) * vector3(15, 15, 15)).ptr
-        box:track(c.ptr)
-        --print(box.position)
-    end
+m = mesh "teapot.obj"
+local width = 3
+for i = 0, width*width*width-1 do
+    local box = positionable()
+    w:add(box)
+    box.drawable = m --drawable.box
+    box.material = mtl
+    box.texture = t
+    box.position = (vector3(i % width, math.floor((i%(width*width)) / width), math.floor(i/(width*width))) * vector3(15, 15, 15)).ptr
+    box:track(c.ptr)
+    --print(box.position)
 end
 
 c.camera = camera()
