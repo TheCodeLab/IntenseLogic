@@ -44,6 +44,8 @@ struct il_type {
     il_typeclass *typeclasses;
     il_storage *storage;
     il_base_init_fn constructor;
+    il_base_free_fn destructor;
+    il_base_copy_fn copy;
     const char *name;
     ilE_registry *registry;
     size_t size;
@@ -52,9 +54,8 @@ struct il_type {
 
 struct il_base {
     int refs;
+    il_base_free_fn free;
     il_storage *storage;
-    il_base_free_fn destructor;
-    il_base_copy_fn copy;
     il_base *gc_next;
     IL_ARRAY(il_base**,) weak_refs;
     il_type *type;
