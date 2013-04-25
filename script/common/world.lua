@@ -1,3 +1,6 @@
+--- Wrapper around world type
+-- See `common.base` for details on interacting with this type.
+-- @type world
 local ffi = require "ffi";
 
 local base = require "common.base"
@@ -23,6 +26,8 @@ extern il_type il_world_type;
 ]]
 
 base.wrap "il.common.world" {
+    --- Adds a positionable to a world
+    -- @tparam positionable positionable The positionable to add
     add = ffi.C.il_world_add,
     struct = "il_world"
 }
