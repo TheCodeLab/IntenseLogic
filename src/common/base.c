@@ -204,6 +204,21 @@ void il_init(il_type *type, void *obj)
     }
 }
 
+void *il_copy(void *obj)
+{
+    il_type *cur = il_typeof(obj);
+    il_base *new = calloc(1, il_sizeof(cur));
+    new->refs = 1;
+    new->type = cur;
+    while (cur) {
+        if (cur->copy) {
+            cur->copy(new, obj);
+        }
+        cur = cur->parent;
+    }
+    return new;
+}
+
 const char *il_name(il_type *type)
 {
     return type->name;

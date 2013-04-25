@@ -221,6 +221,13 @@ function base.create(T)
     return ffi.C.il_new(T)
 end
 
+--- Copies an object
+-- @tparam base v The object to copy
+-- @treturn base The copied object
+function base.copy(v)
+    return ffi.C.il_copy(v)
+end
+
 --- Returns a value from a storage type
 -- @tparam storage v The storage object
 -- @tparam string name The key to retrieve
