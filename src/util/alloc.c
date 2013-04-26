@@ -86,7 +86,9 @@ static void aligned_free(void* ptr)
 
 static void *alloc_aligned(void *user, size_t size)
 {
-    return aligned_alloc(*(int*)user, size);
+    void *ptr = aligned_alloc(*(int*)user, size);
+    memset(ptr, 0, size);
+    return ptr;
 }
 
 static void free_aligned(void *user, void *ptr)
