@@ -4,8 +4,9 @@
 #include <GL/glew.h>
 
 #include "math/vector.h"
+#include "common/base.h"
+#include "common/positionable.h"
 
-struct il_positionable;
 struct ilG_context;
 
 typedef struct ilG_phong {
@@ -19,14 +20,17 @@ enum ilG_light_type {
 };
 
 typedef struct ilG_light {
-    struct il_positionable* positionable;
+    struct il_positionable positionable;
     il_vec4 color;
     enum ilG_light_type type;
     GLuint texture; // shadow map
     float radius;
 } ilG_light;
 
-ilG_light* ilG_light_new();
+extern il_type ilG_light_type;
+
+//ilG_light* ilG_light_new();
+#define ilG_light_new() il_new(&ilG_light_type)
 void ilG_light_add(ilG_light*, struct ilG_context* context);
 void ilG_bindPhong(ilG_phong* phong, GLuint program, const char *prefix);
 /*void ilG_bindLight(ilG_light* light, GLuint program, const char *prefix);
