@@ -9,11 +9,23 @@
 #include "graphics/context.h"
 #include "common/positionable.h"
 
-ilG_light* ilG_light_new()
+void light_init(void *obj)
 {
-    ilG_light* light = calloc(1, sizeof(ilG_light));
-    return light;
+    ilG_light *light = obj;
+    light->color = il_vec4_new();
 }
+
+il_type ilG_light_type = {
+    .typeclasses = NULL,
+    .storage = NULL,
+    .constructor = light_init,
+    .destructor = NULL,
+    .copy = NULL,
+    .name = "il.graphics.light",
+    .registry = NULL,
+    .size = sizeof(ilG_light),
+    .parent = &il_positionable_type
+};
 
 void ilG_light_add(ilG_light* self, ilG_context* context)
 {

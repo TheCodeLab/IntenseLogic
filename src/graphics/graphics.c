@@ -360,7 +360,7 @@ static void draw_lights()
     unsigned int i;
     for (i = 0; i < context->lights.length; i++) {
         ilG_bindable_action(material, context->material);
-        il_vec4 pos = context->lights.data[i]->positionable->position;
+        il_vec4 pos = context->lights.data[i]->positionable.position;
         glUniform3f(position_loc, pos[0], pos[1], pos[2]);
         il_vec4 col = context->lights.data[i]->color;
         glUniform3f(color_loc, col[0], col[1], col[2]);
