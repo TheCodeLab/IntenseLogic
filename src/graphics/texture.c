@@ -133,6 +133,11 @@ void ilG_texture_setFilter(ilG_texture* self, unsigned unit, GLenum min_filter, 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, min_filter);
 }
 
+GLuint ilG_texture_getRaw(ilG_texture *self, unsigned unit)
+{
+    return self->units[unit].tex;
+}
+
 il_type ilG_texture_type = {
     .typeclasses = NULL,
     .storage = NULL,

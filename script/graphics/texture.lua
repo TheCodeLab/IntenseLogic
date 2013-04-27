@@ -27,6 +27,7 @@ void ilG_texture_setContext(ilG_texture* self, struct ilG_context *context);
 void ilG_texture_setName(ilG_texture* self, const char *name);
 void ilG_texture_fromfile(ilG_texture* self, unsigned unit, const char *name);
 void ilG_texture_fromasset(ilG_texture* self, unsigned unit, struct ilA_asset* asset);
+unsigned int /*GLuint*/ ilG_texture_getRaw(ilG_texture *self, unsigned unit);
 
 ]]
 
@@ -43,6 +44,10 @@ base.wrap "il.graphics.texture" {
 
     fromasset = function(self, unit, asset)
         return ffi.C.ilG_texture_fromasset(self, tunit.toUnit(unit), asset.ptr)
+    end;
+
+    getRaw = function(self, unit)
+        return ffi.C.ilG_texture_getRaw(self, tunit.toUnit(unit))
     end;
 }
 
