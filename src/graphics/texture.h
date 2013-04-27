@@ -41,6 +41,7 @@ void ilG_texture_fromdata(ilG_texture* self, unsigned unit, GLenum target,
     GLenum format, GLenum type, void *data);
 GLuint ilG_texture_getTex(ilG_texture* self, unsigned unit, GLenum *target);
 void ilG_texture_setFilter(ilG_texture* self, unsigned unit, GLenum min_filter, GLenum mag_filter);
+GLuint ilG_texture_getRaw(ilG_texture *self, unsigned unit);
 
 #endif
 
