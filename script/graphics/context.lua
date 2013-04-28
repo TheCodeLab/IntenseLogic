@@ -22,7 +22,27 @@ typedef struct ilG_context {
     unsigned *texunits;
     size_t num_texunits;
     size_t num_active;
-    // TODO: update these trailing member fields
+    struct {
+        struct il_positionable* data;
+        size_t length;
+        size_t capacity;
+    } positionables; // tracker.c
+    struct {
+        struct ilG_light* data;
+        size_t length;
+        size_t capacity;
+    } lights;
+    unsigned int /*GLuint*/ fbtextures[5], framebuffer; // depth, accumulation, normal, diffuse, specular
+    int width, height;
+    struct {
+        unsigned int /*GLuint*/ vao, vbo, ibo, lights_ubo, lights_index, mvp_ubo, mvp_index;
+        int /*GLint*/ lights_size, mvp_size, lights_offset[3], mvp_offset[1];
+        struct ilG_material* material;
+        int invalidated;
+        int created;
+    } lightdata;
+    int which;
+
 } ilG_context;
 
 ilG_context* ilG_context_new(int w, int h);
