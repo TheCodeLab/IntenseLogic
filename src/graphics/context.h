@@ -21,7 +21,6 @@ typedef struct ilG_context {
     size_t num_texunits;
     size_t num_active;
     IL_ARRAY(struct il_positionable*,) positionables; // tracker.c
-    ilG_phong phong;
     IL_ARRAY(ilG_light*,) lights;
     GLuint fbtextures[5], framebuffer; // depth, accumulation, normal, diffuse, specular
     int width, height;
@@ -32,6 +31,7 @@ typedef struct ilG_context {
         int invalidated;
         int created;
     } lightdata;
+    int which;
 } ilG_context;
 
 ilG_context* ilG_context_new(int w, int h);
