@@ -24,6 +24,7 @@ enum ilG_transform {
     ILG_VIEW = 2,
     ILG_MODEL = 4,
     ILG_INVERSE = 8,
+    ILG_TRANSPOSE = 16,
     ILG_VP = ILG_PROJECTION | ILG_VIEW,
     ILG_MVP = ILG_VP | ILG_MODEL,
 };
@@ -100,7 +101,8 @@ base.wrap "il.graphics.material" {
             P = ffi.C.ILG_PROJECTION,
             V = ffi.C.ILG_VIEW,
             M = ffi.C.ILG_MODEL,
-            I = ffi.C.ILG_INVERSE
+            I = ffi.C.ILG_INVERSE,
+            T = ffi.C.ILG_TRANSPOSE
         }
         local mode = 0
         for i = 1, #t do

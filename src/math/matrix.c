@@ -263,3 +263,19 @@ il_mat il_mat_invert(const il_mat a, il_mat res)
     return res;
 }
 
+il_mat il_mat_transpose(const il_mat a, il_mat res)
+{
+    if (!res) {
+        res = il_mat_new();
+    }
+    float mat[16];
+    int x, y;
+    for (y = 0; y < 4; y++) {
+        for (x = 0; x < 4; x++) {
+            mat[y*4 + x] = a[x*4 + y];
+        }
+    }
+    memcpy(res, mat, sizeof(mat));
+    return res;
+}
+
