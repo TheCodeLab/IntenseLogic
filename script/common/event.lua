@@ -129,7 +129,7 @@ event.setUnpacker(event.registry, "tick", nilUnpacker)
 event.setUnpacker(event.registry, "shutdown", nilUnpacker)
 
 local function intUnpacker(size, data)
-    return ffi.cast("int", data)
+    return tonumber(ffi.cast("int*", data)[0])
 end
 event.setUnpacker(event.registry, "input.keydown", intUnpacker)
 event.setUnpacker(event.registry, "input.keyup", intUnpacker)
