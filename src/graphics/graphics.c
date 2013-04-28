@@ -372,6 +372,8 @@ static void draw_lights()
     glDisable(GL_BLEND);
     ilG_bindable_unbind(drawable, context->drawable);
     ilG_bindable_unbind(material, context->material);
+    context->drawable = NULL;
+    context->material = NULL;
     ilG_testError("Error drawing lights");
 }
 
