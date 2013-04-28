@@ -18,5 +18,6 @@ il_mat il_mat_identity(il_mat m);
 il_mat il_mat_perspective(il_mat m, float fovy, float aspect, float znear, float zfar);
 il_mat il_mat_rotate(const il_quat q, il_mat m);
 il_mat il_mat_invert(const il_mat a, il_mat m);
+il_mat il_mat_transpose(const il_mat a, il_mat res);
 
 #endif

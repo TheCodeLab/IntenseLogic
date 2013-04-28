@@ -25,6 +25,7 @@ enum ilG_transform {
     ILG_VIEW = 2,
     ILG_MODEL = 4,
     ILG_INVERSE = 8,
+    ILG_TRANSPOSE = 16,
     ILG_VP = ILG_PROJECTION | ILG_VIEW,
     ILG_MVP = ILG_VP | ILG_MODEL,
 };
