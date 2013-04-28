@@ -174,6 +174,8 @@ static void draw(void *obj)
 
 static struct ilG_shape box, cylinder, icosahedron, plane;
 
+struct ilG_drawable3d *ilG_box, *ilG_cylinder, *ilG_icosahedron, *ilG_plane;
+
 il_type ilG_shape_type = {
     .typeclasses = NULL,
     .storage = NULL,

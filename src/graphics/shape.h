@@ -5,10 +5,10 @@
 
 struct ilG_drawable3d;
 
-struct ilG_drawable3d *ilG_box, 
-                      *ilG_cylinder, 
-                      *ilG_icosahedron, 
-                      *ilG_plane;
+extern struct ilG_drawable3d *ilG_box, 
+                             *ilG_cylinder, 
+                             *ilG_icosahedron, 
+                             *ilG_plane;
 
 extern il_type ilG_shape_type;
 
