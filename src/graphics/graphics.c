@@ -489,7 +489,7 @@ static void global_draw(const ilE_registry* registry, const char *name, size_t s
     // no update() as we don't deal with positionables here
     // setup to do postprocessing
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_RECTANGLE, context->fbtextures[1]); // bind the accumulation buffer
+    glBindTexture(GL_TEXTURE_RECTANGLE, context->fbtextures[context->which]); // bind the framebuffer we want to display
     ilG_testError("Error setting up for post processing");
     fullscreenTexture();
     ilG_testError("Error post processing");
