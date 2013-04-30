@@ -37,7 +37,7 @@ mtl:arrayAttrib("position", "in_Position")
 mtl:arrayAttrib("texcoord", "in_Texcoord")
 mtl:arrayAttrib("normal", "in_Normal")
 mtl:matrix("MVP", "mvp")
-mtl:matrix("IM", "im")
+mtl:matrix("IMT", "imt")
 mtl:textureUnit("color0", "tex")
 mtl:fragData("normal", "out_Normal")
 mtl:fragData("accumulation", "out_Ambient")
@@ -62,8 +62,10 @@ c.camera.projection_matrix = matrix.perspective(75, 4/3, 2, 1000).ptr
 c.camera.positionable.position = vector3(0, -5, -25).ptr
 c.camera.sensitivity = .01
 c.camera.movespeed = vector3(1,1,1).ptr
-local l = light(-5, -5, -5, 50, 0, 0, 1.0) -- x y z radius r g b
-print(l.positionable)
+local l = light()---5, -5, -5, 50, 0, 0, 1.0) -- x y z radius r g b
+l.positionable.position = vector3(-5, -5, -5).ptr
+l.radius = 50
+l.color = vector3(0, 0, 1).ptr
 l:add(c.ptr)
 --[[local sig = positionable();
 w:add(sig)

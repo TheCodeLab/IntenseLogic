@@ -42,7 +42,6 @@ typedef struct ilG_context {
         int created;
     } lightdata;
     int which;
-
 } ilG_context;
 
 ilG_context* ilG_context_new(int w, int h);
