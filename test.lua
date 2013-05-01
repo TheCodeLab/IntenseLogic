@@ -19,6 +19,8 @@ local stage         = require "graphics.stage"
 local outpass       = require "graphics.outpass"
 local geometrypass  = require "graphics.geometrypass"
 
+print "???"
+
 local w = world()
 local c = context(800, 600)
 c.world = w
@@ -84,18 +86,17 @@ sig:track(c.ptr)]]
 local plain = material()
 plain:vertex(io.open("shaders/plain.vert","r"):read "*a")
 plain:fragment(io.open("shaders/plain.frag", "r"):read "*a")
-plain:name "Plain material"
+plain:mtlname "Plain material"
 plain:arrayAttrib("position", "in_Position")
 plain:matrix("MVP", "mvp")
-plain:link()
+plain:link(c)
 local ico = positionable()
 w:add(ico)
-ico.position = vector3(-10, 0, 0)
+ico.position = vector3(-10, 0, 0).ptr
 ico.drawable = drawable.icosahedron
 ico.material = plain --material.default;
 ico.texture = texture.default;
-ico:track(c)
->>>>>>> Add a position-only shader and draw an icosahedron
+ico:track(c.ptr)
 
 local first_mouse = true
 function mousemove(reg, name, x, y)

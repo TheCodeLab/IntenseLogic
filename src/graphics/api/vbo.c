@@ -15,18 +15,16 @@ struct ilG_vbo {
     IL_ARRAY(struct vertex,) vertices;
 };
 
-il_base *vbo_create(il_type *type)
-{
-    ilG_vbo *vbo = calloc(1, sizeof(ilG_vbo));
-    return &vbo->base;
-}
-
 il_type ilG_vbo_type = {
     .typeclasses = NULL,
     .storage = NULL,
-    .create = &vbo_create,
-    .name = "VBO",
-    .registry = NULL
+    .constructor = NULL,
+    .destructor = NULL,
+    .copy = NULL,
+    .name = "il.graphics.vbo",
+    .registry = NULL,
+    .size = sizeof(ilG_vbo),
+    .parent = NULL
 };
 
 struct vertex {
