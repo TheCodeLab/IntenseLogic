@@ -55,10 +55,10 @@ static int height = 600;
 static ilG_context* context = NULL;
 ilE_registry *ilG_registry;
 
-void ilG_context_setActive(ilG_context* self)
+/*void ilG_context_setActive(ilG_context* self)
 {
     context = self;
-}
+}*/
 
 static void global_draw();
 static void draw();
@@ -176,7 +176,7 @@ static void context_setup()
 static void event_setup()
 {
     ilG_registry = ilE_registry_new();
-    ilE_register(ilG_registry, "tick", ILE_DONTCARE, ILE_MAIN, &global_draw, NULL);
+    //ilE_register(ilG_registry, "tick", ILE_DONTCARE, ILE_MAIN, &global_draw, NULL);
     ilE_register(il_registry, "shutdown", ILE_DONTCARE, ILE_MAIN, &quit, NULL);
     int hz = glfwGetWindowParam(GLFW_REFRESH_RATE);
     struct timeval tv;

@@ -9,6 +9,8 @@
 #include "util/array.h"
 #include "graphics/light.h"
 
+struct ilG_stage;
+
 typedef struct ilG_context {
     struct ilG_drawable3d* drawable;
     struct ilG_material* material;
@@ -32,11 +34,13 @@ typedef struct ilG_context {
         int created;
     } lightdata;
     int which;
+    IL_ARRAY(struct ilG_stage*,) stages;
 } ilG_context;
 
 ilG_context* ilG_context_new(int w, int h);
 
 void ilG_context_setActive(ilG_context*);
+void ilG_context_addStage(ilG_context* self, struct ilG_stage* stage, int num);
 
 #endif
 
