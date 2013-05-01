@@ -15,13 +15,20 @@ local event         = require "common.event"
 local input         = require "common.input"
 local quaternion    = require "math.quaternion"
 local light         = require "graphics.light"
+local stage         = require "graphics.stage"
+local outpass       = require "graphics.outpass"
+local geometrypass  = require "graphics.geometrypass"
 
-local w = world();
-local c = context(800, 600);
-c.world = w;
-w.context = c.ptr;
-c:setActive();
-local m;
+local w = world()
+local c = context(800, 600)
+c.world = w
+w.context = c.ptr
+local s = stage()
+s.context = c.ptr
+geometrypass(s)
+c:addStage(s, -1)
+c:addStage(outpass(c.ptr), -1)
+c:setActive()
 local t = texture()
 t:setContext(c.ptr)
 t:fromfile("color0", "white-marble-texture.png")
@@ -44,7 +51,7 @@ mtl:fragData("accumulation", "out_Ambient")
 mtl:fragData("diffuse", "out_Diffuse")
 mtl:fragData("specular", "out_Specular")
 mtl:link(c)
-m = mesh "teapot.obj"
+local m = mesh "teapot.obj"
 local width = 3
 for i = 0, width*width*width-1 do
     local box = positionable()

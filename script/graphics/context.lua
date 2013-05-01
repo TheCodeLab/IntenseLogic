@@ -47,6 +47,7 @@ typedef struct ilG_context {
 ilG_context* ilG_context_new(int w, int h);
 
 void ilG_context_setActive(ilG_context*);
+void ilG_context_addStage(ilG_context* self, struct ilG_stage* stage, int num);
 
 ]]
 
@@ -97,6 +98,10 @@ end
 
 function context:setActive()
     ffi.C.ilG_context_setActive(self.ptr);
+end
+
+function context:addStage(st, num)
+    ffi.C.ilG_context_addStage(self.ptr, st, num)
 end
 
 setmetatable(context, {__call = function(self, ...) return context.create(...) end})

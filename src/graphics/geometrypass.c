@@ -6,6 +6,7 @@
 #include "graphics/bindable.h"
 #include "graphics/stage.h"
 #include "graphics/context.h"
+#include "graphics/glutil.h"
 
 static void draw_geometry(ilG_stage *self)
 {
