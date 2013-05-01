@@ -84,6 +84,15 @@ void render_stages(const ilE_registry* registry, const char *name, size_t size, 
     int i;
 
     il_debug("Begin render");
+    static const GLenum drawbufs[] = {
+        GL_COLOR_ATTACHMENT0,   // accumulation
+        GL_COLOR_ATTACHMENT1,   // normal
+        GL_COLOR_ATTACHMENT2,   // diffuse
+        GL_COLOR_ATTACHMENT3    // specular
+    };
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, context->framebuffer);
+    glDrawBuffers(4, &drawbufs[0]);
+    glClearColor(1.0, 0.41, 0.72, 1.0); // hot pink
     for (i = 0; i < context->stages.length; i++) {
         il_debug("Rendering stage %s", context->stages.data[i]->name);
         context->stages.data[i]->run(context->stages.data[i]);
