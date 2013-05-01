@@ -10,7 +10,7 @@
 
 static void draw_geometry(ilG_stage *self)
 {
-    glClearColor(1.0, 0.41, 0.72, 1.0); // hot pink because why not
+    glClearColor(0.39, 0.58, 0.93, 1.0); // cornflower blue
     ilG_testError("glClearColor");
     glClearDepth(1.0);
     ilG_testError("glClearDepth");
