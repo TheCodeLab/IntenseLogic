@@ -32,7 +32,6 @@ ilG_context* ilG_context_new(int w, int h)
     glTexImage2D(GL_TEXTURE_RECTANGLE, 0, GL_RGBA, w, h, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_RECTANGLE, ctx->fbtextures[1], 0);
     ilG_testError("Unable to create accumulation buffer");
-    ctx->which = 1;
     // normal
     glBindTexture(GL_TEXTURE_RECTANGLE, ctx->fbtextures[2]); 
     glTexImage2D(GL_TEXTURE_RECTANGLE, 0, GL_RGB, w, h, 0, GL_RGB, GL_FLOAT, NULL);

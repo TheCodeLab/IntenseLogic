@@ -30,7 +30,7 @@ il_type ilG_light_type = {
 void ilG_light_add(ilG_light* self, ilG_context* context)
 {
     IL_APPEND(context->lights, self);
-    context->lightdata.invalidated = 1;
+    //context->lightdata.invalidated = 1; // TODO: when uniform caching is setup for lighting stage, fix this
 }
 
 void ilG_bindPhong(ilG_phong* phong, GLuint program, const char *prefix)
