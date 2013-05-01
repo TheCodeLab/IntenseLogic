@@ -4,6 +4,9 @@
 
 #include "util/log.h"
 #include "graphics/glutil.h"
+#include "common/event.h"
+#include "graphics/stage.h"
+#include "graphics/graphics.h"
 
 ilG_context* ilG_context_new(int w, int h)
 {
@@ -64,5 +67,31 @@ ilG_context* ilG_context_new(int w, int h)
     }
 
     return ctx;
+}
+
+void ilG_context_addStage(ilG_context* self, ilG_stage* stage, int num)
+{
+    if (num < 0) {
+        IL_APPEND(self->stages, stage);
+        return;
+    }
+    IL_INSERT(self->stages, num, stage);
+}
+
+void render_stages(const ilE_registry* registry, const char *name, size_t size, const void *data, void * ctx)
+{
+    ilG_context *context = ctx;
+    int i;
+
+    il_debug("Begin render");
+    for (i = 0; i < context->stages.length; i++) {
+        il_debug("Rendering stage %s", context->stages.data[i]->name);
+        context->stages.data[i]->run(context->stages.data[i]);
+    }
+}
+
+void ilG_context_setActive(ilG_context *self)
+{
+    ilE_register(ilG_registry, "tick", ILE_DONTCARE, ILE_MAIN, render_stages, self);
 }
 
