@@ -173,10 +173,16 @@ static void context_setup()
     glfwSwapInterval(0); // 1:1 ratio of frames to vsyncs
 }
 
+static void update(const ilE_registry* registry, const char *name, size_t size, const void *data, void * ctx)
+{
+    (void)registry, (void)name, (void)size, (void)data, (void)ctx;
+    glfwPollEvents();
+}
+
 static void event_setup()
 {
     ilG_registry = ilE_registry_new();
-    //ilE_register(ilG_registry, "tick", ILE_DONTCARE, ILE_MAIN, &global_draw, NULL);
+    ilE_register(ilG_registry, "tick", ILE_DONTCARE, ILE_MAIN, update, NULL);
     ilE_register(il_registry, "shutdown", ILE_DONTCARE, ILE_MAIN, &quit, NULL);
     int hz = glfwGetWindowParam(GLFW_REFRESH_RATE);
     struct timeval tv;
