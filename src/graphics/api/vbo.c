@@ -1,6 +1,5 @@
 #include "vbo.h"
 
-#include <GL/glew.h>
 #include <stdlib.h>
 
 #include "util/array.h"
@@ -141,5 +140,14 @@ void ilG_vbo_assemble(ilG_vbo *self)
         }
     }
     glGenBuffers(1, &self->vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, self->vbo);
+    glBufferData(GL_ARRAY_BUFFER, num_vertex * per_vertex, buf, GL_STATIC_DRAW);
+    free(buf);
+}
+
+void ilG_vbo_draw(ilG_vbo *self, GLenum mode)
+{
+    glBindBuffer(GL_ARRAY_BUFFER, self->vbo);
+    glDrawArrays(mode, 0, self->vertices.length);
 }
 

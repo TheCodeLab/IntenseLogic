@@ -1,6 +1,8 @@
 #ifndef ILG_VBO_H
 #define ILG_VBO_H
 
+#include <GL/glew.h>
+
 #include "common/base.h"
 #include "math/vector.h"
 
@@ -21,6 +23,7 @@ void ilG_vbo_diffuse    (ilG_vbo *self, il_vec3 diffuse);
 void ilG_vbo_specular   (ilG_vbo *self, il_vec4 specular);
 
 void ilG_vbo_assemble(ilG_vbo *self);
+void ilG_vbo_draw(ilG_vbo *self, GLenum mode);
 
 #endif
 
