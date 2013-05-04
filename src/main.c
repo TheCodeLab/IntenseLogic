@@ -31,33 +31,12 @@ static const char *help[] = {
 };
 #undef OPT
 
-static void load_modules(const char *path, int argc, char **argv)
-{
-    // TODO: windows
-    DIR *dir = opendir(path);
-    if (!dir) {
-        fprintf(stderr, "Failed to open modules directory: %s\n", strerror(errno));
-    }
-    struct dirent entry, *result;
-    while (!readdir_r(dir, &entry, &result) && result) {
-        if (strcmp(result->d_name + strlen(result->d_name) - 3, ".so") != 0) {
-            // assume it's not a shared library if it doesn't end with .so
-            continue;
-        }
-        char buf[512];
-        snprintf(buf, 512, "%s/%s", path, result->d_name);
-        il_loadmod(buf, argc, argv);
-    }
-    closedir(dir);
-}
-
 int main(int argc, char **argv)
 {
     fprintf(stderr, "MAIN: Initializing engine.\n");
 
     IL_ARRAY(char*,) scripts = {0};
     IL_ARRAY(char*,) script_paths = {0};
-    IL_ARRAY(char*,) module_paths = {0};
 
     int opt, idx, has_modules = 0, has_scripts = 0;
     opterr = 0; // we don't want to print an error if another package uses an option
@@ -70,7 +49,7 @@ int main(int argc, char **argv)
                 }
                 break;
             case 'm':
-                IL_APPEND(module_paths, strdup(optarg));
+                il_modpath(optarg); //IL_APPEND(module_paths, strdup(optarg));
                 has_modules = 1;
                 break;
             case 'r':
@@ -83,20 +62,16 @@ int main(int argc, char **argv)
     }
 
     if (!has_modules) {
-        load_modules("modules", argc, argv); // default path
+        il_loaddir("modules", argc, argv); // default path
     }
-    int i;
-    for (i = 0; i < module_paths.length; i++) {
-        load_modules(module_paths.data[i], argc, argv);
-        free(module_paths.data[i]);
-    }
-    IL_FREE(module_paths);
+    il_loadall(argc, argv);
 
     if (!has_scripts) {
         IL_APPEND(script_paths, "script");
     }
     
     ilS_script *s = ilS_new();
+    int i;
     for (i = 0; i < script_paths.length; i++) {
         ilS_addPath(s, script_paths.data[i]);
     }
@@ -136,7 +111,7 @@ int main(int argc, char **argv)
     // main loop
     fprintf(stderr, "MAIN: Starting main loop\n");
     void (*loop)();
-    loop = (void(*)())il_getsym("libilcommon", "ilE_loop");
+    loop = (void(*)())il_getsym("ilcommon", "ilE_loop");
     if (!loop) {
         return 1;
     }

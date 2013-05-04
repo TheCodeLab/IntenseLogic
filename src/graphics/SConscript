@@ -3,7 +3,7 @@ import os
 output    = "libilgraphics"
 src_dir   = "#src/graphics"
 build_dir = "#build"
-inputs    = "*.c api/*.c"
+inputs    = "*.c api/*.c gui/*.c"
 
 Import("platform")
 Import("env")
@@ -13,7 +13,7 @@ Import("libilcommon")
 
 graphics = env.Clone()
 
-graphics.Append(CPPPATH = src_dir)
+graphics.Append(CPPPATH = src_dir, LIBS=["ilcommon","ilutil","ilmath"])
 
 pkg_libs = {
     "osx":   ["libglfw", "glew"],
