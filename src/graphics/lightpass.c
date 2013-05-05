@@ -105,6 +105,8 @@ static void draw_lights(ilG_stage *ptr)
     glEnable(GL_BLEND);
     glDisable(GL_DEPTH_TEST);
     glBlendFunc(GL_ONE, GL_ONE);
+    glFrontFace(GL_CCW);
+    glCullFace(GL_FRONT);
     
     GLint position_loc  = glGetUniformLocation(context->material->program, "position"),
           color_loc     = glGetUniformLocation(context->material->program, "color"),
