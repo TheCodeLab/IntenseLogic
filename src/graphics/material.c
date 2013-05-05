@@ -198,7 +198,7 @@ il_type ilG_material_type = {
 
 static ilG_bindable material_bindable = {
     .name = "il.graphics.bindable",
-    .hh = {0},
+    //.hh = {0},
     .bind = mtl_bind,
     .action = mtl_update,
     .unbind = mtl_unbind

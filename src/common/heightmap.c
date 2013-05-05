@@ -1,5 +1,7 @@
 #include "heightmap.h"
 
+#include <stdlib.h>
+
 struct il_heightmap {
     unsigned int width, height;
     float *data;
@@ -36,6 +38,7 @@ void il_heightmap_data(il_heightmap* self, unsigned int width, unsigned int heig
 
 void il_heightmap_generate(il_heightmap* self, unsigned int width, unsigned int height, unsigned int x, unsigned int y, const char *generator, unsigned long long seed)
 {
+    (void)self, (void)width, (void)height, (void)x, (void)y, (void)generator, (void)seed;
     // TODO: terrain generator
 }
 

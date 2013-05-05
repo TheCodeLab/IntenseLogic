@@ -288,7 +288,7 @@ void ilE_loop()
 void ilE_dumpHooks(ilE_registry *registry)
 {
     struct callbacks *callbacks;
-    int i;
+    size_t i;
     fprintf(stderr, "Registry dump of registry %p:\n", registry);
     for (callbacks = registry->callbacks; callbacks != NULL; callbacks = callbacks->hh.next) {
         fprintf(stderr, "Callbacks for event %s:\n", callbacks->name);

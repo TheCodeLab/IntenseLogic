@@ -44,11 +44,12 @@ static struct option longopts[] = {
 };
 #undef OPT
 
-#define OPT(s, l, a, h) h,
+// TODO: help options for modules
+/*#define OPT(s, l, a, h) h,
 static const char *help[] = {
     OPTIONS
 };
-#undef OPT
+#undef OPT*/
 
 static int width = 800;
 static int height = 600;
