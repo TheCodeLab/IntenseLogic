@@ -75,6 +75,7 @@ int main(int argc, char **argv)
             return 0;
             case 'v':
             printf("IntenseLogic %s\n", il_version);
+            printf("Built %s\n", __DATE__);
             return 0;
             case '?':
             default:
