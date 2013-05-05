@@ -34,6 +34,7 @@ il_string *writedir;
 
 int il_bootstrap(int argc, char **argv)
 {
+    (void)argc, (void)argv;
     // read environment variables
     char *path = getenv("IL_PATH");
     if (path) {

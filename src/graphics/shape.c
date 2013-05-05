@@ -190,7 +190,7 @@ il_type ilG_shape_type = {
 
 static ilG_bindable shape_bindable = {
     .name = "il.graphics.bindable",
-    .hh = {0},
+    //.hh = {0},
     .bind = &bind,
     .action = &draw
 };

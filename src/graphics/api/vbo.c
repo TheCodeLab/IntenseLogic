@@ -37,7 +37,7 @@ struct vertex {
 
 void ilG_vbo_setAttributes(ilG_vbo *self, const char *attribs)
 {
-    int i;
+    size_t i;
     for (i = 0; i < strlen(attribs); i++) {
         switch (attribs[i]) {
 #define ATTRIB_CASE(c, v) case c: self->attribs |= (1<<v); break
@@ -104,7 +104,7 @@ void ilG_vbo_assemble(ilG_vbo *self)
         ILG_TESTATTR(self->attribs, ILG_ARRATTR_SPECULAR) * sizeof(float) * 4;
     size_t num_vertex = self->vertices.length;
     float *buf = calloc(num_vertex, per_vertex), *ptr = buf;
-    int i;
+    size_t i;
     for (i = 0; i < self->vertices.length; i++) {
         struct vertex *v = self->vertices.data + i;
         if (ILG_TESTATTR(self->attribs, ILG_ARRATTR_POSITION)) {

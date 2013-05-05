@@ -28,7 +28,7 @@ il_string *il_string_new(const char *s, int len)
     } else {
         nlen = strnlen(s, len);
     }
-    str->length = str->capacity = nlen<len? nlen+1 : nlen;
+    str->length = str->capacity = nlen<(size_t)len? nlen+1 : nlen;
     str->start = str->data = strdup(s);
     str->canary = compute_canary(str);
     str->refs = calloc(1, sizeof(int));

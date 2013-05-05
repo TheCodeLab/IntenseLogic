@@ -152,7 +152,7 @@ il_type ilG_texture_type = {
 
 ilG_bindable texture_bindable = {
     .name = "il.graphics.bindable",
-    .hh = {0},
+    //.hh = {0},
     .bind = NULL,
     .action = texture_update,
     .unbind = NULL

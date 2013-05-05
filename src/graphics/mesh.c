@@ -65,7 +65,7 @@ static void draw(void* obj)
 
 static ilG_bindable mesh_bindable = {
     .name = "il.graphics.bindable",
-    .hh = {0},
+    //.hh = {0},
     .bind = bind,
     .action = draw,
     .unbind = NULL

@@ -6,7 +6,7 @@
 
 struct ilN_buf {
     IL_ARRAY(unsigned char,) buf;
-    int byte, bit;
+    size_t byte, bit;
 };
 
 ilN_buf* ilN_buf_new()
@@ -55,7 +55,7 @@ void ilN_buf_align(ilN_buf* self)
     }
 }
 
-void ilN_buf_makeRoom(ilN_buf* self, int bytes)
+void ilN_buf_makeRoom(ilN_buf* self, size_t bytes)
 {
     while (self->byte + bytes + (self->bit>0) >= self->buf.capacity) {
         IL_RESIZE(self->buf);

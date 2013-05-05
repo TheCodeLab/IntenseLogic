@@ -74,13 +74,14 @@ void ilG_context_addStage(ilG_context* self, ilG_stage* stage, int num)
         IL_APPEND(self->stages, stage);
         return;
     }
-    IL_INSERT(self->stages, num, stage);
+    IL_INSERT(self->stages, (size_t)num, stage);
 }
 
 void render_stages(const ilE_registry* registry, const char *name, size_t size, const void *data, void * ctx)
 {
+    (void)registry, (void)name, (void)size, (void)data;
     ilG_context *context = ctx;
-    int i;
+    size_t i;
 
     il_debug("Begin render");
     static const GLenum drawbufs[] = {

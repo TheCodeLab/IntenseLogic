@@ -46,7 +46,7 @@ void il_loaddir(const char *path, int argc, char **argv)
 
 void il_loadall(int argc, char **argv)
 {
-    int i;
+    size_t i;
     for (i = 0; i < modpaths.length; i++) {
         il_loaddir(modpaths.data[i], argc, argv);
     }
@@ -71,7 +71,8 @@ static char *lookup(const char *modpath, const char *name)
 
 int il_loadmod(const char *name, int argc, char **argv)
 {
-    int stripped = 0, res, i;
+    int stripped = 0, res;
+    size_t i;
     char *sname, *path = NULL, *p;
     struct module *mod;
     void *handle;
