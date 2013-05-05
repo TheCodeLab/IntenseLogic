@@ -13,10 +13,11 @@
 #include "util/array.h" // entirely in preprocessor, so it's fine
 
 #define OPTIONS \
-    OPT('m', "modules", required_argument, "Adds a directory to look for modules") \
-    OPT('r', "run",     required_argument, "Runs a Lua script") \
-    OPT(0,   "scripts", required_argument, "Adds a directory to look for scripts")
-static const char *optstring = "m:r:";
+    OPT('m', "modules", required_argument,  "Adds a directory to look for modules") \
+    OPT('r', "run",     required_argument,  "Runs a Lua script") \
+    OPT(0,   "scripts", required_argument,  "Adds a directory to look for scripts")\
+    OPT('h', "help",    no_argument,        "Prints this message")
+static const char *optstring = "m:r:h";
 
 #define OPT(s, l, a, h) {l, a, NULL, s},
 static struct option longopts[] = {
@@ -33,33 +34,50 @@ static const char *help[] = {
 
 int main(int argc, char **argv)
 {
-    fprintf(stderr, "MAIN: Initializing engine.\n");
+    IL_ARRAY(char*,) scripts = {0,0,0};
+    IL_ARRAY(char*,) script_paths = {0,0,0};
+    int opt, idx, has_modules = 0, has_scripts = 0, found_bootstrap = 0, res;
+    size_t i;
+    ilS_script *s = ilS_new();
+    void (*loop)();
 
-    IL_ARRAY(char*,) scripts = {0};
-    IL_ARRAY(char*,) script_paths = {0};
-
-    int opt, idx, has_modules = 0, has_scripts = 0;
     opterr = 0; // we don't want to print an error if another package uses an option
     while ((opt = getopt_long(argc, argv, optstring, longopts, &idx)) != -1) {
         switch(opt) {
             case 0:
-                if (strcmp(longopts[idx].name, "scripts") == 0) {
-                    IL_APPEND(script_paths, strdup(optarg));
-                    has_scripts = 1;
-                }
-                break;
+            if (strcmp(longopts[idx].name, "scripts") == 0) {
+                IL_APPEND(script_paths, strdup(optarg));
+                has_scripts = 1;
+            }
+            break;
             case 'm':
-                il_modpath(optarg); //IL_APPEND(module_paths, strdup(optarg));
-                has_modules = 1;
-                break;
+            il_modpath(optarg); //IL_APPEND(module_paths, strdup(optarg));
+            has_modules = 1;
+            break;
             case 'r':
-                IL_APPEND(scripts, strdup(optarg));
-                break;
+            IL_APPEND(scripts, strdup(optarg));
+            break;
+            case 'h':
+            printf("IntenseLogic 0.1-pre\n"); // TODO: proper versioning based on git tags
+            printf("Usage: %s [OPTIONS]\n\n", argv[0]);
+            printf("Each module may have its own options, see relavent documentation for those.\n\n");
+            printf("Options:\n");
+            for (i = 0; longopts[i].name; i++) {
+                printf(" %c%c %s%-12s %s\n", longopts[i].val? '-' : ' ', 
+                       longopts[i].val? longopts[i].val : ' ',
+                       longopts[i].name? "--" : "  ",
+                       longopts[i].name? longopts[i].name : "",
+                       help[i]
+                );
+            }
+            return 0;
             case '?':
             default:
-                break;
+            break;
         }
     }
+
+    fprintf(stderr, "MAIN: Initializing engine.\n");
 
     if (!has_modules) {
         il_loaddir("modules", argc, argv); // default path
@@ -70,12 +88,9 @@ int main(int argc, char **argv)
         IL_APPEND(script_paths, "script");
     }
     
-    ilS_script *s = ilS_new();
-    int i;
     for (i = 0; i < script_paths.length; i++) {
         ilS_addPath(s, script_paths.data[i]);
     }
-    int found_bootstrap = 0;
     for (i = 0; i < script_paths.length; i++) {
         char path[strlen(script_paths.data[i]) + strlen("/bootstrap.lua") + 1];
         sprintf(path, "%s/bootstrap.lua", script_paths.data[i]);
@@ -89,7 +104,7 @@ int main(int argc, char **argv)
         fprintf(stderr, "MAIN: Could not find bootstrap.lua\n");
         return 1;
     }
-    int res = ilS_run(s);
+    res = ilS_run(s);
     if (res != 0) {
         fprintf(stderr, "MAIN: %s\n", s->err);
         return 1;
@@ -110,7 +125,6 @@ int main(int argc, char **argv)
 
     // main loop
     fprintf(stderr, "MAIN: Starting main loop\n");
-    void (*loop)();
     loop = (void(*)())il_getsym("ilcommon", "ilE_loop");
     if (!loop) {
         return 1;
