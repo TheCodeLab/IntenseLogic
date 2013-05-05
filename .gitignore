@@ -228,4 +228,5 @@ gmon.out
 *.patch
 .clang_complete
 modules
+src/version.h
 

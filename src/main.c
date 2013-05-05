@@ -11,13 +11,15 @@
 #include "loader.h"
 #include "script/script.h"
 #include "util/array.h" // entirely in preprocessor, so it's fine
+#include "version.h"
 
 #define OPTIONS \
     OPT('m', "modules", required_argument,  "Adds a directory to look for modules") \
     OPT('r', "run",     required_argument,  "Runs a Lua script") \
-    OPT(0,   "scripts", required_argument,  "Adds a directory to look for scripts")\
-    OPT('h', "help",    no_argument,        "Prints this message")
-static const char *optstring = "m:r:h";
+    OPT(0,   "scripts", required_argument,  "Adds a directory to look for scripts") \
+    OPT('h', "help",    no_argument,        "Prints this message and exits") \
+    OPT('v', "version", no_argument,        "Prints the version and exits")
+static const char *optstring = "m:r:hv";
 
 #define OPT(s, l, a, h) {l, a, NULL, s},
 static struct option longopts[] = {
@@ -58,7 +60,7 @@ int main(int argc, char **argv)
             IL_APPEND(scripts, strdup(optarg));
             break;
             case 'h':
-            printf("IntenseLogic 0.1-pre\n"); // TODO: proper versioning based on git tags
+            printf("IntenseLogic %s\n", il_version);
             printf("Usage: %s [OPTIONS]\n\n", argv[0]);
             printf("Each module may have its own options, see relavent documentation for those.\n\n");
             printf("Options:\n");
@@ -70,6 +72,9 @@ int main(int argc, char **argv)
                        help[i]
                 );
             }
+            return 0;
+            case 'v':
+            printf("IntenseLogic %s\n", il_version);
             return 0;
             case '?':
             default:
