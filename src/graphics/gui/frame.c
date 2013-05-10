@@ -44,7 +44,7 @@ int ilG_gui_frame_contains(ilG_gui_frame *self, ilG_gui_coord coord)
            coord.x <  rect.b.x && coord.y <  rect.b.y;
 }
 
-enum ilG_gui_inputaction ilG_gui_frame_click(ilG_gui_frame *top, int x, int y, int button)
+enum ilG_gui_inputaction ilG_gui_click(ilG_gui_frame *top, int x, int y, int button)
 {
     ilG_gui_coord mouse = {x,y, 0.f, 0.f};
     if (!ilG_gui_frame_contains(top, mouse)) {
@@ -60,7 +60,7 @@ enum ilG_gui_inputaction ilG_gui_frame_click(ilG_gui_frame *top, int x, int y, i
     ilG_gui_frame *cur = top;
     size_t i;
     for (i = 0; i < cur->children.length; i++) {
-        enum ilG_gui_inputaction res2 = ilG_gui_frame_click(cur->children.data[i], x, y, button);
+        enum ilG_gui_inputaction res2 = ilG_gui_click(cur->children.data[i], x, y, button);
         if (res2 > res) {
             res = res2;
         }
@@ -71,7 +71,7 @@ enum ilG_gui_inputaction ilG_gui_frame_click(ilG_gui_frame *top, int x, int y, i
     return res;
 }
 
-void ilG_gui_frame_hover(ilG_gui_frame *top, int x, int y)
+void ilG_gui_hover(ilG_gui_frame *top, int x, int y)
 {
     (void)top, (void)x, (void)y;
 }
@@ -87,7 +87,7 @@ static void draw(ilG_gui_frame *top, ilG_gui_rect rect)
     }
 }
 
-void ilG_gui_frame_draw(ilG_gui_frame *top)
+void ilG_gui_draw(ilG_gui_frame *top)
 {
     ilG_gui_rect rect = ilG_gui_frame_abs(top);
     draw(top, rect);
