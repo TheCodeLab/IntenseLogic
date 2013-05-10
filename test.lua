@@ -18,8 +18,7 @@ local light         = require "graphics.light"
 local stage         = require "graphics.stage"
 local outpass       = require "graphics.outpass"
 local geometrypass  = require "graphics.geometrypass"
-
-print "???"
+local guipass       = require "graphics.guipass"
 
 local w = world()
 local c = context(800, 600)
@@ -29,6 +28,7 @@ local s = stage()
 s.context = c.ptr
 geometrypass(s)
 c:addStage(s, -1)
+c:addStage(guipass(c.ptr), -1)
 c:addStage(outpass(c.ptr), -1)
 c:setActive()
 local t = texture()

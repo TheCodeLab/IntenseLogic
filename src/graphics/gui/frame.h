@@ -16,7 +16,7 @@ enum ilG_gui_inputaction {
 // TODO: replace with a single callback which takes an input event structure
 typedef enum ilG_gui_inputaction (*ilG_gui_onClick)(ilG_gui_frame *self, int x, int y, int button);
 typedef enum ilG_gui_inputaction (*ilG_gui_onHover)(ilG_gui_frame *self, int x, int y);
-typedef void (*ilG_gui_draw)(ilG_gui_frame *self, ilG_gui_rect where);
+typedef void (*ilG_gui_draw_fn)(ilG_gui_frame *self, ilG_gui_rect where);
 
 struct ilG_gui_frame {
     il_base base;
@@ -24,15 +24,15 @@ struct ilG_gui_frame {
     ilG_gui_rect rect;
     ilG_gui_onClick click;
     ilG_gui_onHover hover;
-    ilG_gui_draw draw;
+    ilG_gui_draw_fn draw;
     IL_ARRAY(ilG_gui_frame*,) children;
 };
 
 ilG_gui_rect ilG_gui_frame_abs(ilG_gui_frame *self);
 int ilG_gui_frame_contains(ilG_gui_frame *self, ilG_gui_coord coord);
-enum ilG_gui_inputaction ilG_gui_frame_click(ilG_gui_frame *top, int x, int y, int button);
-void ilG_gui_frame_hover(ilG_gui_frame *top, int x, int y);
-void ilG_gui_frame_draw(ilG_gui_frame *top);
+enum ilG_gui_inputaction ilG_gui_click(ilG_gui_frame *top, int x, int y, int button);
+void ilG_gui_hover(ilG_gui_frame *top, int x, int y);
+void ilG_gui_draw(ilG_gui_frame *top);
 
 #endif
 
