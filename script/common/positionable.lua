@@ -13,7 +13,13 @@ local base          = require "common.base"
 
 require "math.scalar_defs"
 
+-- TODO: kill the timeval definition
 ffi.cdef [[
+
+struct timeval {
+    unsigned long tv_sec;
+    unsigned long tv_usec;
+};
 
 typedef struct il_positionable {
     il_base base;
