@@ -112,7 +112,7 @@ base.wrap "il.graphics.material" {
     end;
 
     link = function(self, ctx)
-        local res = ffi.C.ilG_material_link(self, ctx.ptr)
+        local res = ffi.C.ilG_material_link(self, ctx)
         if res == 1 then
             error "Failedd to link material"
         end

@@ -21,18 +21,19 @@ local geometrypass  = require "graphics.geometrypass"
 local guipass       = require "graphics.guipass"
 
 local w = world()
-local c = context(800, 600)
+local c = context()
+c:resize(800, 600)
 c.world = w
-w.context = c.ptr
+w.context = c
 local s = stage()
-s.context = c.ptr
+s.context = c
 geometrypass(s)
 c:addStage(s, -1)
-c:addStage(guipass(c.ptr), -1)
-c:addStage(outpass(c.ptr), -1)
+c:addStage(guipass(c), -1)
+c:addStage(outpass(c), -1)
 c:setActive()
 local t = texture()
-t:setContext(c.ptr)
+t:setContext(c)
 t:fromfile("color0", "white-marble-texture.png")
 local vf, ff = io.open("shaders/test.vert", "r"), io.open("shaders/test.frag", "r");
 --local mtl = material(vf:read "*a", ff:read "*a", "test material", "in_Position", "in_Texcoord", "in_Normal", "mvp", {"tex"}, {1}, "out_Normal", "out_Ambient", "out_Diffuse", "out_Specular", "phong");
@@ -62,7 +63,7 @@ for i = 0, width*width*width-1 do
     box.material = mtl
     box.texture = t
     box.position = (vector3(i % width, math.floor((i%(width*width)) / width), math.floor(i/(width*width))) * vector3(15, 15, 15)).ptr
-    box:track(c.ptr)
+    box:track(c)
     --print(box.position)
 end
 
@@ -75,14 +76,14 @@ local l = light()---5, -5, -5, 50, 0, 0, 1.0) -- x y z radius r g b
 l.positionable.position = vector3(-5, -5, -5).ptr
 l.radius = 50
 l.color = vector3(0, 0, 1).ptr
-l:add(c.ptr)
+l:add(c)
 --[[local sig = positionable();
 w:add(sig)
 sig.position = vector3(-5, -5, -5).ptr
 sig.drawable = drawable.box;
 sig.material = material.default;
 sig.texture = texture.default;
-sig:track(c.ptr)]]
+sig:track(c)]]
 local plain = material()
 plain:vertex(io.open("shaders/plain.vert","r"):read "*a")
 plain:fragment(io.open("shaders/plain.frag", "r"):read "*a")
@@ -96,7 +97,7 @@ ico.position = vector3(-10, 0, 0).ptr
 ico.drawable = drawable.icosahedron
 ico.material = plain --material.default;
 ico.texture = texture.default;
-ico:track(c.ptr)
+ico:track(c)
 
 local first_mouse = true
 function mousemove(reg, name, x, y)
