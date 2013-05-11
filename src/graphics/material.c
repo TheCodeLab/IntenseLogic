@@ -143,6 +143,12 @@ void ilG_material_matrix(ilG_material* self, enum ilG_transform type, const char
 
 int /*failure*/ ilG_material_link(ilG_material* self, ilG_context *ctx)
 {
+    if (!ctx) {
+        il_error("Null context");
+    }
+    if (!self) {
+        il_error("Null material");
+    }
     ilG_testError("Unknown");
     il_log("Building shader \"%s\"", self->name);
     self->context = ctx;
