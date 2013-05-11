@@ -17,6 +17,8 @@ enum il_storagetype {
     IL_STORAGE,
     IL_OBJECT,
     IL_LUA,
+    IL_LOCAL_BIT = 0x70, // second high bit determines whether or not to do network sync
+    IL_ARRAY_BIT = 0x80 // high bit is array signifier
 };
 
 typedef struct il_storage {
