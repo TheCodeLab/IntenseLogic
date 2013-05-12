@@ -28,23 +28,29 @@ static void draw_geometry(ilG_stage *self)
     il_positionable* pos = NULL;
     ilG_trackiterator * iter = ilG_trackiterator_new(context);
     gettimeofday(&tv, NULL);
-    const ilG_bindable *drawable = NULL, *material = NULL, *texture = NULL;
+    //const ilG_bindable *drawable = NULL, *material = NULL, *texture = NULL;
 
     while (ilG_trackIterate(iter)) {
         pos = ilG_trackGetPositionable(iter);
         context->positionable = pos;
 
-        ilG_bindable_swap(&drawable, (void**)&context->drawable, ilG_trackGetDrawable(iter));
-        ilG_bindable_swap(&material, (void**)&context->material, ilG_trackGetMaterial(iter));
-        ilG_bindable_swap(&texture,  (void**)&context->texture,  ilG_trackGetTexture(iter));
+        ilG_bindable_swap(&context->drawableb, (void**)&context->drawable, ilG_trackGetDrawable(iter));
+        ilG_bindable_swap(&context->materialb, (void**)&context->material, ilG_trackGetMaterial(iter));
+        ilG_bindable_swap(&context->textureb,  (void**)&context->texture,  ilG_trackGetTexture(iter));
 
-        ilG_bindable_action(material, context->material);
-        ilG_bindable_action(texture,  context->texture);
-        ilG_bindable_action(drawable, context->drawable);
+        ilG_bindable_action(context->materialb, context->material);
+        ilG_bindable_action(context->textureb,  context->texture);
+        ilG_bindable_action(context->drawableb, context->drawable);
     }
+    ilG_bindable_unbind(context->materialb, context->material);
+    ilG_bindable_unbind(context->textureb,  context->texture);
+    ilG_bindable_unbind(context->drawableb, context->drawable);
     context->drawable = NULL;
     context->material = NULL;
     context->texture = NULL;
+    context->drawableb = NULL;
+    context->materialb = NULL;
+    context->textureb = NULL;
 }
 
 void ilG_geometrypass(ilG_stage* self)
