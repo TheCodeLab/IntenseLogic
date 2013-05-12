@@ -1,5 +1,17 @@
 #include "frame.h"
 
+il_type ilG_gui_frame_type = {
+    .typeclasses = NULL,
+    .storage = NULL,
+    .constructor = NULL,
+    .destructor = NULL,
+    .copy = NULL,
+    .name = "il.graphics.gui.frame",
+    .size = sizeof(ilG_gui_frame),
+    .registry = NULL,
+    .parent = NULL
+};
+
 static ilG_gui_coord computecoordabs(ilG_gui_coord coord, ilG_gui_rect parent)
 {
     ilG_gui_coord size, res = {0,0,0,0};
@@ -36,9 +48,9 @@ ilG_gui_rect ilG_gui_frame_abs(ilG_gui_frame *self)
 int ilG_gui_frame_contains(ilG_gui_frame *self, ilG_gui_coord coord)
 {
     ilG_gui_rect rect = ilG_gui_frame_abs(self);
-    ilG_gui_coord size;
+    /*ilG_gui_coord size;
     size.x = rect.b.x - rect.a.x;
-    size.y = rect.b.y - rect.a.y;
+    size.y = rect.b.y - rect.a.y;*/
     coord = computecoordabs(coord, rect);
     return coord.x >= rect.a.x && coord.y >= rect.a.y &&
            coord.x <  rect.b.x && coord.y <  rect.b.y;
@@ -91,5 +103,11 @@ void ilG_gui_draw(ilG_gui_frame *top)
 {
     ilG_gui_rect rect = ilG_gui_frame_abs(top);
     draw(top, rect);
+}
+
+void ilG_gui_addChild(ilG_gui_frame *parent, ilG_gui_frame *child)
+{
+    IL_APPEND(parent->children, child);
+    child->parent = parent;
 }
 

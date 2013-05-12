@@ -19,18 +19,32 @@ local stage         = require "graphics.stage"
 local outpass       = require "graphics.outpass"
 local geometrypass  = require "graphics.geometrypass"
 local guipass       = require "graphics.guipass"
+local frame         = require "graphics.gui.frame"
 
 local w = world()
 local c = context()
 c:resize(800, 600)
 c.world = w
 w.context = c
+-- geometry pass
 local s = stage()
 s.context = c
 geometrypass(s)
 c:addStage(s, -1)
-c:addStage(guipass(c), -1)
+-- gui pass
+s = guipass(c)
+local root = frame()
+s:setRoot(root)
+local f = frame()
+root:addChild(f)
+f.context = c
+f:setPosition(200, 200)
+f:setSize(100, 100)
+f:filler {255,255,0,127}
+c:addStage(s, -1)
+-- output pass
 c:addStage(outpass(c), -1)
+
 c:setActive()
 local t = texture()
 t:setContext(c)
