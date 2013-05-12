@@ -21,6 +21,7 @@ typedef struct ilG_context {
     struct ilG_drawable3d* drawable;
     struct ilG_material* material;
     struct ilG_texture* texture;
+    const struct ilG_bindable *drawableb, *materialb, *textureb;
     struct ilG_camera* camera;
     struct il_world* world;
     struct il_positionable *positionable;
