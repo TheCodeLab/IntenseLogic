@@ -60,6 +60,7 @@ static GLvoid error_cb(GLenum source, GLenum type, GLuint id, GLenum severity,
                        GLsizei length, const GLchar* message, GLvoid* userParam);
 void ilG_material_init();
 void ilG_shape_init();
+void ilG_quad_init();
 void ilG_texture_init();
 
 static void GLFWCALL key_cb(int key, int action)
@@ -232,6 +233,8 @@ int il_bootstrap(int argc, char **argv)
     ilG_material_init();
     // generate primitive defaults
     ilG_shape_init();
+    // generate gui quad
+    ilG_quad_init();
     // generate default textures
     ilG_texture_init();
         
