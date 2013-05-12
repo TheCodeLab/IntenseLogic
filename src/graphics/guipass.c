@@ -13,6 +13,8 @@ void gui_run(ilG_stage *ptr)
 {
     struct guipass *self = (struct guipass*)ptr;
     if (self->root) {
+        glDisable(GL_CULL_FACE);
+        glDisable(GL_DEPTH_TEST);
         self->root->rect = (ilG_gui_rect){
             .a = {0, 0, 0.f, 0.f},
             .b = {self->stage.context->width, self->stage.context->height, 0.f, 0.f}
@@ -28,6 +30,13 @@ struct ilG_stage *ilG_guipass(struct ilG_context *context)
     self->stage.context = context;
     self->stage.run = gui_run;
     return &self->stage;
+}
+
+void ilG_guipass_setRoot(ilG_stage *stage, ilG_gui_frame *root)
+{
+    struct guipass *self = (struct guipass*)stage;
+    il_unref(self->root);
+    self->root = il_ref(root);
 }
 
 il_type ilG_guipass_type = {

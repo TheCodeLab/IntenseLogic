@@ -86,10 +86,10 @@ static void draw_lights(ilG_stage *ptr)
     //glBindBufferBase(GL_UNIFORM_BUFFER, context->lightdata.lights_index, context->lightdata.lights_ubo);
     //glBindBufferBase(GL_UNIFORM_BUFFER, context->lightdata.mvp_index, context->lightdata.mvp_ubo);
     context->drawable = ilG_icosahedron;
-    const ilG_bindable *drawable = il_cast(il_typeof(context->drawable), "il.graphics.bindable"),
-                       *material = il_cast(il_typeof(context->material), "il.graphics.bindable");
-    ilG_bindable_bind(drawable, context->drawable);
-    ilG_bindable_bind(material, context->material);
+    context->drawableb = il_cast(il_typeof(context->drawable), "il.graphics.bindable"),
+    context->materialb = il_cast(il_typeof(context->material), "il.graphics.bindable");
+    ilG_bindable_bind(context->drawableb, context->drawable);
+    ilG_bindable_bind(context->materialb, context->material);
     glUniform3f(glGetUniformLocation(context->material->program, "camera"), 
             context->camera->positionable.position[0], 
             context->camera->positionable.position[1],
@@ -114,21 +114,23 @@ static void draw_lights(ilG_stage *ptr)
     unsigned int i;
     for (i = 0; i < context->lights.length; i++) {
         context->positionable = &context->lights.data[i]->positionable;
-        ilG_bindable_action(material, context->material);
+        ilG_bindable_action(context->materialb, context->material);
         il_vec4 pos = context->positionable->position;
         glUniform3f(position_loc, pos[0], pos[1], pos[2]);
         il_vec4 col = context->lights.data[i]->color;
         glUniform3f(color_loc, col[0], col[1], col[2]);
         glUniform1f(radius_loc, context->lights.data[i]->radius);
-        ilG_bindable_action(drawable, context->drawable);
+        ilG_bindable_action(context->drawableb, context->drawable);
         //glDrawElements(GL_TRIANGLES, sizeof(indices)/sizeof(GLuint), GL_UNSIGNED_INT, NULL);
     }
     //glDrawElementsInstanced(GL_TRIANGLES, sizeof(indices)/sizeof(GLuint), GL_UNSIGNED_INT, NULL, context->lights.length);
     glDisable(GL_BLEND);
-    ilG_bindable_unbind(drawable, context->drawable);
-    ilG_bindable_unbind(material, context->material);
+    ilG_bindable_unbind(context->drawableb, context->drawable);
+    ilG_bindable_unbind(context->materialb, context->material);
     context->drawable = NULL;
     context->material = NULL;
+    context->drawableb = NULL;
+    context->materialb = NULL;
     ilG_testError("Error drawing lights");
 }
 
