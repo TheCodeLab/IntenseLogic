@@ -11,6 +11,9 @@ void *il_ref(void *obj)
 void il_unref(void* obj)
 {
     il_base *base = obj;
+    if (!base) {
+        return;
+    }
     if (--base->refs < 1) {
         size_t i;
         for (i = 0; i < base->weak_refs.length; i++) {
