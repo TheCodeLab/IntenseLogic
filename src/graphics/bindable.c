@@ -2,7 +2,7 @@
 
 void ilG_bindable_bind(const ilG_bindable *self, void *obj)
 {
-    if (!self->bind) {
+    if (!self || !self->bind) {
         return;
     }
     self->bind(obj);
@@ -10,7 +10,7 @@ void ilG_bindable_bind(const ilG_bindable *self, void *obj)
 
 void ilG_bindable_action(const ilG_bindable *self, void *obj)
 {
-    if (!self->action) {
+    if (!self || !self->action) {
         return;
     }
     self->action(obj);
@@ -18,7 +18,7 @@ void ilG_bindable_action(const ilG_bindable *self, void *obj)
 
 void ilG_bindable_unbind(const ilG_bindable *self, void *obj)
 {
-    if (!self->unbind) {
+    if (!self || !self->unbind) {
         return;
     }
     self->unbind(obj);
