@@ -11,6 +11,14 @@
 #include "util/uthash.h" // implemented in preprocessor so it's fine
 #include "util/array.h" // ditto
 
+#if defined __APPLE__
+#define SUFFIX ".dylib"
+#elif defined __WIN32
+#define SUFFIX ".dll"
+#else
+#define SUFFIX ".so"
+#endif
+
 static struct module {
     char *name;
     void *handle;
@@ -29,12 +37,13 @@ void il_loaddir(const char *path, int argc, char **argv)
     // TODO: windows
     DIR *dir = opendir(path);
     if (!dir) {
-        fprintf(stderr, "Failed to open modules directory: %s\n", strerror(errno));
+        fprintf(stderr, "*** Failed to open module directory \"%s\": %s\n", path, strerror(errno));
+        return;
     }
     struct dirent entry, *result;
     while (!readdir_r(dir, &entry, &result) && result) {
-        if (strcmp(result->d_name + strlen(result->d_name) - 3, ".so") != 0) {
-            // assume it's not a shared library if it doesn't end with .so
+        if (strcmp(result->d_name + strlen(result->d_name) - strlen(SUFFIX), SUFFIX) != 0) {
+            // assume it's not a shared library if it doesn't end with SUFFIX
             continue;
         }
         char buf[512];
@@ -57,8 +66,8 @@ static char *lookup(const char *modpath, const char *name)
     // TODO: windows
     char *str;
     if (modpath) {
-        str = calloc(strlen(modpath) + 4 + strlen(name) + 4, 1);
-        sprintf(str, "%s/lib%s.so", modpath, name);
+        str = calloc(strlen(modpath) + 4 + strlen(name) + strlen(SUFFIX) + 1, 1);
+        sprintf(str, "%s/lib%s" SUFFIX, modpath, name);
     } else {
         str = strdup(name);
     }
