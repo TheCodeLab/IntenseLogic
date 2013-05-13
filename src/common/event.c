@@ -13,6 +13,8 @@
 #include "util/array.h"
 #include "util/uthash.h"
 
+char *strdup(const char*);
+
 static struct event_base *ilE_base;
 ilE_registry *il_registry;
 

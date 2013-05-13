@@ -5,6 +5,8 @@
 #include "util/alloc.h"
 #include "util/uthash.h"
 
+char *strdup(const char*);
+
 const char *il_log_prefixes[] = {
     "fatal: ",
     "error: ",

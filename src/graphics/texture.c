@@ -11,6 +11,8 @@
 #include "util/log.h"
 #include "graphics/bindable.h"
 
+char *strdup(const char*);
+
 static void texture_update(void *obj)
 {
     unsigned int i;
