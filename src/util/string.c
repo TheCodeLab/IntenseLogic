@@ -4,6 +4,9 @@
 #include <stdio.h>
 #include <stdarg.h>
 
+char *strdup(const char*);
+size_t strnlen(const char*,size_t);
+
 static size_t compute_canary(const il_string *s)
 {
     return s->length ^ s->capacity ^ (size_t)s->data;

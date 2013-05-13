@@ -4,6 +4,8 @@
 #include "util/array.h"
 #include "util/log.h"
 
+size_t strnlen(const char*,size_t);
+
 struct ilN_buf {
     IL_ARRAY(unsigned char,) buf;
     size_t byte, bit;

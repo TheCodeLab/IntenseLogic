@@ -64,7 +64,15 @@ void il_loaddir(const char *path, int argc, char **argv)
 
     do {
         char name[MAX_PATH];
+#ifdef UNICODE
         wcstombs(name, ffd.cFileName, MAX_PATH);
+#else
+        strcpy(name, ffd.cFileName);
+#endif
+        if (strcmp(name + strlen(name) - strlen(SUFFIX), SUFFIX) != 0) {
+            // assume it's not a shared library if it doesn't end with SUFFIX
+            continue;
+        }
         char buf[MAX_PATH];
         strcpy(buf, path);
         strcat(buf, "\\");
@@ -129,7 +137,15 @@ int il_loadmod(const char *name, int argc, char **argv)
 #endif
 
     // strip path and extension off of name
-    p = strrchr(name, '/'); // path component
+#ifdef WIN32
+    p = strrchr(name, '\\');
+    char *p2 = strrchr(name, '/'); // path component
+    if (p2 > p) {
+        p = p2;
+    }
+#else
+    p = strrchr(name, '/');
+#endif
     if (p) {
         p++; // leave out the / itself
         if (strncmp(p, "lib", 3) == 0) { // lib- prefix
@@ -213,22 +229,23 @@ int il_loadmod(const char *name, int argc, char **argv)
     return res;
 }
 
-void *il_getsym(const char *module, const char *name)
+il_func il_getsym(const char *module, const char *name)
 {
     struct module *mod;
+    il_func sym;
     HASH_FIND_STR(il_loaded, module, mod);
     if (!mod) {
         fprintf(stderr, "*** No loaded module %s\n", module);
         return NULL;
     }
 #ifdef WIN32
-    void *sym = (void*)GetProcAddress(mod->handle, name);
+    sym = GetProcAddress(mod->handle, name);
     if (!sym) {
         fprintf(stderr, "*** Failed to load symbol %s\n", name);
         return NULL;
     }
 #else
-    void *sym = dlsym(mod->handle, name);
+    sym = dlsym(mod->handle, name);
     const char *error = dlerror();
     if (error) {
         fprintf(stderr, "*** Failed to load symbol: %s\n", error);

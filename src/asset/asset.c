@@ -32,6 +32,8 @@ struct SearchPath {
 struct SearchPath *first;
 il_string *writedir;
 
+char *strdup(const char*);
+char *strtok_r(char *str, const char *delim, char **saveptr);
 int il_bootstrap(int argc, char **argv)
 {
     (void)argc, (void)argv;
@@ -93,6 +95,7 @@ void ilA_registerReadDir(il_string *path, int priority)
     ins->next = cur;
 }
 
+size_t strnlen(const char*,size_t);
 static il_string *search_paths(il_string *path)
 {
     struct SearchPath *cur = first;

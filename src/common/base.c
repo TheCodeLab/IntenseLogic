@@ -2,6 +2,9 @@
 
 #include "util/log.h"
 
+char *strdup(const char*);
+size_t strnlen(const char*,size_t);
+
 void *il_ref(void *obj)
 {
     ((il_base*)obj)->refs++;

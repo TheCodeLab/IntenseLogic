@@ -1,2 +1,2 @@
 set PATH=%PATH%;build/
-build/il.exe -r test.lua
+build/il.exe -m build -r test.lua

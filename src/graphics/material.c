@@ -69,8 +69,8 @@ static void mtl_update(void *obj)
         il_error("%s<%p> does not have the required attributes to "
                  "be drawn with %s<%p>", 
                  il_typeof(mtl->context->drawable)->name, 
-                 mtl->context->drawable,
-                 il_typeof(mtl)->name, mtl);
+                 (void*)mtl->context->drawable,
+                 il_typeof(mtl)->name, (void*)mtl);
     }
     unsigned int i;
     for (i = 0; i < mtl->config->matrices.length; i++) {

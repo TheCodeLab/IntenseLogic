@@ -7,6 +7,8 @@
 //#include "util/log.h"
 //#include "util/ilstring.h"
 
+char *strdup(const char*);
+
 static int print(lua_State* L)
 {
     lua_Debug ar;

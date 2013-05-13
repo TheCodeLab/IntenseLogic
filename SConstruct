@@ -50,6 +50,8 @@ if 'LD' in os.environ:
     env['LD'] = os.environ['LD']
 if 'SHLIBSUFFIX' in os.environ:
     env['SHLIBSUFFIX'] = os.environ['SHLIBSUFFIX']
+if 'PROGSUFFIX' in os.environ:
+    env['PROGSUFFIX'] = os.environ['PROGSUFFIX']
 
 env.Append(CPPPATH = [src_dir])
 
