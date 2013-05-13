@@ -1,5 +1,9 @@
 #include "network.h"
 
+#ifdef WIN32
+# include <winsock.h>
+#endif
+
 void il_bootstrap(int argc, char **argv)
 {
     (void)argc, (void)argv;

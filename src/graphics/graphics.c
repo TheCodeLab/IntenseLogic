@@ -185,14 +185,18 @@ static void event_setup()
     ilE_globaltimer(ilG_registry, "tick", 0, NULL, tv); // kick off the draw loop
 }
 
-extern int il_loadmod(const char *name, int argc, char **argv);
+const char **il_dependencies(int argc, char **argv)
+{
+    (void)argc, (void)argv;
+    static const char *deps[] = {
+        "ilcommon",
+        NULL
+    };
+    return deps;
+}
+
 int il_bootstrap(int argc, char **argv)
 {
-    int res;
-    res = il_loadmod("ilcommon", argc, argv);
-    if (!res) {
-        return res;
-    }
     int opt, idx, has_shaders = 0;
     opterr = 0; // we don't want to print an error if another package uses an option
     optind = 0; // reset getopt

@@ -18,6 +18,7 @@ static void draw_geometry(ilG_stage *self)
     ilG_testError("glClear");
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
+    glDisable(GL_BLEND);
     glFrontFace(GL_CCW);
     glCullFace(GL_BACK);
     ilG_testError("glEnable");

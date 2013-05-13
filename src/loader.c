@@ -1,6 +1,11 @@
 #include "loader.h"
 
-#include <dlfcn.h>
+#ifdef WIN32
+# include <windows.h>
+# include <tchar.h> 
+#else
+# include <dlfcn.h>
+#endif
 #include <stdio.h> // we don't have libilutil, so we can't use the traditional logging facilities if something goes wrong
 #include <string.h>
 #include <stdlib.h>
@@ -19,9 +24,17 @@
 #define SUFFIX ".so"
 #endif
 
+#ifdef WIN32
+typedef HINSTANCE il_handle;
+#else
+typedef void *il_handle;
+#endif
+
+char *strdup(const char*);
+
 static struct module {
     char *name;
-    void *handle;
+    il_handle handle;
     UT_hash_handle hh;
 } *il_loaded = NULL;
 
@@ -34,7 +47,33 @@ void il_modpath(const char *path)
 
 void il_loaddir(const char *path, int argc, char **argv)
 {
-    // TODO: windows
+#ifdef WIN32
+    WIN32_FIND_DATA ffd;
+    HANDLE hFind;
+
+    char dir[MAX_PATH];
+    strcpy(dir, path);
+    strcat(dir, "\\*");
+
+    hFind = FindFirstFile(TEXT(dir), &ffd);
+
+    if (INVALID_HANDLE_VALUE == hFind) {
+        fprintf(stderr, "*** Failed to list directory \"%s\"\n", path);
+        return;
+    }
+
+    do {
+        char name[MAX_PATH];
+        wcstombs(name, ffd.cFileName, MAX_PATH);
+        char buf[MAX_PATH];
+        strcpy(buf, path);
+        strcat(buf, "\\");
+        strcat(buf, name);
+        il_loadmod(buf, argc, argv);
+    } while (FindNextFile(hFind, &ffd) != 0);
+
+    FindClose(hFind);
+#else
     DIR *dir = opendir(path);
     if (!dir) {
         fprintf(stderr, "*** Failed to open module directory \"%s\": %s\n", path, strerror(errno));
@@ -51,6 +90,7 @@ void il_loaddir(const char *path, int argc, char **argv)
         il_loadmod(buf, argc, argv);
     }
     closedir(dir);
+#endif
 }
 
 void il_loadall(int argc, char **argv)
@@ -63,7 +103,6 @@ void il_loadall(int argc, char **argv)
 
 static char *lookup(const char *modpath, const char *name)
 {
-    // TODO: windows
     char *str;
     if (modpath) {
         str = calloc(strlen(modpath) + 4 + strlen(name) + strlen(SUFFIX) + 1, 1);
@@ -80,18 +119,19 @@ static char *lookup(const char *modpath, const char *name)
 
 int il_loadmod(const char *name, int argc, char **argv)
 {
-    int stripped = 0, res;
+    int res;
     size_t i;
     char *sname, *path = NULL, *p;
     struct module *mod;
-    void *handle;
+    il_handle handle;
+#ifndef WIN32
     const char *error;
+#endif
 
     // strip path and extension off of name
     p = strrchr(name, '/'); // path component
     if (p) {
         p++; // leave out the / itself
-        stripped = 1;
         if (strncmp(p, "lib", 3) == 0) { // lib- prefix
             sname = strdup(p + 3);
         } else {
@@ -101,7 +141,6 @@ int il_loadmod(const char *name, int argc, char **argv)
         sname = strdup(name);
     }
     if ((p = strchr(sname, '.'))) { // extension
-        stripped = 1;
         *p = 0;
     }
     HASH_FIND_STR(il_loaded, sname, mod); // look it up to see if it's already loaded
@@ -115,19 +154,45 @@ int il_loadmod(const char *name, int argc, char **argv)
     for (i = 0; i < modpaths.length && !path; i++) {
         path = lookup(modpaths.data[i], sname);
     }
-    dlerror();
     if (!path) {
         fprintf(stderr, "*** Could not find module %s\n", sname);
         return 0;
     }
+#ifdef WIN32
+    handle = LoadLibrary(TEXT(path));
+    if (!handle) {
+        fprintf(stderr, "*** Failed to load module %s\n", path);
+        return 0;
+    }
+    il_dependencies_fn deps = (il_dependencies_fn)GetProcAddress(handle, "il_dependencies");
+    if (deps) {
+        const char **mods = deps(argc, argv);
+        for (i = 0; mods[i]; i++) {
+            il_loadmod(mods[i], argc, argv);
+        }
+    }
+    il_bootstrap_fn func = (il_bootstrap_fn)GetProcAddress(handle, "il_bootstrap");
+    if (!func) {
+        fprintf(stderr, "*** Failed to load symbol il_bootstrap\n");
+        FreeLibrary(handle);
+        return 0;
+    }
+#else
+    dlerror();
     handle = dlopen(path, RTLD_LAZY | RTLD_GLOBAL);
     if (!handle) {
         fprintf(stderr, "*** Failed to load module %s: %s\n", path, dlerror());
         return 0;
     }
-
-    // load the il_bootstrap symbol
     dlerror();
+    il_dependencies_fn deps = (il_dependencies_fn)dlsym(handle, "il_dependencies");
+    dlerror();
+    if (deps) {
+        const char **mods = deps(argc, argv);
+        for (i = 0; mods[i]; i++) {
+            il_loadmod(mods[i], argc, argv);
+        }
+    }
     il_bootstrap_fn func = (il_bootstrap_fn)dlsym(handle, "il_bootstrap");
     error = dlerror();
     if (error) {
@@ -135,6 +200,7 @@ int il_loadmod(const char *name, int argc, char **argv)
         dlclose(handle);
         return 0;
     }
+#endif
 
     // initialize the module
     res = func(argc, argv);
@@ -155,12 +221,20 @@ void *il_getsym(const char *module, const char *name)
         fprintf(stderr, "*** No loaded module %s\n", module);
         return NULL;
     }
+#ifdef WIN32
+    void *sym = (void*)GetProcAddress(mod->handle, name);
+    if (!sym) {
+        fprintf(stderr, "*** Failed to load symbol %s\n", name);
+        return NULL;
+    }
+#else
     void *sym = dlsym(mod->handle, name);
     const char *error = dlerror();
     if (error) {
         fprintf(stderr, "*** Failed to load symbol: %s\n", error);
         return NULL;
     }
+#endif
     return sym;
 }
 
@@ -173,7 +247,11 @@ void il_rmmod(const char *module)
         return;
     }
     HASH_DEL(il_loaded, mod);
+#ifdef WIN32
+    FreeLibrary(mod->handle);
+#else
     dlclose(mod->handle);
+#endif
     free(mod->name);
 }
 

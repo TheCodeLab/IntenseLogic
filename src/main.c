@@ -34,6 +34,7 @@ static const char *help[] = {
 };
 #undef OPT
 
+char *strdup(const char*);
 int main(int argc, char **argv)
 {
     IL_ARRAY(char*,) scripts = {0,0,0};

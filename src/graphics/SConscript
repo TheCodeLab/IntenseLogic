@@ -10,10 +10,11 @@ Import("env")
 Import("libilutil")
 Import("libilmath")
 Import("libilcommon")
+Import("libilasset")
 
 graphics = env.Clone()
 
-graphics.Append(CPPPATH = src_dir, LIBS=["ilcommon","ilutil","ilmath"])
+graphics.Append(CPPPATH = src_dir, LIBS=["ilcommon","ilutil","ilmath","ilasset"])
 
 pkg_libs = {
     "osx":   ["libglfw", "glew"],
@@ -37,6 +38,7 @@ libilgraphics = graphics.SharedLibrary(target = build_dir + "/" + output,
 Depends(libilgraphics, libilutil)
 Depends(libilgraphics, libilmath)
 Depends(libilgraphics, libilcommon)
+Depends(libilgraphics, libilasset)
 
 Return("libilgraphics")
 

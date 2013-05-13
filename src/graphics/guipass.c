@@ -15,6 +15,8 @@ void gui_run(ilG_stage *ptr)
     if (self->root) {
         glDisable(GL_CULL_FACE);
         glDisable(GL_DEPTH_TEST);
+        //glEnable(GL_BLEND);
+        //glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
         self->root->rect = (ilG_gui_rect){
             .a = {0, 0, 0.f, 0.f},
             .b = {self->stage.context->width, self->stage.context->height, 0.f, 0.f}

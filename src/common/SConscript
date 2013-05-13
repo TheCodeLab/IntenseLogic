@@ -12,10 +12,11 @@ Import("libilmath")
 
 common = env.Clone()
 
-common.Append(CPPPATH = src_dir)
+common.Append(CPPPATH = src_dir, LIBS=['ilutil', 'ilmath'])
 
 if platform=="mingw":
-    common.Append(LIBS=["libevent"])
+    common.ParseConfig("pkg-config libglfw --libs --cflags")
+    common.Append(LIBS=["libevent", "opengl32"])
 else:
     common.ParseConfig("pkg-config libevent --libs --cflags")
 

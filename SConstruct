@@ -15,7 +15,7 @@ platform  = ARGUMENTS.get("platform", "linux")
 cflags    = "-Wall -Wextra -pedantic -std=c99 -g -O0 -DDEBUG -D_POSIX_C_SOURCE=200809"
 linkflags = "-g -L. -Lbuild"
 if platform == "mingw":
-    cflags += " -DWIN32"
+    cflags += " -DWIN32 -I/usr/i486-mingw32/include/luajit-2.0" # TODO: get rid of that monstrosity
     linkflags += " -Wl,--export-all-symbols"
 else:
     linkflags += " -rdynamic" # assume ELF because I'm terrible
@@ -46,6 +46,10 @@ VariantDir(build_dir, src_dir, duplicate = 0)
 env = Environment(CCFLAGS = cflags, LINKFLAGS = string.split(linkflags, " "))
 if 'CC' in os.environ:
     env['CC'] = os.environ['CC']
+if 'LD' in os.environ:
+    env['LD'] = os.environ['LD']
+if 'SHLIBSUFFIX' in os.environ:
+    env['SHLIBSUFFIX'] = os.environ['SHLIBSUFFIX']
 
 env.Append(CPPPATH = [src_dir])
 
@@ -58,7 +62,8 @@ Export("libilmath")
 libilcommon = SConscript("src/common/SConscript", platform=platform, env=env, libilutil=libilutil, libilmath=libilmath)
 Export("libilcommon")
 libilasset = SConscript("src/asset/SConscript", platform=platform, env=env, libilutil=libilutil, libilmath=libilmath, libilcommon=libilcommon)
-libilgraphics = SConscript("src/graphics/SConscript", platform=platform, env=env, libilutil=libilutil, libilmath=libilmath, libilcommon=libilcommon)
+Export("libilasset")
+libilgraphics = SConscript("src/graphics/SConscript", platform=platform, env=env, libilutil=libilutil, libilmath=libilmath, libilcommon=libilcommon, libilasset=libilasset)
 Export("libilgraphics")
 libilnetwork = SConscript("src/network/SConscript", platform=platform, env=env, libilutil=libilutil)
 Export("libilnetwork")
