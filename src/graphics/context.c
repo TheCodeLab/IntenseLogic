@@ -66,7 +66,7 @@ void ilG_context_resize(ilG_context *self, int w, int h)
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_RECTANGLE, self->fbtextures[ILG_CONTEXT_DEPTH], 0);
     ilG_testError("Unable to create depth buffer");
     glBindTexture(GL_TEXTURE_RECTANGLE, self->fbtextures[ILG_CONTEXT_ACCUM]);
-    glTexImage2D(GL_TEXTURE_RECTANGLE, 0, GL_RGBA, w, h, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+    glTexImage2D(GL_TEXTURE_RECTANGLE, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_RECTANGLE, self->fbtextures[ILG_CONTEXT_ACCUM], 0);
     ilG_testError("Unable to create accumulation buffer");
     glBindTexture(GL_TEXTURE_RECTANGLE, self->fbtextures[ILG_CONTEXT_NORMAL]); 
@@ -128,6 +128,7 @@ void render_stages(const ilE_registry* registry, const char *name, size_t size, 
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, context->framebuffer);
     glDrawBuffers(4, &drawbufs[0]);
     glClearColor(1.0, 0.41, 0.72, 1.0); // hot pink
+    glClear(GL_COLOR_BUFFER_BIT);
     for (i = 0; i < context->stages.length; i++) {
         il_debug("Rendering stage %s", context->stages.data[i]->name);
         context->stages.data[i]->run(context->stages.data[i]);

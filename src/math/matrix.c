@@ -2,7 +2,9 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <xmmintrin.h>
+#ifdef IL_SSE
+# include <xmmintrin.h>
+#endif
 #include <math.h>
 #include <assert.h>
 

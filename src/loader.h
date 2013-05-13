@@ -11,6 +11,7 @@ void *il_getsym(const char *module, const char *name);
 void il_rmmod(const char *module);
 
 typedef int /*success*/ (*il_bootstrap_fn)(int argc, char **argv);
+typedef const char **(*il_dependencies_fn)(int argc, char **argv);
 
 #endif
 

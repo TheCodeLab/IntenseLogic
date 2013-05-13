@@ -9,7 +9,10 @@ Import("platform", "env", "libilutil")
 
 ilnet = env.Clone()
 
-ilnet.Append(CPPPATH = src_dir, LINKFLAGS="-lilutil")
+ilnet.Append(CPPPATH = src_dir, LIBS=["ilutil"])
+
+if platform=="mingw":
+    ilnet.Append(LIBS=["ws2_32"])
 
 sources = []
 for module in Split(inputs) :

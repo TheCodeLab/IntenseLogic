@@ -9,7 +9,7 @@ Import("platform", "env", "libilutil")
 
 ilmath = env.Clone()
 
-ilmath.Append(CPPPATH = src_dir)
+ilmath.Append(CPPPATH = src_dir, LIBS=["ilutil"])
 
 sources = []
 for module in Split(inputs) :
