@@ -28,9 +28,9 @@ extern il_type il_world_type;
 base.wrap "il.common.world" {
     --- Adds a positionable to a world
     -- @tparam positionable positionable The positionable to add
-    add = ffi.C.il_world_add,
+    add = modules.common.il_world_add,
     struct = "il_world"
 }
 
-return ffi.C.il_world_type
+return modules.common.il_world_type
 

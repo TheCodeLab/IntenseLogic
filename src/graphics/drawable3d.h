@@ -15,7 +15,7 @@ struct ilG_drawable3d {
     const char *name;
 };
 
-extern il_type ilG_drawable3d_type;
+il_type ilG_drawable3d_type;
 
 #endif
 

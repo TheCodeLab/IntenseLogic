@@ -62,6 +62,10 @@ void ilG_testError_(const char *file, int line, const char *func,
 
 GLuint ilG_makeShader(GLenum type, il_string *source)
 {
+    if (!source) {
+        il_error("Null source");
+        return 0;
+    }
     IL_GRAPHICS_TESTERROR("Unknown");
 
     GLuint shader = glCreateShader(type);

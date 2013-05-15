@@ -23,5 +23,5 @@ base.wrap "il.graphics.camera" {
     struct = "ilG_camera";
 }
 
-return ffi.C.ilG_camera_type;
+return modules.graphics.ilG_camera_type;
 

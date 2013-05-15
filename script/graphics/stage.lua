@@ -22,5 +22,5 @@ base.wrap "il.graphics.stage" {
     struct = "ilG_stage"
 }
 
-return ffi.C.ilG_stage_type
+return modules.graphics.ilG_stage_type
 

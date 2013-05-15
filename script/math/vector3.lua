@@ -50,15 +50,15 @@ local function c_wrap(f)
     end
 end
 
-local add = c_wrap(ffi.C.il_vec4_add)
-local sub = c_wrap(ffi.C.il_vec4_sub)
-local oldmul = c_wrap(ffi.C.il_vec4_mul)
-local div = c_wrap(ffi.C.il_vec4_div)
+local add = c_wrap(modules.math.il_vec4_add)
+local sub = c_wrap(modules.math.il_vec4_sub)
+local oldmul = c_wrap(modules.math.il_vec4_mul)
+local div = c_wrap(modules.math.il_vec4_div)
 
 local function mul(a,b)
     quaternion = quaternion or require "math.quaternion"
     if quaternion.check(b) then
-        return vector3.wrap(ffi.C.il_vec3_rotate(a.ptr, b.ptr, nil))
+        return vector3.wrap(modules.math.il_vec3_rotate(a.ptr, b.ptr, nil))
     else
         return oldmul(a,b)
     end
@@ -74,10 +74,10 @@ local function index(t, k)
     elseif k == "len" then
         return il_vec3_len(t.ptr)
     elseif k == "normal" then
-        return vector3.wrap(ffi.C.il_vec3_normal(t.ptr, nil))
+        return vector3.wrap(modules.math.il_vec3_normal(t.ptr, nil))
     elseif k == "vec4" then
         vector4 = vector4 or require "math.vector4"
-        return vector4.wrap(ffi.C.il_vec3_to_vec4(t.ptr, nil))
+        return vector4.wrap(modules.math.il_vec3_to_vec4(t.ptr, nil))
     end
     return vector3[k]
 end
@@ -102,7 +102,7 @@ local function ts(t)
 end
 
 local function gc(obj)
-    ffi.C.il_vec4_free(obj.ptr);
+    modules.math.il_vec4_free(obj.ptr);
 end
 
 --- Wraps the vec3 with a metatable
@@ -120,7 +120,7 @@ end
 -- @treturn vec3
 function vector3.dot(a,b)
     assert(vector3.check(a) and vector3.check(b))
-    return ffi.C.il_vec3_dot(a.ptr, b.ptr)
+    return modules.math.il_vec3_dot(a.ptr, b.ptr)
 end
 
 --- Computes the cross product of two vec3s
@@ -129,7 +129,7 @@ end
 -- @treturn vec3
 function vector3.cross(a,b)
     assert(vector3.check(a) and vector3.check(b))
-    return vector3.wrap(ffi.C.il_vec3_cross(a.ptr, b.ptr))
+    return vector3.wrap(modules.math.il_vec3_cross(a.ptr, b.ptr))
 end
 
 --- Creates a new vec3
@@ -139,13 +139,13 @@ end
 -- @treturn vec3
 function vector3.create(x, y, z)
     if type(x) == "number" and not y then
-        return vector3.wrap(ffi.C.il_vec4_set(nil, x, x, x, 1.0))
+        return vector3.wrap(modules.math.il_vec4_set(nil, x, x, x, 1.0))
     elseif vector3.check(x) then
-        return vector3.wrap(ffi.C.il_vec4_copy(x.ptr))
+        return vector3.wrap(modules.math.il_vec4_copy(x.ptr))
     elseif x and y and z then
         assert(type(y) == "number" and
                type(z) == "number")
-        return vector3.wrap(ffi.C.il_vec4_set(nil, x, y, z, 1.0))
+        return vector3.wrap(modules.math.il_vec4_set(nil, x, y, z, 1.0))
     end
 end
 

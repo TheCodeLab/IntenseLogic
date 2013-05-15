@@ -68,7 +68,7 @@ ffi.metatype("ilE_registry", {
     __index = function(t,k) return event[k] end
 })
 
-event.registry = ffi.C.il_registry;
+event.registry = modules.common.il_registry;
 
 local packers = {}
 
@@ -86,7 +86,7 @@ end
 -- @param ... Data to pass with the event
 function event.event(registry, name, ...)
     local data, size = packers[tostring(ffi.cast("void*", registry))..name](...)
-    ffi.C.ilE_globalevent(registry, name, size, data);
+    modules.common.ilE_globalevent(registry, name, size, data);
 end
 
 --- Creates a new timer
@@ -107,7 +107,7 @@ function event.timer(registry, name, interval, ...)
         error "Unknown time format for timer"
     end
     local data, size = packers[tostring(ffi.cast("void*", registry))..name](...)
-    ffi.C.ilE_globalevent(registry, name, size, data, tv)
+    modules.common.ilE_globalevent(registry, name, size, data, tv)
 end
 
 local unpackers = {}
@@ -195,7 +195,7 @@ function event.register(registry, name, fn)
     end
     if not callbacks[key][name] then
         callbacks[key][name] = {}
-        ffi.C.ilE_register(registry, name, ffi.C.ILE_DONTCARE, ffi.C.ILE_ANY, lua_dispatch, nil);
+        modules.common.ilE_register(registry, name, modules.common.ILE_DONTCARE, modules.common.ILE_ANY, lua_dispatch, nil);
     end
 
     callbacks[key][name][#callbacks[key][name] + 1] = fn;

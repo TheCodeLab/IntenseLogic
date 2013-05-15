@@ -10,6 +10,6 @@ extern struct ilG_drawable3d *ilG_box,
                              *ilG_icosahedron, 
                              *ilG_plane;
 
-extern il_type ilG_shape_type;
+il_type ilG_shape_type;
 
 #endif

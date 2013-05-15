@@ -29,12 +29,12 @@ local matrix = {}
 local function mul(a,b)
     assert(type(a) == "table" and ffi.istype(matrix.type, a.ptr), "Expected matrix")
     assert(type(b) == "table" and ffi.istype(matrix.type, a.ptr), "Expected matrix")
-    return wrap(ffi.C.il_mat_mul(a.ptr, b.ptr, nil));
+    return wrap(modules.math.il_mat_mul(a.ptr, b.ptr, nil));
 end
 
 local function unm(a)
     assert(type(a) == "table" and ffi.istype(matrix.type, a.ptr), "Expected matrix")
-    return wrap(ffi.C.il_mat_invert(a, nil));
+    return wrap(modules.math.il_mat_invert(a, nil));
 end
 
 --- Wraps a cdata with a metatable
@@ -58,12 +58,12 @@ end
 matrix.type = ffi.typeof "il_mat";
 
 --- Identity matrix
-matrix.identity = wrap(ffi.C.il_mat_identity(nil));
+matrix.identity = wrap(modules.math.il_mat_identity(nil));
 
 --- Creates a new matrix
 -- @treturn matrix Created matrix
 function matrix.create()
-    return wrap(ffi.C.il_mat_new());
+    return wrap(modules.math.il_mat_new());
 end
 
 --- Produces a translation using the provided vector
@@ -78,7 +78,7 @@ end
 -- @treturn matrix Translation matrix
 function matrix.translate(v)
     assert(vector4.check(v))
-    return wrap(ffi.C.il_mat_translate(v.ptr, nil));
+    return wrap(modules.math.il_mat_translate(v.ptr, nil));
 end
 
 --- Produces a scaling matrix using the provided vector
@@ -93,7 +93,7 @@ end
 -- @treturn matrix Scaling matrix
 function matrix.scale(v)
     assert(vector4.check(v))
-    return wrap(ffi.C.il_mat_scale(v.ptr, nil))
+    return wrap(modules.math.il_mat_scale(v.ptr, nil))
 end
 
 --- Creates a rotation matrix
@@ -102,10 +102,10 @@ end
 function matrix.rotate(a, v)
     if type(a) == "table" then
         assert(quaternion.check(a))
-        return wrap(ffi.C.il_mat_rotate(a.ptr, nil))
+        return wrap(modules.math.il_mat_rotate(a.ptr, nil))
     --[[elseif type(a) == "number" then
         assert(type(v) == "table" and ffi.istype("il_Vector3", v.ptr), "Expected vector3")
-        return wrap(ffi.C.il_Matrix_rotate_v(a, v.ptr));]]
+        return wrap(modules.math.il_Matrix_rotate_v(a, v.ptr));]]
     else
         error("Expected quaternion or vector4")
     end
@@ -118,7 +118,7 @@ end
 -- @tparam number zfar Clipping plane for objects far from the camera (set as close as comfortable, to preserve Z buffer precision)
 -- @treturn matrix Projection matrix
 function matrix.perspective(fovy, aspect, znear, zfar)
-    return wrap(ffi.C.il_mat_perspective(nil, fovy, aspect, znear, zfar))
+    return wrap(modules.math.il_mat_perspective(nil, fovy, aspect, znear, zfar))
 end
 
 setmetatable(matrix, {__call=function(self,mat) return matrix.create(mat) end})

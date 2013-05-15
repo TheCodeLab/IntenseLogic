@@ -14,7 +14,7 @@ Import("libilasset")
 
 graphics = env.Clone()
 
-graphics.Append(CPPPATH = src_dir, LIBS=["ilcommon","ilutil","ilmath","ilasset"])
+graphics.Append(CFLAGS="-DIL_IN_GRAPHICS", CPPPATH = src_dir, LIBS=["ilcommon","ilutil","ilmath","ilasset"])
 
 pkg_libs = {
     "osx":   ["libglfw", "glew"],

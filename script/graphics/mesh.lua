@@ -18,12 +18,12 @@ base.wrap "il.graphics.mesh" {
     --- Creates a mesh from a file
     -- @function fromFile
     -- @tparam string name The filename
-    fromFile = ffi.C.ilG_mesh_fromFile;
+    fromFile = modules.graphics.ilG_mesh_fromFile;
     --- Calls `mesh:fromFile`
     __call = function(self, file)
-        return ffi.C.ilG_mesh_fromFile(file)
+        return modules.graphics.ilG_mesh_fromFile(file)
     end;
 }
 
-return ffi.C.ilG_mesh_type
+return modules.graphics.ilG_mesh_type
 

@@ -57,10 +57,10 @@ void ilG_context_addStage(ilG_context* self, struct ilG_stage* stage, int num);
 
 base.wrap "il.graphics.context" {
     struct = "ilG_context";
-    resize = ffi.C.ilG_context_resize;
-    setActive = ffi.C.ilG_context_setActive;
-    addStage = ffi.C.ilG_context_addStage;
+    resize = modules.graphics.ilG_context_resize;
+    setActive = modules.graphics.ilG_context_setActive;
+    addStage = modules.graphics.ilG_context_addStage;
 }
 
-return ffi.C.ilG_context_type;
+return modules.graphics.ilG_context_type;
 

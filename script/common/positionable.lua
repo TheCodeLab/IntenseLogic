@@ -45,16 +45,16 @@ base.wrap "il.common.positionable" {
     -- @tparam positionable self The positionable
     -- @tparam context ctx The context
     track = function(self, ctx)
-        ffi.C.ilG_trackPositionable(ctx, self)
+        modules.graphics.ilG_trackPositionable(ctx, self)
     end,
     --- Unsets a positionable to be rendered in a context
     -- @tparam positionable self The positionable
     -- @tparam context ctx The context
     untrack = function(self, ctx)
-        ffi.C.ilG_untrackPositionable(ctx, self)
+        modules.graphics.ilG_untrackPositionable(ctx, self)
     end,
     struct = "il_positionable"
 }
 
-return ffi.C.il_positionable_type
+return modules.common.il_positionable_type
 

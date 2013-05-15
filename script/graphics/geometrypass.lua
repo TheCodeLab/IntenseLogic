@@ -10,5 +10,5 @@ void ilG_geometrypass(struct ilG_stage* self);
 
 ]]
 
-return ffi.C.ilG_geometrypass -- TODO: something to make this less awkward
+return modules.graphics.ilG_geometrypass -- TODO: something to make this less awkward
 

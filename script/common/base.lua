@@ -197,7 +197,7 @@ function base.type(name)
         T.parent = cons.parent
         T.size = ffi.sizeof(cons.struct or "il_base")
         T.constructor = function(v)
-            ffi.gc(v, ffi.C.il_unref)
+            ffi.gc(v, modules.common.il_unref)
             if cons.constructor then
                 cons.constructor(v)
             end
@@ -213,7 +213,7 @@ end
 -- @treturn type The type object
 function base.typeof(v)
     --assert(ffi.istype("il_base*", v) or ffi.istype("il_base", v))
-    return ffi.C.il_typeof(v)
+    return modules.common.il_typeof(v)
 end
 
 --- Creates a new instance of a type
@@ -221,14 +221,14 @@ end
 -- @treturn base
 function base.create(T)
     assert(ffi.istype("il_type*", T) or ffi.istype("il_type", T))
-    return ffi.C.il_new(T)
+    return modules.common.il_new(T)
 end
 
 --- Copies an object
 -- @tparam base v The object to copy
 -- @treturn base The copied object
 function base.copy(v)
-    return ffi.C.il_copy(v)
+    return modules.common.il_copy(v)
 end
 
 --- Returns a value from a storage type
@@ -243,11 +243,11 @@ function base.get(v, name)
     local size = ffi.new("size_t[1]")
     local data
     if ffi.istype("il_type", v) then
-        data = ffi.C.il_type_get(v, name, size, tag)
+        data = modules.common.il_type_get(v, name, size, tag)
     else
-        data = ffi.C.il_base_get(ffi.cast("il_base*",v), name, size, tag)--data = ffi.C.il_storage_get(v, name, size, tag)
+        data = modules.common.il_base_get(ffi.cast("il_base*",v), name, size, tag)--data = ffi.C.il_storage_get(v, name, size, tag)
     end
-    --local data = ffi.C.il_storage_get(v, name, ffi.cast("size_t*", size), ffi.cast("enum il_storagetype*", tag))
+    --local data = modules.common.il_storage_get(v, name, ffi.cast("size_t*", size), ffi.cast("enum il_storagetype*", tag))
     --print("got "..tostring(data).."@"..tostring(size[0]).." "..tostring(tag[0]))
     tag = tag[0]
     size = size[0]
@@ -315,9 +315,9 @@ function base.set(v, name, val)
         size = ffi.sizeof("int")
     end
     if ffi.istype("il_type", v) then
-        ffi.C.il_type_set(v, name, ptr, size, t)
+        modules.common.il_type_set(v, name, ptr, size, t)
     else
-        ffi.C.il_base_set(ffi.cast("il_base*",v), name, ptr, size, t)
+        modules.common.il_base_set(ffi.cast("il_base*",v), name, ptr, size, t)
     end
 end
 
@@ -326,9 +326,9 @@ end
 function base.event(self, name, ...)
     event = event or require "common.event"
     if ffi.istype("il_base", self) then
-        event.event(ffi.C.ilE_base_registry(self), name, ...)
+        event.event(modules.common.ilE_base_registry(self), name, ...)
     elseif ffi.istype("il_type", self) then
-        event.event(ffi.C.ilE_type_registry(self), name, ...)
+        event.event(modules.common.ilE_type_registry(self), name, ...)
     end
 end
 
@@ -337,9 +337,9 @@ end
 function base.timer(self, name, ...)
     event = event or require "common.event"
     if ffi.istype("il_base", self) then
-        event.timer(ffi.C.ilE_base_registry(self), name, ...)
+        event.timer(modules.common.ilE_base_registry(self), name, ...)
     elseif ffi.istype("il_type", self) then
-        event.timer(ffi.C.ilE_type_registry(self), name, ...)
+        event.timer(modules.common.ilE_type_registry(self), name, ...)
     end
 
 end
@@ -349,9 +349,9 @@ end
 function base.register(self, name, fn)
     event = event or require "common.event"
     if ffi.istype("il_base", self) then
-        event.register(ffi.C.ilE_base_registry(self), name, fn)
+        event.register(modules.common.ilE_base_registry(self), name, fn)
     elseif ffi.istype("il_type", self) then
-        event.register(ffi.C.ilE_type_registry(self), name, fn)
+        event.register(modules.common.ilE_type_registry(self), name, fn)
     end
 end
 

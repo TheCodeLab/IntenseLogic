@@ -42,17 +42,17 @@ int /*failure*/ ilG_material_link(ilG_material*, struct ilG_context *ctx);
 
 base.wrap "il.graphics.material" {
     struct = "struct ilG_material";
-    default = ffi.C.ilG_material_default;
+    default = modules.graphics.ilG_material_default;
 
     vertex = function(self, source)
-        ffi.C.ilG_material_vertex(self, ilstring(source))
+        modules.graphics.ilG_material_vertex(self, ilstring(source))
     end;
 
     fragment = function(self, source)
-        ffi.C.ilG_material_fragment(self, ilstring(source))
+        modules.graphics.ilG_material_fragment(self, ilstring(source))
     end;
 
-    mtlname = ffi.C.ilG_material_name;
+    mtlname = modules.graphics.ilG_material_name;
 
     arrayAttrib = function(self, attribstr, loc)
         local attrib = ({
@@ -63,7 +63,7 @@ base.wrap "il.graphics.material" {
             diffuse     = 4,
             specular    = 5
         })[attribstr] or error "Unknown array attribute"
-        ffi.C.ilG_material_arrayAttrib(self, attrib, loc)
+        modules.graphics.ilG_material_arrayAttrib(self, attrib, loc)
     end;
 
     fragData = function(self, attribstr, loc)
@@ -73,7 +73,7 @@ base.wrap "il.graphics.material" {
             diffuse        = 2,
             specular       = 3
         })[attribstr] or error "Unknown fragment output"
-        ffi.C.ilG_material_fragData(self, attrib, loc)
+        modules.graphics.ilG_material_fragData(self, attrib, loc)
     end;
 
     textureUnit = function(self, attribstr, loc)
@@ -93,31 +93,31 @@ base.wrap "il.graphics.material" {
         else
             error("Unknown texture unit")
         end
-        ffi.C.ilG_material_textureUnit(self, attrib, loc)
+        modules.graphics.ilG_material_textureUnit(self, attrib, loc)
     end;
 
     matrix = function(self, t, loc)
         local modes = {
-            P = ffi.C.ILG_PROJECTION,
-            V = ffi.C.ILG_VIEW,
-            M = ffi.C.ILG_MODEL,
-            I = ffi.C.ILG_INVERSE,
-            T = ffi.C.ILG_TRANSPOSE
+            P = modules.graphics.ILG_PROJECTION,
+            V = modules.graphics.ILG_VIEW,
+            M = modules.graphics.ILG_MODEL,
+            I = modules.graphics.ILG_INVERSE,
+            T = modules.graphics.ILG_TRANSPOSE
         }
         local mode = 0
         for i = 1, #t do
             mode = bit.bor(mode, modes[t:sub(i, i)])
         end
-        ffi.C.ilG_material_matrix(self, mode, loc)
+        modules.graphics.ilG_material_matrix(self, mode, loc)
     end;
 
     link = function(self, ctx)
-        local res = ffi.C.ilG_material_link(self, ctx)
+        local res = modules.graphics.ilG_material_link(self, ctx)
         if res == 1 then
             error "Failedd to link material"
         end
     end
 }
 
-return ffi.C.ilG_material_type;
+return modules.graphics.ilG_material_type;
 
