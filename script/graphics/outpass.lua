@@ -12,8 +12,8 @@ extern il_type ilG_outpass_type;
 
 base.wrap "il.graphics.outpass" {
     struct = "ilG_stage";
-    __call = function(self, ctx) return ffi.C.ilG_outpass(ctx) end
+    __call = function(self, ctx) return modules.graphics.ilG_outpass(ctx) end
 }
 
-return ffi.C.ilG_outpass_type
+return modules.graphics.ilG_outpass_type
 

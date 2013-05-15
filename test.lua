@@ -41,7 +41,7 @@ f.context = c
 f:setPosition(200, 200)
 f:setSize(100, 100)
 f:filler {255,255,0,127}
-c:addStage(s, -1)
+--c:addStage(s, -1)
 -- output pass
 c:addStage(outpass(c), -1)
 

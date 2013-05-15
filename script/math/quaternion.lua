@@ -70,7 +70,7 @@ end
 function mul(a, b)
     vector3 = vector3 or require "math.vector3"
     if quaternion.check(b) then
-        return quaternion.wrap(ffi.C.il_quat_mul(a.ptr, b.ptr, nil))
+        return quaternion.wrap(modules.math.il_quat_mul(a.ptr, b.ptr, nil))
     elseif vector3.check(b) then
         return b * a
     else
@@ -79,11 +79,11 @@ function mul(a, b)
 end
 
 function lerp(a, b, t)
-    return quaternion.wrap(ffi.C.il_quat_lerp(a,b,t,nil))
+    return quaternion.wrap(modules.math.il_quat_lerp(a,b,t,nil))
 end
 
 function gc(obj)
-    ffi.C.il_quat_free(obj.ptr)
+    modules.math.il_quat_free(obj.ptr)
 end
 
 function ts(self)
@@ -111,14 +111,14 @@ function quaternion.create(...)
     local args = {...};
     if #args == 3 then -- YPR
         assert(type(args[1]) == "number" and type(args[2]) == "number" and type(args[3]) == "number")
-        return quaternion.wrap(ffi.C.il_quat_fromYPR(args[1], args[2], args[3], nil))
+        return quaternion.wrap(modules.math.il_quat_fromYPR(args[1], args[2], args[3], nil))
     elseif #args == 2 then -- axis angle with vec3
         assert(vector3.check(args[1]))
         assert(type(args[2]) == "number")
-        return quaternion.wrap(ffi.C.il_quat_fromAxisAngle(args[1].x, args[1].y, args[1].z, args[2], nil))
+        return quaternion.wrap(modules.math.il_quat_fromAxisAngle(args[1].x, args[1].y, args[1].z, args[2], nil))
     elseif #args == 4 then -- axis angle from numbers
         assert(type(args[1]) == "number" and type(args[2]) == "number" and type(args[3]) == "number" and type(args[4]) == "number")
-        return quaternion.wrap(ffi.C.il_quat_fromAxisAngle(args[1], args[2], args[3], args[4], nil))
+        return quaternion.wrap(modules.math.il_quat_fromAxisAngle(args[1], args[2], args[3], args[4], nil))
     end
     error "Don't know how to handle args"
 end

@@ -16,9 +16,9 @@ extern il_type ilG_guipass_type;
 
 base.wrap "il.graphics.guipass" {
     struct = "ilG_stage";
-    setRoot = ffi.C.ilG_guipass_setRoot;
-    __call = function(self, ...) return ffi.C.ilG_guipass(...) end;
+    setRoot = modules.graphics.ilG_guipass_setRoot;
+    __call = function(self, ...) return modules.graphics.ilG_guipass(...) end;
 }
 
-return ffi.C.ilG_guipass_type
+return modules.graphics.ilG_guipass_type
 

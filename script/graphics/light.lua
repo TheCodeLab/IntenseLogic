@@ -31,8 +31,8 @@ void ilG_light_add(ilG_light*, struct ilG_context* context);
 
 base.wrap "il.graphics.light" {
     struct = "ilG_light";
-    add = ffi.C.ilG_light_add;
+    add = modules.graphics.ilG_light_add;
 }
 
-return ffi.C.ilG_light_type
+return modules.graphics.ilG_light_type
 

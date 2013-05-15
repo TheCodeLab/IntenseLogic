@@ -41,17 +41,17 @@ local function c_wrap(c)
     end
 end
 
-local add = c_wrap(ffi.C.il_vec4_add)
-local sub = c_wrap(ffi.C.il_vec4_sub)
-local mul = c_wrap(ffi.C.il_vec4_mul)
-local div = c_wrap(ffi.C.il_vec4_div)
+local add = c_wrap(modules.math.il_vec4_add)
+local sub = c_wrap(modules.math.il_vec4_sub)
+local mul = c_wrap(modules.math.il_vec4_mul)
+local div = c_wrap(modules.math.il_vec4_div)
 
 local function index(t, k)
     vector3 = vector3 or require "math.vector3"
     if k == "len" or k == "length" then
-        return ffi.C.il_vec4_len(t.ptr)
+        return modules.math.il_vec4_len(t.ptr)
     elseif k == "vec3" then
-        return vector3.wrap(ffi.C.il_vec4_to_vec3(t.ptr, nil))
+        return vector3.wrap(modules.math.il_vec4_to_vec3(t.ptr, nil))
     elseif k == "x" then
         return t.ptr[0];
     elseif k == "y" then
@@ -88,7 +88,7 @@ local function ts(t)
 end
 
 local function gc(obj)
-    ffi.C.il_vec4_free(obj.ptr);
+    modules.math.il_vec4_free(obj.ptr);
 end
 
 --- Converts a cdata to a vec4
@@ -109,7 +109,7 @@ end
 --- Computes the dot product of two vectors
 function vector4.dot(a,b)
     assert(vector4.check(a) and vector4.check(b))
-    return ffi.C.il_vec4_dot(a.ptr, b.ptr)
+    return modules.math.il_vec4_dot(a.ptr, b.ptr)
 end
 
 --- Creates a new vec4 with optional parameters
@@ -123,9 +123,9 @@ function vector4.create(x, y, z, w)
                 type(y) == "number" and
                 type(z) == "number",
                 "Expected vector4 literal")
-        return wrap(ffi.C.il_vec4_set(nil, x, y, z, type(w)=="number" and w or 1.0));
+        return wrap(modules.math.il_vec4_set(nil, x, y, z, type(w)=="number" and w or 1.0));
     else
-        return wrap(ffi.C.il_vec4_new());
+        return wrap(modules.math.il_vec4_new());
     end
 end
 

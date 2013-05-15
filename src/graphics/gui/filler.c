@@ -40,6 +40,10 @@ static void filler_draw(ilG_gui_frame *self, ilG_gui_rect where)
     float *col = il_base_get(&self->base, "il.graphics.gui.frame.fillcolor", NULL, NULL);
     GLuint *col_loc = il_base_get(&self->context->base, "il.graphics.gui.frame.color_loc", NULL, NULL),
            *pos_loc = il_base_get(&self->context->base, "il.graphics.gui.frame.pos_loc", NULL, NULL);
+    if (!col_loc || !pos_loc) {
+        il_error("Could not retrieve shader information");
+        return;
+    }
     ilG_bindable_swap(&self->context->drawableb, (void**)&self->context->drawable, quad);
     ilG_bindable_swap(&self->context->materialb, (void**)&self->context->material, shader);
     ilG_bindable_action(self->context->materialb, self->context->material);

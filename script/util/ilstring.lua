@@ -25,7 +25,7 @@ il_string *il_string_format(const char *fmt, ...);
 local ilstring = {}
 
 function ilstring.create(s)
-    return ffi.C.il_string_new(s, #s)
+    return modules.util.il_string_new(s, #s)
 end
 
 setmetatable(ilstring, {__call = function(self, ...) return ilstring.create(...) end})

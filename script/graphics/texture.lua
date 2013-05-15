@@ -34,22 +34,22 @@ unsigned int /*GLuint*/ ilG_texture_getRaw(ilG_texture *self, unsigned unit);
 base.wrap "il.graphics.texture" {
     struct = "ilG_texture";
 
-    setContext = ffi.C.ilG_texture_setContext;
+    setContext = modules.graphics.ilG_texture_setContext;
 
-    setName = ffi.C.ilG_texture_setName;
+    setName = modules.graphics.ilG_texture_setName;
 
     fromfile = function(self, unit, name)
-        return ffi.C.ilG_texture_fromfile(self, tunit.toUnit(unit), name)
+        return modules.graphics.ilG_texture_fromfile(self, tunit.toUnit(unit), name)
     end;
 
     fromasset = function(self, unit, asset)
-        return ffi.C.ilG_texture_fromasset(self, tunit.toUnit(unit), asset.ptr)
+        return modules.graphics.ilG_texture_fromasset(self, tunit.toUnit(unit), asset.ptr)
     end;
 
     getRaw = function(self, unit)
-        return ffi.C.ilG_texture_getRaw(self, tunit.toUnit(unit))
+        return modules.graphics.ilG_texture_getRaw(self, tunit.toUnit(unit))
     end;
 }
 
-return ffi.C.ilG_texture_type
+return modules.graphics.ilG_texture_type
 

@@ -19,6 +19,7 @@ struct ilG_drawable3d {
 };
 
 extern il_type ilG_drawable3d_type;
+il_type *ilG_drawable3d_type_get();
 
 ilG_drawable3d *ilG_box, 
                *ilG_cylinder, 
@@ -39,5 +40,5 @@ base.wrap "il.graphics.drawable3d" {
     plane       = modules.graphics.ilG_plane;
 }
 
-return ffi.C.ilG_drawable3d_type;
+return modules.graphics.ilG_drawable3d_type;
 

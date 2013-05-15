@@ -54,7 +54,7 @@ base.wrap "il.graphics.gui.frame" {
             v[2] = col[3]
             v[3] = col[4]
         end
-        return ffi.C.ilG_gui_frame_filler(self, v)
+        return modules.graphics.ilG_gui_frame_filler(self, v)
     end;
     setPosition = function(self, x, y, xp, yp)
         xp = xp or 0
@@ -72,10 +72,10 @@ base.wrap "il.graphics.gui.frame" {
         self.rect.b.xp = self.rect.a.xp + wp
         self.rect.b.yp = self.rect.a.yp + hp
     end;
-    addChild = ffi.C.ilG_gui_addChild;
-    abs = ffi.C.ilG_gui_frame_abs;
-    contains = ffi.C.ilG_gui_frame_contains;
+    addChild = modules.graphics.ilG_gui_addChild;
+    abs = modules.graphics.ilG_gui_frame_abs;
+    contains = modules.graphics.ilG_gui_frame_contains;
 }
 
-return ffi.C.ilG_gui_frame_type;
+return modules.graphics.ilG_gui_frame_type;
 

@@ -7,7 +7,7 @@ struct ilG_context;
 
 struct ilG_drawable3d *ilG_quad(struct ilG_context *context);
 
-extern il_type ilG_quad_type;
+il_type ilG_quad_type;
 
 #endif
 
