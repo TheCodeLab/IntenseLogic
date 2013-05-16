@@ -37,7 +37,7 @@ il_string *il_string_new(const char *s, int len)
     } else {
         nlen = 0;
     }
-    str->length = str->capacity = nlen<len? nlen+1 : nlen;
+    str->length = str->capacity = nlen<(size_t)len? nlen+1 : nlen;
     if (s) {
         str->start = str->data = strdup(s);
     } else {
