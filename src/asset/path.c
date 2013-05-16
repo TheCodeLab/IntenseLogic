@@ -1,9 +1,11 @@
 #include "path.h"
 
 #include <unistd.h>
+#include <string.h>
 
 #include "util/log.h"
 
+char *strsep(char **stringp, const char *delim);
 ilA_path* ilA_path_string(il_string *path)
 {
     ilA_path* p;
@@ -24,23 +26,23 @@ ilA_path* ilA_path_string(il_string *path)
         p = calloc(1, sizeof(ilA_path));
     }
     p->path = il_string_ref(path);
-    //p->nodes = mowgli_list_create();
-    const char *s, *ptr, *end, *ptrend = path->data + path->length;
-    size_t len;
-    for (s = ptr = path->data; s; s = memchr(s, '/', ptrend-s), end = memchr(s, '/', ptrend-s)) {
-        if (!end) {
-            end = s + path->length;
-        }
-        len = end - s;
-        if (strncmp(s, ".", len) == 0) {
+    char *orig = il_StoC(path), *str, *delim;
+#ifdef WIN32
+    delim = "\\/";
+#else
+    delim = "/";
+#endif
+    for (str = orig; str; strsep(str, delim)) {
+        if (strcmp(str, ".") == 0) {
             continue;
-        } else if (strncmp(s, "..", len) == 0) {
+        } else if (strcmp(str, "..") == 0) {
             il_string_unref(p->nodes.data[p->nodes.length-1]);
             --p->nodes.length;
         } else {
-            IL_APPEND(p->nodes, il_string_sub(path, ptr - s, len));
+            IL_APPEND(p->nodes, il_string_sub(path, str - orig, strlen(str)));
         }
     }
+    free(orig);
     return p;
 }
 
@@ -53,7 +55,6 @@ ilA_path* ilA_path_copy(const ilA_path *self)
 {
     ilA_path* p = calloc(1, sizeof(ilA_path));
     p->path = il_string_ref(self->path);
-    //p->nodes = mowgli_list_create();
     unsigned i;
     for (i = 0; i < self->nodes.length; i++) {
         IL_APPEND(p->nodes, il_string_ref(self->nodes.data[i]));
