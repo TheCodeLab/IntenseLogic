@@ -32,10 +32,13 @@ ilA_path* ilA_path_string(il_string *path)
 #else
     delim = "/";
 #endif
-    for (str = orig; str; strsep(str, delim)) {
+    for (str = orig; str; strsep(&str, delim)) {
         if (strcmp(str, ".") == 0) {
             continue;
         } else if (strcmp(str, "..") == 0) {
+            if (p->nodes.length < 1) {
+                continue;
+            }
             il_string_unref(p->nodes.data[p->nodes.length-1]);
             --p->nodes.length;
         } else {

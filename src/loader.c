@@ -229,12 +229,12 @@ int il_loadmod(const char *name, int argc, char **argv)
     mod->name = sname;
     mod->handle = handle;
     HASH_ADD_KEYPTR(hh, il_loaded, sname, strlen(sname), mod);
-    free(sname);
+    //free(sname);
     free(path);
     return res;
 
 fail:
-    free(sname);
+    //free(sname);
     free(path);
     return 0;
 }

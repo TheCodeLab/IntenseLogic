@@ -10,6 +10,7 @@
 
 #include "util/uthash.h"
 #include "util/log.h"
+#include "asset/image.h"
 
 struct ilA_asset {
     il_string *path;
@@ -81,7 +82,7 @@ void ilA_registerReadDir(il_string *path, int priority)
         return;
     }
 
-    struct SearchPath *last;
+    struct SearchPath *last = NULL;
     while (cur && cur->priority >= priority) {
         last = cur;
         cur = cur->next;
@@ -210,7 +211,7 @@ il_string *ilA_readContents(ilA_asset* asset)
     fseek(handle, 0, SEEK_SET); /* Go back to the beginning of the file */
     fread(buf, len, 1, handle); /* Read the contents of the file in to the buffer */
     fclose(handle); /* Close the file */
-    str = il_string_new(buf, len);
+    str = il_string_bin(buf, len);
 
     return str;
 }
@@ -241,75 +242,32 @@ int ilA_delete(ilA_asset* asset)
 
 GLuint ilA_assetToTexture(ilA_asset *asset)
 {
-    FILE* fd = ilA_getHandle(asset, "rb");
-
-    if (!fd) {
-        il_error("Failed to open file");
+    il_string *contents = ilA_readContents(asset);
+    ilA_img *img = ilA_img_load(contents->data, contents->length);
+    GLenum format;
+    GLuint tex;
+    
+    if (!img) {
         return 0;
     }
-
-    unsigned char header[8];
-    size_t numbytes = fread(header, 1, 8, fd);
-    if (!png_sig_cmp(header, 0, numbytes)) { // it is, in fact, a png file
-        goto png;
+    
+    glGenTextures(1, &tex);
+    glBindTexture(GL_TEXTURE_2D, tex);
+    switch (img->channels) {
+        case ILA_IMG_RGBA:
+        format = GL_RGBA;
+        break;
+        case ILA_IMG_RGB:
+        format = GL_RGB;
+        break;
+        default:
+        il_error("Unhandled colour format");
+        return 0;
     }
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, img->width, img->height, 0, format, GL_UNSIGNED_BYTE, img->data);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 
-    il_error("Unknown image type");
-    return 0;
-
-png:
-    {
-        png_structp png_ptr = png_create_read_struct
-            (PNG_LIBPNG_VER_STRING, (png_voidp)NULL,
-            NULL, NULL);
-
-        if (!png_ptr) {
-            il_error("Failed to allocate png structure");
-            return 0;
-        }
-
-        png_infop info_ptr = png_create_info_struct(png_ptr);
-
-        if (!info_ptr) {
-            png_destroy_read_struct(&png_ptr,
-                (png_infopp)NULL, (png_infopp)NULL);
-            il_error("Failed to allocate png info structure");
-            return 0;
-        }
-
-        png_init_io(png_ptr, fd);
-        png_set_sig_bytes(png_ptr, numbytes);
-        png_read_png(png_ptr, info_ptr, PNG_TRANSFORM_SCALE_16 | 
-            PNG_TRANSFORM_PACKING, NULL);
-
-        png_uint_32 width, height;
-        int bpp, ctype;
-        png_get_IHDR(png_ptr, info_ptr, &width, &height, &bpp, &ctype, NULL, 
-            NULL, NULL);
-
-        png_bytepp rows;
-        rows = png_get_rows(png_ptr, info_ptr);
-
-        if (ctype != PNG_COLOR_TYPE_RGB && ctype != PNG_COLOR_TYPE_RGBA) {
-            il_error("Image is not RGB or RGBA");
-        }
-
-        GLuint tex;
-        glGenTextures(1, &tex);
-        glBindTexture(GL_TEXTURE_2D, tex);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, ctype == PNG_COLOR_TYPE_RGB ? GL_RGB : GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-
-        unsigned int i;
-        for (i = 0; i < height; i++) {
-            /*              image type,    l, x, y, w,     h, format,                                         size,             data*/
-            glTexSubImage2D(GL_TEXTURE_2D, 0, 0, i, width, 1, ctype == PNG_COLOR_TYPE_RGB ? GL_RGB : GL_RGBA, GL_UNSIGNED_BYTE, rows[i]);
-        }
-
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-
-        
-        return tex;
-    }
+    return tex;
 }
 
