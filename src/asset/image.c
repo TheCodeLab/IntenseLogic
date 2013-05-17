@@ -102,10 +102,25 @@ ilA_img *ilA_img_load(const void *data, size_t size)
     return NULL;
 }
 
-ilA_img *ilA_img_loadasset(ilA_file *iface, il_base *file)
+ilA_img *ilA_img_loadasset(const ilA_file *iface, il_base *file)
 {
     size_t size;
     void *data = ilA_contents(iface, file, &size);
     return ilA_img_load(data, size);
+}
+
+ilA_img *ilA_img_loadfile(const char *name)
+{
+    const ilA_file *iface;
+    ilA_path *path = ilA_path_chars(name);
+    il_base *file = ilA_stdiofile(path, ILA_FILE_READ, &iface);
+    ilA_path_free(path);
+    return ilA_img_loadasset(iface, file);
+}
+
+void ilA_img_free(ilA_img *self)
+{
+    free(self->data);
+    free(self);
 }
 
