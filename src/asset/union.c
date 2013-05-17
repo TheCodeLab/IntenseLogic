@@ -80,6 +80,8 @@ il_base *ilA_union(const ilA_dir *ai, const ilA_dir *bi, il_base *a, il_base *b,
     }
     if (!bi) {
         bi = il_cast(il_typeof(b), "il.asset.dir");
+    }
+    if (!bi) {
         il_error("b is not a directory");
         return NULL;
     }
@@ -90,10 +92,7 @@ il_base *ilA_union(const ilA_dir *ai, const ilA_dir *bi, il_base *a, il_base *b,
         return a;
     } else if (b->type == &ilA_union_type) {
         il_ref(a);
-        entry = (struct union_entry){
-            .iface = ai,
-            .obj = b
-        };
+        entry = (struct union_entry){ai, a};
         IL_APPEND(((struct ilunion*)b)->dirs, entry);
         return b;
     } else {
