@@ -19,8 +19,9 @@ typedef struct ilA_img {
 } ilA_img;
 
 ilA_img *ilA_img_load(const void *data, size_t size);
-ilA_img *ilA_img_loadasset(ilA_file *iface, il_base *file);
-#define ilA_img_loadfile(s) ilA_img_load(NULL, ilA_stdiofile(ilA_path_chars(s), ILA_FILE_READ, NULL))
+ilA_img *ilA_img_loadasset(const ilA_file *iface, il_base *file);
+ilA_img *ilA_img_loadfile(const char *file);
+void ilA_img_free(ilA_img *self);
 
 #endif
 
