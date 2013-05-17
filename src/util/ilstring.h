@@ -11,6 +11,7 @@ typedef struct il_string {
 
 const il_string *il_string_static(const char *s);
 il_string *il_string_new(const char *s, int len);
+il_string *il_string_bin(const void *s, size_t len);
 il_string *il_string_copy(const il_string *s);
 char *il_string_cstring(const il_string *s, size_t *len);
 int /*success*/ il_string_resize(il_string *self, size_t size);

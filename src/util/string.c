@@ -50,6 +50,19 @@ il_string *il_string_new(const char *s, int len)
     return str;
 }
 
+il_string *il_string_bin(const void *s, size_t len)
+{
+    il_string *str = calloc(1, sizeof(il_string));
+    str->length = str->capacity = len;
+    str->start = str->data = malloc(len);
+    memcpy(str->data, s, len);
+    str->canary = compute_canary(str);
+    str->refs = calloc(1, sizeof(int));
+    *str->refs = 1;
+    return str;
+
+}
+
 il_string *il_string_copy(const il_string *old)
 {
     if (!il_string_verify(old)) {
@@ -158,7 +171,9 @@ il_string *il_string_sub(il_string *s, int p1, int p2)
     str->data = s->data + p1;
     str->canary = compute_canary(str);
     str->refs = s->refs;
-    (*str->refs)++;
+    if (str->refs) {
+        (*str->refs)++;
+    }
     return str;
 }
 
@@ -208,11 +223,16 @@ il_string *il_string_format(const char *fmt, ...)
 
 int il_string_cat(il_string *self, const il_string *str)
 {
+    if (!il_string_verify(self) || !il_string_verify(str)) {
+        return 0;
+    }
     size_t selflen = strnlen(self->data, self->length),
            str_len = strnlen(str->data, str->length),
            len = selflen + str_len;
     if (len >= self->capacity) {
-        il_string_resize(self, len >= self->capacity*2? len+1 : self->capacity*2);
+        if (!il_string_resize(self, len >= self->capacity*2? len+1 : self->capacity*2)) {
+            return 0;
+        }
     }
     strncpy(self->data + selflen, str->data, str_len);
     return 1;

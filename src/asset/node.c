@@ -38,7 +38,7 @@ il_base *ilA_mkdir(const ilA_dir *iface, il_base *dir, const ilA_path *path, con
     return iface->mkdir(dir, path, res);
 }
 
-void ilA_delete(const ilA_dir *iface, il_base *dir, const ilA_path *path)
+/*void ilA_delete(const ilA_dir *iface, il_base *dir, const ilA_path *path)
 {
     if (!iface) {
         iface = il_cast(il_typeof(dir), "il.asset.dir");
@@ -48,7 +48,7 @@ void ilA_delete(const ilA_dir *iface, il_base *dir, const ilA_path *path)
         return;
     }
     iface->delete(dir, path);
-}
+}*/
 
 void *ilA_contents(const ilA_file *iface, il_base *file, size_t *size)
 {
@@ -57,6 +57,7 @@ void *ilA_contents(const ilA_file *iface, il_base *file, size_t *size)
     }
     if (!iface) {
         il_error("Parameter is not a file");
+        return NULL;
     }
     return iface->contents(file, size);
 }
