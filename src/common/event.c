@@ -119,17 +119,30 @@ static int push(ilE_registry* registry, const char *name, size_t size, const voi
     struct dispatch_ctx * ctx = calloc(sizeof(struct dispatch_ctx), 1);
     event->name = strdup(name);
     if (size > 255) {
-        return 0;
+        goto fail;
     }
     event->size = size;
-    memcpy(&event->data, data, size);
+    if (data) {
+        memcpy(&event->data, data, size);
+    } else if (size > 0) {
+        il_error("Size provided, but data was not");
+        goto fail;
+    }
     ctx->ev = event;
     ctx->registry = registry;
     struct event * ev = event_new(ilE_base, -1, 0, &dispatch, ctx);
     int res = event_add(ev, NULL);
-    if (res != 0) return 0;
+    if (res != 0) {
+        goto fail;
+    }
     event_active(ev, 0, 0);
     return 1;
+
+fail:
+    free(event->name);
+    free(event);
+    free(ctx);
+    return 0;
 }
 
 static int timer(ilE_registry* registry, const char *name, size_t size, const void *data, struct timeval interval)
