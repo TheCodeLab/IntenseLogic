@@ -172,13 +172,13 @@ int il_loadmod(const char *name, int argc, char **argv)
     }
     if (!path) {
         fprintf(stderr, "*** Could not find module %s\n", sname);
-        return 0;
+        goto fail;
     }
 #ifdef WIN32
     handle = LoadLibrary(TEXT(path));
     if (!handle) {
         fprintf(stderr, "*** Failed to load module %s\n", path);
-        return 0;
+        goto fail;
     }
     il_dependencies_fn deps = (il_dependencies_fn)GetProcAddress(handle, "il_dependencies");
     if (deps) {
@@ -191,14 +191,14 @@ int il_loadmod(const char *name, int argc, char **argv)
     if (!func) {
         fprintf(stderr, "*** Failed to load symbol il_bootstrap\n");
         FreeLibrary(handle);
-        return 0;
+        goto fail;
     }
 #else
     dlerror();
     handle = dlopen(path, RTLD_LAZY | RTLD_GLOBAL);
     if (!handle) {
         fprintf(stderr, "*** Failed to load module %s: %s\n", path, dlerror());
-        return 0;
+        goto fail;
     }
     dlerror();
     il_dependencies_fn deps = (il_dependencies_fn)dlsym(handle, "il_dependencies");
@@ -206,7 +206,10 @@ int il_loadmod(const char *name, int argc, char **argv)
     if (deps) {
         const char **mods = deps(argc, argv);
         for (i = 0; mods[i]; i++) {
-            il_loadmod(mods[i], argc, argv);
+            if (!il_loadmod(mods[i], argc, argv)) {
+                fprintf(stderr, "*** Failed to load module %s: Dependency %s failed to load", path, mods[i]);
+                goto fail;
+            }
         }
     }
     il_bootstrap_fn func = (il_bootstrap_fn)dlsym(handle, "il_bootstrap");
@@ -214,7 +217,7 @@ int il_loadmod(const char *name, int argc, char **argv)
     if (error) {
         fprintf(stderr, "*** Failed to load symbol: %s\n", error);
         dlclose(handle);
-        return 0;
+        goto fail;
     }
 #endif
 
@@ -226,7 +229,14 @@ int il_loadmod(const char *name, int argc, char **argv)
     mod->name = sname;
     mod->handle = handle;
     HASH_ADD_KEYPTR(hh, il_loaded, sname, strlen(sname), mod);
+    free(sname);
+    free(path);
     return res;
+
+fail:
+    free(sname);
+    free(path);
+    return 0;
 }
 
 il_func il_getsym(const char *module, const char *name)
