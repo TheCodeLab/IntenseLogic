@@ -2,26 +2,39 @@
 
 #include <stdlib.h>
 #include <stdio.h>
-#include <sys/mman.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include <fcntl.h>
 #include <string.h>
+#ifdef WIN32
+# include <windows.h>
+#else
+# include <sys/mman.h>
+# include <fcntl.h>
+#endif
 
 struct stdiofile {
     il_base base;
-    int fd;
     void *contents;
     size_t size;
     char *path;
     enum ilA_file_mode mode;
+#ifdef WIN32
+    HANDLE handle;
+#else
+    int fd;
+#endif
 };
 
 static void stdiofile_des(void *ptr)
 {
     struct stdiofile *self = ptr;
+#ifdef WIN32
+    UnmapViewOfFile(self->contents);
+    CloseHandle(self->handle);
+#else
     munmap(self->contents, self->size);
     close(self->fd);
+#endif
     free(self->path);
 }
 
@@ -34,14 +47,26 @@ static enum ilA_file_mode stdiofile_mode(void *ptr)
 static void *stdiofile_contents(void *ptr, size_t *size)
 {
     struct stdiofile *self = ptr;
-    int oflag, prot;
+    int oflag;
+#ifndef WIN32
+    int prot;
     struct stat s;
+#endif
+
     if (self->contents) {
         if (size) {
             *size = self->size;
         }
         return self->contents;
     }
+#ifdef WIN32
+    oflag = (self->mode&ILA_FILE_READ?   FILE_MAP_READ    : 0) |
+            (self->mode&ILA_FILE_WRITE?  FILE_MAP_WRITE   : 0);// |
+            //(self->mode&ILA_FILE_EXEC?   FILE_MAP_EXECUTE : 0); // TODO: find out why mingw thinks there's no such thing as executable files
+    self->handle = OpenFileMappingA(oflag, FALSE, self->path);
+    self->size = GetFileSize(self->handle, NULL);
+    self->contents = MapViewOfFile(self->handle, oflag, 0, 0, self->size);
+#else
     oflag = (self->mode&ILA_FILE_READ && self->mode&ILA_FILE_WRITE? O_RDWR :
                 (self->mode&ILA_FILE_READ? O_RDONLY : 0) |
                 (self->mode&ILA_FILE_WRITE? O_WRONLY : 0));
@@ -50,13 +75,14 @@ static void *stdiofile_contents(void *ptr, size_t *size)
         return NULL;
     }
     self->size = s.st_size;
-    if (size) {
-        *size = self->size;
-    }
     prot = (self->mode&ILA_FILE_READ?  PROT_READ  : 0) |
            (self->mode&ILA_FILE_WRITE? PROT_WRITE : 0) |
            (self->mode&ILA_FILE_EXEC?  PROT_EXEC  : 0);
     self->contents = mmap(NULL, self->size, prot, MAP_SHARED, self->fd, 0);
+#endif
+    if (size) {
+        *size = self->size;
+    }
     return self->contents;
 }
 
