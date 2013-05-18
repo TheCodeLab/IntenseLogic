@@ -1,12 +1,9 @@
 #include "asset.h"
-#include "texture.h"
 
 #include <stdlib.h>
-//#include <stdio.h>
 #include <unistd.h>
 #include <errno.h>
 #include <time.h>
-#include <png.h>
 
 #include "util/uthash.h"
 #include "util/log.h"
@@ -238,36 +235,5 @@ int ilA_delete(ilA_asset* asset)
     remove(il_StoC(asset->fullpath));
     ilA_close(asset);
     return 0;
-}
-
-GLuint ilA_assetToTexture(ilA_asset *asset)
-{
-    il_string *contents = ilA_readContents(asset);
-    ilA_img *img = ilA_img_load(contents->data, contents->length);
-    GLenum format;
-    GLuint tex;
-    
-    if (!img) {
-        return 0;
-    }
-    
-    glGenTextures(1, &tex);
-    glBindTexture(GL_TEXTURE_2D, tex);
-    switch (img->channels) {
-        case ILA_IMG_RGBA:
-        format = GL_RGBA;
-        break;
-        case ILA_IMG_RGB:
-        format = GL_RGB;
-        break;
-        default:
-        il_error("Unhandled colour format");
-        return 0;
-    }
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, img->width, img->height, 0, format, GL_UNSIGNED_BYTE, img->data);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-
-    return tex;
 }
 
