@@ -100,7 +100,11 @@ il_string *ilA_path_tostr(const ilA_path* self)
     il_string *str = il_string_new(NULL, 0), *temp;
     unsigned i;
     for (i = 0; i < self->nodes.length; i++) {
+#ifdef WIN32
+        il_string_catchars(str, "\\");
+#else
         il_string_catchars(str, "/");
+#endif
         temp = self->nodes.data[i];
         il_string_cat(str, temp);
     }
