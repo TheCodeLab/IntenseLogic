@@ -20,6 +20,7 @@ local outpass       = require "graphics.outpass"
 local geometrypass  = require "graphics.geometrypass"
 local guipass       = require "graphics.guipass"
 local frame         = require "graphics.gui.frame"
+require "asset.image"
 
 local w = world()
 local c = context()
