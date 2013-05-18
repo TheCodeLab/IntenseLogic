@@ -80,7 +80,7 @@ void ilA_path_free(ilA_path* self)
 {
     il_string_unref(self->path);
     unsigned i;
-    for (i = 0; self->nodes.length; i++) {
+    for (i = 0; i < self->nodes.length; i++) {
         il_string_unref(self->nodes.data[i]);
     }
     IL_FREE(self->nodes);
