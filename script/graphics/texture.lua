@@ -2,6 +2,8 @@ local ffi = require "ffi"
 
 local base = require "common.base"
 local tunit = require "graphics.textureunit"
+require "asset.file"
+require "asset.image"
 
 ffi.cdef [[
 
@@ -26,7 +28,8 @@ extern il_type ilG_texture_type;
 void ilG_texture_setContext(ilG_texture* self, struct ilG_context *context);
 void ilG_texture_setName(ilG_texture* self, const char *name);
 void ilG_texture_fromfile(ilG_texture* self, unsigned unit, const char *name);
-void ilG_texture_fromasset(ilG_texture* self, unsigned unit, struct ilA_asset* asset);
+void ilG_texture_fromasset(ilG_texture* self, unsigned unit, const struct ilA_file* iface, struct il_base *file);
+void ilG_texture_fromimage(ilG_texture *self, unsigned unit, struct ilA_img *img);
 unsigned int /*GLuint*/ ilG_texture_getRaw(ilG_texture *self, unsigned unit);
 
 ]]
@@ -43,7 +46,11 @@ base.wrap "il.graphics.texture" {
     end;
 
     fromasset = function(self, unit, asset)
-        return modules.graphics.ilG_texture_fromasset(self, tunit.toUnit(unit), asset.ptr)
+        return modules.graphics.ilG_texture_fromasset(self, tunit.toUnit(unit), nil, asset)
+    end;
+
+    fromimage = function(self, unit, img)
+        return modules.graphics.ilG_texture_fromimage(self, tunit.toUnit(unit), img);
     end;
 
     getRaw = function(self, unit)
