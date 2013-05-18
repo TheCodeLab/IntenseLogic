@@ -1,5 +1,7 @@
 local ffi = require "ffi"
 
+require "util.ilstring"
+
 ffi.cdef [[
 
 typedef struct ilA_path ilA_path;
@@ -35,7 +37,9 @@ end
 
 path.cwd = modules.asset.ilA_path_cwd
 path.copy = modules.asset.ilA_path_copy
-path.__tostring = modules.asset.ilA_path_tostr
+path.__tostring = function(s)
+    return tostring(modules.asset.ilA_path_tostr(s))
+end
 function path.__eq(a, b)
     return modules.asset.ilA_path_cmp(a,b) == 0
 end
@@ -50,5 +54,6 @@ function path.__sub(a,b)
 end
 
 ffi.metatype("ilA_path", path)
+setmetatable(path, path)
 return path
 

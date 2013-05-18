@@ -8,43 +8,52 @@
 char *strsep(char **stringp, const char *delim);
 ilA_path* ilA_path_string(il_string *path)
 {
-    ilA_path* p;
-    if (il_string_byte(path, 0) == '~') {
-        char *home = getenv("HOME");
-        if (home) {
-            p = ilA_path_chars(home);
-        } else {
+    ilA_path *p;
+    char *orig = il_StoC(path), *saveptr = orig, *tok, *delim, *home, *cwd, buf[4096];
+    
+    if (*orig == '~') {
+        home = getenv("HOME");
+        if (!home) {
             il_error("Attempted to parse string starting with ~ and no $HOME is set.");
             return NULL;
         }
-    } else if (il_string_byte(path, 0) != '/') {
-        p = ilA_path_cwd();
-        if (!p) {
+        p = ilA_path_string(il_string_format("%s/%s", home, orig));
+        free(orig);
+        return p;
+    }
+    if (*orig == '/') {
+        p = calloc(1, sizeof(ilA_path));
+        saveptr++;
+    } else {
+        cwd = getcwd(buf, 4096);
+        if (!cwd) {
+            il_error("Failed to get current working directory");
             return NULL;
         }
-    } else {
-        p = calloc(1, sizeof(ilA_path));
+        p = ilA_path_string(il_string_format("%s/%s", cwd, orig));
+        free(orig);
+        return p;
     }
     p->path = il_string_ref(path);
-    char *orig = il_StoC(path), *str, *delim;
 #ifdef WIN32
     delim = "\\/";
 #else
     delim = "/";
 #endif
-    for (str = orig; str; strsep(&str, delim)) {
-        if (strcmp(str, ".") == 0) {
+    for (tok = strsep(&saveptr, delim); tok; tok = strsep(&saveptr, delim)) {
+        if (strcmp(tok, ".") == 0 || strcmp(tok, "") == 0) {
             continue;
-        } else if (strcmp(str, "..") == 0) {
+        } else if (strcmp(tok, "..") == 0) {
             if (p->nodes.length < 1) {
                 continue;
             }
             il_string_unref(p->nodes.data[p->nodes.length-1]);
             --p->nodes.length;
         } else {
-            IL_APPEND(p->nodes, il_string_sub(path, str - orig, strlen(str)));
+            IL_APPEND(p->nodes, il_string_sub(path, tok-orig, tok-orig+strlen(tok)));
         }
     }
+
     free(orig);
     return p;
 }
@@ -91,11 +100,9 @@ il_string *ilA_path_tostr(const ilA_path* self)
     il_string *str = il_string_new(NULL, 0), *temp;
     unsigned i;
     for (i = 0; i < self->nodes.length; i++) {
+        il_string_catchars(str, "/");
         temp = self->nodes.data[i];
         il_string_cat(str, temp);
-        if (i+1 < self->nodes.length) {
-            il_string_catchars(str, "/");
-        }
     }
     return str;
 }

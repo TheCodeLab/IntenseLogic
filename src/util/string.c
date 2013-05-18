@@ -114,6 +114,7 @@ int il_string_resize(il_string *self, size_t size)
     free(self->data);
     self->data = self->start = buf;
     self->capacity = size;
+    self->canary = compute_canary(self);
     return 1;
 }
 
@@ -235,6 +236,9 @@ int il_string_cat(il_string *self, const il_string *str)
         }
     }
     strncpy(self->data + selflen, str->data, str_len);
+    self->data[len] = 0;
+    self->length = len;
+    self->canary = compute_canary(self);
     return 1;
 }
 

@@ -22,6 +22,13 @@ il_string *il_string_format(const char *fmt, ...);
 
 ]]
 
+local mt = {}
+function mt:__tostring()
+    return ffi.string(self.data, self.length) 
+end
+
+ffi.metatype("il_string", mt)
+
 local ilstring = {}
 
 function ilstring.create(s)
