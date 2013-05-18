@@ -89,12 +89,8 @@ char *il_string_cstring(const il_string *s, size_t *len)
     if (len) {
         *len = size;
     }
-    int has_zero = size < s->length && s->data[size] == 0;
-    char *buf = calloc(1, strnlen(s->data, s->length) + !has_zero);
+    char *buf = calloc(1, size + 1);
     memcpy(buf, s->data, size);
-    if (!has_zero) {
-        buf[size] = 0;
-    }
     return buf;
 }
 

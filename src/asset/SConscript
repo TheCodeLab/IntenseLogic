@@ -16,13 +16,13 @@ asset = env.Clone()
 asset.Append(CPPPATH = src_dir, LIBS=["ilutil", "ilcommon"])
 
 pkg_libs = {
-    "osx":   ["libglfw", "glew", "libpng"],
-    "arch":  ["libglfw", "glew", "gl", "libpng"],
-    "linux": ["gl", "glfw", "glew", "libpng"],
+    "osx":   ["libpng"],
+    "arch":  ["libpng"],
+    "linux": ["libpng"],
 }
 
 if platform=="mingw":
-    asset.Append(LIBS=["glfw", "glew32", "opengl32", "png", "z"])
+    asset.Append(LIBS=["png", "z"])
 else:
     for lib in pkg_libs[platform]:
         asset.ParseConfig("pkg-config " + lib + " --cflags --libs")

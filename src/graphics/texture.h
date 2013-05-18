@@ -27,15 +27,18 @@ typedef struct ilG_texture {
 
 extern il_type ilG_texture_type;
 
-struct ilA_asset;
+struct ilA_file;
+struct il_base;
+struct ilA_img;
 
 //ilG_texture* ilG_texture_new();
 #define ilG_texture_new() il_new(&ilG_texture_type)
 void ilG_texture_setContext(ilG_texture* self, struct ilG_context *context);
 void ilG_texture_setName(ilG_texture* self, const char *name);
 void ilG_texture_fromfile(ilG_texture* self, unsigned unit, const char *name);
-void ilG_texture_fromasset(ilG_texture* self, unsigned unit, struct ilA_asset* asset);
+void ilG_texture_fromasset(ilG_texture* self, unsigned unit, const struct ilA_file* iface, struct il_base *file);
 void ilG_texture_fromGL(ilG_texture* self, unsigned unit, GLenum target, GLuint tex);
+void ilG_texture_fromimage(ilG_texture *self, unsigned unit, struct ilA_img *img);
 void ilG_texture_fromdata(ilG_texture* self, unsigned unit, GLenum target, 
     GLenum internalformat, unsigned width, unsigned height, unsigned depth,
     GLenum format, GLenum type, void *data);

@@ -4,8 +4,8 @@
 #include <string.h>
 #include <GL/glew.h>
 
-#include "asset/asset.h"
-#include "asset/texture.h"
+#include "asset/node.h"
+#include "asset/image.h"
 #include "graphics/tracker.h"
 #include "graphics/context.h"
 #include "util/log.h"
@@ -49,17 +49,16 @@ void ilG_texture_setName(ilG_texture* self, const char *name)
 
 void ilG_texture_fromfile(ilG_texture* self, unsigned unit, const char *name)
 {
-    ilA_asset* asset = ilA_open(il_string_new(name, strlen(name)));
-    ilG_texture_fromasset(self, unit, asset);
+    ilA_img *img = ilA_img_loadfile(name);
+    ilG_texture_fromimage(self, unit, img);
+    ilA_img_free(img);
 }
 
-void ilG_texture_fromasset(ilG_texture* self, unsigned unit, ilA_asset* asset)
+void ilG_texture_fromasset(ilG_texture* self, unsigned unit, const ilA_file *iface, il_base *file)
 {
-    self->units[unit] = (ilG_textureunit) {
-        .used = 1,
-        .tex = ilA_assetToTexture(asset),
-        .mode = GL_TEXTURE_2D
-    };
+    size_t size;
+    void *contents = ilA_contents(iface, file, &size);
+    ilG_texture_fromimage(self, unit, ilA_img_load(contents, size));
 }
 
 void ilG_texture_fromGL(ilG_texture* self, unsigned unit, GLenum target, GLuint tex)
@@ -71,13 +70,31 @@ void ilG_texture_fromGL(ilG_texture* self, unsigned unit, GLenum target, GLuint 
     };
 }
 
+void ilG_texture_fromimage(ilG_texture *self, unsigned unit, ilA_img *img)
+{
+    GLenum format;
+
+    switch (img->channels) {
+        case ILA_IMG_RGBA:
+        format = GL_RGBA;
+        break;
+        case ILA_IMG_RGB:
+        format = GL_RGB;
+        break;
+        default:
+        il_error("Unhandled colour format");
+        return;
+    }
+    ilG_texture_fromdata(self, unit, GL_TEXTURE_2D, format, img->width, img->height, 1, format, GL_UNSIGNED_BYTE, img->data);
+}
+
 void ilG_texture_fromdata(ilG_texture* self, unsigned unit, GLenum target, 
     GLenum internalformat, unsigned width, unsigned height, unsigned depth, GLenum format, 
     GLenum type, void *data)
 {
     GLuint tex;
 
-    glGenTextures(target, &tex);
+    glGenTextures(1, &tex);
     glBindTexture(target, tex);
     switch (target) {
         case GL_TEXTURE_1D:
