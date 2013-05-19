@@ -20,7 +20,7 @@ local outpass       = require "graphics.outpass"
 local geometrypass  = require "graphics.geometrypass"
 local guipass       = require "graphics.guipass"
 local frame         = require "graphics.gui.frame"
-require "asset.image"
+local image         = require "asset.image"
 
 local w = world()
 local c = context()
@@ -50,6 +50,8 @@ c:setActive()
 local t = texture()
 t:setContext(c)
 t:fromfile("color0", "white-marble-texture.png")
+--local img = image.loadfile("white-marble-texture.png")
+--t:fromimage("color0", img:resize(16, 16))
 local vf, ff = io.open("shaders/test.vert", "r"), io.open("shaders/test.frag", "r");
 --local mtl = material(vf:read "*a", ff:read "*a", "test material", "in_Position", "in_Texcoord", "in_Normal", "mvp", {"tex"}, {1}, "out_Normal", "out_Ambient", "out_Diffuse", "out_Specular", "phong");
 local mtl = material()

@@ -16,6 +16,14 @@ struct read_context {
     size_t head;
 };
 
+static int compute_bpp(int channels) 
+{
+    return (!!(channels & ILA_IMG_R) +
+            !!(channels & ILA_IMG_G) +
+            !!(channels & ILA_IMG_B) +
+            !!(channels & ILA_IMG_A) ) * 8;
+}
+
 static void png_read_fn(png_structp png_ptr, png_bytep data, png_size_t length)
 {
     struct read_context *self = (struct read_context*)png_get_io_ptr(png_ptr);
@@ -68,11 +76,7 @@ static int read_png(ilA_img *self, const void *data, size_t size)
         il_error("Palettes are not handled");
         return 0;
     }
-    self->bpp = 
-        (((self->channels & ILA_IMG_R) != 0) +
-         ((self->channels & ILA_IMG_G) != 0) +
-         ((self->channels & ILA_IMG_B) != 0) +
-         ((self->channels & ILA_IMG_A) != 0)   ) * 8;
+    self->bpp = compute_bpp(self->channels);
     
     self->data = calloc(rowbytes, self->width);
     rows = png_get_rows(png_ptr, info_ptr);
@@ -122,5 +126,79 @@ void ilA_img_free(ilA_img *self)
 {
     free(self->data);
     free(self);
+}
+
+// TODO: stop asserting there are 8 bits per channel
+static void sample_pixel(void *dest, const void *src, int bpp, int channels, int desired_bpp, int desired_channels)
+{
+    unsigned char *ptr = dest;
+    const unsigned char *src_ptr = src;
+    (void)bpp, (void)desired_bpp;
+    if (desired_channels&ILA_IMG_R) {
+        if (channels&ILA_IMG_R) {
+            *ptr++ = *src_ptr++;
+        } else {
+            *ptr++ = 0;
+        }
+    }
+    if (desired_channels&ILA_IMG_G) {
+        if (channels&ILA_IMG_G) {
+            *ptr++ = *src_ptr++;
+        } else {
+            *ptr++ = 0;
+        }
+    }
+    if (desired_channels&ILA_IMG_B) {
+        if (channels&ILA_IMG_B) {
+            *ptr++ = *src_ptr++;
+        } else {
+            *ptr++ = 0;
+        }
+    }
+    if (desired_channels&ILA_IMG_A) {
+        if (channels&ILA_IMG_A) {
+            *ptr++ = *src_ptr++;
+        } else {
+            *ptr++ = 0;
+        }
+    }
+}
+
+static void nearest_sample(ilA_img *self, const ilA_img *sample, int x, int y)
+{
+    float xp = (float)x/self->width, yp = (float)y/self->height;
+    int xs = xp * sample->width, ys = yp * sample->height;
+    int pix = self->bpp * (y*self->width + x) / 8, spix = sample->bpp * (ys*sample->width + xs) / 8;
+    sample_pixel(self->data + pix, sample->data + spix, sample->bpp, sample->channels, self->bpp, self->channels);
+}
+
+ilA_img *ilA_img_resize(const ilA_img *self, enum ilA_img_interpolation up, enum ilA_img_interpolation down, unsigned w, unsigned h, int channels)
+{
+    enum ilA_img_interpolation interp;
+    unsigned x, y;
+    ilA_img *img = calloc(1, sizeof(ilA_img));
+
+    img->width = w;
+    img->height = h;
+    img->channels = channels;
+    img->bpp = compute_bpp(channels);
+    img->data = calloc(img->bpp/8, w*h);
+    if (w > self->width && h > self->height) {
+        interp = up;
+    } else {
+        interp = down;
+    }
+    switch (interp) {
+        case ILA_IMG_NEAREST:
+        for (y = 0; y < h; y++) {
+            for (x = 0; x < w; x++) {
+                nearest_sample(img, self, x, y);
+            }
+        }
+        break;
+        default:
+        il_error("Unknown interpolation algorithm");
+    }
+    return img;
 }
 
