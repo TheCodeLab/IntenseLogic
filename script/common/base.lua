@@ -91,6 +91,7 @@ il_base *il_new(il_type *type);
 const char *il_name(il_type *type);
 const void *il_cast(il_type* T, const char *to);
 void il_impl(il_type* T, const char *name, void *impl);
+char *strdup(const char*);
 
 ]]
 
@@ -115,8 +116,10 @@ end
 local metatypes = {"__call", "__le", "__lt", "__eq", "__len", "__concat", "__unm", "__pow", "__mod", "__div", "__mul", "__sub", "__add"}
 base.metatable = {
     __index = metafun("__index", function(t,k)
-        local pc = per_class[ffi.string(base.typeof(t).name)]
-        if pc and pc[k] then return pc[k] end
+        local tname = ffi.string(base.typeof(t).name)
+        local pc = per_class[tname] or error("Unwrapped type '"..tname.."'!")
+        --print(pc, k, tname)
+        if pc[k] then return pc[k] end
         return base.get(t, k) or base.get(base.typeof(t), k) or base[k] 
     end),
     __newindex = metafun("__newindex", function(t,k,v) base.set(t, k, v) end)
@@ -193,11 +196,17 @@ function base.type(name)
     return function(cons)
         base.wrap(name)(cons)
         local T = ffi.new("il_type")
-        T.name = name
+        --ffi.gc(T, function() print "WTF: freed static type object" end)
+        local cname = ffi.C.strdup(name) --ffi.new("char[?]", #name+1, name)
+        cons.__cname = cname
+        cons.__type = T
+        --print(ffi.string(cname))
+        --ffi.gc(cname, function() print "WTF: freed static type name" end)
+        T.name = cname
         T.parent = cons.parent
         T.size = ffi.sizeof(cons.struct or "il_base")
         T.constructor = function(v)
-            ffi.gc(v, modules.common.il_unref)
+            ffi.gc(v, function() print("freed "..v) end) --modules.common.il_unref)
             if cons.constructor then
                 cons.constructor(v)
             end
