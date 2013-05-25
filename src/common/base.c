@@ -86,7 +86,7 @@ void *il_storage_get(il_storage **md, const char *key, size_t *size, enum il_sto
 void il_storage_set(il_storage **md, const char *key, void *data, size_t size, enum il_storagetype tag)
 {
     il_return_on_fail(md && key && data);
-    int is_array = (tag & IL_ARRAY_BIT) == IL_ARRAY_BIT;
+    int is_array = (tag & IL_ARRAY_BIT) == IL_ARRAY_BIT, exists = 0;
     size_t nmemb = is_array? size:1, i;
     void *buf = NULL, *old;
     il_storage *entry;
@@ -135,6 +135,7 @@ void il_storage_set(il_storage **md, const char *key, void *data, size_t size, e
     }
     HASH_FIND_STR(*md, key, entry);
     if (entry) {
+        exists = 1;
         old = entry->value;
         switch((unsigned)entry->tag) { // enum warnings are no fun when ORing flags :(
             case IL_OBJECT | IL_ARRAY_BIT:
@@ -160,7 +161,9 @@ void il_storage_set(il_storage **md, const char *key, void *data, size_t size, e
     entry->value = buf;
     entry->tag = tag;
     entry->size = size;
-    HASH_ADD_KEYPTR(hh, *md, key, strlen(key), entry);
+    if (!exists) {
+        HASH_ADD_KEYPTR(hh, *md, key, strlen(key), entry);
+    }
 }
 
 void *il_type_get(il_type* self, const char *key, size_t *size, enum il_storagetype *tag)
