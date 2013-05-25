@@ -170,10 +170,13 @@ function lua_dispatch(registry, name, size, data, ctx)
     --print(registry, name, size, data, ctx)
     if not callbacks[key] or not callbacks[key][name] then return end
     for i = 1, #callbacks[key][name] do
-        local res, err = pcall(callbacks[key][name][i], registry, name, event.unpack(registry, name, size, data));
+        local f = function()
+            callbacks[key][name][i](registry, name, event.unpack(registry, name, size, data))
+        end
+        local res, err = xpcall(f, function(s) print(debug.traceback(s, 2)) end);
         -- TODO: get proper error propogation when we 'escape' protected calling by being a callback from C
         if not res then
-            print(err)
+            --print(err)
             table.remove(callbacks[key][name], i)
         end
     end
