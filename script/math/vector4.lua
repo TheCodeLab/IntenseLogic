@@ -112,6 +112,14 @@ function vector4.dot(a,b)
     return modules.math.il_vec4_dot(a.ptr, b.ptr)
 end
 
+--- Creates a copy of a vec4
+-- @tparam vec4 v
+-- @treturn vec4
+function vector4.copy(v)
+    assert(vector4.check(v))
+    return vector4.wrap(modules.math.il_vec4_copy(v.ptr))
+end
+
 --- Creates a new vec4 with optional parameters
 -- w is optional; x may be a table
 function vector4.create(x, y, z, w)

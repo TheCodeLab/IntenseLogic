@@ -132,6 +132,14 @@ function vector3.cross(a,b)
     return vector3.wrap(modules.math.il_vec3_cross(a.ptr, b.ptr))
 end
 
+--- Creates a copy of a vec3
+-- @tparam vec3 v
+-- @treturn vec3
+function vector3.copy(v)
+    assert(vector3.check(v))
+    return vector3.wrap(modules.math.il_vec4_copy(v.ptr))
+end
+
 --- Creates a new vec3
 -- @tparam ?number x
 -- @tparam ?number y
