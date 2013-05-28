@@ -247,7 +247,7 @@ end
 function base.get(v, name)
     --assert(ffi.istype("struct il_storage**", v), "Expected storage")
     --if v == nil then error "null storage" end
-    assert(type(name) == "string", "Expected string")
+    assert(type(name) == "string", "Expected string, got "..type(name))
     local tag = ffi.new("enum il_storagetype[1]");
     local size = ffi.new("size_t[1]")
     local data

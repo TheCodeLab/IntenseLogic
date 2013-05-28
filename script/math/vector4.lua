@@ -91,12 +91,20 @@ local function gc(obj)
     modules.math.il_vec4_free(obj.ptr);
 end
 
+local function eq(a, b)
+    return a.x == b.x and a.y == b.y and a.z == b.z and a.w == b.w
+end
+
+local function lt(a, b)
+    return a.x < b.x and a.y < b.y and a.z < b.z and a.w < b.w
+end
+
 --- Converts a cdata to a vec4
 local function wrap(ptr)
     local obj = {}
     obj.ptr = ptr;
     obj.T = "vec4"
-    setmetatable(obj, {__index=index, __newindex=newindex, __tostring=ts, __add=add, __sub=sub, __mul=mul, __div=div, __gc=gc})
+    setmetatable(obj, {__index=index, __newindex=newindex, __tostring=ts, __add=add, __sub=sub, __mul=mul, __div=div, __gc=gc, __eq=eq, __lt=lt})
     return obj;
 end
 vector4.wrap = wrap;
@@ -123,17 +131,19 @@ end
 --- Creates a new vec4 with optional parameters
 -- w is optional; x may be a table
 function vector4.create(x, y, z, w)
-    if type(x) == "table" then
-        x, y, z, w = unpack(x)
-    end
-    if x then
-        assert( type(x) == "number" and
-                type(y) == "number" and
-                type(z) == "number",
-                "Expected vector4 literal")
-        return wrap(modules.math.il_vec4_set(nil, x, y, z, type(w)=="number" and w or 1.0));
-    else
-        return wrap(modules.math.il_vec4_new());
+    if not x then
+        return vector3.wrap(modules.math.il_vec4_new())
+    elseif type(x) == "number" and not y then
+        return vector4.wrap(modules.math.il_vec4_set(nil, x, x, x, x))
+    elseif vector4.check(x) then
+        return vector4.wrap(modules.math.il_vec4_copy(x.ptr))
+    elseif ffi.istype(vector4.type, x) then
+        return vector4.wrap(x)
+    elseif x and y and z and w then
+        assert(type(y) == "number" and
+               type(z) == "number" and
+               type(w) == "number")
+        return vector4.wrap(modules.math.il_vec4_set(nil, x, y, z, w))
     end
 end
 

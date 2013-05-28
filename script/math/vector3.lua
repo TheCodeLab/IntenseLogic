@@ -45,7 +45,8 @@ end
 
 local function c_wrap(f)
     return function(a,b)
-        assert(vector3.check(a) and vector3.check(b))
+        assert(vector3.check(a), "Bad argument #1: Expected vector3, got "..type(a))
+        assert(vector3.check(b), "Bad argument #2: Expected vector3, got "..type(b))
         return vector3.wrap(f(a.ptr, b.ptr, nil))
     end
 end
@@ -72,7 +73,7 @@ local function index(t, k)
     elseif k == "z" then
         return t.ptr[2]
     elseif k == "len" then
-        return il_vec3_len(t.ptr)
+        return modules.math.il_vec3_len(t.ptr)
     elseif k == "normal" then
         return vector3.wrap(modules.math.il_vec3_normal(t.ptr, nil))
     elseif k == "vec4" then
@@ -105,12 +106,20 @@ local function gc(obj)
     modules.math.il_vec4_free(obj.ptr);
 end
 
+local function eq(a, b)
+    return a.x == b.x and a.y == b.y and a.z == b.z
+end
+
+local function lt(a, b)
+    return a.x < b.x and a.y < b.y and a.z < b.z
+end
+
 --- Wraps the vec3 with a metatable
 function vector3.wrap(ptr)
     local obj = {}
     obj.ptr = ptr;
     obj.T = "vec3"
-    setmetatable(obj, {__index=index, __newindex=newindex, __tostring=ts, __add=add, __sub=sub, __mul=mul, __div=div, __gc=gc})
+    setmetatable(obj, {__index=index, __newindex=newindex, __tostring=ts, __add=add, __sub=sub, __mul=mul, __div=div, __gc=gc, __eq=eq, __lt=lt})
     return obj;
 end
 
@@ -146,10 +155,14 @@ end
 -- @tparam ?number z
 -- @treturn vec3
 function vector3.create(x, y, z)
-    if type(x) == "number" and not y then
+    if not x then
+        return vector3.wrap(modules.math.il_vec4_new())
+    elseif type(x) == "number" and not y then
         return vector3.wrap(modules.math.il_vec4_set(nil, x, x, x, 1.0))
     elseif vector3.check(x) then
         return vector3.wrap(modules.math.il_vec4_copy(x.ptr))
+    elseif ffi.istype(vector3.type, x) then
+        return vector3.wrap(x)
     elseif x and y and z then
         assert(type(y) == "number" and
                type(z) == "number")
