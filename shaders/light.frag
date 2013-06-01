@@ -1,71 +1,54 @@
 #version 140
 
-//uniform LightBlock {
-<<<<<<< HEAD
-    uniform vec3 position;//[1024]; // world space
-=======
-    uniform vec3 position;//[1024]; // world
->>>>>>> Some lighting work
-    uniform vec3 color;//[1024];
-    uniform float radius;//[1024];
-//};
-uniform sampler2DRect depth; // screen space
-//uniform sampler2DRect accumulation;
-uniform sampler2DRect normal; // world space
+uniform vec3 position;
+uniform vec3 color; // unused
+uniform float radius; // unused
+uniform sampler2DRect depth;
+uniform sampler2DRect normal;
 uniform sampler2DRect diffuse;
-uniform sampler2DRect specular;
-<<<<<<< HEAD
-uniform vec3 camera; // world space
-=======
-uniform vec3 camera; // world
->>>>>>> Some lighting work
-uniform mat4 mvp;
-uniform mat4 ivp;
-
-flat in int instanceID;
+uniform sampler2DRect specular; // unused
+uniform mat4 mvp; // unused
+uniform mat4 ivp; // unused
 
 out vec3 out_Color;
+out vec3 out_Normal;
+out vec3 out_Diffuse;
+out vec3 out_Specular;
 
-vec3 calc_diffuse(vec3 pos, vec3 norm, vec3 dir, float daf)
+/*
+[17:03] <feep> so device = clip.xyz/w and clip = Matrix world
+[17:03] <feep> and world.w = 1, solve for world, device is given.
+[17:04] <feep> (Matrix is assumed constant)
+[17:04] <feep> clip = Matrix world, so Matrix^-1 clip = Matrix^-1 Matrix world = world
+[17:04] <feep> device = clip.xyz / clip.w, clip.xyz = device * clip.w
+[17:05] <feep> Matrix^-1 (clip.xyz clip.w) = world
+[17:05] <feep> Matrix^-1 (device * clip.w   clip.w) = world
+[17:05] <feep> Matrix^-1 (clip.w (device   1)) = world
+[17:05] <feep> matrices are linear transforms, M f a = f M a
+[17:06] <feep> clip.w Matrix^-1 (device  1) = world
+[17:06] <feep> are we stuck? no! world.w = 1.
+[17:06] <feep> so take that last line and isolate the w component
+[17:06] <feep> clip.w (Matrix^-1 (device 1)).w = world.w = 1
+[17:07] <feep> clip.w = 1 / (Matrix^-1 (device 1)).w
+[17:08] <feep> (Matrix^-1 (device  1)) / (Matrix^-1 (device 1)).w = world
+[17:08] <feep> iow
+[17:08] <feep> world = (Matrix^-1 (device  1)).(xyz/w)
+*/
+vec3 screen_to_world(vec3 sp)
 {
-    return /*texture(diffuse, gl_FragCoord.xy).xyz*/ vec3(1) * max(0, dot(dir, norm)) * daf;
-}
-
-vec3 calc_specular(vec3 pos, vec3 norm, vec3 dir, float daf)
-{
-    vec4 spec = texture(specular, gl_FragCoord.xy);
-    vec3 ray = normalize(2 * dot(dir, norm) * norm - dir);
-    vec3 user_dir = normalize(camera - pos);
-    return spec.xyz * pow(max(0, dot(ray, user_dir)), spec.w) * daf;
-}
-
-vec3 window_to_camera()
-{
-    float Dn = 2;
-    float Df = 1000; // TODO: uniform value for the near/far clipping
-    vec2 V = vec2(800, 600); // TODO: window size uniform
-    vec3 N;
-    N.x = (2*gl_FragCoord.x)/V.x - 1;
-    N.y = (2*gl_FragCoord.y)/V.y - 1;
-    N.z = (2*gl_FragCoord.z - Df - Dn)/(Df-Dn);
-    vec4 C = vec4(N, 1.0) / gl_FragCoord.w;
-    vec4 res = ivp * C;
+    vec4 res = ivp * vec4(sp, 1);
     return res.xyz/res.w;
 }
 
 void main() 
 {
-    //vec4 pos_xyzw = ivp * vec4(gl_FragCoord.xy/vec2(400,300)-vec2(400, 300), texture(depth, gl_FragCoord.xy).x, 1.0);
-    vec3 pos = window_to_camera();//pos_xyzw.xyz / pos_xyzw.w; // world space
-    vec3 light_dir = normalize(pos - position); // world space
-    float daf = 1;//length(pos - position) / radius;
+    vec3 pos = screen_to_world(vec3(gl_FragCoord.xy, texture(depth, gl_FragCoord.xy).x));
+    vec3 light_dir = normalize(pos - position);
     vec3 norm = texture(normal, gl_FragCoord.xy).xyz;
 
-    //out_Color = vec3(length(pos - position)/radius);
-    out_Color = calc_diffuse(pos, norm, light_dir, daf); //+ calc_specular(pos, norm, light_dir, daf);
-
-    if (length(pos - position) < 1) {
-        out_Color = vec3(1, 0, 0);
-    }
+    out_Color = texture(diffuse, gl_FragCoord.xy).xyz * max(0, dot(light_dir, norm));
+    out_Normal = vec3(0);
+    out_Diffuse = vec3(0);
+    out_Specular = vec3(0);
 }
 

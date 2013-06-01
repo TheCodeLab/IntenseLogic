@@ -12,6 +12,7 @@ il_mat il_mat_copy(il_mat m);
 
 il_mat il_mat_set(il_mat m, il_vec4 a, il_vec4 b, il_vec4 c, il_vec4 d);
 il_mat il_mat_mul(const il_mat a, const il_mat b, il_mat m);
+il_vec4 il_mat_mulv(const il_mat a, const il_vec4 b, il_vec4 v);
 il_mat il_mat_translate(const il_vec4 v, il_mat m);
 il_mat il_mat_scale(const il_vec4 v, il_mat m);
 il_mat il_mat_identity(il_mat m);

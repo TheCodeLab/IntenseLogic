@@ -257,6 +257,8 @@ void ilG_shape_init()
             IL_GRAPHICS_TESTERROR("Unable to upload cube data");
             glVertexAttribPointer(ILG_ARRATTR_POSITION, 3, GL_FLOAT, GL_FALSE, 0, NULL);
             glVertexAttribPointer(ILG_ARRATTR_TEXCOORD, 2, GL_FLOAT, GL_FALSE, 0, (GLvoid*)sizeof(cube));
+            glEnableVertexAttribArray(ILG_ARRATTR_POSITION);
+            glEnableVertexAttribArray(ILG_ARRATTR_TEXCOORD);
             IL_GRAPHICS_TESTERROR("Unable to set vertex attrib pointer");
             break;
           case 2:
@@ -265,16 +267,13 @@ void ilG_shape_init()
             //glBufferSubData(GL_ARRAY_BUFFER, sizeof(ico),   sizeof(cube_texcoord), cube_texcoord);
             IL_GRAPHICS_TESTERROR("Unable to upload icosahedron data");
             glVertexAttribPointer(ILG_ARRATTR_POSITION, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+            glEnableVertexAttribArray(ILG_ARRATTR_POSITION);
             //glVertexAttribPointer(ILG_ARRATTR_TEXCOORD, 2, GL_FLOAT, GL_FALSE, 0, (GLvoid*)sizeof(cube));
             IL_GRAPHICS_TESTERROR("Unable to set vertex attrib pointer");
             break;
           default:
             break;
         }
-
-        glEnableVertexAttribArray(ILG_ARRATTR_POSITION);
-        glEnableVertexAttribArray(ILG_ARRATTR_TEXCOORD);
-        IL_GRAPHICS_TESTERROR("Unable to enable vertex attrib array index 0");
 
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo[i]);
         IL_GRAPHICS_TESTERROR("Unable to bind index buffer object");
