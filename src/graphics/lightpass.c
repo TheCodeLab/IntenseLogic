@@ -9,6 +9,8 @@
 #include "graphics/textureunit.h"
 #include "graphics/arrayattrib.h"
 #include "asset/asset.h"
+#include "math/vector.h"
+#include "math/matrix.h"
 
 struct lightpass {
     ilG_stage stage;
@@ -105,24 +107,29 @@ static void draw_lights(ilG_stage *ptr)
     glEnable(GL_BLEND);
     glDisable(GL_DEPTH_TEST);
     glBlendFunc(GL_ONE, GL_ONE);
+    //glDisable(GL_CULL_FACE);
     glFrontFace(GL_CCW);
     glCullFace(GL_FRONT);
     
     GLint position_loc  = glGetUniformLocation(context->material->program, "position"),
           color_loc     = glGetUniformLocation(context->material->program, "color"),
           radius_loc    = glGetUniformLocation(context->material->program, "radius");
+    //il_mat vp = ilG_computeMVP(ILG_VP, context->camera, NULL);
+    //il_vec4 vec = il_vec4_new();
     unsigned int i;
     for (i = 0; i < context->lights.length; i++) {
         context->positionable = &context->lights.data[i]->positionable;
         ilG_bindable_action(context->materialb, context->material);
-        il_vec4 pos = context->positionable->position;
+        il_vec3 pos = context->positionable->position;
+        //pos = il_mat_mulv(vp, pos, pos);
         glUniform3f(position_loc, pos[0], pos[1], pos[2]);
-        il_vec4 col = context->lights.data[i]->color;
+        il_vec3 col = context->lights.data[i]->color;
         glUniform3f(color_loc, col[0], col[1], col[2]);
         glUniform1f(radius_loc, context->lights.data[i]->radius);
         ilG_bindable_action(context->drawableb, context->drawable);
         //glDrawElements(GL_TRIANGLES, sizeof(indices)/sizeof(GLuint), GL_UNSIGNED_INT, NULL);
     }
+    //il_vec4_free(vec);
     //glDrawElementsInstanced(GL_TRIANGLES, sizeof(indices)/sizeof(GLuint), GL_UNSIGNED_INT, NULL, context->lights.length);
     glDisable(GL_BLEND);
     ilG_bindable_unbind(context->drawableb, context->drawable);

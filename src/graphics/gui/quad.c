@@ -70,7 +70,9 @@ ilG_drawable3d *ilG_quad(ilG_context* context)
     glBindVertexArray(q->vao);
     glBufferData(GL_ARRAY_BUFFER, sizeof(verts), verts, GL_STATIC_DRAW);
     glVertexAttribPointer(ILG_ARRATTR_POSITION, 2, GL_FLOAT, GL_FALSE, 0, NULL);
+    glVertexAttribPointer(ILG_ARRATTR_TEXCOORD, 2, GL_FLOAT, GL_FALSE, 0, NULL);
     glEnableVertexAttribArray(ILG_ARRATTR_POSITION);
+    glEnableVertexAttribArray(ILG_ARRATTR_TEXCOORD);
     q->valid = 1;
     il_base_set(&context->base, "il.graphics.gui.quad", q, 0, IL_OBJECT|IL_LOCAL_BIT);
     return &q->drawable;

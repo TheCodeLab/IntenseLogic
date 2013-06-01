@@ -88,6 +88,23 @@ il_mat il_mat_mul(const il_mat a, const il_mat b, il_mat res)
     return res;
 }
 
+il_vec4 il_mat_mulv(const il_mat a, const il_vec4 b, il_vec4 res)
+{
+    if (!res) {
+        res = il_vec4_new();
+    }
+    float vec[4];
+    memset(vec, 0, sizeof(vec));
+    int i, j;
+    for (i = 0; i < 4; i++) {
+        for (j = 0; j < 4; j++) {
+            vec[i] += a[i*4 + j] * b[j];
+        }
+    }
+    memcpy(res, vec, sizeof(vec));
+    return res;
+}
+
 il_mat il_mat_translate(const il_vec4 v, il_mat m)
 {
     if (!m) {
