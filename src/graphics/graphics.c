@@ -101,8 +101,15 @@ static void GLFWCALL mousewheel_cb(int pos)
     ilE_globalevent(il_registry, "input.mousewheel", sizeof(ilI_mouseWheel), &mousewheel);
 }*/
 
+static void glew_error(int code, const char *err)
+{
+    (void)code;
+    il_log_real("", 0, "GLFW", 1, "%s", err);
+}
+
 static void glfw_setup()
 {
+    glfwSetErrorCallback(glew_error);
     if (!glfwInit()) {
         il_fatal("glfwInit() failed");
     }
@@ -110,8 +117,6 @@ static void glfw_setup()
     int major, minor, rev;
     glfwGetVersion(&major, &minor, &rev);
     il_log("Using GLFW version %i.%i.%i", major, minor, rev);
-
-    glfwSwapInterval(0); // 1:1 ratio of frames to vsyncs
 }
 
 static void update(const ilE_registry* registry, const char *name, size_t size, const void *data, void * ctx)

@@ -49,6 +49,7 @@ il_type ilG_context_type = {
 void ilG_context_resize(ilG_context *self, int w, int h, const char *title)
 {
     if (!self->window) {
+        glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 #ifdef __APPLE__
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
@@ -62,6 +63,8 @@ void ilG_context_resize(ilG_context *self, int w, int h, const char *title)
             il_fatal("glfwOpenWindow() failed - are you sure you have OpenGL 3.1?");
         }
         ilG_context_makeCurrent(self);
+        glfwSwapInterval(0);
+        glewExperimental = GL_TRUE; // TODO: find out why IL crashes without this
         GLenum err = glewInit();
         if (GLEW_OK != err) {
             il_fatal("glewInit() failed: %s", glewGetErrorString(err));
@@ -71,6 +74,8 @@ void ilG_context_resize(ilG_context *self, int w, int h, const char *title)
 #ifndef __APPLE__
         if (!GLEW_VERSION_3_1) {
             il_error("GL version 3.1 is required, your Segfault Insurance is now invalid");
+        } else {
+            il_log("OpenGL Version %s", glGetString(GL_VERSION));
         }
 #endif
 

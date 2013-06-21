@@ -24,7 +24,7 @@ local image         = require "asset.image"
 
 local w = world()
 local c = context()
-c:resize(800, 600)
+c:resize(800, 600, "IntenseLogic Demo")
 c.world = w
 w.context = c
 -- geometry pass
@@ -86,6 +86,7 @@ end
 
 c.camera = camera()
 c.camera.projection_matrix = matrix.perspective(75, 4/3, 2, 1000).ptr
+print(c.camera.projection_matrix)
 c.camera.positionable.position = vector3(0, -5, -25).ptr
 c.camera.sensitivity = .01
 c.camera.movespeed = vector3(1,1,1).ptr
@@ -111,7 +112,7 @@ plain:link(c)
 local ico = positionable()
 w:add(ico)
 ico.position = vector3(-10, 0, 0).ptr
-ico.drawable = drawable.icosahedron
+ico.drawable = drawable.icosahedron(c)
 ico.material = plain --material.default;
 ico.texture = texture.default;
 ico:track(c)
@@ -142,6 +143,6 @@ function tick(reg, name)
     c.camera.positionable.rotation = (quaternion.wrap(c.camera.positionable.rotation) * bank).ptr
 end
 
-event.register(event.registry, "tick", tick)
-event.register(event.registry, "input.mousemove", mousemove)
+--event.register(event.registry, "tick", tick)
+--event.register(event.registry, "input.mousemove", mousemove)
 
