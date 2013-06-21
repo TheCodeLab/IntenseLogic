@@ -1,9 +1,5 @@
 #include "camera.h"
 
-#include <stdlib.h>
-#include <GL/glew.h>
-#include <GL/glfw.h>
-
 #include "common/positionable.h"
 
 void camera_init(void *self)
