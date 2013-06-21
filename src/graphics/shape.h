@@ -4,11 +4,10 @@
 #include "common/base.h"
 
 struct ilG_drawable3d;
+struct ilG_context;
 
-extern struct ilG_drawable3d *ilG_box, 
-                             *ilG_cylinder, 
-                             *ilG_icosahedron, 
-                             *ilG_plane;
+struct ilG_drawable3d* ilG_box(struct ilG_context *context);
+struct ilG_drawable3d* ilG_icosahedron(struct ilG_context *context);
 
 extern il_type ilG_shape_type;
 

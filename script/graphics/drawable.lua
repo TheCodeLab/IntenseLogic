@@ -19,25 +19,22 @@ struct ilG_drawable3d {
 };
 
 extern il_type ilG_drawable3d_type;
-il_type *ilG_drawable3d_type_get();
 
-ilG_drawable3d *ilG_box, 
-               *ilG_cylinder, 
-               *ilG_icosahedron, 
-               *ilG_plane;
+ilG_drawable3d* ilG_box(struct ilG_context *context);
+ilG_drawable3d* ilG_icosahedron(struct ilG_context *context);
 
 ]]
 
 base.wrap "il.graphics.drawable3d" {
     struct = "ilG_drawable3d";
     --- A simple box mesh
+    -- @tparam context context The context to create it in
+    -- @treturn drawable3d mesh The mesh
     box         = modules.graphics.ilG_box;
-    --- A cylinder mesh (not implemented)
-    cylinder    = modules.graphics.ilG_cylinder;
     --- An icosahedron
+    -- @tparam context context The context to create it in
+    -- @treturn drawable3d mesh The mesh\
     icosahedron = modules.graphics.ilG_icosahedron;
-    --- A plane with a vertical-facing normal (not implemented)
-    plane       = modules.graphics.ilG_plane;
 }
 
 return modules.graphics.ilG_drawable3d_type;
