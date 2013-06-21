@@ -17,9 +17,9 @@ graphics = env.Clone()
 graphics.Append(CFLAGS="-DIL_IN_GRAPHICS", CPPPATH = src_dir, LIBS=["ilcommon","ilutil","ilmath","ilasset"])
 
 pkg_libs = {
-    "osx":   ["libglfw", "glew"],
-    "arch":  ["libglfw", "glew", "gl"],
-    "linux": ["gl", "glfw", "glew"],
+    "osx":   ["glfw3", "glew"],
+    "arch":  ["glfw3", "glew", "gl"],
+    "linux": ["gl", "glfw3", "glew"],
 }
 
 if platform=="mingw":

@@ -1,7 +1,7 @@
 #include "outpass.h"
 
 #include <GL/glew.h>
-#include <GL/glfw.h>
+#include <GLFW/glfw3.h>
 
 #include "graphics/stage.h"
 #include "graphics/context.h"
@@ -42,13 +42,13 @@ static void fullscreenTexture(struct outpass *self)
 
 static void out_pass(ilG_stage *ptr)
 {
-    if (!glfwGetWindowParam(GLFW_OPENED)) { // TODO: find a better way to do this
-        ilE_globalevent(il_registry, "shutdown", 0, NULL);
-        return;
-    }
     struct outpass *self = (struct outpass*)ptr;
     ilG_context *context = ptr->context;
-    
+
+    if (glfwWindowShouldClose(context->window)) {
+        //ilE_globalevent(il_registry, "shutdown", 0, NULL);
+        return;
+    }
     ilG_testError("Unknown");
     ilG_material* material = context->material = self->material;
     // prepare the GL state for outputting to the default framebuffer
@@ -68,7 +68,7 @@ static void out_pass(ilG_stage *ptr)
     ilG_bindable_unbind(il_cast(il_typeof(material), "il.graphics.bindable"), material);
     context->material = NULL;
     ilG_testError("Error cleaning up shaders");
-    glfwSwapBuffers();
+    glfwSwapBuffers(context->window);
 }
 
 struct ilG_stage *ilG_outpass(struct ilG_context *context)

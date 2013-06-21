@@ -3,6 +3,7 @@
 
 #include <stdlib.h>
 #include <GL/glew.h>
+#include <GLFW/glfw3.h>
 
 #include "util/array.h"
 #include "graphics/light.h"
@@ -22,6 +23,7 @@ enum ilG_context_attachments {
 
 typedef struct ilG_context {
     il_base base;
+    GLFWwindow *window;
     int complete;
     struct ilG_drawable3d* drawable;
     struct ilG_material* material;
@@ -42,7 +44,8 @@ typedef struct ilG_context {
 
 extern il_type ilG_context_type;
 
-void ilG_context_resize(ilG_context *self, int w, int h);
+void ilG_context_resize(ilG_context *self, int w, int h, const char *title);
+void ilG_context_makeCurrent(ilG_context *self);
 void ilG_context_setActive(ilG_context*);
 void ilG_context_addStage(ilG_context* self, struct ilG_stage* stage, int num);
 

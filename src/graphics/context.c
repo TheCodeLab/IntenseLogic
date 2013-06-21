@@ -1,27 +1,17 @@
 #include "context.h"
 
-#include <stdlib.h>
-
 #include "util/log.h"
 #include "graphics/glutil.h"
 #include "common/event.h"
 #include "graphics/stage.h"
 #include "graphics/graphics.h"
 
+static GLvoid error_cb(GLenum source, GLenum type, GLuint id, GLenum severity,
+                       GLsizei length, const GLchar* message, GLvoid* user);
+
 void context_cons(void *obj)
 {
     ilG_context *self = obj;
-    GLint num_texunits;
-
-    ilG_testError("Unknown error before this function");
-    glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &num_texunits);
-    ilG_testError("glGetIntegerv");
-    self->texunits = calloc(sizeof(unsigned), num_texunits);
-    self->num_texunits = num_texunits;
-    glGenFramebuffers(1, &self->framebuffer);
-    glBindFramebuffer(GL_FRAMEBUFFER, self->framebuffer);
-    glGenTextures(5, &self->fbtextures[0]);
-    ilG_testError("Unable to generate framebuffer");
 }
 
 static void context_des(void *obj)
@@ -56,8 +46,56 @@ il_type ilG_context_type = {
     .parent = NULL
 };
 
-void ilG_context_resize(ilG_context *self, int w, int h)
+void ilG_context_resize(ilG_context *self, int w, int h, const char *title)
 {
+    if (!self->window) {
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+#ifdef __APPLE__
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
+#else
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
+#endif
+#ifdef DEBUG
+        glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
+#endif
+        if (!(self->window = glfwCreateWindow(w, h, title, NULL, NULL))) { // TODO: allow context sharing + monitor specification
+            il_fatal("glfwOpenWindow() failed - are you sure you have OpenGL 3.1?");
+        }
+        ilG_context_makeCurrent(self);
+        GLenum err = glewInit();
+        if (GLEW_OK != err) {
+            il_fatal("glewInit() failed: %s", glewGetErrorString(err));
+        }
+        il_log("Using GLEW %s", glewGetString(GLEW_VERSION));
+
+#ifndef __APPLE__
+        if (!GLEW_VERSION_3_1) {
+            il_error("GL version 3.1 is required, your Segfault Insurance is now invalid");
+        }
+#endif
+
+        IL_GRAPHICS_TESTERROR("Unknown");
+#ifdef DEBUG
+        if (GLEW_ARB_debug_output) {
+            glDebugMessageCallbackARB((GLDEBUGPROCARB)&error_cb, NULL);
+            glEnable(GL_DEBUG_OUTPUT);
+            il_log("ARB_debug_output present, enabling advanced errors");
+            IL_GRAPHICS_TESTERROR("glDebugMessageCallbackARB()");
+        } else {
+            il_log("ARB_debug_output missing");
+        }
+#endif    
+        GLint num_texunits;
+        glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &num_texunits);
+        ilG_testError("glGetIntegerv");
+        self->texunits = calloc(sizeof(unsigned), num_texunits);
+        self->num_texunits = num_texunits;
+        glGenFramebuffers(1, &self->framebuffer);
+        glBindFramebuffer(GL_FRAMEBUFFER, self->framebuffer);
+        glGenTextures(5, &self->fbtextures[0]);
+        ilG_testError("Unable to generate framebuffer");
+    }
+
     self->width = w;
     self->height = h;
     ilG_testError("Unknown from before this function");
@@ -102,6 +140,11 @@ void ilG_context_resize(ilG_context *self, int w, int h)
     self->complete = 1;
 }
 
+void ilG_context_makeCurrent(ilG_context *self)
+{
+    glfwMakeContextCurrent(self->window);
+}
+
 void ilG_context_addStage(ilG_context* self, ilG_stage* stage, int num)
 {
     stage = il_ref(stage);
@@ -117,7 +160,11 @@ void render_stages(const ilE_registry* registry, const char *name, size_t size, 
     (void)registry, (void)name, (void)size, (void)data;
     ilG_context *context = ctx;
     size_t i;
+    int width, height;
 
+    ilG_context_makeCurrent(context);
+    glfwGetFramebufferSize(context->window, &width, &height);
+    glViewport(0, 0, width, height);
     il_debug("Begin render");
     static const GLenum drawbufs[] = {
         GL_COLOR_ATTACHMENT0,   // accumulation
@@ -138,5 +185,40 @@ void render_stages(const ilE_registry* registry, const char *name, size_t size, 
 void ilG_context_setActive(ilG_context *self)
 {
     ilE_register(ilG_registry, "tick", ILE_DONTCARE, ILE_MAIN, render_stages, self);
+}
+
+static GLvoid error_cb(GLenum source, GLenum type, GLuint id, GLenum severity,
+                       GLsizei length, const GLchar* message, GLvoid* user)
+{
+    (void)id, (void)severity, (void)length, (void)user;
+    const char *ssource;
+    switch(source) {
+        case GL_DEBUG_SOURCE_API_ARB:               ssource="API";              break;
+        case GL_DEBUG_SOURCE_WINDOW_SYSTEM_ARB:     ssource="Window System";    break;
+        case GL_DEBUG_SOURCE_SHADER_COMPILER_ARB:   ssource="Shader Compiler";  break;
+        case GL_DEBUG_SOURCE_THIRD_PARTY_ARB:       ssource="Third Party";      break;
+        case GL_DEBUG_SOURCE_APPLICATION_ARB:       ssource="Application";      break;
+        case GL_DEBUG_SOURCE_OTHER_ARB:             ssource="Other";            break;
+        default: ssource="???";
+    }
+    const char *stype;
+    switch(type) {
+        case GL_DEBUG_TYPE_ERROR_ARB:               stype="Error";                  break;
+        case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR_ARB: stype="Deprecated Behaviour";   break;
+        case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR_ARB:  stype="Undefined Behaviour";    break;
+        case GL_DEBUG_TYPE_PORTABILITY_ARB:         stype="Portability";            break;
+        case GL_DEBUG_TYPE_PERFORMANCE_ARB:         stype="Performance";            break;
+        case GL_DEBUG_TYPE_OTHER_ARB:               stype="Other";                  break;
+        default: stype="???";
+    }
+    const char *sseverity;
+    switch(severity) {
+        case GL_DEBUG_SEVERITY_HIGH_ARB:    sseverity="HIGH";   break;
+        case GL_DEBUG_SEVERITY_MEDIUM_ARB:  sseverity="MEDIUM"; break;
+        case GL_DEBUG_SEVERITY_LOW_ARB:     sseverity="LOW";    break;
+        default: sseverity="???";
+    }
+    il_log("OpenGL %s %s (%s): %s\n", ssource, stype,
+            sseverity, message);
 }
 

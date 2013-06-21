@@ -4,14 +4,13 @@
 #include <time.h>
 #include <sys/time.h>
 #include <GL/glew.h>
-#include <GL/glfw.h>
+#include <GLFW/glfw3.h>
 #include <math.h>
 #include <unistd.h>
 #include <getopt.h>
 
 #include "graphics/camera.h"
 #include "common/event.h"
-#include "common/input.h"
 #include "math/matrix.h"
 #include "common/base.h"
 //#include "common/keymap.h"
@@ -56,14 +55,12 @@ static int height = 600;
 ilE_registry *ilG_registry;
 
 static void quit();
-static GLvoid error_cb(GLenum source, GLenum type, GLuint id, GLenum severity,
-                       GLsizei length, const GLchar* message, GLvoid* userParam);
 void ilG_material_init();
 void ilG_shape_init();
 void ilG_quad_init();
 void ilG_texture_init();
 
-static void GLFWCALL key_cb(int key, int action)
+/*static void key_cb(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
     il_debug("Key %c", key);
     if (action == GLFW_PRESS) {
@@ -73,7 +70,7 @@ static void GLFWCALL key_cb(int key, int action)
     }
 }
 
-static void GLFWCALL mouse_cb(int button, int action)
+static void mouse_cb(int button, int action)
 {
     il_debug("Mouse %i", button);
     if (action == GLFW_PRESS) {
@@ -83,7 +80,7 @@ static void GLFWCALL mouse_cb(int button, int action)
     }
 }
 
-static void GLFWCALL mousemove_cb(int x, int y)
+static void mousemove_cb(int x, int y)
 {
     static int last_x = 0, last_y = 0;
     ilI_mouseMove mousemove =
@@ -102,67 +99,17 @@ static void GLFWCALL mousewheel_cb(int pos)
         0, pos
     };
     ilE_globalevent(il_registry, "input.mousewheel", sizeof(ilI_mouseWheel), &mousewheel);
-}
+}*/
 
-static void context_setup()
+static void glfw_setup()
 {
     if (!glfwInit()) {
         il_fatal("glfwInit() failed");
     }
 
-    {
-        int major, minor, rev;
-        glfwGetVersion(&major, &minor, &rev);
-        il_log("Using GLFW version %i.%i.%i", major, minor, rev);
-    }
-
-    glfwOpenWindowHint(GLFW_OPENGL_VERSION_MAJOR, 3);
-#ifdef __APPLE__
-    glfwOpenWindowHint(GLFW_OPENGL_VERSION_MINOR, 2);
-#else
-    glfwOpenWindowHint(GLFW_OPENGL_VERSION_MINOR, 1);
-#endif
-#ifdef DEBUG
-    glfwOpenWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
-#endif
-    if (!glfwOpenWindow(width, height, 8, 8, 8, 8, 32, 8, GLFW_WINDOW)) {
-        il_fatal("glfwOpenWindow() failed - are you sure you have OpenGL 3.1?");
-    }
-
-    // register glfw stuff
-    glfwSetCharCallback(&key_cb);
-    glfwSetMouseButtonCallback(&mouse_cb);
-    glfwSetMousePosCallback(&mousemove_cb);
-    glfwSetMouseWheelCallback(&mousewheel_cb);
-
-    IL_GRAPHICS_TESTERROR("Unknown");
-
-    // GLEW
-    glewExperimental = GL_TRUE;
-    GLenum err = glewInit();
-    if (GLEW_OK != err) {
-        il_fatal("glewInit() failed: %s", glewGetErrorString(err));
-    }
-    il_log("Using GLEW %s", glewGetString(GLEW_VERSION));
-
-    IL_GRAPHICS_TESTERROR("glewInit()");
-
-#ifndef __APPLE__
-    if (!GLEW_VERSION_3_1) {
-        il_error("GL version 3.1 is required, your Segfault Insurance is now invalid");
-    }
-#endif
-
-    IL_GRAPHICS_TESTERROR("Unknown");
-#ifdef DEBUG
-    if (GLEW_ARB_debug_output) {
-        glDebugMessageCallbackARB((GLDEBUGPROCARB)&error_cb, NULL);
-        glEnable(GL_DEBUG_OUTPUT);
-        il_log("ARB_debug_output present, enabling advanced errors");
-        IL_GRAPHICS_TESTERROR("glDebugMessageCallbackARB()");
-    } else
-        il_log("ARB_debug_output missing");
-#endif
+    int major, minor, rev;
+    glfwGetVersion(&major, &minor, &rev);
+    il_log("Using GLFW version %i.%i.%i", major, minor, rev);
 
     glfwSwapInterval(0); // 1:1 ratio of frames to vsyncs
 }
@@ -178,10 +125,9 @@ static void event_setup()
     ilG_registry = ilE_registry_new();
     ilE_register(ilG_registry, "tick", ILE_DONTCARE, ILE_MAIN, update, NULL);
     ilE_register(il_registry, "shutdown", ILE_DONTCARE, ILE_MAIN, &quit, NULL);
-    int hz = glfwGetWindowParam(GLFW_REFRESH_RATE);
     struct timeval tv;
     tv.tv_sec = 0;
-    tv.tv_usec = hz>0? 1000000.0/hz : 1000000.0/60;
+    tv.tv_usec = 1000000.0/60; // TODO: get some proper refresh rate code instead of hardcoding 60fps
     ilE_globaltimer(ilG_registry, "tick", 0, NULL, tv); // kick off the draw loop
 }
 
@@ -224,8 +170,7 @@ int il_bootstrap(int argc, char **argv)
         ilA_registerReadDir(il_string_new("shaders", strlen("shaders")),0);
     }
 
-    // Setup GL context (glfw, glew, etc.)
-    context_setup();
+    glfw_setup();
     IL_GRAPHICS_TESTERROR("Unknown");
     
     // GL setup
@@ -246,41 +191,6 @@ int il_bootstrap(int argc, char **argv)
     event_setup();
 
     return 1;
-}
-
-static GLvoid error_cb(GLenum source, GLenum type, GLuint id, GLenum severity,
-                       GLsizei length, const GLchar* message, GLvoid* user)
-{
-    (void)id, (void)severity, (void)length, (void)user;
-    const char *ssource;
-    switch(source) {
-        case GL_DEBUG_SOURCE_API_ARB:               ssource="API";              break;
-        case GL_DEBUG_SOURCE_WINDOW_SYSTEM_ARB:     ssource="Window System";    break;
-        case GL_DEBUG_SOURCE_SHADER_COMPILER_ARB:   ssource="Shader Compiler";  break;
-        case GL_DEBUG_SOURCE_THIRD_PARTY_ARB:       ssource="Third Party";      break;
-        case GL_DEBUG_SOURCE_APPLICATION_ARB:       ssource="Application";      break;
-        case GL_DEBUG_SOURCE_OTHER_ARB:             ssource="Other";            break;
-        default: ssource="???";
-    }
-    const char *stype;
-    switch(type) {
-        case GL_DEBUG_TYPE_ERROR_ARB:               stype="Error";                  break;
-        case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR_ARB: stype="Deprecated Behaviour";   break;
-        case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR_ARB:  stype="Undefined Behaviour";    break;
-        case GL_DEBUG_TYPE_PORTABILITY_ARB:         stype="Portability";            break;
-        case GL_DEBUG_TYPE_PERFORMANCE_ARB:         stype="Performance";            break;
-        case GL_DEBUG_TYPE_OTHER_ARB:               stype="Other";                  break;
-        default: stype="???";
-    }
-    const char *sseverity;
-    switch(severity) {
-        case GL_DEBUG_SEVERITY_HIGH_ARB:    sseverity="HIGH";   break;
-        case GL_DEBUG_SEVERITY_MEDIUM_ARB:  sseverity="MEDIUM"; break;
-        case GL_DEBUG_SEVERITY_LOW_ARB:     sseverity="LOW";    break;
-        default: sseverity="???";
-    }
-    il_log("OpenGL %s %s (%s): %s\n", ssource, stype,
-            sseverity, message);
 }
 
 static void quit(const ilE_registry* registry, const char *name, size_t size, const void *data, void * ctx)
