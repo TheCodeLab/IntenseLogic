@@ -62,6 +62,7 @@ void ilG_context_resize(ilG_context *self, int w, int h, const char *title)
         if (!(self->window = glfwCreateWindow(w, h, title, NULL, NULL))) { // TODO: allow context sharing + monitor specification
             il_fatal("glfwOpenWindow() failed - are you sure you have OpenGL 3.1?");
         }
+        glfwSetWindowUserPointer(self->window, self);
         ilG_context_makeCurrent(self);
         glfwSwapInterval(0);
         glewExperimental = GL_TRUE; // TODO: find out why IL crashes without this
