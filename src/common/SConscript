@@ -15,8 +15,7 @@ common = env.Clone()
 common.Append(CPPPATH = src_dir, LIBS=['ilutil', 'ilmath'])
 
 if platform=="mingw":
-    common.ParseConfig("pkg-config libglfw --libs --cflags")
-    common.Append(LIBS=["libevent", "opengl32"])
+    common.Append(LIBS=["libevent"])
 else:
     common.ParseConfig("pkg-config libevent --libs --cflags")
 
