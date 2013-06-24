@@ -8,6 +8,7 @@
 
 static GLvoid error_cb(GLenum source, GLenum type, GLuint id, GLenum severity,
                        GLsizei length, const GLchar* message, GLvoid* user);
+void ilG_registerInputBackend(ilG_context *ctx);
 
 void context_cons(void *obj)
 {
@@ -62,6 +63,7 @@ void ilG_context_resize(ilG_context *self, int w, int h, const char *title)
         if (!(self->window = glfwCreateWindow(w, h, title, NULL, NULL))) { // TODO: allow context sharing + monitor specification
             il_fatal("glfwOpenWindow() failed - are you sure you have OpenGL 3.1?");
         }
+        ilG_registerInputBackend(self);
         glfwSetWindowUserPointer(self->window, self);
         ilG_context_makeCurrent(self);
         glfwSwapInterval(0);
