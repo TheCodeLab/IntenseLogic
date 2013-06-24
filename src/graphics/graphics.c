@@ -59,6 +59,7 @@ void ilG_material_init();
 void ilG_shape_init();
 void ilG_quad_init();
 void ilG_texture_init();
+void ilG_registerJoystickBackend();
 
 /*static void key_cb(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
@@ -117,6 +118,7 @@ static void glfw_setup()
     int major, minor, rev;
     glfwGetVersion(&major, &minor, &rev);
     il_log("Using GLFW version %i.%i.%i", major, minor, rev);
+    ilG_registerJoystickBackend();
 }
 
 static void update(const ilE_registry* registry, const char *name, size_t size, const void *data, void * ctx)
