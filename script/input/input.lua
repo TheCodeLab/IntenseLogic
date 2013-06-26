@@ -1,10 +1,15 @@
-#ifndef ILI_INPUT_H
-#define ILI_INPUT_H
+local ffi = require "ffi"
 
-enum ilI_key {
-    // most of these were lifted off of GFLW so they wouldn't have to be arbitrarily assigned and remapped
-    ILI_KEY_WORLD_1         = 161, /* non-US #1 */
-    ILI_KEY_WORLD_2         = 162, /* non-US #2 */
+ffi.cdef [[
+
+int ilI_getKey(int key, int *input);
+char *ilI_backend_getName(int input);
+
+]]
+
+keysyms = {
+    ILI_KEY_WORLD_1         = 161,
+    ILI_KEY_WORLD_2         = 162,
     ILI_KEY_ESCAPE          = 256,
     ILI_KEY_ENTER           = 257,
     ILI_KEY_TAB             = 258,
@@ -101,16 +106,19 @@ enum ilI_key {
     ILI_JOY_16              = 783,
 };
 
-int ilI_getKey(enum ilI_key key, int *input);
 
-typedef struct ilI_backend {
-    char *name;
-    int (*get)(struct ilI_backend *self, enum ilI_key key);
-    void *user;
-} ilI_backend;
+local input = {}
 
-int ilI_register(ilI_backend *backend);
-char *ilI_backend_getName(int input);
+function input.get(key)
+    local ret = ffi.new("int[1]")
+    local str = string.upper(key:gsub(" ", "_"))
+    local enum = keysyms["ILI_"..str] or 
+                 keysyms["ILI_KEY_"..str] or
+                 keysyms["ILI_MOUSE_"..str] or
+                 keysyms["ILI_JOY_"..str] or
+                 (#key == 1 and string.byte(key) or error "Invalid key specification")
+    return modules.input.ilI_getKey(enum, ret) == 1, ret[0]
+end
 
-#endif
+return input
 

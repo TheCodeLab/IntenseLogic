@@ -12,7 +12,7 @@ local matrix        = require "math.matrix"
 local vector3       = require "math.vector3"
 local mesh          = require "graphics.mesh"
 local event         = require "common.event"
-local input         = require "common.input"
+local input         = require "input.input"
 local quaternion    = require "math.quaternion"
 local light         = require "graphics.light"
 local stage         = require "graphics.stage"
@@ -120,7 +120,7 @@ ico:track(c)
 local first_mouse = true
 function mousemove(reg, name, x, y)
     if first_mouse then first_mouse = false return end
-    if input.isButtonSet(0) == 0 then return end -- TODO: Make this work
+    if not input.get "mouse left" then return end
     local yaw = quaternion(vector3(0, 1, 0), x * c.camera.sensitivity)
     local pitch = quaternion(vector3(1, 0, 0), y * c.camera.sensitivity)
     local rot = quaternion.wrap(c.camera.positionable.rotation) * yaw * pitch
@@ -129,10 +129,14 @@ end
 
 function tick(reg, name)
     --print "tick"
-    local x = input.isKeySet("D") - input.isKeySet("A")
-    local z = input.isKeySet("W") - input.isKeySet("S")
-    local y = input.isKeySet("R") - input.isKeySet("F")
-    local r = input.isKeySet("Q") - input.isKeySet("E")
+    local get = function(k)
+        local b, _ = input.get(k)
+        return b and 1 or 0
+    end
+    local x = get("D") - get("A")
+    local z = get("W") - get("S")
+    local y = get("R") - get("F")
+    local r = get("Q") - get("E")
     local v = vector3(x,y,z) * vector3.wrap(c.camera.movespeed)
     --print("r", c.camera.positionable.rotation)
     --print("v", v)
@@ -143,6 +147,6 @@ function tick(reg, name)
     c.camera.positionable.rotation = (quaternion.wrap(c.camera.positionable.rotation) * bank).ptr
 end
 
---event.register(event.registry, "tick", tick)
---event.register(event.registry, "input.mousemove", mousemove)
+event.register(event.registry, "tick", tick)
+event.register(event.registry, "input.mousemove", mousemove)
 

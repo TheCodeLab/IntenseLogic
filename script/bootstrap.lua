@@ -21,6 +21,7 @@ _G.modules = {
     common = loadmod "ilcommon",
     network = loadmod "ilnetwork",
     graphics = loadmod "ilgraphics",
-    asset = loadmod "ilasset"
+    asset = loadmod "ilasset",
+    input = loadmod "ilinput"
 }
 
