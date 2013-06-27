@@ -14,7 +14,7 @@ List of Dependencies:
 * libpng
 * LuaJIT (Lua 5.1)
 
-See the Wiki for help building.
+See the Wiki for help [building](https://github.com/TheCodeLab/IntenseLogic/wiki/Building).
 
 ## Authors
 camoy, tiffany352, harutsedo, et al.
