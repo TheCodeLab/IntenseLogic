@@ -89,7 +89,9 @@ void ilA_registerReadDir(il_string *path, int priority)
     ins->path = path;
     ins->priority = priority;
 
-    last->next = ins;
+    if (last) {
+        last->next = ins;
+    }
     ins->next = cur;
 }
 
