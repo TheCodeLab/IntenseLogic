@@ -17,17 +17,17 @@ graphics = env.Clone()
 graphics.Append(CFLAGS="-DIL_IN_GRAPHICS", CPPPATH = src_dir, LIBS=["ilcommon","ilutil","ilmath","ilasset"])
 
 pkg_libs = {
-    "osx":   ["glfw3", "glew"],
-    "arch":  ["glfw3", "glew", "gl"],
-    "linux": ["gl", "glfw3", "glew"],
+    "osx":   ["glfw3", "glew", "harfbuzz", "cairo"],
+    "arch":  ["glfw3", "glew", "gl", "harfbuzz", "harfbuzz-icu", "cairo"],
+    "linux": ["gl", "glfw3", "glew", "harfbuzz", "cairo"],
 }
 
 if platform=="mingw":
-    graphics.Append(LIBS=["glfw", "glew32", "opengl32", "png", "z"])
+    graphics.Append(LIBS=["glfw", "glew32", "opengl32", "png", "z", "harfbuzz", "harfbuzz-icu", "cairo"])
 else:
     for lib in pkg_libs[platform]:
         graphics.ParseConfig("pkg-config " + lib + " --cflags --libs")
-
+        graphics.ParseConfig("freetype-config --cflags --libs")
 
 sources = []
 for module in Split(inputs) :
