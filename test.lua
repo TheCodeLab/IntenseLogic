@@ -118,7 +118,8 @@ ico.texture = texture.default;
 ico:track(c)
 
 local first_mouse = true
-function mousemove(reg, name, x, y)
+function mousemove(reg, name, xabs, yabs, x, y)
+    --print(string.format("mouse move by (%d, %d)", x, y))
     if first_mouse then first_mouse = false return end
     if not input.get "mouse left" then return end
     local yaw = quaternion(vector3(0, 1, 0), x * c.camera.sensitivity)
@@ -147,6 +148,11 @@ function tick(reg, name)
     c.camera.positionable.rotation = (quaternion.wrap(c.camera.positionable.rotation) * bank).ptr
 end
 
+function close(reg, name)
+    event.event(event.registry, "shutdown")
+end
+
 event.register(event.registry, "tick", tick)
 event.register(event.registry, "input.mousemove", mousemove)
+event.register(event.registry, "graphics.close", close)
 

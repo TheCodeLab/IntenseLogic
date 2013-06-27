@@ -13,6 +13,12 @@ void ilG_registerInputBackend(ilG_context *ctx);
 void context_cons(void *obj)
 {
     ilG_context *self = obj;
+    if (!ilG_context_type.registry) {
+        ilG_context_type.registry = ilE_registry_new();
+        ilE_registry_forward(ilG_context_type.registry, il_registry);
+    }
+    self->base.registry = ilE_registry_new();
+    ilE_registry_forward(self->base.registry, ilG_context_type.registry);
 }
 
 static void context_des(void *obj)
