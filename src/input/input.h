@@ -101,6 +101,21 @@ enum ilI_key {
     ILI_JOY_16              = 783,
 };
 
+enum ilI_mod {
+    ILI_MOD_SHIFT   = 0x1,
+    ILI_MOD_CONTROL = 0x2,
+    ILI_MOD_ALT     = 0x4,
+    ILI_MOD_SUPER   = 0x8
+};
+
+typedef struct ilI_buttonevent {
+    enum ilI_key button;
+    int scancode;
+    int device;
+    int action;
+    enum ilI_mod mods;
+} ilI_buttonevent;
+
 int ilI_getKey(enum ilI_key key, int *input);
 
 typedef struct ilI_backend {

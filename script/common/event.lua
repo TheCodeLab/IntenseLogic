@@ -49,17 +49,6 @@ void ilE_dumpHooks(ilE_registry *registry);
 
 extern ilE_registry* il_registry;
 
-//////////////////////////////////////////////////////////////////////////////
-// input.h
-
-typedef struct ilI_mouseMove {
-  int x, y;
-} ilI_mouseMove;
-
-typedef struct ilI_mouseWheel {
-  int x, y;
-} ilI_mouseWheel;
-
 ]]
 
 local event = {}
@@ -80,12 +69,25 @@ function event.setPacker(registry, name, fn)
     packers[tostring(ffi.cast("void*", registry))..name] = fn
 end
 
+function event.nilPacker()
+    return nil, 0
+end
+
+function event.defaultPackers(reg)
+    event.setPacker(reg, "tick", event.nilPacker)
+    event.setPacker(reg, "shutdown", event.nilPacker)
+end
+
+event.defaultPackers(event.registry)
+
 --- Fires off an event
 -- @tparam registry registry The registry (and all that registry's parents) to send the event to
 -- @tparam string name The event to fire
 -- @param ... Data to pass with the event
 function event.event(registry, name, ...)
-    local data, size = packers[tostring(ffi.cast("void*", registry))..name](...)
+    local packer = packers[tostring(ffi.cast("void*", registry))..name]
+    if not packer then error("No packer for event "..name) end
+    local data, size = packer(...)
     modules.common.ilE_globalevent(registry, name, size, data);
 end
 
@@ -121,32 +123,32 @@ function event.setUnpacker(registry, name, fn)
     unpackers[tostring(ffi.cast("void*", registry)) .. name] = fn
 end
 
-local function nilUnpacker()
+function event.nilUnpacker()
     return nil
 end
-event.setUnpacker(event.registry, "startup", nilUnpacker)
-event.setUnpacker(event.registry, "tick", nilUnpacker)
-event.setUnpacker(event.registry, "shutdown", nilUnpacker)
 
-local function intUnpacker(size, data)
-    return tonumber(ffi.cast("int*", data)[0])
+function event.arrayUnpacker(T, n)
+    return function(size, data)
+        local t = {}
+        local arr = ffi.cast(T.."*", data)
+        for i = 0, n do
+            t[#t + 1] = arr[i]
+        end
+        return unpack(t)
+    end
 end
-event.setUnpacker(event.registry, "input.keydown", intUnpacker)
-event.setUnpacker(event.registry, "input.keyup", intUnpacker)
-event.setUnpacker(event.registry, "input.mousedown", intUnpacker)
-event.setUnpacker(event.registry, "input.mouseup", intUnpacker)
 
-local function mousemoveUnpacker(size, data)
-    local s = ffi.cast("ilI_mouseMove*", data);
-    return s.x, s.y
+function event.typeUnpacker(T)
+    return event.arrayUnpacker(T, 1)
 end
-event.setUnpacker(event.registry, "input.mousemove", mousemoveUnpacker)
 
-local function mousewheelUnpacker(size, data)
-    local s = ffi.cast("ilI_mouseWheel*", data);
-    return s.y, s.x;
+function event.defaultUnpackers(reg)
+    event.setUnpacker(reg, "startup",   event.nilUnpacker)
+    event.setUnpacker(reg, "tick",      event.nilUnpacker)
+    event.setUnpacker(reg, "shutdown",  event.nilUnpacker)
 end
-event.setUnpacker(event.registry, "input.mousehweel", mousewheelUnpacker)
+
+event.defaultUnpackers(event.registry)
 
 --- Unpacks an event from native format
 -- @tparam registry registry The registry the event came from

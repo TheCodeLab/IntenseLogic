@@ -206,7 +206,11 @@ void ilE_typeevent(il_type* type, const char *name, size_t size, const void *dat
 
 void ilE_objectevent(il_base* base, const char *name, size_t size, const void *data)
 {
-    if (!base || !base->registry || !name) {
+    if (!base || !name) {
+        return;
+    }
+    if (!base->registry) {
+        ilE_typeevent(base->type, name, size, data);
         return;
     }
     push(base->registry, name, size, data);
@@ -231,6 +235,10 @@ void ilE_typetimer(il_type* type, const char *name, size_t size, const void *dat
 void ilE_objecttimer(il_base* base, const char *name, size_t size, const void *data, struct timeval tv)
 {
     if (!base || !base->registry || !name) {
+        return;
+    }
+    if (!base->registry) {
+        ilE_typetimer(base->type, name, size, data, tv);
         return;
     }
     timer(base->registry, name, size, data, tv);

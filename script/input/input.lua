@@ -1,9 +1,26 @@
 local ffi = require "ffi"
 
+local event = require "common.event"
+
 ffi.cdef [[
+
+enum ilI_mod {
+    ILI_MOD_SHIFT   = 0x1,
+    ILI_MOD_CONTROL = 0x2,
+    ILI_MOD_ALT     = 0x4,
+    ILI_MOD_SUPER   = 0x8
+};
 
 int ilI_getKey(int key, int *input);
 char *ilI_backend_getName(int input);
+
+typedef struct ilI_buttonevent {
+    int button;
+    int scancode;
+    int device;
+    int action;
+    enum ilI_mod mods;
+} ilI_buttonevent;
 
 ]]
 
@@ -106,8 +123,35 @@ keysyms = {
     ILI_JOY_16              = 783,
 };
 
-
 local input = {}
+
+function input.buttonUnpacker(size, data)
+    local ev = ffi.cast("ilI_buttonevent*", data)
+    local button
+    for k, v in pairs(keysyms) do
+        if v == ev.button then
+            button = string.lower(k:sub(5, -1):gsub("_", " "))
+            break
+        end
+    end
+    local mods = ""
+    for k,v in pairs {S=1, C=2, A=4, W=8} do
+        if bit.band(v, ev.mods) ~= 0 then
+            mods = mods .. k
+        end
+    end
+    return button, ev.scancode, ev.device, ev.action == 1, mods
+end
+
+function input.inputUnpackers(reg)
+    event.setUnpacker(reg, "input.button", input.buttonUnpacker)
+    event.setUnpacker(reg, "input.mousemove", event.arrayUnpacker("int", 4))
+    event.setUnpacker(reg, "input.mouseenter", event.typeUnpacker("int"))
+    event.setUnpacker(reg, "input.mousescroll", event.arrayUnpacker("float", 2))
+    event.setUnpacker(reg, "input.character", event.typeUnpacker("unsigned int"))
+end
+
+input.inputUnpackers(event.registry)
 
 function input.get(key)
     local ret = ffi.new("int[1]")
