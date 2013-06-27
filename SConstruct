@@ -104,10 +104,12 @@ prog = env.Program(target  = build_dir + "/" + output,
                    source  = objects,
                    LIBPATH = lib_dirs,
                    CPPPATH = src_dir)
-#Depends(prog, libilmath)
-#Depends(prog, libilnetwork)
+Depends(prog, libilmath)
+Depends(prog, libilnetwork)
 Depends(prog, libilutil)
 Depends(prog, libilcommon)
-#Depends(prog, libilgraphics)
+Depends(prog, libilgraphics)
+Depends(prog, libilasset)
+Depends(prog, libilinput)
 Default(prog)
 
