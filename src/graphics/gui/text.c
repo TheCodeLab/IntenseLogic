@@ -83,7 +83,10 @@ ilG_gui_textlayout *ilG_gui_textlayout_new(struct ilG_context *ctx, const char *
 
     l->buf = hb_buffer_create();
     hb_buffer_set_unicode_funcs(l->buf, hb_icu_get_unicode_funcs());
-    hb_buffer_set_direction(l->buf, direction + 4); // Hacky solution
+    if (direction == ILG_GUI_DEFAULTDIR) { // TODO: find out how to determine this based on script
+        direction = ILG_GUI_LTR;
+    }
+    hb_buffer_set_direction(l->buf, direction + 3); // Hacky solution
     hb_buffer_set_script(l->buf, hb_script_from_string(script, -1));
     hb_buffer_set_language(l->buf, hb_language_from_string(lang, -1));
     hb_buffer_add_utf8(l->buf, source->data, source->length, 0, source->length);

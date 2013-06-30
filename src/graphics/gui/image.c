@@ -37,6 +37,8 @@ static void image_draw(ilG_gui_frame *self, ilG_gui_rect where)
         ctx->pos_loc[1] = glGetUniformLocation(shader->program, "pos2");
         il_base_set(self->context, "il.graphics.gui.image.shader", shader, sizeof(ilG_material), IL_OBJECT);
     }
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     ilG_bindable_swap(&self->context->materialb, (void**)&self->context->material, shader);
     ilG_bindable_swap(&self->context->drawableb, (void**)&self->context->drawable, ilG_quad(self->context));
     ilG_bindable_swap(&self->context->textureb, (void**)&self->context->texture, ctx->tex);
@@ -46,6 +48,7 @@ static void image_draw(ilG_gui_frame *self, ilG_gui_rect where)
     ilG_bindable_action(self->context->materialb, self->context->material);
     ilG_bindable_action(self->context->textureb,  self->context->texture);
     ilG_bindable_action(self->context->drawableb, self->context->drawable);
+    glDisable(GL_BLEND);
 }
 
 void ilG_gui_frame_image(ilG_gui_frame *self, ilG_texture *tex)

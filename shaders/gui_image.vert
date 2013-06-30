@@ -10,6 +10,6 @@ out vec2 texcoord;
 void main()
 {
     gl_Position = vec4(2 * (pos2 - pos1) * in_Position + pos1 - vec2(.5), 0.0, 1.0);
-    texcoord = in_Position;
+    texcoord = in_Position * vec2(1, -1) + vec2(0, 1);
 }
 
