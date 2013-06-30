@@ -78,7 +78,7 @@ ilG_gui_textlayout *ilG_gui_textlayout_new(struct ilG_context *ctx, const char *
         return NULL;
     }
     il_return_null_on_fail(!FT_New_Memory_Face(gctx->library, data, size, 0, &l->ft_face));
-    il_return_null_on_fail(!FT_Set_Char_Size(l->ft_face, 0, pt, 0, 0));
+    il_return_null_on_fail(!FT_Set_Char_Size(l->ft_face, 0, pt * 64, 0, 0));
     l->hb_ft_font = hb_ft_font_create(l->ft_face, NULL);
 
     l->buf = hb_buffer_create();
@@ -104,10 +104,10 @@ void ilG_gui_textlayout_getSize(ilG_gui_textlayout *self, unsigned *x, unsigned 
         h += self->glyph_pos[i].y_advance;
     }
     if (x) {
-        *x = w/64;
+        *x = w;
     }
     if (y) {
-        *y = h/64;
+        *y = h;
     }
 }
 
@@ -120,11 +120,6 @@ struct text_ctx {
     enum ilG_gui_textjustify horiz, vert;
     ilG_texture *tex;
 };
-
-/*void draw(ilG_gui_frame *self, ilG_gui_rect rect)
-{
-
-}*/
 
 void ilG_gui_frame_label(ilG_gui_frame *self, ilG_gui_textlayout *layout, float col[4], enum ilG_gui_textjustify justify)
 {
@@ -171,16 +166,18 @@ void ilG_gui_frame_label(ilG_gui_frame *self, ilG_gui_textlayout *layout, float 
             break;
         }
 
-        //x *= 64;
-        //y *= 64;
+        int scale = 64;
+
+        x *= scale;
+        y *= scale;
         cairo_glyph_t cairo_glyphs[sizeof(cairo_glyph_t) * layout->glyph_count];
         unsigned i;
         for (i = 0; i < layout->glyph_count; i++) {
             cairo_glyphs[i].index = layout->glyph_info[i].codepoint;
+            cairo_glyphs[i].x = (x + layout->glyph_pos[i].x_offset)/scale;
+            cairo_glyphs[i].y = (y + layout->glyph_pos[i].y_offset)/scale;
             x += layout->glyph_pos[i].x_advance;
             y += layout->glyph_pos[i].y_advance;
-            cairo_glyphs[i].x = x;
-            cairo_glyphs[i].y = y;
         }
 
         cairo_set_source_rgba(ctx->cr, col[0], col[1], col[2], col[3]);
