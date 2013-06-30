@@ -61,47 +61,6 @@ void ilG_quad_init();
 void ilG_texture_init();
 void ilG_registerJoystickBackend();
 
-/*static void key_cb(GLFWwindow* window, int key, int scancode, int action, int mods)
-{
-    il_debug("Key %c", key);
-    if (action == GLFW_PRESS) {
-        ilE_globalevent(il_registry, "input.keydown", sizeof(int), &key);
-    } else {
-        ilE_globalevent(il_registry, "input.keyup", sizeof(int), &key);
-    }
-}
-
-static void mouse_cb(int button, int action)
-{
-    il_debug("Mouse %i", button);
-    if (action == GLFW_PRESS) {
-        ilE_globalevent(il_registry, "input.mousedown", sizeof(int), &button);
-    } else {
-        ilE_globalevent(il_registry, "input.mouseup", sizeof(int), &button);
-    }
-}
-
-static void mousemove_cb(int x, int y)
-{
-    static int last_x = 0, last_y = 0;
-    ilI_mouseMove mousemove =
-    (ilI_mouseMove) {
-        x - last_x, y - last_y
-    };
-    last_x = x;
-    last_y = y;
-    ilE_globalevent(il_registry, "input.mousemove", sizeof(ilI_mouseMove), &mousemove);
-}
-
-static void GLFWCALL mousewheel_cb(int pos)
-{
-    ilI_mouseWheel mousewheel =
-    (ilI_mouseWheel) {
-        0, pos
-    };
-    ilE_globalevent(il_registry, "input.mousewheel", sizeof(ilI_mouseWheel), &mousewheel);
-}*/
-
 static void glew_error(int code, const char *err)
 {
     (void)code;
