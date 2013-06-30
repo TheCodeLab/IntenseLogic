@@ -176,14 +176,14 @@ void il_type_set(il_type* self, const char *key, void *data, size_t size, enum i
     il_storage_set(&self->storage, key, data, size, tag);
 }
 
-void *il_base_get(il_base* self, const char *key, size_t *size, enum il_storagetype *tag)
+void *il_base_get(void* self, const char *key, size_t *size, enum il_storagetype *tag)
 {
-    return il_storage_get(&self->storage, key, size, tag);
+    return il_storage_get(&((il_base*)self)->storage, key, size, tag);
 }
 
-void il_base_set(il_base* self, const char *key, void *data, size_t size, enum il_storagetype tag)
+void il_base_set(void* self, const char *key, void *data, size_t size, enum il_storagetype tag)
 {
-    il_storage_set(&self->storage, key, data, size, tag);
+    il_storage_set(&((il_base*)self)->storage, key, data, size, tag);
 }
 
 ilE_registry *il_base_registry(il_base *self)
