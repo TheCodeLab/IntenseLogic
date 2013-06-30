@@ -21,6 +21,7 @@ local geometrypass  = require "graphics.geometrypass"
 local guipass       = require "graphics.guipass"
 local frame         = require "graphics.gui.frame"
 local image         = require "asset.image"
+local text          = require "graphics.gui.text"
 
 local w = world()
 local c = context()
@@ -39,18 +40,29 @@ s:setRoot(root)
 local f = frame()
 root:addChild(f)
 f.context = c
-f:setPosition(100, 100)
+f:setPosition(0, 0)
 f:setSize(400, 300)
---f:filler {255,255,0,127}
-local marble = texture()
-marble:setContext(c)
-marble:fromfile("color0", "white-marble-texture.png")
-f:image(marble)
+local layout = text(c, 'en', 'ltr', 'latin', 'georgia.ttf', 20, "hello, world")
+f:label(layout, {0, 0, 1, 1}, 'left middle')
+--[[f = frame()
+root:addChild(f)
+f.context = c
+f:setPosition(400, 300)
+f:setSize(300, 200)
+local scribble = texture()
+scribble:setContext(c)
+scribble:fromfile("color0", "test.png")
+f:image(scribble)]]
 c:addStage(s, -1)
 -- output pass
 c:addStage(outpass(c), -1)
 
 c:setActive()
+
+local marble = texture()
+marble:setContext(c)
+marble:fromfile("color0", "white-marble-texture.png")
+
 local vf, ff = io.open("shaders/test.vert", "r"), io.open("shaders/test.frag", "r");
 local mtl = material()
 mtl:vertex(vf:read "*a")

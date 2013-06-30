@@ -2,6 +2,7 @@ local ffi = require "ffi"
 local base = require "common.base"
 
 require "graphics.gui.types"
+require "graphics.gui.text"
 
 ffi.cdef [[
 
@@ -43,6 +44,8 @@ void ilG_gui_hover(ilG_gui_frame *top, int x, int y);
 void ilG_gui_draw(ilG_gui_frame *top);
 void ilG_gui_addChild(ilG_gui_frame *parent, ilG_gui_frame *child);
 
+void ilG_gui_frame_label(ilG_gui_frame *self, ilG_gui_textlayout *layout, float col[4], enum ilG_gui_textjustify justify);
+
 ]]
 
 base.wrap "il.graphics.gui.frame" {
@@ -58,6 +61,15 @@ base.wrap "il.graphics.gui.frame" {
         return modules.graphics.ilG_gui_frame_filler(self, v)
     end;
     image = modules.graphics.ilG_gui_frame_image;
+    label = function(self, layout, col, justify)
+        local arr = ffi.new("float[4]", col)
+        local mask = 0
+        for w in justify:gmatch("%w+") do
+            mask = bit.bor(mask, tonumber(ffi.cast("enum ilG_gui_textjustify", "ILG_GUI_"..w:upper().."JUSTIFY")))
+            print(w, mask)
+        end
+        modules.graphics.ilG_gui_frame_label(self, layout, arr, mask)
+    end;
     setPosition = function(self, x, y, xp, yp)
         xp = xp or 0
         yp = yp or 0

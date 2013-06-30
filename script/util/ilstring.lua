@@ -32,6 +32,7 @@ ffi.metatype("il_string", mt)
 local ilstring = {}
 
 function ilstring.create(s)
+    assert(type(s) == "string", "expected string")
     return modules.util.il_string_new(s, #s)
 end
 

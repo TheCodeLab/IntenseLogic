@@ -37,7 +37,9 @@ struct ilG_stage *ilG_guipass(struct ilG_context *context)
 void ilG_guipass_setRoot(ilG_stage *stage, ilG_gui_frame *root)
 {
     struct guipass *self = (struct guipass*)stage;
-    il_unref(self->root);
+    if (self->root) {
+        il_unref(self->root);
+    }
     self->root = il_ref(root);
 }
 

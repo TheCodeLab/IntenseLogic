@@ -30,6 +30,9 @@ struct SearchPath {
 struct SearchPath *first;
 il_string *writedir;
 
+void ilA_union_init();
+void ilA_stdiofile_init();
+void ilA_stdiodir_init();
 char *strdup(const char*);
 char *strtok_r(char *str, const char *delim, char **saveptr);
 int il_bootstrap(int argc, char **argv)
@@ -58,6 +61,10 @@ int il_bootstrap(int argc, char **argv)
     /*if (args.path){
         ilA_registerReadDir(il_string_new(args.path, strlen(args.path)), 1);
     }*/
+
+    ilA_union_init();
+    ilA_stdiofile_init();
+    ilA_stdiodir_init();
 
     return 1;
 }

@@ -1,6 +1,6 @@
 local ffi = require "ffi"
 
-require "asset.path"
+local path = require "asset.path"
 
 ffi.cdef [[
 
@@ -17,5 +17,30 @@ void    *ilA_contents   (const ilA_file *iface, il_base *file, size_t *size);
 
 ]]
 
+local file = {}
 
+function file.load(p, mode)
+    mode = mode or "r"
+    local modes = {r = 1, w = 2, x = 4}
+    local perm = 0
+    for i = 1, #mode do
+        local c = mode:sub(i,i)
+        perm = bit.bor(perm, modes[c])
+    end
+    local f = modules.asset.ilA_stdiofile(path(p), perm, nil)
+    if f == nil then
+        error("Could not open file "..p)
+    end
+    return f
+end
+
+function file.contents(f)
+    local sz = ffi.new("size_t[1]")
+    local data = modules.asset.ilA_contents(nil, f, sz)
+    return data, sz[0]
+end
+
+setmetatable(file, {__call = function(self,...) return file.load(...) end})
+
+return file
 
