@@ -42,7 +42,7 @@ root:addChild(f)
 f.context = c
 f:setPosition(0, 0)
 f:setSize(400, 300)
-local layout = text(c, 'en', 'ltr', 'latin', 'georgia.ttf', 20, "hello, world")
+local layout = text(c, 'en', 'ltr', 'latin', 'georgia.ttf', 30, "hello, world")
 f:label(layout, {0, 0, 1, 1}, 'left middle')
 --[[f = frame()
 root:addChild(f)
