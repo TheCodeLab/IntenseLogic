@@ -31,10 +31,8 @@
 #include "graphics/bindable.h"
 
 #define OPTIONS \
-    OPT(0,   "shaders", required_argument, "Adds a directory to look for shaders") \
-    OPT('w', "width",   required_argument, "Sets the window width") \
-    OPT('h', "height",  required_argument, "Sets the window height")
-static const char *optstring = "w:h:";
+    OPT(0,   "shaders", required_argument, "Adds a directory to look for shaders")
+static const char *optstring = "";
 
 #define OPT(s, l, a, h) {l, a, NULL, s},
 static struct option longopts[] = {
@@ -50,8 +48,6 @@ static const char *help[] = {
 };
 #undef OPT*/
 
-static int width = 800;
-static int height = 600;
 ilE_registry *ilG_registry;
 
 static void quit();
@@ -119,12 +115,6 @@ int il_bootstrap(int argc, char **argv)
                     ilA_registerReadDir(il_string_new(optarg, strlen(optarg)), 0);
                     has_shaders = 1;
                 }
-                break;
-            case 'w':
-                width = atoi(optarg);
-                break;
-            case 'h':
-                height = atoi(optarg);
                 break;
             case '?':
             default:
