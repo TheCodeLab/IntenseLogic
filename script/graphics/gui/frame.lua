@@ -35,6 +35,7 @@ struct ilG_gui_frame {
 extern il_type ilG_gui_frame_type;
 
 void ilG_gui_frame_filler(ilG_gui_frame *self, float col[4]);
+void ilG_gui_frame_image(ilG_gui_frame *self, struct ilG_texture *tex);
 ilG_gui_rect ilG_gui_frame_abs(ilG_gui_frame *self);
 int ilG_gui_frame_contains(ilG_gui_frame *self, ilG_gui_coord coord);
 enum ilG_gui_inputaction ilG_gui_click(ilG_gui_frame *top, int x, int y, int button);
@@ -56,6 +57,7 @@ base.wrap "il.graphics.gui.frame" {
         end
         return modules.graphics.ilG_gui_frame_filler(self, v)
     end;
+    image = modules.graphics.ilG_gui_frame_image;
     setPosition = function(self, x, y, xp, yp)
         xp = xp or 0
         yp = yp or 0
