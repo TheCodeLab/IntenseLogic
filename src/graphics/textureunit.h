@@ -18,8 +18,8 @@
 #define ILG_TUNIT_ACTIVE(context, unit, type)   \
     if ((unit) < (context)->num_texunits) {     \
         (context)->texunits[unit] = (type);     \
-        if ((unit) > (context)->num_active)     \
-            (context)->num_active = (unit);     \
+        if ((unit) >= (context)->num_active)    \
+            (context)->num_active = (unit)+1;   \
     } else {                                    \
         il_error("Not enough texture units!"); \
     }

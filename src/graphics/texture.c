@@ -24,10 +24,17 @@ static void texture_update(void *obj)
     tex->last_mtl = tex->context->material;
     for (i = 0; i < tex->context->num_active; i++) {
         if (tex->units[tex->context->texunits[i]].used) {
-            glActiveTexture(i);
+            glActiveTexture(GL_TEXTURE0 + i);
             glBindTexture(tex->units[tex->context->texunits[i]].mode, tex->units[tex->context->texunits[i]].tex);
         }
     }
+}
+
+static void texture_unbind(void *obj)
+{
+    ilG_texture *tex = obj;
+
+    tex->last_mtl = NULL;
 }
 
 static void texture_init(void *obj)
@@ -174,7 +181,7 @@ ilG_bindable texture_bindable = {
     //.hh = {0},
     .bind = NULL,
     .action = texture_update,
-    .unbind = NULL
+    .unbind = texture_unbind
 };
 
 void ilG_texture_init()

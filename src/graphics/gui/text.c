@@ -16,8 +16,12 @@
 
 #include "util/assert.h"
 #include "graphics/context.h"
+#include "graphics/textureunit.h"
+#include "graphics/material.h"
+#include "graphics/texture.h"
 
 struct ilG_gui_textlayout {
+    il_base base;
     char *lang, *script;
     il_base *font;
     enum ilG_gui_textdir direction;
@@ -31,12 +35,26 @@ struct ilG_gui_textlayout {
     hb_glyph_position_t *glyph_pos;
 };
 
+il_type ilG_gui_textlayout_type = {
+    .typeclasses = NULL,
+    .storage = NULL,
+    .constructor = NULL,
+    .destructor = NULL,
+    .copy = NULL, 
+    .name = "il.graphics.gui.textlayout",
+    .registry = NULL,
+    .size = sizeof(ilG_gui_textlayout),
+    .parent = NULL
+};
+
 struct text_globalctx {
     FT_Library library;
+    ilG_material *shader;
 };
 
 ilG_gui_textlayout *ilG_gui_textlayout_new(struct ilG_context *ctx, const char *lang, enum ilG_gui_textdir direction, const char *script, il_base *font, const ilA_file *tc, double pt, il_string *source)
 {
+    il_return_null_on_fail(ctx && lang && script && font && source);
     struct text_globalctx *gctx = il_base_get(&ctx->base, "il.graphics.gui.text.ctx", NULL, NULL);
     if (!gctx) {
         gctx = calloc(1, sizeof(struct text_globalctx));
@@ -46,7 +64,7 @@ ilG_gui_textlayout *ilG_gui_textlayout_new(struct ilG_context *ctx, const char *
         il_base_set(&ctx->base, "il.graphics.gui.text.ctx", gctx, sizeof(struct text_globalctx), IL_VOID);
     }
 
-    ilG_gui_textlayout *l = calloc(1, sizeof(ilG_gui_textlayout));
+    ilG_gui_textlayout *l = il_new(&ilG_gui_textlayout_type);
     l->lang = strdup(lang);
     l->script = strdup(script);
     l->font = il_ref(font);
@@ -55,6 +73,10 @@ ilG_gui_textlayout *ilG_gui_textlayout_new(struct ilG_context *ctx, const char *
     l->source = il_string_ref(source);
     size_t size;
     void *data = ilA_contents(tc, font, &size);
+    if (!data) {
+        il_error("Could not open font");
+        return NULL;
+    }
     il_return_null_on_fail(!FT_New_Memory_Face(gctx->library, data, size, 0, &l->ft_face));
     il_return_null_on_fail(!FT_Set_Char_Size(l->ft_face, 0, pt, 0, 0));
     l->hb_ft_font = hb_ft_font_create(l->ft_face, NULL);
@@ -93,10 +115,17 @@ struct text_ctx {
     hb_face_t *hb_ft_face;
     float col[4];
     enum ilG_gui_textjustify horiz, vert;
+    ilG_texture *tex;
 };
+
+/*void draw(ilG_gui_frame *self, ilG_gui_rect rect)
+{
+
+}*/
 
 void ilG_gui_frame_label(ilG_gui_frame *self, ilG_gui_textlayout *layout, float col[4], enum ilG_gui_textjustify justify)
 {
+    il_return_on_fail(layout);
     struct text_ctx *ctx = il_base_get(&self->base, "il.graphics.gui.text.ctx", NULL, NULL);
     if (!ctx) {
         ctx = calloc(1, sizeof(struct text_ctx));
@@ -106,7 +135,7 @@ void ilG_gui_frame_label(ilG_gui_frame *self, ilG_gui_textlayout *layout, float 
 
         ilG_gui_rect rect = ilG_gui_frame_abs(self);
         int w = rect.b.x - rect.a.x, h = rect.b.y - rect.a.y;
-        ctx->surface = cairo_image_surface_create(CAIRO_FORMAT_A8, w, h);
+        ctx->surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, w, h);
         ctx->cr = cairo_create(ctx->surface);
 
         unsigned tw, th;
@@ -139,22 +168,30 @@ void ilG_gui_frame_label(ilG_gui_frame *self, ilG_gui_textlayout *layout, float 
             break;
         }
 
-        x *= 64;
-        y *= 64;
+        //x *= 64;
+        //y *= 64;
         cairo_glyph_t cairo_glyphs[sizeof(cairo_glyph_t) * layout->glyph_count];
         unsigned i;
         for (i = 0; i < layout->glyph_count; i++) {
             cairo_glyphs[i].index = layout->glyph_info[i].codepoint;
             x += layout->glyph_pos[i].x_advance;
             y += layout->glyph_pos[i].y_advance;
-            cairo_glyphs[i].x = x/64;
-            cairo_glyphs[i].y = y/64;
+            cairo_glyphs[i].x = x;
+            cairo_glyphs[i].y = y;
         }
 
         cairo_set_source_rgba(ctx->cr, col[0], col[1], col[2], col[3]);
         cairo_set_font_face(ctx->cr, ctx->cairo_ft_face);
         cairo_set_font_size(ctx->cr, layout->pt);
         cairo_show_glyphs(ctx->cr, cairo_glyphs, layout->glyph_count);
+        cairo_surface_flush(ctx->surface);
+
+        ctx->tex = ilG_texture_new();
+        ilG_texture_setContext(ctx->tex, self->context);
+        ilG_texture_setName(ctx->tex, "Text Label");
+        ilG_texture_fromdata(ctx->tex, ILG_TUNIT_COLOR0, GL_TEXTURE_2D, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, cairo_image_surface_get_data(ctx->surface));
+        
+        ilG_gui_frame_image(self, ctx->tex);
 
         il_base_set(&self->base, "il.graphics.gui.text.ctx", ctx, sizeof(struct text_ctx), IL_VOID);
     }

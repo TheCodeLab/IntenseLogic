@@ -60,7 +60,7 @@ ilA_dir il_stdiodir_dir = {
     .lookup = stdiodir_lookup
 };
 
-void il_stdiodir_init()
+void ilA_stdiodir_init()
 {
     il_impl(&il_stdiodir_type, &il_stdiodir_dir);
 }

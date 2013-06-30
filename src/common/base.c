@@ -125,6 +125,7 @@ void il_storage_set(il_storage **md, const char *key, void *data, size_t size, e
         }
         break;
         case IL_VOID:
+        buf = data;
         tag |= IL_LOCAL_BIT;
         default:
         break;

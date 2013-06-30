@@ -116,6 +116,10 @@ il_base *ilA_stdiofile(const ilA_path *path, enum ilA_file_mode mode, const ilA_
     struct stdiofile *f = il_new(&il_stdiofile_type);
     f->mode = mode;
     f->path = ilA_path_tochars(path);
+    if (access(f->path, F_OK)) {
+        il_unref(f);
+        return NULL;
+    }
     if (res) {
         *res = &il_stdiofile_file;
     }

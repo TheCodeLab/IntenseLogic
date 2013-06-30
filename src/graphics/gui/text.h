@@ -15,17 +15,18 @@ enum ilG_gui_textdir {
 };
 
 enum ilG_gui_textjustify {
-    ILG_GUI_LEFTJUSTIFY,
+    ILG_GUI_LEFTJUSTIFY = 1,
     ILG_GUI_CENTERJUSTIFY,
     ILG_GUI_RIGHTJUSTIFY,
-    ILG_GUI_HORIZMASK,
+    ILG_GUI_HORIZMASK = 3,
     ILG_GUI_TOPJUSTIFY = 4,
     ILG_GUI_MIDDLEJUSTIFY = 8,
     ILG_GUI_BOTTOMJUSTIFY = 12,
-    ILG_GUI_VERTMASK = 7
+    ILG_GUI_VERTMASK = 12
 };
 
 typedef struct ilG_gui_textlayout ilG_gui_textlayout;
+extern il_type ilG_gui_textlayout_type;
 
 struct ilG_context;
 
