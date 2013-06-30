@@ -39,21 +39,19 @@ s:setRoot(root)
 local f = frame()
 root:addChild(f)
 f.context = c
-f:setPosition(200, 200)
-f:setSize(100, 100)
-f:filler {255,255,0,127}
---c:addStage(s, -1)
+f:setPosition(100, 100)
+f:setSize(400, 300)
+--f:filler {255,255,0,127}
+local marble = texture()
+marble:setContext(c)
+marble:fromfile("color0", "white-marble-texture.png")
+f:image(marble)
+c:addStage(s, -1)
 -- output pass
 c:addStage(outpass(c), -1)
 
 c:setActive()
-local t = texture()
-t:setContext(c)
-t:fromfile("color0", "white-marble-texture.png")
---local img = image.loadfile("white-marble-texture.png")
---t:fromimage("color0", img:resize(16, 16))
 local vf, ff = io.open("shaders/test.vert", "r"), io.open("shaders/test.frag", "r");
---local mtl = material(vf:read "*a", ff:read "*a", "test material", "in_Position", "in_Texcoord", "in_Normal", "mvp", {"tex"}, {1}, "out_Normal", "out_Ambient", "out_Diffuse", "out_Specular", "phong");
 local mtl = material()
 mtl:vertex(vf:read "*a")
 mtl:fragment(ff:read "*a")
@@ -78,7 +76,7 @@ for i = 0, width*width*width-1 do
     w:add(box)
     box.drawable = m --drawable.box
     box.material = mtl
-    box.texture = t
+    box.texture = marble
     box.position = (vector3(i % width, math.floor((i%(width*width)) / width), math.floor(i/(width*width))) * vector3(15, 15, 15)).ptr
     box:track(c)
     --print(box.position)

@@ -6,6 +6,7 @@
 #include "util/array.h"
 
 struct ilG_context;
+struct ilG_texture;
 
 typedef struct ilG_gui_frame ilG_gui_frame;
 
@@ -34,6 +35,7 @@ struct ilG_gui_frame {
 extern il_type ilG_gui_frame_type;
 
 void ilG_gui_frame_filler(ilG_gui_frame *self, float col[4]);
+void ilG_gui_frame_image(ilG_gui_frame *self, struct ilG_texture *tex);
 ilG_gui_rect ilG_gui_frame_abs(ilG_gui_frame *self);
 int ilG_gui_frame_contains(ilG_gui_frame *self, ilG_gui_coord coord);
 enum ilG_gui_inputaction ilG_gui_click(ilG_gui_frame *top, int x, int y, int button);
