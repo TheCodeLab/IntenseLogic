@@ -15,6 +15,7 @@
 struct image_ctx {
     ilG_texture *tex;
     GLint pos_loc[2];
+    int premultiplied;
 };
 
 static void image_draw(ilG_gui_frame *self, ilG_gui_rect where)
@@ -38,7 +39,11 @@ static void image_draw(ilG_gui_frame *self, ilG_gui_rect where)
         il_base_set(self->context, "il.graphics.gui.image.shader", shader, sizeof(ilG_material), IL_OBJECT);
     }
     glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    if (ctx->premultiplied) {
+        glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+    } else {
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    }
     ilG_bindable_swap(&self->context->materialb, (void**)&self->context->material, shader);
     ilG_bindable_swap(&self->context->drawableb, (void**)&self->context->drawable, ilG_quad(self->context));
     ilG_bindable_swap(&self->context->textureb, (void**)&self->context->texture, ctx->tex);
@@ -51,7 +56,7 @@ static void image_draw(ilG_gui_frame *self, ilG_gui_rect where)
     glDisable(GL_BLEND);
 }
 
-void ilG_gui_frame_image(ilG_gui_frame *self, ilG_texture *tex)
+void ilG_gui_frame_image(ilG_gui_frame *self, ilG_texture *tex, int premultiplied)
 {
     il_return_on_fail(self && tex);
     struct image_ctx *ctx = il_base_get(self, "il.graphics.gui.image.ctx", NULL, NULL);
@@ -62,6 +67,7 @@ void ilG_gui_frame_image(ilG_gui_frame *self, ilG_texture *tex)
     if (ctx->tex) {
         il_unref(ctx->tex);
     }
+    ctx->premultiplied = premultiplied;
     ctx->tex = il_ref(tex);
     self->draw = image_draw;
 }

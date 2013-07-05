@@ -45,7 +45,7 @@ f:setPosition(400, 300)
 --local layout = text(c, 'ar', 'rtl', 'arabic', 'DroidSansArabic.ttf', 30, "هذا هو عربي")
 local layout = text(c, 'en', 'ltr', 'latin', 'georgia.ttf', 30, "hello, world")
 print(layout:getSize())
-f:label(layout, {0, 1, 1, 1}, 'left middle')
+f:label(layout, {1, 1, 1, 1}, 'left middle')
 --[[f = frame()
 root:addChild(f)
 f.context = c
