@@ -2,7 +2,8 @@ local ffi = require "ffi"
 local base = require "common.base"
 
 require "graphics.gui.types"
-require "graphics.gui.text"
+local text = require "graphics.gui.text"
+local texture = require "graphics.texture"
 
 ffi.cdef [[
 
@@ -44,8 +45,6 @@ void ilG_gui_hover(ilG_gui_frame *top, int x, int y);
 void ilG_gui_draw(ilG_gui_frame *top);
 void ilG_gui_addChild(ilG_gui_frame *parent, ilG_gui_frame *child);
 
-void ilG_gui_frame_label(ilG_gui_frame *self, ilG_gui_textlayout *layout, float col[4], enum ilG_gui_textjustify justify);
-
 ]]
 
 base.wrap "il.graphics.gui.frame" {
@@ -61,22 +60,27 @@ base.wrap "il.graphics.gui.frame" {
         return modules.graphics.ilG_gui_frame_filler(self, v)
     end;
     image = modules.graphics.ilG_gui_frame_image;
-    label = function(self, layout, col, justify)
-        local arr = ffi.new("float[4]", col)
-        local mask = 0
-        for w in justify:gmatch("%w+") do
-            mask = bit.bor(mask, tonumber(ffi.cast("enum ilG_gui_textjustify", "ILG_GUI_"..w:upper().."JUSTIFY")))
-            print(w, mask)
-        end
-        modules.graphics.ilG_gui_frame_label(self, layout, arr, mask)
+    label = function(self, layout, col, opts)
+        self:setSize(layout:getSize())
+        local tex = texture()
+        tex:setContext(self.context)
+        tex:setName("Text Label")
+        tex:fromimage("color0", layout:render(col, opts))
+        self:image(tex)
     end;
     setPosition = function(self, x, y, xp, yp)
         xp = xp or 0
         yp = yp or 0
+        local oldx, oldy = self.rect.a.x, self.rect.a.y
+        local oldxp, oldyp = self.rect.a.xp, self.rect.a.yp
         self.rect.a.x = x
         self.rect.a.y = y
         self.rect.a.xp = xp
         self.rect.a.yp = yp
+        self.rect.b.x = self.rect.b.x + x - oldx
+        self.rect.b.y = self.rect.b.y + y - oldy
+        self.rect.b.xp = self.rect.b.xp + xp - oldxp
+        self.rect.b.yp = self.rect.b.yp + yp - oldyp
     end;
     setSize = function(self, w, h, wp, hp)
         wp = wp or 0
