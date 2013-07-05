@@ -8,11 +8,14 @@ Copious amounts of documentation can be found on the [Wiki](https://github.com/T
 Compile using [scons](http://scons.org/).
 
 List of Dependencies:
-* glfw stable
+* glfw 3.0
 * glew latest
 * libevent2
 * libpng
 * LuaJIT (Lua 5.1)
+* HarfBuzz (with ICU)
+* Cairo
+* FreeType2
 
 See the Wiki for help [building](https://github.com/TheCodeLab/IntenseLogic/wiki/Building).
 
