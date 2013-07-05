@@ -1,6 +1,8 @@
 #ifndef ILA_IMAGE_H
 #define ILA_IMAGE_H
 
+#include <stdint.h>
+
 #include "asset/node.h"
 
 enum ilA_imgchannels {
@@ -26,8 +28,11 @@ enum ilA_img_interpolation {
 ilA_img *ilA_img_load(const void *data, size_t size);
 ilA_img *ilA_img_loadasset(const ilA_file *iface, il_base *file);
 ilA_img *ilA_img_loadfile(const char *file);
+ilA_img *ilA_img_fromdata(const void *data, unsigned w, unsigned h, unsigned depth, enum ilA_imgchannels channels);
 void ilA_img_free(ilA_img *self);
 ilA_img *ilA_img_resize(const ilA_img *self, enum ilA_img_interpolation up, enum ilA_img_interpolation down, unsigned w, unsigned h, int channels);
+ilA_img *ilA_img_swizzle(const ilA_img *self, uint16_t mask);
+ilA_img *ilA_img_bgra_to_rgba(const ilA_img *self);
 
 #endif
 

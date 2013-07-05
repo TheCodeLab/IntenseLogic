@@ -30,6 +30,7 @@ ilA_img *ilA_img_loadasset(ilA_file *iface, il_base *file);
 ilA_img *ilA_img_loadfile(const char *file);
 void ilA_img_free(ilA_img *self);
 ilA_img *ilA_img_resize(const ilA_img *self, enum ilA_img_interpolation up, enum ilA_img_interpolation down, unsigned w, unsigned h, int channels);
+ilA_img *ilA_img_swizzle(const ilA_img *self, uint16_t mask);
 
 ]]
 
@@ -63,6 +64,23 @@ function img:resize(w, h, channels, up, down)
         bits = bit.bor(bits, chan)
     end
     return ffi.gc(modules.asset.ilA_img_resize(self, up, down, w, h, bits), modules.asset.ilA_img_free)
+end
+
+function img:swizzle(str)
+    local mat = 0
+    local chans = {r=1, g=2, b=3, a=4}
+    --[[
+    -- j=* R G B A
+    -- i=1 
+    -- i=2 
+    -- i=3 
+    -- i=4 
+    --]]
+    for i = 1, #str do
+        local j = chans[str:sub(i,i)]
+        mat = bit.bor(mat, bit.bshift(1, i*4 + j))
+    end
+    return modules.asset.ilA_img_swizzle(self, mat)
 end
 
 ffi.metatype("ilA_img", {__index=img})

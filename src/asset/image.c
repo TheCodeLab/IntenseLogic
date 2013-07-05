@@ -122,6 +122,23 @@ ilA_img *ilA_img_loadfile(const char *name)
     return ilA_img_loadasset(iface, file);
 }
 
+ilA_img *ilA_img_fromdata(const void *data, unsigned w, unsigned h, unsigned depth, enum ilA_imgchannels channels)
+{
+    ilA_img *img = calloc(1, sizeof(ilA_img));
+    img->width = w;
+    img->height = h;
+    img->channels = channels;
+    img->bpp = depth;
+    unsigned size = compute_bpp(channels) * w * h / 8;
+    img->data = malloc(size);
+    if (data) {
+        memcpy(img->data, data, size);
+    } else {
+        memset(img->data, 0, size);
+    }
+    return img;
+}
+
 void ilA_img_free(ilA_img *self)
 {
     free(self->data);
@@ -198,6 +215,88 @@ ilA_img *ilA_img_resize(const ilA_img *self, enum ilA_img_interpolation up, enum
         break;
         default:
         il_error("Unknown interpolation algorithm");
+    }
+    return img;
+}
+
+static void decompose_pixel(enum ilA_imgchannels channels, const unsigned char *data, unsigned char out[4])
+{
+    memset(out, 0, sizeof(unsigned char) * 4);
+    if (channels & ILA_IMG_R) {
+        out[0] = *data++;
+    }
+    if (channels & ILA_IMG_G) {
+        out[1] = *data++;
+    }
+    if (channels & ILA_IMG_B) {
+        out[2] = *data++;
+    }
+    if (channels & ILA_IMG_A) {
+        out[3] = *data++;
+    }
+}
+
+static void compose_pixel(enum ilA_imgchannels channels, const unsigned char col[4], unsigned char *out)
+{
+    if (channels & ILA_IMG_R) {
+        *out++ = col[0];
+    }
+    if (channels & ILA_IMG_G) {
+        *out++ = col[1];
+    }
+    if (channels & ILA_IMG_B) {
+        *out++ = col[2];
+    }
+    if (channels & ILA_IMG_A) {
+        *out++ = col[3];
+    }
+}
+
+static void bitmat_mulv(uint16_t mat, const unsigned char col[4], unsigned char out[4])
+{
+    int i, j, bit;
+
+    memset(out, 0, sizeof(unsigned char) * 4);
+    for (i = 0; i < 4; i++) {
+        for (j = 0; j < 4; j++) {
+            bit = mat & (1<<(i*4 + j));
+            if (bit) {
+                out[i] = col[j];
+                break;
+            }
+        }
+    }
+}
+
+ilA_img *ilA_img_swizzle(const ilA_img *self, uint16_t mask)
+{
+    ilA_img *img = ilA_img_fromdata(NULL, self->width, self->height, self->bpp, self->channels);
+    unsigned x, y;
+    for (y = 0; y < img->height; y++) {
+        for (x = 0; x < img->width; x++) {
+            unsigned char col[4], out[4];
+            unsigned bpp = compute_bpp(self->channels) / 8;
+            decompose_pixel(self->channels, self->data + bpp*x + bpp*self->width*y, col);
+            bitmat_mulv(mask, col, out);
+            compose_pixel(img->channels, out, img->data + bpp*x + bpp*img->width*y);
+        }
+    }
+    return img;
+}
+
+ilA_img *ilA_img_bgra_to_rgba(const ilA_img *self)
+{
+    ilA_img *img = ilA_img_fromdata(NULL, self->width, self->height, self->bpp, self->channels);
+    unsigned x, y, bpp = compute_bpp(self->channels)/8;
+    for (y = 0; y < img->height; y++) {
+        for (x = 0; x < img->width; x++) {
+            unsigned char *dst = img->data + bpp * img->width * y + bpp * x;
+            const unsigned char *src = self->data + bpp * self->width * y + bpp * x;
+            dst[0] = src[2];
+            dst[1] = src[1];
+            dst[2] = src[0];
+            dst[3] = src[3];
+        }
     }
     return img;
 }
