@@ -9,7 +9,7 @@ ffi.cdef [[
 
 extern il_type ilG_mesh_type;
 
-ilG_drawable3d* ilG_mesh_fromFile(const char *name);
+ilG_drawable3d* ilG_mesh_fromfile(const char *name);
 
 ]]
 
@@ -18,10 +18,10 @@ base.wrap "il.graphics.mesh" {
     --- Creates a mesh from a file
     -- @function fromFile
     -- @tparam string name The filename
-    fromFile = modules.graphics.ilG_mesh_fromFile;
+    fromFile = modules.graphics.ilG_mesh_fromfile;
     --- Calls `mesh:fromFile`
     __call = function(self, file)
-        return modules.graphics.ilG_mesh_fromFile(file)
+        return modules.graphics.ilG_mesh_fromfile(file)
     end;
 }
 

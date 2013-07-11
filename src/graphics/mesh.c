@@ -4,16 +4,18 @@
 //#include <stdio.h>
 #include <GL/glew.h>
 
-#include "graphics/obj.h"
+//#include "graphics/obj.h"
 #include "graphics/drawable3d.h"
 #include "graphics/context.h"
 #include "graphics/glutil.h"
 #include "graphics/arrayattrib.h"
 #include "graphics/bindable.h"
+#include "asset/mesh.h"
+#include "asset/path.h"
+#include "asset/node.h"
 
 struct ilG_mesh {
     ilG_drawable3d drawable;
-    ilG_obj_mesh * mesh;
     GLuint vbo;
     GLuint vao;
     GLint count;
@@ -65,44 +67,96 @@ static void draw(void* obj)
 
 static ilG_bindable mesh_bindable = {
     .name = "il.graphics.bindable",
-    //.hh = {0},
     .bind = bind,
     .action = draw,
     .unbind = NULL
 };
 
-ilG_drawable3d* ilG_mesh_fromObj(ilG_obj_mesh * mesh)
+ilG_drawable3d* ilG_mesh(ilA_mesh* self)
 {
     struct ilG_mesh* m = il_new(&ilG_mesh_type);
-    m->mesh = mesh;
+    m->count = self->num_vertices;
+    ilG_testError("Unknown");
     glGenVertexArrays(1, &m->vao);
     glBindVertexArray(m->vao);
-    m->vbo = ilG_obj_to_gl(mesh, &m->count);
-    /*if (mesh->name && mesh->group) {
-        char *s = calloc(1, strlen(mesh->name) + strlen(mesh->group) + 2); // 1 for NUL, 1 for .
-        sprintf(s, "%s.%s", mesh->group, mesh->name);
-        m->drawable.name = s;
-    } else if (mesh->name) {
-        m->drawable.name = mesh->name;
-    } else if (mesh->group) {
-        m->drawable.name = mesh->group;
-    } else {
-        m->drawable.name = "Unnamed Mesh";
-    }*/
-    // TODO: actually check for mesh attributes
-    ILG_SETATTR(m->drawable.attrs, ILG_ARRATTR_POSITION);
-    ILG_SETATTR(m->drawable.attrs, ILG_ARRATTR_TEXCOORD);
-    ILG_SETATTR(m->drawable.attrs, ILG_ARRATTR_NORMAL);
-    ILG_SETATTR(m->drawable.attrs, ILG_ARRATTR_AMBIENT);
-    ILG_SETATTR(m->drawable.attrs, ILG_ARRATTR_DIFFUSE);
-    ILG_SETATTR(m->drawable.attrs, ILG_ARRATTR_SPECULAR);
+    //m->vbo = ilG_obj_to_gl(mesh, &m->count);
+    glGenBuffers(1, &m->vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, m->vbo);
+    size_t per_vertex = 
+        (sizeof(float) * 4 * !!self->position) +
+        (sizeof(float) * 4 * !!self->texcoord) +
+        (sizeof(float) * 4 * !!self->normal) +
+        (sizeof(unsigned char) * 4 * !!self->ambient) +
+        (sizeof(unsigned char) * 4 * !!self->diffuse) +
+        (sizeof(unsigned char) * 4 * !!self->specular);
+    glBufferData(GL_ARRAY_BUFFER, per_vertex * self->num_vertices, NULL, GL_STATIC_DRAW);
+    size_t offset = 0, size;
+    if (self->position) {
+        ILG_SETATTR(m->drawable.attrs, ILG_ARRATTR_POSITION);
+        size = self->num_vertices * sizeof(float) * 4;
+        glBufferSubData(GL_ARRAY_BUFFER, offset, size, self->position);
+        glVertexAttribPointer(ILG_ARRATTR_POSITION, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 4, (GLvoid*)offset);
+        glEnableVertexAttribArray(ILG_ARRATTR_POSITION);
+        offset += size;
+    }
+    if (self->texcoord) {
+        ILG_SETATTR(m->drawable.attrs, ILG_ARRATTR_TEXCOORD);
+        size = self->num_vertices * sizeof(float) * 4;
+        glBufferSubData(GL_ARRAY_BUFFER, offset, size, self->texcoord);
+        glVertexAttribPointer(ILG_ARRATTR_TEXCOORD, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 4, (GLvoid*)offset);
+        glEnableVertexAttribArray(ILG_ARRATTR_TEXCOORD);
+        offset += size;
+    }
+    if (self->normal) {
+        ILG_SETATTR(m->drawable.attrs, ILG_ARRATTR_NORMAL);
+        size = self->num_vertices * sizeof(float) * 4;
+        glBufferSubData(GL_ARRAY_BUFFER, offset, size, self->normal);
+        glVertexAttribPointer(ILG_ARRATTR_NORMAL, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 4, (GLvoid*)offset);
+        glEnableVertexAttribArray(ILG_ARRATTR_NORMAL);
+        offset += size;
+    }
+    if (self->ambient) {
+        ILG_SETATTR(m->drawable.attrs, ILG_ARRATTR_AMBIENT);
+        size = self->num_vertices * sizeof(unsigned char) * 4;
+        glBufferSubData(GL_ARRAY_BUFFER, offset, size, self->ambient);
+        glVertexAttribPointer(ILG_ARRATTR_AMBIENT, 4, GL_UNSIGNED_BYTE, GL_TRUE, 0, (GLvoid*)offset);
+        glEnableVertexAttribArray(ILG_ARRATTR_AMBIENT);
+        offset += size;
+    }
+    if (self->diffuse) {
+        ILG_SETATTR(m->drawable.attrs, ILG_ARRATTR_DIFFUSE);
+        size = self->num_vertices * sizeof(unsigned char) * 4;
+        glBufferSubData(GL_ARRAY_BUFFER, offset, size, self->diffuse);
+        glVertexAttribPointer(ILG_ARRATTR_DIFFUSE, 4, GL_UNSIGNED_BYTE, GL_TRUE, 0, (GLvoid*)offset);
+        glEnableVertexAttribArray(ILG_ARRATTR_DIFFUSE);
+        offset += size;
+    }
+    if (self->specular) {
+        ILG_SETATTR(m->drawable.attrs, ILG_ARRATTR_SPECULAR);
+        size = self->num_vertices * sizeof(unsigned char) * 4;
+        glBufferSubData(GL_ARRAY_BUFFER, offset, size, self->specular);
+        glVertexAttribPointer(ILG_ARRATTR_SPECULAR, 4, GL_UNSIGNED_BYTE, GL_TRUE, 0, (GLvoid*)offset);
+        glEnableVertexAttribArray(ILG_ARRATTR_SPECULAR);
+        offset += size;
+    }
+    ilG_testError("Error uploading mesh");
     return &m->drawable;
 }
 
-ilG_drawable3d* ilG_mesh_fromFile(const char *name)
+ilA_mesh *ilA_mesh_parseObj(const char *filename, const char *data, size_t length);
+ilG_drawable3d* ilG_mesh_fromfile(const char *name)
 {
-    ilG_obj_file f = ilG_obj_readfile(name);
-    return ilG_mesh_fromObj(f.first_mesh);
+    const ilA_file *res;
+    ilA_path *path = ilA_path_chars(name);
+    il_base *file = ilA_stdiofile(path, ILA_FILE_READ, &res);
+    size_t length;
+    void *data = ilA_contents(res, file, &length);
+    ilA_mesh *mesh = ilA_mesh_parseObj(name, data, length);
+    il_unref(file);
+    ilA_path_free(path);
+    ilG_drawable3d *drawable = ilG_mesh(mesh);
+    ilA_mesh_free(mesh);
+    return drawable;
 }
 
 
