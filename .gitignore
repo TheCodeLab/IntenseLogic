@@ -1,5 +1,4 @@
-﻿
-#################
+﻿#################
 ## Eclipse
 #################
 
@@ -230,3 +229,5 @@ gmon.out
 modules
 src/version.h
 
+# Doxygen
+gen_docs/
