@@ -1,5 +1,4 @@
-﻿
-#################
+﻿#################
 ## Eclipse
 #################
 
@@ -230,3 +229,6 @@ gmon.out
 modules
 src/version.h
 
+# Doxygen
+docs/html/
+docs/latex/
