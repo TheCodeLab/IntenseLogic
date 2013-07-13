@@ -6,7 +6,6 @@
 #include <GLFW/glfw3.h>
 
 #include "util/array.h"
-#include "graphics/light.h"
 #include "common/base.h"
 #include "graphics/bindable.h"
 
@@ -39,7 +38,7 @@ typedef struct ilG_context {
     int width, height;
     IL_ARRAY(struct ilG_stage*,) stages;
     IL_ARRAY(struct il_positionable*,) positionables; // tracker.c // TODO: move to geometry stage
-    IL_ARRAY(ilG_light*,) lights; // TODO: move to lighting stage
+    IL_ARRAY(struct ilG_light*,) lights; // TODO: move to lighting stage
 } ilG_context;
 
 extern il_type ilG_context_type;
