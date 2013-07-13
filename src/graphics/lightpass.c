@@ -87,7 +87,7 @@ static void draw_lights(ilG_stage *ptr)
     }*/
     //glBindBufferBase(GL_UNIFORM_BUFFER, context->lightdata.lights_index, context->lightdata.lights_ubo);
     //glBindBufferBase(GL_UNIFORM_BUFFER, context->lightdata.mvp_index, context->lightdata.mvp_ubo);
-    context->drawable = ilG_icosahedron;
+    context->drawable = ilG_icosahedron(context);
     context->drawableb = il_cast(il_typeof(context->drawable), "il.graphics.bindable"),
     context->materialb = il_cast(il_typeof(context->material), "il.graphics.bindable");
     ilG_bindable_bind(context->drawableb, context->drawable);

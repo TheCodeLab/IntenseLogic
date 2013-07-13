@@ -23,6 +23,8 @@ local frame         = require "graphics.gui.frame"
 local image         = require "asset.image"
 local text          = require "graphics.gui.text"
 local mesh          = require "asset.mesh"
+local lightpass     = require "graphics.lightpass"
+local file          = require "asset.file"
 
 local w = world()
 local c = context()
@@ -34,19 +36,22 @@ local s = stage()
 s.context = c
 geometrypass(s)
 c:addStage(s, -1)
+-- light pass
+s = lightpass(c)
+c:addStage(s, -1)
 -- gui pass
 s = guipass(c)
 local root = frame()
 s:setRoot(root)
-local f = frame()
+--[[local f = frame()
 root:addChild(f)
 f.context = c
-f:setPosition(400, 300)
+f:setPosition(400, 300)]]
 --local layout = text(c, 'jp', 'ltr', 'han', 'DroidSansJapanese.ttf', 30, "これは日本語です")
 --local layout = text(c, 'ar', 'rtl', 'arabic', 'DroidSansArabic.ttf', 30, "هذا هو عربي")
-local layout = text(c, 'en', 'ltr', 'latin', 'georgia.ttf', 30, "hello, world")
+--[[local layout = text(c, 'en', 'ltr', 'latin', 'georgia.ttf', 30, "hello, world")
 print(layout:getSize())
-f:label(layout, {1, 1, 1, 1}, 'left middle')
+f:label(layout, {1, 1, 1, 1}, 'left middle')]]
 --[[f = frame()
 root:addChild(f)
 f.context = c
@@ -122,14 +127,14 @@ plain:mtlname "Plain material"
 plain:arrayAttrib("position", "in_Position")
 plain:matrix("MVP", "mvp")
 plain:link(c)
-m = drawnmesh((mesh.loadfile "teapot.obj"):debugLines(.1))
+m = drawable.icosahedron(c)--drawnmesh((mesh.loadfile "teapot.obj"):debugLines(.1))
 for i = 0, width*width*width - 1 do
     local box = positionable()
     w:add(box)
     box.drawable = m --drawable.box
     box.material = plain
     box.texture = marble
-    box.position = (vector3(i % width, math.floor((i%(width*width)) / width), math.floor(i/(width*width))) * vector3(15, 15, 15)).ptr
+    box.position = (vector3((i % width) + 5, math.floor((i%(width*width)) / width), math.floor(i/(width*width))) * vector3(15, 15, 15)).ptr
     box:track(c)
     --print(box.position)
 end
@@ -153,6 +158,17 @@ function mousemove(reg, name, xabs, yabs, x, y)
     c.camera.positionable.rotation = rot.ptr
 end
 
+local georgia = file.load "georgia.ttf"
+local camera_pos_label = frame()
+camera_pos_label.context = c
+camera_pos_label:setPosition(5,5)
+root:addChild(camera_pos_label)
+function render_pos(pos)
+    local label = text(c, "en", "ltr", "latin", georgia, 14, tostring(pos))
+    camera_pos_label:setSize(label:getSize())
+    camera_pos_label:label(label, {1,1,1,1}, "left middle")
+end
+
 function tick(reg, name)
     --print "tick"
     local get = function(k)
@@ -171,6 +187,7 @@ function tick(reg, name)
     c.camera.positionable.position = (vector3.wrap(c.camera.positionable.position) + v).ptr
     local bank = quaternion(vector3(0, 0, 1), r * c.camera.sensitivity)
     c.camera.positionable.rotation = (quaternion.wrap(c.camera.positionable.rotation) * bank).ptr
+    render_pos(vector3(c.camera.positionable.position))
 end
 
 function close(reg, name)

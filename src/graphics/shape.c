@@ -256,7 +256,11 @@ void ilG_shape_init()
 
 ilG_drawable3d *ilG_box(ilG_context *context)
 {
-    struct ilG_shape *self = il_new(&ilG_shape_type);
+    struct ilG_shape *self = il_base_get(context, "il.graphics.shape.box", NULL, NULL);
+    if (self) {
+        return self;
+    }
+    self = il_new(&ilG_shape_type);
     self->drawable.context = context;
     ILG_SETATTR(self->drawable.attrs, ILG_ARRATTR_POSITION);
     ILG_SETATTR(self->drawable.attrs, ILG_ARRATTR_TEXCOORD);
@@ -269,7 +273,11 @@ ilG_drawable3d *ilG_box(ilG_context *context)
 
 ilG_drawable3d *ilG_icosahedron(ilG_context *context)
 {
-    struct ilG_shape *self = il_new(&ilG_shape_type);
+    struct ilG_shape *self = il_base_get(context, "il.graphics.shape.icosahedron", NULL, NULL);
+    if (self) {
+        return self;
+    }
+    self = il_new(&ilG_shape_type);
     self->drawable.context = context;
     ILG_SETATTR(self->drawable.attrs, ILG_ARRATTR_POSITION);
     self->mode = GL_TRIANGLES;

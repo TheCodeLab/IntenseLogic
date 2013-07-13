@@ -46,7 +46,7 @@ void main()
     vec3 light_dir = normalize(pos - position);
     vec3 norm = texture(normal, gl_FragCoord.xy).xyz;
 
-    out_Color = texture(diffuse, gl_FragCoord.xy).xyz * max(0, dot(light_dir, norm));
+    out_Color = vec3(1);//texture(diffuse, gl_FragCoord.xy).xyz * max(0, dot(light_dir, norm));
     out_Normal = vec3(0);
     out_Diffuse = vec3(0);
     out_Specular = vec3(0);
