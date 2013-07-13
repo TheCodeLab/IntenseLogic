@@ -10,7 +10,7 @@ local positionable  = require "common.positionable"
 local world         = require "common.world"
 local matrix        = require "math.matrix"
 local vector3       = require "math.vector3"
-local mesh          = require "graphics.mesh"
+local drawnmesh     = require "graphics.mesh"
 local event         = require "common.event"
 local input         = require "input.input"
 local quaternion    = require "math.quaternion"
@@ -22,6 +22,7 @@ local guipass       = require "graphics.guipass"
 local frame         = require "graphics.gui.frame"
 local image         = require "asset.image"
 local text          = require "graphics.gui.text"
+local mesh          = require "asset.mesh"
 
 local w = world()
 local c = context()
@@ -83,7 +84,7 @@ mtl:fragData("accumulation", "out_Ambient")
 mtl:fragData("diffuse", "out_Diffuse")
 mtl:fragData("specular", "out_Specular")
 mtl:link(c)
-local m = mesh "teapot.obj"
+local m = drawnmesh "teapot.obj"
 local width = 3
 for i = 0, width*width*width-1 do
     local box = positionable()
@@ -121,6 +122,18 @@ plain:mtlname "Plain material"
 plain:arrayAttrib("position", "in_Position")
 plain:matrix("MVP", "mvp")
 plain:link(c)
+m = drawnmesh((mesh.loadfile "teapot.obj"):debugLines(.1))
+for i = 0, width*width*width - 1 do
+    local box = positionable()
+    w:add(box)
+    box.drawable = m --drawable.box
+    box.material = plain
+    box.texture = marble
+    box.position = (vector3(i % width, math.floor((i%(width*width)) / width), math.floor(i/(width*width))) * vector3(15, 15, 15)).ptr
+    box:track(c)
+    --print(box.position)
+end
+
 local ico = positionable()
 w:add(ico)
 ico.position = vector3(-10, 0, 0).ptr

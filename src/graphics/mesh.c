@@ -19,6 +19,7 @@ struct ilG_mesh {
     GLuint vbo;
     GLuint vao;
     GLint count;
+    GLenum type;
 };
 
 static ilG_bindable mesh_bindable;
@@ -61,7 +62,7 @@ static void draw(void* obj)
     struct ilG_mesh* mesh = obj;
 
     ilG_testError("Unknown error");
-    glDrawArrays(GL_TRIANGLES, 0, mesh->count);
+    glDrawArrays(mesh->type, 0, mesh->count);
     ilG_testError("Failed to draw mesh");
 }
 
@@ -74,7 +75,22 @@ static ilG_bindable mesh_bindable = {
 
 ilG_drawable3d* ilG_mesh(ilA_mesh* self)
 {
+    static GLenum mapping[] = {
+        GL_POINTS,                  //ILA_MESH_POINTS
+        GL_LINES,                   //ILA_MESH_LINES
+        GL_LINE_STRIP,              //ILA_MESH_LINE_STRIP
+        GL_LINE_LOOP,               //ILA_MESH_LINE_LOOP
+        GL_LINE_STRIP_ADJACENCY,    //ILA_MESH_LINE_STRIP_ADJACENCY
+        GL_LINES_ADJACENCY,         //ILA_MESH_LINES_ADJACENCY
+        GL_TRIANGLES,               //ILA_MESH_TRIANGLES
+        GL_TRIANGLE_STRIP,          //ILA_MESH_TRIANGLE_STRIP
+        GL_TRIANGLE_FAN,            //ILA_MESH_TRIANGLE_FAN
+        GL_TRIANGLE_STRIP_ADJACENCY,//ILA_MESH_TRIANGLE_STRIP_ADJACENCY
+        GL_TRIANGLES_ADJACENCY,     //ILA_MESH_TRIANGLES_ADJACENCY
+        GL_PATCHES,                 //ILA_MESH_PATCHES
+    };
     struct ilG_mesh* m = il_new(&ilG_mesh_type);
+    m->type = mapping[self->mode];
     m->count = self->num_vertices;
     ilG_testError("Unknown");
     glGenVertexArrays(1, &m->vao);
@@ -146,14 +162,11 @@ ilG_drawable3d* ilG_mesh(ilA_mesh* self)
 ilA_mesh *ilA_mesh_parseObj(const char *filename, const char *data, size_t length);
 ilG_drawable3d* ilG_mesh_fromfile(const char *name)
 {
-    const ilA_file *res;
-    ilA_path *path = ilA_path_chars(name);
-    il_base *file = ilA_stdiofile(path, ILA_FILE_READ, &res);
     size_t length;
-    void *data = ilA_contents(res, file, &length);
+    void *data;
+    il_base *file = ilA_contents_chars(name, &length, &data, NULL);
     ilA_mesh *mesh = ilA_mesh_parseObj(name, data, length);
     il_unref(file);
-    ilA_path_free(path);
     ilG_drawable3d *drawable = ilG_mesh(mesh);
     ilA_mesh_free(mesh);
     return drawable;
