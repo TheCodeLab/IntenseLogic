@@ -99,7 +99,7 @@ local function newindex(t, k, v)
 end
 
 local function ts(t)
-    return "("..t.x..", "..t.y..", "..t.z..")"
+    return string.format("(%.6f, %.6f, %.6f)", t.x, t.y, t.z)
 end
 
 local function gc(obj)
