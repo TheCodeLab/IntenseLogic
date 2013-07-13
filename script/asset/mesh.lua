@@ -1,8 +1,6 @@
-#ifndef ILA_MESH_H
-#define ILA_MESH_H
+local ffi = require "ffi"
 
-#include "common/base.h"
-#include "asset/node.h"
+ffi.cdef [[
 
 enum ilA_mesh_primitive {
     ILA_MESH_POINTS,
@@ -36,5 +34,21 @@ ilA_mesh *ilA_mesh_loadmem(const char *filename, const void *data, size_t length
 void ilA_mesh_free(ilA_mesh *self);
 ilA_mesh *ilA_mesh_debugLines(ilA_mesh *self, float f);
 
-#endif
+]]
+
+local mesh = {}
+
+local function set_gc(m)
+    ffi.gc(m, modules.asset.ilA_mesh_free)
+    return m
+end
+
+mesh.load = function(f) return set_gc(modules.asset.ilA_mesh_load(f, nil)) end
+mesh.loadfile = function(f) return set_gc(modules.asset.ilA_mesh_loadfile(f)) end
+mesh.loadstr = function(f, s) return set_gc(modules.asset.ilA_mesh_loadmem(f, s, #s)) end
+mesh.debugLines = function(self, f) return set_gc(modules.asset.ilA_mesh_debugLines(self, f or 1)) end
+
+ffi.metatype("ilA_mesh", {__index=mesh})
+
+return mesh
 

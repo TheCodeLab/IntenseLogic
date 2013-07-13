@@ -41,7 +41,7 @@ static int parse_line(struct obj *obj, char *line, char *error)
 {
     char *saveptr = line, *word;
     float fvec[4] = {0, 0, 0, 1};
-    unsigned char cvec[4] = {0};
+    //unsigned char cvec[4] = {0};
     int i, col = -1;
 
 #define next strsep(&saveptr, " ")
@@ -156,7 +156,7 @@ ilA_mesh *ilA_mesh_parseObj(const char *filename, const char *data, size_t lengt
 {
     struct obj *obj = calloc(1, sizeof(struct obj));
     ilA_mesh *mesh;
-    char *str = strdup(data), *saveptr = str, *ptr, error[1024], col_str[8];
+    char *str = strndup(data, length), *saveptr = str, *ptr, error[1024], col_str[8];
     int line = 0, col;
     size_t i, j, v = 0;
 
