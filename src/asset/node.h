@@ -39,18 +39,19 @@ struct ilA_dir {
 
 // [iface] [obj] ... [result_iface]
 // constructor functions
-il_base *ilA_stdiofile  (const ilA_path *path,  enum ilA_file_mode mode,                    const ilA_file **res);
-il_base *ilA_stdiodir   (const ilA_path *path,  const ilA_dir **res);
-il_base *ilA_union      (const ilA_dir  *ai,    const ilA_dir *bi, il_base *a, il_base *b,  const ilA_dir **res);
-il_base *ilA_prefix     (const ilA_dir  *iface, il_base *dir, const ilA_path *path,         const ilA_dir **res);
+il_base *ilA_stdiofile      (const ilA_path *path,  enum ilA_file_mode mode,                    const ilA_file **res);
+il_base *ilA_stdiodir       (const ilA_path *path,  const ilA_dir **res);
+il_base *ilA_union          (const ilA_dir  *ai,    const ilA_dir *bi, il_base *a, il_base *b,  const ilA_dir **res);
+il_base *ilA_prefix         (const ilA_dir  *iface, il_base *dir, const ilA_path *path,         const ilA_dir **res);
 // operations
-il_base *ilA_lookup     (const ilA_dir  *iface, il_base *dir, const ilA_path *path);
-il_base *ilA_create     (const ilA_dir  *iface, il_base *dir, const ilA_path *path,         const ilA_file **res);
-il_base *ilA_mkdir      (const ilA_dir  *iface, il_base *dir, const ilA_path *path,         const ilA_dir **res);
-// TODO: remove when old API is gone
-//#define ilA_delete ilA_deletefile
+il_base *ilA_lookup         (const ilA_dir  *iface, il_base *dir, const ilA_path *path);
+il_base *ilA_create         (const ilA_dir  *iface, il_base *dir, const ilA_path *path,         const ilA_file **res);
+il_base *ilA_mkdir          (const ilA_dir  *iface, il_base *dir, const ilA_path *path,         const ilA_dir **res);
+// TODO: uncomment when deprecated API is dropped
 //void     ilA_delete     (const ilA_dir  *iface, il_base *dir, const ilA_path *path);
-void    *ilA_contents   (const ilA_file *iface, il_base *file, size_t *size);
+void    *ilA_contents       (const ilA_file *iface, il_base *file, size_t *size);
+il_base *ilA_contents_path  (const ilA_path *path, size_t *size, void **data, const ilA_file **res);
+il_base *ilA_contents_chars (const char *path, size_t *size, void **data, const ilA_file **res);
 
 #endif
 

@@ -62,3 +62,22 @@ void *ilA_contents(const ilA_file *iface, il_base *file, size_t *size)
     return iface->contents(file, size);
 }
 
+il_base *ilA_contents_path  (const ilA_path *path, size_t *size, void **data, const ilA_file **res)
+{
+    const ilA_file *iface;
+    il_base *base = ilA_stdiofile(path, ILA_FILE_READ, &iface);
+    if (res) {
+        *res = iface;
+    }
+    *data = ilA_contents(iface, base, size);
+    return base;
+}
+
+il_base *ilA_contents_chars (const char *str, size_t *size, void **data, const ilA_file **res)
+{
+    ilA_path *path = ilA_path_chars(str);
+    il_base *base = ilA_contents_path(path, size, data, res);
+    ilA_path_free(path);
+    return base;
+}
+
