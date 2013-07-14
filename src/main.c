@@ -54,7 +54,7 @@ int main(int argc, char **argv)
             }
             break;
             case 'm':
-            il_modpath(optarg); //IL_APPEND(module_paths, strdup(optarg));
+            il_add_module_path(optarg); //IL_APPEND(module_paths, strdup(optarg));
             has_modules = 1;
             break;
             case 'r':
@@ -87,9 +87,9 @@ int main(int argc, char **argv)
     fprintf(stderr, "MAIN: Initializing engine.\n");
 
     if (!has_modules) {
-        il_loaddir("modules", argc, argv); // default path
+        il_load_module_dir("modules", argc, argv); // default path
     }
-    il_loadall(argc, argv);
+    il_load_module_paths(argc, argv);
 
     if (!has_scripts) {
         IL_APPEND(script_paths, "script");
@@ -132,7 +132,7 @@ int main(int argc, char **argv)
 
     // main loop
     fprintf(stderr, "MAIN: Starting main loop\n");
-    loop = (void(*)())il_getsym("ilcommon", "ilE_loop");
+    loop = (void(*)())il_get_symbol("ilcommon", "ilE_loop");
     if (!loop) {
         return 1;
     }
