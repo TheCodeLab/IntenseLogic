@@ -12,11 +12,16 @@ void print_matrix(il_mat m)
     printf("{ ");
     int y, x;
     for (y = 0; y < 4; y++) {
+        printf("{");
         for (x = 0; x < 4; x++) {
-            printf("% .6f ", m[y*4 + x]);
+            printf("% .6f", m[y*4 + x]);
+            if (x != 3) {
+                printf(", ");
+            }
         }
+        printf("}");
         if (y != 3) {
-            printf("\n  ");
+            printf(",\n  ");
         }
     }
     printf("}\n");
@@ -31,13 +36,9 @@ int inversionTest()
 {
     il_mat mat = il_mat_new();
     int i;
-    /*for (i = 0; i < 16; i++) {
-        mat[i] = (float)rand() / RAND_MAX;
-    }*/
-    mat = il_mat_identity(mat);
-    mat[3] = 34;
-    mat[7] = 24;
-    mat[11] = 45;
+    for (i = 0; i < 16; i++) {
+        mat[i] = ((float)rand() / RAND_MAX) * 10;
+    }
     printf("Input matrix:\n");
     print_matrix(mat);
     il_mat inverted = il_mat_invert(mat, NULL);
