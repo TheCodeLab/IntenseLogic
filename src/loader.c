@@ -40,12 +40,12 @@ static struct module {
 
 static IL_ARRAY(char*,) modpaths;
 
-void il_modpath(const char *path)
+void il_add_module_path(const char *path)
 {
     IL_APPEND(modpaths, strdup(path));
 }
 
-void il_loaddir(const char *path, int argc, char **argv)
+void il_load_module_dir(const char *path, int argc, char **argv)
 {
 #ifdef WIN32
     WIN32_FIND_DATA ffd;
@@ -77,7 +77,7 @@ void il_loaddir(const char *path, int argc, char **argv)
         strcpy(buf, path);
         strcat(buf, "\\");
         strcat(buf, name);
-        il_loadmod(buf, argc, argv);
+        il_load_module(buf, argc, argv);
     } while (FindNextFile(hFind, &ffd) != 0);
 
     FindClose(hFind);
@@ -95,17 +95,17 @@ void il_loaddir(const char *path, int argc, char **argv)
         }
         char buf[512];
         snprintf(buf, 512, "%s/%s", path, result->d_name);
-        il_loadmod(buf, argc, argv);
+        il_load_module(buf, argc, argv);
     }
     closedir(dir);
 #endif
 }
 
-void il_loadall(int argc, char **argv)
+void il_load_module_paths(int argc, char **argv)
 {
     size_t i;
     for (i = 0; i < modpaths.length; i++) {
-        il_loaddir(modpaths.data[i], argc, argv);
+        il_load_module_dir(modpaths.data[i], argc, argv);
     }
 }
 
@@ -125,7 +125,7 @@ static char *lookup(const char *modpath, const char *name)
     return NULL;
 }
 
-int il_loadmod(const char *name, int argc, char **argv)
+int il_load_module(const char *name, int argc, char **argv)
 {
     int res;
     size_t i;
@@ -184,7 +184,7 @@ int il_loadmod(const char *name, int argc, char **argv)
     if (deps) {
         const char **mods = deps(argc, argv);
         for (i = 0; mods[i]; i++) {
-            il_loadmod(mods[i], argc, argv);
+            il_load_module(mods[i], argc, argv);
         }
     }
     il_bootstrap_fn func = (il_bootstrap_fn)GetProcAddress(handle, "il_bootstrap");
@@ -206,7 +206,7 @@ int il_loadmod(const char *name, int argc, char **argv)
     if (deps) {
         const char **mods = deps(argc, argv);
         for (i = 0; mods[i]; i++) {
-            if (!il_loadmod(mods[i], argc, argv)) {
+            if (!il_load_module(mods[i], argc, argv)) {
                 fprintf(stderr, "*** Failed to load module %s: Dependency %s failed to load", path, mods[i]);
                 goto fail;
             }
@@ -239,7 +239,7 @@ fail:
     return 0;
 }
 
-il_func il_getsym(const char *module, const char *name)
+il_func il_get_symbol(const char *module, const char *name)
 {
     struct module *mod;
     il_func sym;
@@ -265,7 +265,7 @@ il_func il_getsym(const char *module, const char *name)
     return sym;
 }
 
-void il_rmmod(const char *module)
+void il_close_module(const char *module)
 {
     struct module *mod;
     HASH_FIND_STR(il_loaded, module, mod);
