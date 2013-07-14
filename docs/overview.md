@@ -1,6 +1,6 @@
 # IntenseLogic Overview
 
-IntenseLogic's design is somewhat modularised, which makes an overview easier.
+IntenseLogic is a highly modular project. At first, it was a monolithic game engine, but over time it has matured into something closer to a framework or set of libraries. The main binary is only a handful of files, and it loads plugins and executes scripts. Everything else is implemented through plugins.
 
 ## Project Layout
 
@@ -19,13 +19,11 @@ IntenseLogic's design is somewhat modularised, which makes an overview easier.
       |-util/       Datastructures, logging, etc.
       |-math/       Math related to 3D graphics (vectors, matrices, quaternions)
       |-graphics/   Code that manages rendering
-      | |-api/      Wrapper layer for some extensions and for some OpenGL functionality not present in early versions
-      | `-sg/       Scene graph layer
+      | `-gui/      GUI rendering
       |-network/    Networking
       |-asset/      Filesystem management and file format loaders
       |-script/     Loads Lua scripts
-      |-windows.c   Windows-specific code (mostly for functions from POSIX that MinGW doesn't implement)
-      `-il.docopt   Docopt file, for command-line options
+      `-windows.c   Windows-specific code (mostly for functions from POSIX that MinGW doesn't implement)
 
 ## Engine Diagram
 

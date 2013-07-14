@@ -1,8 +1,8 @@
 # IntenseLogic
 
-IntenseLogic is a general-purpose game engine designed with extensibility and performance in mind. It is designed from the ground up to be as extensible as possible without rebuilding the binary itself, and modules are as isolated as possible. It is not meant to compete with AAA game engines, especially in terms of features. 
+IntenseLogic is a framework used to write a game engine. It's designed with performance and extensibility in mind. 
 
-We've spent nearly a year working on this engine, and have a few games in development. 
+IntenseLogic has been in development for over a year, and has several games currently in development.
 
 ## Features
 
@@ -15,6 +15,10 @@ We've spent nearly a year working on this engine, and have a few games in develo
 
 ## Upcoming
 
- * Graphics API abstraction layer and GL 1.x support
+ * Deferred shading
+ * Threading
  * Networking
  * Animation
+ * AngelScript
+ * OpenGL 2.1 and 4.1 support
+
