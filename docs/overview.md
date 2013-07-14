@@ -3,6 +3,7 @@
 IntenseLogic's design is somewhat modularised, which makes an overview easier.
 
 ## Project Layout
+
     IntenseLogic/   Project root (entries ending with / are directories, others are files)
     |-build/        This is where scons puts binaries
     | `-docs/       LDoc puts generated files here
