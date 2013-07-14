@@ -157,15 +157,8 @@ struct ilG_shape {
     int type;
 };
 
-static void box(struct ilG_shape *self)
+static void box()
 {
-    glGenVertexArrays(1, &self->vao);
-    glGenBuffers(1, &self->vbo);
-    glGenBuffers(1, &self->ibo);
-    glBindVertexArray(self->vao);
-    glBindBuffer(GL_ARRAY_BUFFER, self->vbo);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, self->vbo);
-
     glBufferData(GL_ARRAY_BUFFER, sizeof(cube) + sizeof(cube_texcoord), NULL, GL_STATIC_DRAW);
     glBufferSubData(GL_ARRAY_BUFFER, 0,             sizeof(cube), cube);
     glBufferSubData(GL_ARRAY_BUFFER, sizeof(cube),  sizeof(cube_texcoord), cube_texcoord);
@@ -179,15 +172,8 @@ static void box(struct ilG_shape *self)
     IL_GRAPHICS_TESTERROR("Unable to upload index buffer data");
 }
 
-static void icosahedron(struct ilG_shape *self)
+static void icosahedron()
 {
-    glGenVertexArrays(1, &self->vao);
-    glGenBuffers(1, &self->vbo);
-    glGenBuffers(1, &self->ibo);
-    glBindVertexArray(self->vao);
-    glBindBuffer(GL_ARRAY_BUFFER, self->vbo);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, self->vbo);
-
     glBufferData(GL_ARRAY_BUFFER, sizeof(ico) /*+ sizeof(ico_texcoord)*/, NULL, GL_STATIC_DRAW);
     glBufferSubData(GL_ARRAY_BUFFER, 0,             sizeof(ico), ico);
     //glBufferSubData(GL_ARRAY_BUFFER, sizeof(ico),   sizeof(cube_texcoord), cube_texcoord);
@@ -203,23 +189,30 @@ static void icosahedron(struct ilG_shape *self)
 
 static void bind(void *obj)
 {
-    struct ilG_shape * shape = obj;
-    if (!shape->created) {
-        shape->created = 1;
-        switch(shape->type) {
+    struct ilG_shape *self = obj;
+    if (!self->created) {
+        self->created = 1;
+        glGenVertexArrays(1, &self->vao);
+        glGenBuffers(1, &self->vbo);
+        glGenBuffers(1, &self->ibo);
+        glBindVertexArray(self->vao);
+        glBindBuffer(GL_ARRAY_BUFFER, self->vbo);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, self->ibo);
+        switch(self->type) {
             case 1:
-            box(shape);
+            box();
             break;
             case 2:
-            icosahedron(shape);
+            icosahedron();
             break;
             default:
             break;
         }
+    } else {
+        glBindVertexArray(self->vao);
+        glBindBuffer(GL_ARRAY_BUFFER, self->vbo);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, self->ibo);
     }
-    glBindVertexArray(shape->vao);
-    glBindBuffer(GL_ARRAY_BUFFER, shape->vbo);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, shape->ibo);
     IL_GRAPHICS_TESTERROR("Could not bind drawable");
 }
 
@@ -258,7 +251,7 @@ ilG_drawable3d *ilG_box(ilG_context *context)
 {
     struct ilG_shape *self = il_base_get(context, "il.graphics.shape.box", NULL, NULL);
     if (self) {
-        return self;
+        return &self->drawable;
     }
     self = il_new(&ilG_shape_type);
     self->drawable.context = context;
@@ -267,7 +260,7 @@ ilG_drawable3d *ilG_box(ilG_context *context)
     self->mode = GL_TRIANGLES;
     self->count = 36;
     self->type = 1;
-    ilG_drawable3d_assignId(&self->drawable);
+    il_base_set(context, "Il.graphics.shape.box", self, sizeof(struct ilG_shape), IL_OBJECT);
     return &self->drawable;
 }
 
@@ -275,7 +268,7 @@ ilG_drawable3d *ilG_icosahedron(ilG_context *context)
 {
     struct ilG_shape *self = il_base_get(context, "il.graphics.shape.icosahedron", NULL, NULL);
     if (self) {
-        return self;
+        return &self->drawable;
     }
     self = il_new(&ilG_shape_type);
     self->drawable.context = context;
@@ -283,7 +276,7 @@ ilG_drawable3d *ilG_icosahedron(ilG_context *context)
     self->mode = GL_TRIANGLES;
     self->count = 20 * 3;
     self->type = 2;
-    ilG_drawable3d_assignId(&self->drawable);
+    il_base_set(context, "Il.graphics.shape.icosahedron", self, sizeof(struct ilG_shape), IL_OBJECT);
     return &self->drawable;
 }
 
