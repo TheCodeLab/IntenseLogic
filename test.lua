@@ -127,16 +127,15 @@ plain:mtlname "Plain material"
 plain:arrayAttrib("position", "in_Position")
 plain:matrix("MVP", "mvp")
 plain:link(c)
-m = drawable.icosahedron(c)--drawnmesh((mesh.loadfile "teapot.obj"):debugLines(.1))
+m = drawable.icosahedron(c)
 for i = 0, width*width*width - 1 do
     local box = positionable()
     w:add(box)
-    box.drawable = m --drawable.box
+    box.drawable = m
     box.material = plain
     box.texture = marble
     box.position = (vector3((i % width) + 5, math.floor((i%(width*width)) / width), math.floor(i/(width*width))) * vector3(15, 15, 15)).ptr
     box:track(c)
-    --print(box.position)
 end
 
 local ico = positionable()

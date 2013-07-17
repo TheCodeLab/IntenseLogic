@@ -42,11 +42,13 @@ vec3 screen_to_world(vec3 sp)
 
 void main() 
 {
-    vec3 pos = screen_to_world(vec3(gl_FragCoord.xy, texture(depth, gl_FragCoord.xy).x));
-    vec3 light_dir = normalize(pos - position);
+    // gl_FragCoord is from (.5, .5) to (w - .5, h - .5)
+    vec3 pos = screen_to_world(vec3(gl_FragCoord.xy / vec2(800,600), texture(depth, gl_FragCoord.xy - vec2(.5)).x) * 2 - 1);
+    vec3 light_dir = /*normalize(vec3(1, 1, 1));*/normalize(pos - position);
     vec3 norm = texture(normal, gl_FragCoord.xy).xyz;
 
-    out_Color = vec3(1);//texture(diffuse, gl_FragCoord.xy).xyz * max(0, dot(light_dir, norm));
+    out_Color = /*texture(diffuse, gl_FragCoord.xy).xyz */ vec3(.5) * vec3(max(0, dot(light_dir, norm)));
+    //out_Color = vec3(1) / pos;
     out_Normal = vec3(0);
     out_Diffuse = vec3(0);
     out_Specular = vec3(0);
