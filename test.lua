@@ -111,7 +111,7 @@ c.camera.movespeed = vector3(1,1,1).ptr
 local l = light()---5, -5, -5, 50, 0, 0, 1.0) -- x y z radius r g b
 l.positionable.position = vector3(0, 50, 0).ptr
 l.radius = 250
-l.color = vector3(0, 0, 1).ptr
+l.color = vector3(.3, .4, 1).ptr
 l:add(c)
 --[[local sig = positionable();
 w:add(sig)
