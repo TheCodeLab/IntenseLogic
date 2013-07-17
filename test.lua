@@ -105,12 +105,12 @@ end
 c.camera = camera()
 c.camera.projection_matrix = matrix.perspective(75, 4/3, 2, 1000).ptr
 print(c.camera.projection_matrix)
-c.camera.positionable.position = vector3(0, -5, -25).ptr
+c.camera.positionable.position = vector3(0, 0, 0).ptr
 c.camera.sensitivity = .01
 c.camera.movespeed = vector3(1,1,1).ptr
 local l = light()---5, -5, -5, 50, 0, 0, 1.0) -- x y z radius r g b
-l.positionable.position = vector3(-5, -5, -5).ptr
-l.radius = 50
+l.positionable.position = vector3(0, 50, 0).ptr
+l.radius = 250
 l.color = vector3(0, 0, 1).ptr
 l:add(c)
 --[[local sig = positionable();
@@ -174,9 +174,9 @@ function tick(reg, name)
         local b, _ = input.get(k)
         return b and 1 or 0
     end
-    local x = get("D") - get("A")
-    local z = get("W") - get("S")
-    local y = get("R") - get("F")
+    local x = get("A") - get("D")
+    local z = get("S") - get("W")
+    local y = get("F") - get("R")
     local r = get("Q") - get("E")
     local v = vector3(x,y,z) * vector3.wrap(c.camera.movespeed)
     --print("r", c.camera.positionable.rotation)
