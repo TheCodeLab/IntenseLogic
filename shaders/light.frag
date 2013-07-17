@@ -1,14 +1,15 @@
 #version 140
 
 uniform vec3 position;
-uniform vec3 color; // unused
-uniform float radius; // unused
+uniform vec3 color;
+uniform float radius;
+uniform vec3 camera;
 uniform sampler2DRect depth;
 uniform sampler2DRect normal;
 uniform sampler2DRect diffuse;
-uniform sampler2DRect specular; // unused
-uniform mat4 mvp; // unused
-uniform mat4 ivp; // unused
+uniform sampler2DRect specular;
+uniform mat4 mvp;
+uniform mat4 ivp;
 
 out vec3 out_Color;
 out vec3 out_Normal;
@@ -47,8 +48,10 @@ void main()
     vec3 light_dir = /*normalize(vec3(1, 1, 1));*/normalize(pos - position);
     vec3 norm = texture(normal, gl_FragCoord.xy).xyz;
 
-    out_Color = /*texture(diffuse, gl_FragCoord.xy).xyz */ vec3(.5) * vec3(max(0, dot(light_dir, norm)));
-    //out_Color = vec3(1) / pos;
+    out_Color = vec3(0);
+    out_Color += /*texture(diffuse, gl_FragCoord.xy - vec2(.5)).xyz */ vec3(.5) * vec3(max(0, dot(light_dir, norm)));
+    vec4 spec = vec4(.4, .3, .25, 20); //texture(specular, gl_FragCoord.xy - vec2(.5));
+    out_Color += /*spec.xyz*/ pow(dot(normalize(2 * dot(light_dir, norm) * norm - light_dir), normalize(camera - pos)), spec.w);
     out_Normal = vec3(0);
     out_Diffuse = vec3(0);
     out_Specular = vec3(0);
