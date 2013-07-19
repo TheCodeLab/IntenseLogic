@@ -4,7 +4,6 @@
 #include <string.h>
 
 #include "graphics/glutil.h"
-#include "asset/asset.h"
 #include "graphics/context.h"
 #include "graphics/textureunit.h"
 #include "graphics/arrayattrib.h"
@@ -13,7 +12,9 @@
 #include "graphics/tracker.h"
 #include "graphics/fragdata.h"
 #include "util/array.h"
-#include "asset/asset.h"
+#include "asset/node.h"
+#include "util/assert.h"
+#include "graphics/graphics.h"
 
 struct textureunit {
     const char *location;
@@ -101,10 +102,51 @@ void ilG_material_vertex(ilG_material* self, il_string *source)
     self->config->vertsource = il_string_ref(source);
 }
 
+void ilG_material_vertex_file(ilG_material *self, const char *filename)
+{
+    size_t size;
+    void *data;
+    ilA_path *path = ilA_path_chars(filename);
+    il_base *base = ilA_lookup(ilG_shaders_iface, ilG_shaders_dir, path);
+    ilA_path_free(path);
+    if (!base) {
+        il_error("No such file %s", filename);
+        return;
+    }
+    data = ilA_contents(NULL, base, &size);
+    if (!data) {
+        il_error("%s is not a file", filename);
+        return;
+    }
+    ilG_material_vertex(self, il_string_bin(data, size));
+    il_unref(base);
+}
+
 void ilG_material_fragment(ilG_material* self, il_string *source)
 {
     self->config->fragsource = il_string_ref(source);
 }
+
+void ilG_material_fragment_file(ilG_material *self, const char *filename)
+{
+    size_t size;
+    void *data;
+    ilA_path *path = ilA_path_chars(filename);
+    il_base *base = ilA_lookup(ilG_shaders_iface, ilG_shaders_dir, path);
+    ilA_path_free(path);
+    if (!base) {
+        il_error("No such file %s", filename);
+        return;
+    }
+    data = ilA_contents(NULL, base, &size);
+    if (!data) {
+        il_error("%s is not a file", filename);
+        return;
+    }
+    ilG_material_fragment(self, il_string_bin(data, size));
+    il_unref(base);
+}
+
 
 void ilG_material_name(ilG_material* self, const char* name)
 {

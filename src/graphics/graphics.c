@@ -17,7 +17,6 @@
 #include "graphics/context.h"
 #include "util/log.h"
 #include "graphics/shape.h"
-#include "asset/asset.h"
 #include "common/world.h"
 #include "graphics/drawable3d.h"
 #include "graphics/material.h"
@@ -49,6 +48,8 @@ static const char *help[] = {
 #undef OPT*/
 
 ilE_registry *ilG_registry;
+il_base *ilG_shaders_dir;
+const ilA_dir *ilG_shaders_iface;
 
 static void quit();
 void ilG_material_init();
@@ -105,25 +106,34 @@ const char **il_dependencies(int argc, char **argv)
 
 int il_bootstrap(int argc, char **argv)
 {
-    int opt, idx, has_shaders = 0;
+    int opt, idx;
     opterr = 0; // we don't want to print an error if another package uses an option
     optind = 0; // reset getopt
     while ((opt = getopt_long(argc, argv, optstring, longopts, &idx)) != -1) {
         switch(opt) {
             case 0:
-                if (strcmp(longopts[idx].name, "shaders") == 0) {
-                    ilA_registerReadDir(il_string_new(optarg, strlen(optarg)), 0);
-                    has_shaders = 1;
+            if (strcmp(longopts[idx].name, "shaders") == 0) {
+                ilA_path *path = ilA_path_chars(optarg);
+                const ilA_dir *iface;
+                il_base *base = ilA_stdiodir(path, &iface);
+                ilA_path_free(path);
+                if (ilG_shaders_dir) {
+                    ilG_shaders_dir = ilA_union(ilG_shaders_iface, iface, ilG_shaders_dir, base, &ilG_shaders_iface);
+                } else {
+                    ilG_shaders_dir = base;
+                    ilG_shaders_iface = iface;
                 }
-                break;
+            }
+            break;
             case '?':
             default:
-                break;
+            break;
         }
     }
-    if (!has_shaders) {
-        // guess at the location of our shaders
-        ilA_registerReadDir(il_string_new("shaders", strlen("shaders")),0);
+    if (!ilG_shaders_dir) {
+        ilA_path *path = ilA_path_chars("shaders");
+        ilG_shaders_dir = ilA_stdiodir(path, &ilG_shaders_iface);
+        ilA_path_free(path);
     }
 
     glfw_setup();

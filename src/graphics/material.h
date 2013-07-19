@@ -29,7 +29,9 @@ extern ilG_material ilG_material_default;
 
 #define ilG_material_new() il_new(&ilG_material_type)
 void ilG_material_vertex(ilG_material*, il_string *source);
+void ilG_material_vertex_file(ilG_material *self, const char *filename);
 void ilG_material_fragment(ilG_material*, il_string *source);
+void ilG_material_fragment_file(ilG_material *self, const char *filename);
 void ilG_material_name(ilG_material*, const char* name);
 void ilG_material_arrayAttrib(ilG_material*, unsigned long attrib, const char *location);
 void ilG_material_fragData(ilG_material*, unsigned long attrib, const char *location);

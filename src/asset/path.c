@@ -9,7 +9,7 @@ char *strsep(char **stringp, const char *delim);
 ilA_path* ilA_path_string(il_string *path)
 {
     ilA_path *p;
-    char *orig = il_StoC(path), *saveptr = orig, *tok, *delim, *home, *cwd, buf[4096];
+    char *orig = il_StoC(path), *saveptr = orig, *tok, *delim, *home;
     
     if (*orig == '~') {
         home = getenv("HOME");
@@ -21,18 +21,10 @@ ilA_path* ilA_path_string(il_string *path)
         free(orig);
         return p;
     }
+    p = calloc(1, sizeof(ilA_path));
     if (*orig == '/') {
-        p = calloc(1, sizeof(ilA_path));
         saveptr++;
-    } else {
-        cwd = getcwd(buf, 4096);
-        if (!cwd) {
-            il_error("Failed to get current working directory");
-            return NULL;
-        }
-        p = ilA_path_string(il_string_format("%s/%s", cwd, orig));
-        free(orig);
-        return p;
+        p->absolute = 1;
     }
     p->path = il_string_ref(path);
 #ifdef WIN32
@@ -85,6 +77,17 @@ ilA_path* ilA_path_cwd()
     return ilA_path_chars(cwd);
 }
 
+ilA_path* ilA_path_absolute(ilA_path *path)
+{
+    if (path->absolute) {
+        return ilA_path_copy(path);
+    }
+    ilA_path *cwd = ilA_path_cwd(), *p = ilA_path_concat(cwd, path);
+    ilA_path_free(cwd);
+    p->absolute = 1;
+    return p;
+}
+
 void ilA_path_free(ilA_path* self)
 {
     il_string_unref(self->path);
@@ -100,11 +103,13 @@ il_string *ilA_path_tostr(const ilA_path* self)
     il_string *str = il_string_new(NULL, 0), *temp;
     unsigned i;
     for (i = 0; i < self->nodes.length; i++) {
+        if (self->absolute || i > 0) {
 #ifdef WIN32
-        il_string_catchars(str, "\\");
+            il_string_catchars(str, "\\");
 #else
-        il_string_catchars(str, "/");
+            il_string_catchars(str, "/");
 #endif
+        }
         temp = self->nodes.data[i];
         il_string_cat(str, temp);
     }
@@ -139,7 +144,10 @@ int ilA_path_cmp(const ilA_path* a, const ilA_path* b)
 
 ilA_path* ilA_path_concat(const ilA_path* a, const ilA_path* b)
 {
-    il_string *path = il_string_copy(a->path); 
+    il_string *path = il_string_copy(a->path);
+    if (!a->absolute) {
+        il_string_catchars(path, "/");
+    }
     if (!il_string_cat(path, b->path)) {
         il_error("Failed to concatenate paths");
         return NULL;

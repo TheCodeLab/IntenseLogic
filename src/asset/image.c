@@ -118,6 +118,10 @@ ilA_img *ilA_img_loadfile(const char *name)
     const ilA_file *iface;
     ilA_path *path = ilA_path_chars(name);
     il_base *file = ilA_stdiofile(path, ILA_FILE_READ, &iface);
+    if (!file) {
+        il_error("No such file %s", name);
+        return NULL;
+    }
     ilA_path_free(path);
     return ilA_img_loadasset(iface, file);
 }

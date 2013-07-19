@@ -35,7 +35,7 @@ static il_base* stdiodir_lookup(void* ptr, const ilA_path *path)
     if (S_ISDIR(s.st_mode)) {
         node = ilA_stdiodir(full, NULL);
     } else {
-        node = ilA_stdiofile(full, 0, NULL);
+        node = ilA_stdiofile(full, ILA_FILE_READ, NULL);
     }
     ilA_path_free(full);
     return node;

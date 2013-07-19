@@ -47,8 +47,7 @@ il_base *ilA_prefix         (const ilA_dir  *iface, il_base *dir, const ilA_path
 il_base *ilA_lookup         (const ilA_dir  *iface, il_base *dir, const ilA_path *path);
 il_base *ilA_create         (const ilA_dir  *iface, il_base *dir, const ilA_path *path,         const ilA_file **res);
 il_base *ilA_mkdir          (const ilA_dir  *iface, il_base *dir, const ilA_path *path,         const ilA_dir **res);
-// TODO: uncomment when deprecated API is dropped
-//void     ilA_delete     (const ilA_dir  *iface, il_base *dir, const ilA_path *path);
+void     ilA_delete         (const ilA_dir  *iface, il_base *dir, const ilA_path *path);
 void    *ilA_contents       (const ilA_file *iface, il_base *file, size_t *size);
 il_base *ilA_contents_path  (const ilA_path *path, size_t *size, void **data, const ilA_file **res);
 il_base *ilA_contents_chars (const char *path, size_t *size, void **data, const ilA_file **res);

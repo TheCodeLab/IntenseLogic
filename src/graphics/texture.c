@@ -57,6 +57,9 @@ void ilG_texture_setName(ilG_texture* self, const char *name)
 void ilG_texture_fromfile(ilG_texture* self, unsigned unit, const char *name)
 {
     ilA_img *img = ilA_img_loadfile(name);
+    if (!img) {
+        return;
+    }
     ilG_texture_fromimage(self, unit, img);
     ilA_img_free(img);
 }

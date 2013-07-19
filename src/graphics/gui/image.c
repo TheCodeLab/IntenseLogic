@@ -3,7 +3,6 @@
 #include <GL/glew.h>
 
 #include "graphics/material.h"
-#include "asset/asset.h"
 #include "graphics/arrayattrib.h"
 #include "graphics/fragdata.h"
 #include "graphics/textureunit.h"
@@ -24,8 +23,8 @@ static void image_draw(ilG_gui_frame *self, ilG_gui_rect where)
     ilG_material *shader = il_base_get(self->context, "il.graphics.gui.image.shader", NULL, NULL);
     if (!shader) {
         shader = ilG_material_new();
-        ilG_material_vertex(shader, IL_ASSET_READFILE("gui_image.vert"));
-        ilG_material_fragment(shader, IL_ASSET_READFILE("gui_image.frag"));
+        ilG_material_vertex_file(shader, "gui_image.vert");
+        ilG_material_fragment_file(shader, "gui_image.frag");
         ilG_material_name(shader, "GUI Image");
         ilG_material_arrayAttrib(shader, ILG_ARRATTR_POSITION, "in_Position");
         ilG_material_fragData(shader, ILG_FRAGDATA_ACCUMULATION, "out_Color");

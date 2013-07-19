@@ -4,7 +4,6 @@
 
 #include <GL/glew.h>
 
-#include "asset/asset.h"
 #include "graphics/glutil.h"
 #include "graphics/drawable3d.h"
 #include "graphics/bindable.h"

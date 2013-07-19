@@ -1,6 +1,7 @@
 #include "context.h"
 
 #include "util/log.h"
+#include "util/assert.h"
 #include "graphics/glutil.h"
 #include "common/event.h"
 #include "graphics/stage.h"
@@ -161,6 +162,7 @@ void ilG_context_makeCurrent(ilG_context *self)
 
 void ilG_context_addStage(ilG_context* self, ilG_stage* stage, int num)
 {
+    il_return_on_fail(stage);
     stage = il_ref(stage);
     if (num < 0) {
         IL_APPEND(self->stages, stage);

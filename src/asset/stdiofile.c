@@ -12,6 +12,8 @@
 # include <fcntl.h>
 #endif
 
+#include "util/log.h"
+
 struct stdiofile {
     il_base base;
     void *contents;

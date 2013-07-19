@@ -3,7 +3,6 @@
 #include <GL/glew.h>
 
 #include "util/log.h"
-#include "asset/asset.h"
 #include "graphics/gui/quad.h"
 #include "graphics/drawable3d.h"
 #include "graphics/bindable.h"
@@ -19,8 +18,8 @@ static ilG_material *get_shader(ilG_context *context)
     }
     mtl = ilG_material_new();
     ilG_material_name(mtl, "GUI Color Fill");
-    ilG_material_vertex(mtl, IL_ASSET_READFILE("colorfill.vert"));
-    ilG_material_fragment(mtl, IL_ASSET_READFILE("colorfill.frag"));
+    ilG_material_vertex_file(mtl, "colorfill.vert");
+    ilG_material_fragment_file(mtl, "colorfill.frag");
     ilG_material_arrayAttrib(mtl, ILG_ARRATTR_POSITION, "in_Position");
     if (ilG_material_link(mtl, context)) {
         return NULL;

@@ -9,7 +9,6 @@
 #include "graphics/glutil.h"
 #include "graphics/arrayattrib.h"
 #include "graphics/textureunit.h"
-#include "asset/asset.h"
 
 struct outpass {
     ilG_stage stage;
@@ -80,14 +79,14 @@ struct ilG_stage *ilG_outpass(struct ilG_context *context)
     self->stage.name = "Screen Output";
     
     ilG_material *material = ilG_material_new();
-    ilG_material_vertex(material, IL_ASSET_READFILE("post.vert"));
-    ilG_material_fragment(material, IL_ASSET_READFILE("post.frag"));
+    ilG_material_vertex_file(material, "post.vert");
+    ilG_material_fragment_file(material, "post.frag");
     ilG_material_name(material, "Post Processing Shader");
     ilG_material_arrayAttrib(material, ILG_ARRATTR_POSITION, "in_Position");
     ilG_material_arrayAttrib(material, ILG_ARRATTR_TEXCOORD, "in_Texcoord");
     ilG_material_textureUnit(material, ILG_TUNIT_NONE, "tex");
     if (ilG_material_link(material, context)) {
-        abort();
+        return NULL;
     }
     ilG_testError("Error creating material");
     self->material = material;

@@ -8,7 +8,6 @@
 #include "graphics/fragdata.h"
 #include "graphics/textureunit.h"
 #include "graphics/arrayattrib.h"
-#include "asset/asset.h"
 #include "math/vector.h"
 #include "math/matrix.h"
 
@@ -151,8 +150,8 @@ struct ilG_stage *ilG_lightpass(struct ilG_context* context)
 
     // shader creation
     struct ilG_material* mtl = ilG_material_new();
-    ilG_material_vertex(mtl, IL_ASSET_READFILE("light.vert"));
-    ilG_material_fragment(mtl, IL_ASSET_READFILE("light.frag"));
+    ilG_material_vertex_file(mtl, "light.vert");
+    ilG_material_fragment_file(mtl, "light.frag");
     ilG_material_name(mtl, "Deferred Shader");
     ilG_material_arrayAttrib(mtl, ILG_ARRATTR_POSITION, "in_Position");
     ilG_material_textureUnit(mtl, ILG_TUNIT_NONE, "depth");
@@ -163,7 +162,7 @@ struct ilG_stage *ilG_lightpass(struct ilG_context* context)
     ilG_material_fragData(mtl, ILG_FRAGDATA_ACCUMULATION, "out_Color");
     ilG_material_matrix(mtl, ILG_MVP, "mvp");
     if (ilG_material_link(mtl, context)) {
-        abort();
+        return NULL;
     }
     self->material = mtl;
     self->invalidated = 1;
