@@ -40,11 +40,30 @@ struct ilG_gui_textlayout {
     float col[4];
 };
 
+static void text_des(void *obj)
+{
+    ilG_gui_textlayout *self = obj;
+    il_unref(self->font);
+    free(self->lang);
+    free(self->script);
+    il_string_unref(self->source);
+
+    hb_buffer_destroy(self->buf);
+    hb_face_destroy(self->hb_ft_face);
+    hb_font_destroy(self->hb_ft_font);
+
+    cairo_destroy(self->cr);
+    cairo_surface_destroy(self->surface);
+    cairo_font_face_destroy(self->cairo_ft_face);
+
+    FT_Done_Face(self->ft_face);
+}
+
 il_type ilG_gui_textlayout_type = {
     .typeclasses = NULL,
     .storage = NULL,
     .constructor = NULL,
-    .destructor = NULL,
+    .destructor = text_des,
     .copy = NULL, 
     .name = "il.graphics.gui.textlayout",
     .registry = NULL,

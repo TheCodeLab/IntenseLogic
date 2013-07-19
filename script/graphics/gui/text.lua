@@ -51,7 +51,9 @@ base.wrap "il.graphics.gui.textlayout" {
         if not font then
             error "Could not load font"
         end
-        return modules.graphics.ilG_gui_textlayout_new(ctx, lang, "ILG_GUI_"..string.upper(dir), script, font, nil, pt, source)
+        local tl = modules.graphics.ilG_gui_textlayout_new(ctx, lang, "ILG_GUI_"..string.upper(dir), script, font, nil, pt, source)
+        ffi.gc(tl, modules.common.il_unref)
+        return tl
     end;
     getSize = function(self)
         local sz = ffi.new("unsigned[2]")
@@ -60,7 +62,9 @@ base.wrap "il.graphics.gui.textlayout" {
     end;
     render = function(self, col, opts)
         local arr = ffi.new("float[4]", col)
-        return modules.graphics.ilG_gui_textlayout_render(self, arr, 0)
+        local img = modules.graphics.ilG_gui_textlayout_render(self, arr, 0)
+        ffi.gc(img, modules.asset.ilA_img_free)
+        return img
     end;
 }
 
