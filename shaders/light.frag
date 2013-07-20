@@ -44,16 +44,16 @@ vec3 screen_to_world(vec3 sp)
 void main() 
 {
     // gl_FragCoord is from (.5, .5) to (w - .5, h - .5), depth texture is 0..1, feep's function wants (0,0,-1)..(1,1,1)
-    vec3 pos = screen_to_world(vec3(gl_FragCoord.xy / vec2(800,600), texture(depth, gl_FragCoord.xy - vec2(.5)).x) * 2 - 1);
+    vec3 pos = screen_to_world(vec3(gl_FragCoord.xy / vec2(800,600), texture(depth, gl_FragCoord.xy).x) * 2 - 1);
     vec3 light_dir = normalize(position - pos);
     vec3 norm = texture(normal, gl_FragCoord.xy).xyz;
     float daf = 1 - length(position - pos) / radius;
 
-    vec3 col;
-    vec3 diffuse = vec3(.64); //texture(diffuse, gl_FragCoord.xy - vec2(.5)).xyz; 
+    vec3 col = vec3(0);
+    vec3 diffuse = texture(diffuse, gl_FragCoord.xy).xyz; 
     col = diffuse * vec3(max(0, dot(light_dir, norm)));
-    vec4 spec = vec4(.5, .5, .5, 96); //texture(specular, gl_FragCoord.xy - vec2(.5));
-    col += spec.xyz * pow(max(0, dot(normalize(2 * dot(light_dir, norm) * norm - light_dir), normalize(camera - pos))), spec.w);
+    vec4 spec = texture(specular, gl_FragCoord.xy);
+    col += spec.xyz * pow(max(0, dot(normalize(2 * dot(light_dir, norm) * norm - light_dir), normalize(camera - pos))), spec.w * 255);
 
     out_Color = col * daf * color;
     out_Normal = vec3(0);
