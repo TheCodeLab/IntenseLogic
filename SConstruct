@@ -20,10 +20,6 @@ if platform == "mingw":
 else:
     linkflags += " -rdynamic" # assume ELF because I'm terrible
 
-# luajit requires this
-if platform == "osx":
-    linkflags += " -pagezero_size 10000 -image_base 100000000"
-
 # libs
 lib_dirs = ["/usr/lib", "/usr/local/lib"]
 
@@ -63,10 +59,11 @@ libilmath = SConscript("src/math/SConscript", platform=platform, env=env)
 Export("libilmath")
 libilcommon = SConscript("src/common/SConscript", platform=platform, env=env, libilutil=libilutil, libilmath=libilmath)
 Export("libilcommon")
-libilinput = SConscript("src/input/SConscript", platform=platform, env=env, libilutil=libilutil, libilcommon=libilcommon)
 libilasset = SConscript("src/asset/SConscript", platform=platform, env=env, libilutil=libilutil, libilmath=libilmath, libilcommon=libilcommon)
 Export("libilasset")
-libilgraphics = SConscript("src/graphics/SConscript", platform=platform, env=env, libilutil=libilutil, libilmath=libilmath, libilcommon=libilcommon, libilasset=libilasset)
+libilinput = SConscript("src/input/SConscript", platform=platform, env=env, libilutil=libilutil, libilcommon=libilcommon)
+Export("libilinput")
+libilgraphics = SConscript("src/graphics/SConscript", platform=platform, env=env, libilutil=libilutil, libilmath=libilmath, libilcommon=libilcommon, libilasset=libilasset, libilinput=libilinput)
 Export("libilgraphics")
 libilnetwork = SConscript("src/network/SConscript", platform=platform, env=env, libilutil=libilutil)
 Export("libilnetwork")
@@ -99,11 +96,16 @@ env.Append(LIBS = libs[platform])
 for lib in pkg_libs[platform] :
     env.ParseConfig("pkg-config " + lib + " --cflags --libs")
 
+lf=""
+if platform=="osx":
+    lf = "-pagezero_size 10000 -image_base 100000000"
+
 # link program
 prog = env.Program(target  = build_dir + "/" + output,
                    source  = objects,
                    LIBPATH = lib_dirs,
-                   CPPPATH = src_dir)
+                   CPPPATH = src_dir,
+                   LINKFLAGS = lf)
 Depends(prog, libilmath)
 Depends(prog, libilnetwork)
 Depends(prog, libilutil)
