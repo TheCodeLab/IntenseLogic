@@ -122,7 +122,7 @@ sig.drawable = drawable.box;
 sig.material = material.default;
 sig.texture = texture.default;
 sig:track(c)]]
-local plain = material()
+--[[local plain = material()
 plain:vertex(io.open("shaders/plain.vert","r"):read "*a")
 plain:fragment(io.open("shaders/plain.frag", "r"):read "*a")
 plain:mtlname "Plain material"
@@ -146,7 +146,7 @@ ico.position = vector3(-10, 0, 0).ptr
 ico.drawable = drawable.icosahedron(c)
 ico.material = plain --material.default;
 ico.texture = texture.default;
-ico:track(c)
+ico:track(c)]]
 
 local first_mouse = true
 function mousemove(reg, name, xabs, yabs, x, y)
