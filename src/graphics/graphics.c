@@ -137,12 +137,7 @@ int il_bootstrap(int argc, char **argv)
     }
 
     glfw_setup();
-    IL_GRAPHICS_TESTERROR("Unknown");
-    
-    // GL setup
-    glDepthFunc(GL_LESS);
-    glEnable(GL_DEPTH_TEST);
-    IL_GRAPHICS_TESTERROR("Error setting up screen");
+    /* IL_GRAPHICS_TESTERROR("Unknown"); */
 
     // generate ilG_material_default
     ilG_material_init();
@@ -152,7 +147,7 @@ int il_bootstrap(int argc, char **argv)
     ilG_quad_init();
     // generate default textures
     ilG_texture_init();
-        
+
     // register events
     event_setup();
 
