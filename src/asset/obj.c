@@ -5,6 +5,7 @@
 #include <errno.h>
 
 #include "util/log.h"
+#include "asset/mtl.h"
 
 char *strsep(char **stringp, const char *delim);
 
@@ -23,7 +24,7 @@ struct face {
     int vert[4];
     int tex[4];
     int norm[4];
-    int mtl;
+    ilA_mtl *mtl;
 };
 
 struct obj {
@@ -35,6 +36,7 @@ struct obj {
     float (*normal)[4];
     size_t num_face, face_cap;
     struct face *face;
+    ilA_mtl mtl, *cur;
 };
 
 static int parse_line(struct obj *obj, char *line, char *error)
@@ -44,10 +46,10 @@ static int parse_line(struct obj *obj, char *line, char *error)
     //unsigned char cvec[4] = {0};
     int i, col = -1;
 
-#define next strsep(&saveptr, " ")
-    word = next;
+#define next_word strsep(&saveptr, " ")
+    word = next_word;
     if (strcmp(word, "v") == 0) {
-        for (i = 0, word = next; word && i < 4; word = next, i++) {
+        for (i = 0, word = next_word; word && i < 4; word = next_word, i++) {
             errno = 0;
             fvec[i] = strtof(word, NULL);
             if (errno) {
@@ -61,7 +63,7 @@ static int parse_line(struct obj *obj, char *line, char *error)
         }
         memcpy(obj->vertex[obj->num_vertex++], fvec, sizeof(float) * 4);
     } else if (strcmp(word, "vt") == 0) {
-        for (i = 0, word = next; word && i < 3; word = next, i++) {
+        for (i = 0, word = next_word; word && i < 3; word = next_word, i++) {
             errno = 0;
             fvec[i] = strtof(word, NULL);
             if (errno) {
@@ -75,7 +77,7 @@ static int parse_line(struct obj *obj, char *line, char *error)
         }
         memcpy(obj->texcoord[obj->num_texcoord++], fvec, sizeof(float) * 4);
     } else if (strcmp(word, "vn") == 0) {
-        for (i = 0, word = next; word && i < 3; word = next, i++) {
+        for (i = 0, word = next_word; word && i < 3; word = next_word, i++) {
             errno = 0;
             fvec[i] = strtof(word, NULL);
             if (errno) {
@@ -91,7 +93,7 @@ static int parse_line(struct obj *obj, char *line, char *error)
     } else if (strcmp(word, "f") == 0) {
         struct face face;
         memset(&face, 0, sizeof(struct face));
-        for (i = 0, word = next; word && i < 4; word = next, i++) {
+        for (i = 0, word = next_word; word && i < 4; word = next_word, i++) {
             face.vert[i] = -1;
             face.tex[i] = -1;
             face.norm[i] = -1;
@@ -138,16 +140,30 @@ static int parse_line(struct obj *obj, char *line, char *error)
             }
             face.norm[i] = id - 1;
         }
+        face.mtl = obj->cur;
         face.num = i;
         if (obj->num_face >= obj->face_cap) {
             obj->face = resize(obj->face, obj->num_face * sizeof(struct face), obj->face_cap * 2 * sizeof(struct face));
             obj->face_cap *= 2;
         }
         memcpy(obj->face + obj->num_face++, &face, sizeof(struct face));
+    } else if (strcmp(word, "mtllib") == 0) {
+        void *data;
+        size_t size;
+        char *filename = next_word;
+        il_base *base = ilA_contents_chars(filename, &size, &data, NULL);
+        if (!base) {
+            return 0;
+        }
+        ilA_mesh_parseMtl(&obj->mtl, filename, data, size);
+    } else if (strcmp(word, "usemtl") == 0) {
+        char *name = next_word;
+        HASH_FIND(hh, &obj->mtl, name, strlen(name), obj->cur);
     } else if (strcmp(word, "#") != 0) {
         snprintf(error, 1024, "Unknown command \"%s\".", word);
         col = word - line;
     }
+#undef next_word
 
     return col;
 }
@@ -183,6 +199,9 @@ ilA_mesh *ilA_mesh_parseObj(const char *filename, const char *data, size_t lengt
     mesh->position = calloc(sizeof(float) * 4, mesh->num_vertices);
     mesh->texcoord = calloc(sizeof(float) * 4, mesh->num_vertices);
     mesh->normal   = calloc(sizeof(float) * 4, mesh->num_vertices);
+    //mesh->ambient  = calloc(sizeof(unsigned char) * 4, mesh->num_vertices);
+    mesh->diffuse  = calloc(sizeof(unsigned char) * 4, mesh->num_vertices);
+    mesh->specular = calloc(sizeof(unsigned char) * 4, mesh->num_vertices);
     for (i = 0; i < obj->num_face; i++) {
         struct face *face = obj->face + i;
         static int quad_to_tri[] = {
@@ -213,6 +232,11 @@ ilA_mesh *ilA_mesh_parseObj(const char *filename, const char *data, size_t lengt
                 }
             } else {
                 memcpy(mesh->normal[v],   obj->normal[  face->norm[idx]], sizeof(float) * 4);
+            }
+            if (face->mtl) {
+                //memcpy(mesh->ambient[v],  face->mtl->ambient, sizeof(unsigned char) * 4);
+                memcpy(mesh->diffuse[v],  face->mtl->diffuse, sizeof(unsigned char) * 4);
+                memcpy(mesh->specular[v], face->mtl->specular, sizeof(unsigned char) * 4);
             }
             v++;
         }

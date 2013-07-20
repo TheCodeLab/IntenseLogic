@@ -81,6 +81,8 @@ mtl:mtlname "Test material"
 mtl:arrayAttrib("position", "in_Position")
 mtl:arrayAttrib("texcoord", "in_Texcoord")
 mtl:arrayAttrib("normal", "in_Normal")
+mtl:arrayAttrib("diffuse", "in_Diffuse")
+mtl:arrayAttrib("specular", "in_Specular")
 mtl:matrix("MVP", "mvp")
 mtl:matrix("IMT", "imt")
 mtl:textureUnit("color0", "tex")
