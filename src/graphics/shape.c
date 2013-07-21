@@ -259,7 +259,7 @@ ilG_drawable3d *ilG_box(ilG_context *context)
     self->mode = GL_TRIANGLES;
     self->count = 36;
     self->type = 1;
-    il_base_set(context, "Il.graphics.shape.box", self, sizeof(struct ilG_shape), IL_OBJECT);
+    il_base_set(context, "il.graphics.shape.box", self, sizeof(struct ilG_shape), IL_OBJECT);
     return &self->drawable;
 }
 
@@ -275,7 +275,7 @@ ilG_drawable3d *ilG_icosahedron(ilG_context *context)
     self->mode = GL_TRIANGLES;
     self->count = 20 * 3;
     self->type = 2;
-    il_base_set(context, "Il.graphics.shape.icosahedron", self, sizeof(struct ilG_shape), IL_OBJECT);
+    il_base_set(context, "il.graphics.shape.icosahedron", self, sizeof(struct ilG_shape), IL_OBJECT);
     return &self->drawable;
 }
 
