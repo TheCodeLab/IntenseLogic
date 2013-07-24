@@ -1,3 +1,7 @@
+/** @file world.h
+ * @brief Container for data related to in-game scenes
+ */
+
 #ifndef IL_COMMON_WORLD_H
 #define IL_COMMON_WORLD_H
 
@@ -21,8 +25,10 @@ typedef struct il_worldIterator il_worldIterator;
 
 il_world* il_world_new();
 
+/** Adds a positionable to a world */
 void il_world_add(il_world*, struct il_positionable*);
 
+/** Iterates the positionables in a world. Pass a pointer to NULL for first iteration */
 struct il_positionable * il_world_iterate(il_world*,
   il_worldIterator**);
 
