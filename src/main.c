@@ -9,7 +9,7 @@
 
 //#include "docopt.inc"
 #include "loader.h"
-#include "script/script.h"
+#include "script.h"
 #include "util/array.h" // entirely in preprocessor, so it's fine
 #include "version.h"
 
