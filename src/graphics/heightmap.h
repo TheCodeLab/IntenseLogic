@@ -1,12 +1,14 @@
 #ifndef ILG_HEIGHTMAP_H
 #define ILG_HEIGHTMAP_H
 
-struct ilG_drawable3d;
-struct ilG_texture;
-struct il_heightmap;
+#include "common/base.h"
 
-struct ilG_drawable3d* ilG_heightmapDrawable(const struct il_heightmap* self);
-struct ilG_texture* ilG_heightmapTexture(const struct il_heightmap* self);
+extern il_type ilG_heightmap_type;
+
+struct ilG_context;
+
+struct ilG_drawable3d *ilG_heightmap_new(struct ilG_context *context, unsigned w, unsigned h);
+struct ilG_material *ilG_heightmap_shader(struct ilG_context *context);
 
 #endif
 

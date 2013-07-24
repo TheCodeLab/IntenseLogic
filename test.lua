@@ -25,6 +25,7 @@ local text          = require "graphics.gui.text"
 local mesh          = require "asset.mesh"
 local lightpass     = require "graphics.lightpass"
 local file          = require "asset.file"
+local heightmap     = require "graphics.heightmap"
 
 local w = world()
 local c = context()

@@ -52,11 +52,6 @@ il_base *ilG_shaders_dir;
 const ilA_dir *ilG_shaders_iface;
 
 static void quit();
-void ilG_material_init();
-void ilG_shape_init();
-void ilG_quad_init();
-void ilG_texture_init();
-void ilG_registerJoystickBackend();
 
 static void glew_error(int code, const char *err)
 {
@@ -64,6 +59,7 @@ static void glew_error(int code, const char *err)
     il_log_real("", 0, "GLFW", 1, "%s", err);
 }
 
+void ilG_registerJoystickBackend();
 static void glfw_setup()
 {
     glfwSetErrorCallback(glew_error);
@@ -104,6 +100,11 @@ const char **il_dependencies(int argc, char **argv)
     return deps;
 }
 
+void ilG_material_init();
+void ilG_shape_init();
+void ilG_quad_init();
+void ilG_texture_init();
+void ilG_heightmap_init();
 int il_bootstrap(int argc, char **argv)
 {
     int opt, idx;
@@ -144,14 +145,11 @@ int il_bootstrap(int argc, char **argv)
     glEnable(GL_DEPTH_TEST);
     IL_GRAPHICS_TESTERROR("Error setting up screen");
 
-    // generate ilG_material_default
     ilG_material_init();
-    // generate primitive defaults
     ilG_shape_init();
-    // generate gui quad
     ilG_quad_init();
-    // generate default textures
     ilG_texture_init();
+    ilG_heightmap_init();
         
     // register events
     event_setup();
