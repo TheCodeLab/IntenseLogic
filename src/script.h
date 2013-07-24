@@ -1,3 +1,7 @@
+/** @file script.h
+ * @brief Loads and runs Lua scripts
+ */
+
 #ifndef IL_SCRIPT_H
 #define IL_SCRIPT_H
 
@@ -8,11 +12,7 @@
 #include <lualib.h>
 #include <lauxlib.h>
 
-//#include "util/ilstring.h"
-
 typedef struct ilS_script {
-  //char *source;
-  //size_t source_len;
   char *filename;
   int running;
   lua_State * L;
@@ -21,6 +21,7 @@ typedef struct ilS_script {
   char * err;
 } ilS_script;
 
+/** Convienience macro for running a script */
 #define ilS_loadfile(f) {   \
   ilS_script* script;       \
   script = ilS_new();       \
@@ -32,12 +33,17 @@ typedef struct ilS_script {
   }                               \
 }
 
+/** Creates a new script */
 ilS_script * ilS_new();
+/** Destroys a script */
 void ilS_free(ilS_script* self);
+/** Adds a path to package.path */
 int ilS_addPath(ilS_script* self, const char *path);
-//int ilS_fromAsset(ilS_script* self, ilA_asset * asset);
+/** Loads the script source */
 int ilS_fromSource(ilS_script* self, const char *source, size_t len);
+/** Loads script source from a file */
 int ilS_fromFile(ilS_script* self, const char * filename);
+/** Executes the script */
 int ilS_run(ilS_script* self);
 
 #endif

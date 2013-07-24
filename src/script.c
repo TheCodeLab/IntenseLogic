@@ -4,9 +4,6 @@
 #include <sys/stat.h>
 #include <stdio.h>
 
-//#include "util/log.h"
-//#include "util/ilstring.h"
-
 char *strdup(const char*);
 
 static int print(lua_State* L)
@@ -60,13 +57,6 @@ ilS_script * ilS_new()
     return self;
 }
 
-/*int ilS_fromAsset(ilS_script* self, ilA_asset * asset)
-{
-    if (!self || !asset) return -1;
-    self->filename = il_StoC(ilA_getPath(asset));
-    return ilS_fromSource(self, ilA_readContents(asset));
-}*/
-
 struct reader_ctx {
     int loaded;
     const char *source;
@@ -85,8 +75,6 @@ static const char * reader(lua_State* L, void * data, size_t * size)
 int ilS_fromSource(ilS_script* self, const char *source, size_t len)
 {
     if (!self || !source) return -1;
-    //self->source = strdup(source);
-    //self->source_len = len;
     struct reader_ctx data;
     data.loaded = 0;
     data.source = source;
