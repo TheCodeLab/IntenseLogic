@@ -1,6 +1,7 @@
 #ifndef ILI_INPUT_H
 #define ILI_INPUT_H
 
+/** Key mapping table */
 enum ilI_key {
     // most of these were lifted off of GFLW so they wouldn't have to be arbitrarily assigned and remapped
     ILI_KEY_WORLD_1         = 161, /* non-US #1 */
@@ -101,6 +102,7 @@ enum ilI_key {
     ILI_JOY_16              = 783,
 };
 
+/** Keyboard modifiers */
 enum ilI_mod {
     ILI_MOD_SHIFT   = 0x1,
     ILI_MOD_CONTROL = 0x2,
@@ -108,6 +110,7 @@ enum ilI_mod {
     ILI_MOD_SUPER   = 0x8
 };
 
+/** Key/mouse button press/release */
 typedef struct ilI_buttonevent {
     enum ilI_key button;
     int scancode;
@@ -116,6 +119,7 @@ typedef struct ilI_buttonevent {
     enum ilI_mod mods;
 } ilI_buttonevent;
 
+/** Returns whether the specified button is being pressed, and optionally returns which input backend reported it */
 int ilI_getKey(enum ilI_key key, int *input);
 
 typedef struct ilI_backend {
@@ -124,7 +128,9 @@ typedef struct ilI_backend {
     void *user;
 } ilI_backend;
 
+/** Registers a new input backend, the memory must last until application exit */
 int ilI_register(ilI_backend *backend);
+/** Returns the name of the specified backend, allocated with strdup(3), the user must free it */
 char *ilI_backend_getName(int input);
 
 #endif
