@@ -1,4 +1,4 @@
-/** @file mesh.h
+/** @file asset/mesh.h
  * @brief Mesh loading and manipulation
  */
 

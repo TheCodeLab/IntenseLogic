@@ -1,4 +1,4 @@
-/** @file world.h
+/** @file common/world.h
  * @brief Container for data related to in-game scenes
  */
 
