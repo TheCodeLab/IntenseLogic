@@ -1,4 +1,5 @@
-#include "common.h"
+#include "common/base.h"
+#include "common/event.h"
 
 void ilE_init();
 
