@@ -1,13 +1,19 @@
+/** @file list.h
+ * @brief Linked lists implemented entirely in C preprocessor
+ */
+
 #ifndef IL_LIST_H
 #define IL_LIST_H
 
-/* This is some support code for the engine, to simplify creation of data
+/** @section Description
+ *
+ * This is some support code for the engine, to simplify creation of data
  * structures used throughout. This is a simple doubley linked list
  * implementation. It is entirely made using C preprocessor. All macros
  * follow the form of:
- *
- * IL_LIST_<NAME>([list,] el [, item], ...)
- *
+
+        IL_LIST_<NAME>([list,] el [, item], ...)
+
  * List is a constant struct that represents the head/tail of your linked list
  * El is the identifier used for the list in your struct (see below)
  * Item is a pointer to a specific item in your linked list
@@ -17,26 +23,26 @@
  *
  * The following is how you would create a linked list struct for your code:
 
-struct MyStruct {
-    int n;
-    char *whatever;
-    IL_LIST(struct MyStruct) ll;
-};
+        struct MyStruct {
+            int n;
+            char *whatever;
+            IL_LIST(struct MyStruct) ll;
+        };
 
  * You would then create a global instance of this struct to contain head/tail:
 
-struct MyStruct MyStruct_list;
+        struct MyStruct MyStruct_list;
 
  * You can then perform various operations on your linked lists
  * Getting the next element:
 
-struct MyStruct *mystruct = ...;
-struct MyStruct *next = IL_LIST_NEXT(ll, mystruct);
+        struct MyStruct *mystruct = ...;
+        struct MyStruct *next = IL_LIST_NEXT(ll, mystruct);
 
  * Appending an element:
 
-struct MyStruct *mystruct = ...;
-IL_LIST_APPEND(MyStruct_list, ll, mystruct);
+        struct MyStruct *mystruct = ...;
+        IL_LIST_APPEND(MyStruct_list, ll, mystruct);
 
  */
 
