@@ -1,9 +1,14 @@
+/** @file mesh.h
+ * @brief Mesh loading and manipulation
+ */
+
 #ifndef ILA_MESH_H
 #define ILA_MESH_H
 
 #include "common/base.h"
 #include "asset/node.h"
 
+/** These match up with the OpenGL primitives without creating a dependency on gl.h */
 enum ilA_mesh_primitive {
     ILA_MESH_POINTS,
     ILA_MESH_LINES, 
@@ -30,10 +35,15 @@ typedef struct ilA_mesh {
     unsigned char (*specular)[4];
 } ilA_mesh;
 
+/** Loads a mesh from a file */
 ilA_mesh *ilA_mesh_load(il_base *file, const ilA_file *iface);
+/** Loads a mesh from a file path */
 ilA_mesh *ilA_mesh_loadfile(const char *path);
+/** Loads a mesh from memory */
 ilA_mesh *ilA_mesh_loadmem(const char *filename, const void *data, size_t length);
+/** Destroys all data associated with a mesh */
 void ilA_mesh_free(ilA_mesh *self);
+/** Creates lines out of the position and normal data of a mesh, for debugging purposes. The f paramter is a factor for how long the lines should be */
 ilA_mesh *ilA_mesh_debugLines(ilA_mesh *self, float f);
 
 #endif

@@ -1,3 +1,6 @@
+/** @file mtl.h
+ * @brief Used for MTL file parsing, as part of Wavefront OBJ loading 
+ */
 #ifndef ILA_MTL_H
 #define ILA_MTL_H
 
@@ -15,6 +18,7 @@ typedef struct ilA_mtl {
     struct ilA_mtl *cur;
 } ilA_mtl;
 
+/** Parses an MTL file */
 ilA_mtl *ilA_mesh_parseMtl(ilA_mtl *mtl, const char *filename, const char *data, size_t length);
 void ilA_mtl_free(ilA_mtl *self);
 
