@@ -2,7 +2,9 @@
 Intense Logic is metagaming at its finest.
 
 ## Documentation
-Copious amounts of documentation can be found on the [Wiki](https://github.com/TheCodeLab/IntenseLogic/wiki).
+API docs can be found at [https://lymiahugs.com/~tiffany/il/api/index.html]
+
+Lua API docs can be found at [https://lymiahugs.com/~tiffany/il/doc/index.html]
 
 ## Building
 Compile using [scons](http://scons.org/).
