@@ -3,6 +3,39 @@
 #include <stdlib.h>
 
 #include "util/assert.h"
+#include "util/alloc.h"
+
+static il_allocator *aligned_16;
+
+ilA_mesh *ilA_mesh_new(enum ilA_mesh_attrib attribs, size_t vertices)
+{
+    ilA_mesh *self = calloc(1, sizeof(ilA_mesh));
+
+    if (!aligned_16) {
+        aligned_16 = il_allocator_aligned(&il_default_alloc, 16);
+    }
+    self->num_vertices = vertices;
+    if (attribs & ILA_MESH_POSITION) {
+        self->position = il_alloc(aligned_16, sizeof(float) * 4 * vertices);
+    }
+    if (attribs & ILA_MESH_TEXCOORD) {
+        self->texcoord = il_alloc(aligned_16, sizeof(float) * 4 * vertices);
+    }
+    if (attribs & ILA_MESH_NORMAL) {
+        self->normal = il_alloc(aligned_16, sizeof(float) * 4 * vertices);
+    }
+    if (attribs & ILA_MESH_AMBIENT) {
+        self->ambient = il_alloc(aligned_16, sizeof(unsigned char) * 4 * vertices);
+    }
+    if (attribs & ILA_MESH_DIFFUSE) {
+        self->diffuse = il_alloc(aligned_16, sizeof(unsigned char) * 4 * vertices);
+    }
+    if (attribs & ILA_MESH_SPECULAR) {
+        self->specular = il_alloc(aligned_16, sizeof(unsigned char) * 4 * vertices);
+    }
+
+    return self;
+}
 
 ilA_mesh *ilA_mesh_load(il_base *file, const ilA_file *iface)
 {
@@ -31,22 +64,22 @@ ilA_mesh *ilA_mesh_loadmem(const char *filename, const void *data, size_t length
 void ilA_mesh_free(ilA_mesh *self)
 {
     if (self->position) {
-        free(self->position);
+        il_free(aligned_16, self->position);
     }
     if (self->texcoord) {
-        free(self->texcoord);
+        il_free(aligned_16, self->texcoord);
     }
     if (self->normal) {
-        free(self->normal);
+        il_free(aligned_16, self->normal);
     }
     if (self->ambient) {
-        free(self->ambient);
+        il_free(aligned_16, self->ambient);
     }
     if (self->diffuse) {
-        free(self->diffuse);
+        il_free(aligned_16, self->diffuse);
     }
     if (self->specular) {
-        free(self->specular);
+        il_free(aligned_16, self->specular);
     }
     free(self);
 }

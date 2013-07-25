@@ -24,6 +24,16 @@ enum ilA_mesh_primitive {
     ILA_MESH_PATCHES
 };
 
+/** Attributes for a mesh */
+enum ilA_mesh_attrib {
+    ILA_MESH_POSITION   = 0x1,
+    ILA_MESH_TEXCOORD   = 0x2,
+    ILA_MESH_NORMAL     = 0x4,
+    ILA_MESH_AMBIENT    = 0x8,
+    ILA_MESH_DIFFUSE    = 0x10,
+    ILA_MESH_SPECULAR   = 0x20,
+};
+
 typedef struct ilA_mesh {
     enum ilA_mesh_primitive mode;
     size_t num_vertices, texcoord_size;
@@ -35,6 +45,8 @@ typedef struct ilA_mesh {
     unsigned char (*specular)[4];
 } ilA_mesh;
 
+/** Create a new mesh using a bitvector of array attributes (see graphics/arrayattrib.h) to allocate and a number of vertices */
+ilA_mesh *ilA_mesh_new(enum ilA_mesh_attrib attribs, size_t vertices);
 /** Loads a mesh from a file */
 ilA_mesh *ilA_mesh_load(il_base *file, const ilA_file *iface);
 /** Loads a mesh from a file path */

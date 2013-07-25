@@ -174,7 +174,7 @@ ilA_mesh *ilA_mesh_parseObj(const char *filename, const char *data, size_t lengt
     ilA_mesh *mesh;
     char *str = strndup(data, length), *saveptr = str, *ptr, error[1024], col_str[8];
     int line = 0, col;
-    size_t i, j, v = 0;
+    size_t i, j, v = 0, num_vertices = 0;
 
     obj->vertex = calloc(sizeof(float) * 4, 1000);
     obj->texcoord = calloc(sizeof(float) * 4, 1000);
@@ -191,17 +191,11 @@ ilA_mesh *ilA_mesh_parseObj(const char *filename, const char *data, size_t lengt
         }
     }
     free(str);
-    mesh = calloc(1, sizeof(ilA_mesh));
-    mesh->mode = ILA_MESH_TRIANGLES;
     for (i = 0; i < obj->num_face; i++) {
-        mesh->num_vertices += obj->face[i].num == 4? 6 : obj->face[i].num;
+        num_vertices += obj->face[i].num == 4? 6 : obj->face[i].num;
     }
-    mesh->position = calloc(sizeof(float) * 4, mesh->num_vertices);
-    mesh->texcoord = calloc(sizeof(float) * 4, mesh->num_vertices);
-    mesh->normal   = calloc(sizeof(float) * 4, mesh->num_vertices);
-    //mesh->ambient  = calloc(sizeof(unsigned char) * 4, mesh->num_vertices);
-    mesh->diffuse  = calloc(sizeof(unsigned char) * 4, mesh->num_vertices);
-    mesh->specular = calloc(sizeof(unsigned char) * 4, mesh->num_vertices);
+    mesh = ilA_mesh_new(ILA_MESH_POSITION|ILA_MESH_TEXCOORD|ILA_MESH_NORMAL|ILA_MESH_DIFFUSE|ILA_MESH_SPECULAR, num_vertices);
+    mesh->mode = ILA_MESH_TRIANGLES;
     for (i = 0; i < obj->num_face; i++) {
         struct face *face = obj->face + i;
         static int quad_to_tri[] = {
