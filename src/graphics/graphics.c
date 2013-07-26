@@ -104,7 +104,6 @@ void ilG_material_init();
 void ilG_shape_init();
 void ilG_quad_init();
 void ilG_texture_init();
-void ilG_heightmap_init();
 int il_bootstrap(int argc, char **argv)
 {
     int opt, idx;
@@ -138,13 +137,11 @@ int il_bootstrap(int argc, char **argv)
     }
 
     glfw_setup();
-    /* IL_GRAPHICS_TESTERROR("Unknown"); */
 
     ilG_material_init();
     ilG_shape_init();
     ilG_quad_init();
     ilG_texture_init();
-    ilG_heightmap_init();
         
     // register events
     event_setup();

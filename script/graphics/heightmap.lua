@@ -7,17 +7,21 @@ ffi.cdef [[
 struct ilG_drawable3d *ilG_heightmap_new(struct ilG_context *context, unsigned w, unsigned h);
 struct ilG_material *ilG_heightmap_shader(struct ilG_context *context);
 
-extern il_type ilG_heightmap_type;
-
 ]]
 
-base.wrap "il.graphics.heightmap" {
-    struct = "ilG_drawable3d";
-    __call = function(self, ...)
-        return modules.graphics.ilG_heightmap_new(...)
-    end;
-    defaultShader = modules.graphics.ilG_heightmap_shader;
-}
+local hm = {}
 
-return modules.graphics.ilG_heightmap_type
+hm.heightmap = modules.graphics.ilG_heightmap_new
+
+function hm.defaultShader(...)
+    local res = modules.graphics.ilG_heightmap_shader(...)
+    if (res == nil) then
+        error "Failed to compile shader"
+    end
+    return res
+end
+
+setmetatable(hm, {__call = function(_, ...) return hm.heightmap(...) end})
+
+return hm
 

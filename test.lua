@@ -105,6 +105,18 @@ for i = 0, width*width*width-1 do
     --print(box.position)
 end
 
+local ht = texture()
+ht:setContext(c)
+ht:fromfile("height0", "heightmap.png")
+local hm = positionable()
+w:add(hm)
+hm.drawable = heightmap(c, 100, 100)
+hm.material = heightmap.defaultShader(c)
+hm.texture = ht
+hm.position = vector3(0, 0, 0).ptr
+hm.size = vector3(100, 50, 100).ptr
+hm:track(c)
+
 c.camera = camera()
 c.camera.projection_matrix = matrix.perspective(75, 4/3, 2, 1000).ptr
 print(c.camera.projection_matrix)
