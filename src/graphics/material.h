@@ -24,6 +24,8 @@ typedef struct ilG_material {
     char *name;
 } ilG_material;
 
+typedef void (*ilG_material_customDataFunc)(ilG_material *self, GLint uniform, void *user);
+
 extern il_type ilG_material_type;
 extern ilG_material ilG_material_default;
 
@@ -37,6 +39,7 @@ void ilG_material_arrayAttrib(ilG_material*, unsigned long attrib, const char *l
 void ilG_material_fragData(ilG_material*, unsigned long attrib, const char *location);
 void ilG_material_textureUnit(ilG_material*, unsigned long type, const char *location);
 void ilG_material_matrix(ilG_material*, enum ilG_transform, const char *location);
+void ilG_material_customUniform(ilG_material*, ilG_material_customDataFunc func, void *user, const char *location);
 int /*failure*/ ilG_material_link(ilG_material*, struct ilG_context *ctx);
 
 ilG_material* ilG_material_fromId(unsigned int id); // tracker.c

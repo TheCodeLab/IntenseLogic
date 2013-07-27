@@ -17,24 +17,32 @@
 #include "graphics/graphics.h"
 
 struct textureunit {
-    const char *location;
+    char *location;
     GLint uniform;
     unsigned long type;
 };
 
 struct matrixinfo {
-    const char *location;
+    char *location;
     GLint uniform;
     enum ilG_transform type;
+};
+
+struct mtlfunc {
+    char *location;
+    ilG_material_customDataFunc func;
+    GLint uniform;
+    void *user;
 };
 
 struct ilG_material_config {
     IL_ARRAY(struct textureunit,) texunits;    
     IL_ARRAY(struct matrixinfo,) matrices;
+    IL_ARRAY(struct mtlfunc,) funcs;
     il_string *vertsource;
     il_string *fragsource;
-    const char* attriblocs[ILG_ARRATTR_NUMATTRS];
-    const char* fraglocs[ILG_FRAGDATA_NUMATTRS];
+    char* attriblocs[ILG_ARRATTR_NUMATTRS];
+    char* fraglocs[ILG_FRAGDATA_NUMATTRS];
 };
 
 static void mtl_bind(void *obj)
@@ -57,6 +65,9 @@ static void mtl_bind(void *obj)
             // same for any positionable, otherwise it goes in update()
             ilG_bindMVP(mtl->config->matrices.data[i].uniform, mtl->config->matrices.data[i].type, mtl->context->camera, NULL);
         }
+    }
+    for (i = 0; i < mtl->config->funcs.length; i++) {
+        mtl->config->funcs.data[i].func(mtl, mtl->config->funcs.data[i].uniform, mtl->config->funcs.data[i].user);
     }
 }
 
@@ -181,6 +192,17 @@ void ilG_material_matrix(ilG_material* self, enum ilG_transform type, const char
         type
     };
     IL_APPEND(self->config->matrices, mat);
+}
+
+void ilG_material_customUniform(ilG_material* self, ilG_material_customDataFunc func, void *user, const char *location)
+{
+    struct mtlfunc f = (struct mtlfunc) {
+        strdup(location),
+        func,
+        0,
+        user
+    };
+    IL_APPEND(self->config->funcs, f);
 }
 
 int /*failure*/ ilG_material_link(ilG_material* self, ilG_context *ctx)
