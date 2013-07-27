@@ -249,6 +249,9 @@ int /*failure*/ ilG_material_link(ilG_material* self, ilG_context *ctx)
         self->config->matrices.data[i].uniform = glGetUniformLocation(self->program, self->config->matrices.data[i].location);
     }
     ilG_testError("Error binding matrices");
+    for (i = 0; i < self->config->funcs.length; i++) {
+        self->config->funcs.data[i].uniform = glGetUniformLocation(self->program, self->config->funcs.data[i].location);
+    }
 
     self->valid = 1;
     return 0;

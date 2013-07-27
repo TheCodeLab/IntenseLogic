@@ -107,14 +107,14 @@ end
 
 local ht = texture()
 ht:setContext(c)
-ht:fromfile("height0", "heightmap.png")
+ht:fromfile("height0", "smooth-heightmap.png")
 local hm = positionable()
 w:add(hm)
 hm.drawable = heightmap(c, 100, 100)
 hm.material = heightmap.defaultShader(c)
 hm.texture = ht
 hm.position = vector3(0, 0, 0).ptr
-hm.size = vector3(100, 50, 100).ptr
+hm.size = vector3(100, 25, 100).ptr
 hm:track(c)
 
 c.camera = camera()
@@ -124,7 +124,7 @@ c.camera.positionable.position = vector3(0, 0, 0).ptr
 c.camera.sensitivity = .01
 c.camera.movespeed = vector3(1,1,1).ptr
 local l = light()---5, -5, -5, 50, 0, 0, 1.0) -- x y z radius r g b
-l.positionable.position = vector3(0, 50, 0).ptr
+l.positionable.position = vector3(50, 50, 50).ptr
 l.radius = 250
 l.color = vector3(.3, .4, 1).ptr
 l:add(c)

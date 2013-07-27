@@ -10,7 +10,7 @@ out vec4 out_Specular;
 void main()
 {
     out_Normal = normal;
-    out_Ambient = vec4(.5, .5, .5, 1);
+    out_Ambient = vec4(0, 0, 0, 1); //vec4(.5, .5, .5, 1);
     out_Diffuse = vec3(.64);
     out_Specular = vec4(.5, .5, .5, 96);
 }
