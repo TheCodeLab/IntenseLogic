@@ -91,6 +91,9 @@ void ilG_texture_fromimage(ilG_texture *self, unsigned unit, ilA_img *img)
         case ILA_IMG_RGB:
         format = GL_RGB;
         break;
+        case ILA_IMG_R:
+        format = GL_RED;
+        break;
         default:
         il_error("Unhandled colour format");
         return;
