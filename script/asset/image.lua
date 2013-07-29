@@ -16,7 +16,7 @@ enum ilA_imgchannels {
 
 typedef struct ilA_img {
     enum ilA_imgchannels channels;
-    unsigned width, height, bpp;
+    unsigned width, height, depth, bpp;
     unsigned char *data;
 } ilA_img;
 

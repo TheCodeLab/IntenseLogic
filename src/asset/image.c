@@ -16,12 +16,12 @@ struct read_context {
     size_t head;
 };
 
-static int compute_bpp(int channels) 
+static int compute_bpp(int channels, int depth) 
 {
     return (!!(channels & ILA_IMG_R) +
             !!(channels & ILA_IMG_G) +
             !!(channels & ILA_IMG_B) +
-            !!(channels & ILA_IMG_A) ) * 8;
+            !!(channels & ILA_IMG_A) ) * depth;
 }
 
 static void png_read_fn(png_structp png_ptr, png_bytep data, png_size_t length)
@@ -76,7 +76,8 @@ static int read_png(ilA_img *self, const void *data, size_t size)
         il_error("Palettes are not handled");
         return 0;
     }
-    self->bpp = compute_bpp(self->channels);
+    self->depth = 8; // TODO: 16-bit textures
+    self->bpp = compute_bpp(self->channels, 8);
     
     self->data = calloc(rowbytes, self->width);
     rows = png_get_rows(png_ptr, info_ptr);
@@ -132,8 +133,9 @@ ilA_img *ilA_img_fromdata(const void *data, unsigned w, unsigned h, unsigned dep
     img->width = w;
     img->height = h;
     img->channels = channels;
-    img->bpp = depth;
-    unsigned size = compute_bpp(channels) * w * h / 8;
+    img->depth = depth;
+    img->bpp = compute_bpp(channels, depth);
+    unsigned size = img->bpp * w * h / 8;
     img->data = malloc(size);
     if (data) {
         memcpy(img->data, data, size);
@@ -202,7 +204,8 @@ ilA_img *ilA_img_resize(const ilA_img *self, enum ilA_img_interpolation up, enum
     img->width = w;
     img->height = h;
     img->channels = channels;
-    img->bpp = compute_bpp(channels);
+    img->depth = 8; 
+    img->bpp = compute_bpp(channels, 8);
     img->data = calloc(img->bpp/8, w*h);
     if (w > self->width && h > self->height) {
         interp = up;
@@ -274,12 +277,12 @@ static void bitmat_mulv(uint16_t mat, const unsigned char col[4], unsigned char 
 
 ilA_img *ilA_img_swizzle(const ilA_img *self, uint16_t mask)
 {
-    ilA_img *img = ilA_img_fromdata(NULL, self->width, self->height, self->bpp, self->channels);
+    ilA_img *img = ilA_img_fromdata(NULL, self->width, self->height, self->depth, self->channels);
     unsigned x, y;
     for (y = 0; y < img->height; y++) {
         for (x = 0; x < img->width; x++) {
             unsigned char col[4], out[4];
-            unsigned bpp = compute_bpp(self->channels) / 8;
+            unsigned bpp = compute_bpp(self->channels, self->depth) / 8;
             decompose_pixel(self->channels, self->data + bpp*x + bpp*self->width*y, col);
             bitmat_mulv(mask, col, out);
             compose_pixel(img->channels, out, img->data + bpp*x + bpp*img->width*y);
@@ -290,8 +293,8 @@ ilA_img *ilA_img_swizzle(const ilA_img *self, uint16_t mask)
 
 ilA_img *ilA_img_bgra_to_rgba(const ilA_img *self)
 {
-    ilA_img *img = ilA_img_fromdata(NULL, self->width, self->height, self->bpp, self->channels);
-    unsigned x, y, bpp = compute_bpp(self->channels)/8;
+    ilA_img *img = ilA_img_fromdata(NULL, self->width, self->height, self->depth, self->channels);
+    unsigned x, y, bpp = compute_bpp(self->channels, self->depth)/8;
     for (y = 0; y < img->height; y++) {
         for (x = 0; x < img->width; x++) {
             unsigned char *dst = img->data + bpp * img->width * y + bpp * x;
