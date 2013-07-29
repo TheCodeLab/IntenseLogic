@@ -13,7 +13,7 @@ out vec3 normal;
 
 void compute_normal()
 {
-    vec4 normal4 = vec4(texture(normal_tex, in_Texcoord.xy / size).xyz, 0) * imt;
+    vec4 normal4 = vec4(texture(normal_tex, in_Position.xy).xyz, 0) * imt;
     normal = normalize(normal4.xyz);
 }
 
