@@ -82,23 +82,59 @@ void ilG_texture_fromGL(ilG_texture* self, unsigned unit, GLenum target, GLuint 
 
 void ilG_texture_fromimage(ilG_texture *self, unsigned unit, ilA_img *img)
 {
-    GLenum format;
+    GLenum format, internalformat, type;
+    unsigned i;
+    const static struct {
+        enum ilA_imgchannels channels;
+        unsigned depth;
+        unsigned fp;
+        GLenum format;
+    } mapping_table[] = {
+        {ILA_IMG_R,     8,  0,  GL_R8},
+        {ILA_IMG_R,     16, 0,  GL_R16},
+        {ILA_IMG_R,     32, 1,  GL_R32F},
+
+        {ILA_IMG_RG,    8,  0,  GL_RG8},
+        {ILA_IMG_RG,    16, 0,  GL_RG16},
+        {ILA_IMG_RG,    32, 1,  GL_RG32F},
+
+        {ILA_IMG_RGB,   8,  0, GL_RGB8},
+        {ILA_IMG_RGB,   16, 0, GL_RGB16},
+        {ILA_IMG_RGB,   32, 1, GL_RGB32F},
+
+        {ILA_IMG_RGBA,  8,  0, GL_RGBA8},
+        {ILA_IMG_RGBA,  16, 0, GL_RGBA16},
+        {ILA_IMG_RGBA,  32, 1, GL_RGBA32F},
+
+        {0, 0, 0, 0}
+    };
 
     switch (img->channels) {
-        case ILA_IMG_RGBA:
-        format = GL_RGBA;
-        break;
-        case ILA_IMG_RGB:
-        format = GL_RGB;
-        break;
-        case ILA_IMG_R:
-        format = GL_RED;
-        break;
-        default:
-        il_error("Unhandled colour format");
-        return;
+        case ILA_IMG_RGBA:  format = GL_RGBA;   break;
+        case ILA_IMG_RGB:   format = GL_RGB;    break;
+        case ILA_IMG_RG:    format = GL_RG;     break;
+        case ILA_IMG_R:     format = GL_RED;    break;
+        default: il_error("Unhandled colour format"); return;
     }
-    ilG_texture_fromdata(self, unit, GL_TEXTURE_2D, format, img->width, img->height, 1, format, GL_UNSIGNED_BYTE, img->data);
+    if (img->fp) {
+        type = GL_FLOAT;
+    } else {
+        switch (img->depth) {
+            case 8:     type = GL_UNSIGNED_BYTE;    break;
+            case 16:    type = GL_UNSIGNED_SHORT;   break;
+            case 32:    type = GL_UNSIGNED_INT;     break;
+            default: il_error("Unhandled bit depth"); return;
+        }
+    }
+    internalformat = format; // default
+    for (i = 0; mapping_table[i].depth; i++) {
+        if (mapping_table[i].channels == img->channels && mapping_table[i].fp == img->fp && mapping_table[i].depth == img->depth) {
+            internalformat = mapping_table[i].format;
+            break;
+        }
+    }
+
+    ilG_texture_fromdata(self, unit, GL_TEXTURE_2D, internalformat, img->width, img->height, 1, format, type, img->data);
 }
 
 void ilG_texture_fromdata(ilG_texture* self, unsigned unit, GLenum target, 

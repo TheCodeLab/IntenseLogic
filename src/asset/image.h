@@ -14,13 +14,14 @@ enum ilA_imgchannels {
     ILA_IMG_G = 1<<1,                               /**< Green */
     ILA_IMG_B = 1<<2,                               /**< Blue */
     ILA_IMG_A = 1<<3,                               /**< Alpha */
-    ILA_IMG_RGB = ILA_IMG_R|ILA_IMG_G|ILA_IMG_B,    /**< RGB */
+    ILA_IMG_RG = ILA_IMG_R | ILA_IMG_G,             /**< RG */
+    ILA_IMG_RGB = ILA_IMG_RG | ILA_IMG_B,           /**< RGB */
     ILA_IMG_RGBA = ILA_IMG_RGB | ILA_IMG_A          /**< RGBA */
 };
 
 typedef struct ilA_img {
     enum ilA_imgchannels channels;
-    unsigned width, height, depth, bpp;
+    unsigned width, height, depth, bpp, fp;
     unsigned char *data;
 } ilA_img;
 
@@ -45,6 +46,8 @@ ilA_img *ilA_img_resize(const ilA_img *self, enum ilA_img_interpolation up, enum
 ilA_img *ilA_img_swizzle(const ilA_img *self, uint16_t mask);
 /** Converts from bgra to rgba */
 ilA_img *ilA_img_bgra_to_rgba(const ilA_img *self);
+/** Computes a normal map from a height map */
+ilA_img *ilA_img_height_to_normal(const ilA_img *self);
 
 #endif
 
