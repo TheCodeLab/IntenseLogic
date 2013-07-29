@@ -107,7 +107,9 @@ end
 
 local ht = texture()
 ht:setContext(c)
-ht:fromfile("height0", "smooth-heightmap.png")
+local hmt = image.loadfile "smooth-heightmap.png"
+ht:fromimage("height0", hmt)
+ht:fromimage("normal0", hmt:height_to_normal())
 local hm = positionable()
 w:add(hm)
 hm.drawable = heightmap(c, 100, 100)

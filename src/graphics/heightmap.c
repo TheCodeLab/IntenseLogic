@@ -78,6 +78,7 @@ ilG_material *ilG_heightmap_shader(ilG_context *context)
     ilG_material_arrayAttrib(mat, ILG_ARRATTR_POSITION, "in_Position");
     ilG_material_arrayAttrib(mat, ILG_ARRATTR_TEXCOORD, "in_Texcoord");
     ilG_material_textureUnit(mat, ILG_TUNIT_HEIGHT0, "height_tex");
+    ilG_material_textureUnit(mat, ILG_TUNIT_NORMAL0, "normal_tex");
     ilG_material_fragData(mat, ILG_FRAGDATA_ACCUMULATION, "out_Ambient");
     ilG_material_fragData(mat, ILG_FRAGDATA_NORMAL, "out_Normal");
     ilG_material_fragData(mat, ILG_FRAGDATA_DIFFUSE, "out_Diffuse");

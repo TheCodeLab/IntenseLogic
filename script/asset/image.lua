@@ -31,6 +31,7 @@ ilA_img *ilA_img_loadfile(const char *file);
 void ilA_img_free(ilA_img *self);
 ilA_img *ilA_img_resize(const ilA_img *self, enum ilA_img_interpolation up, enum ilA_img_interpolation down, unsigned w, unsigned h, int channels);
 ilA_img *ilA_img_swizzle(const ilA_img *self, uint16_t mask);
+ilA_img *ilA_img_height_to_normal(const ilA_img *self);
 
 ]]
 
@@ -82,6 +83,8 @@ function img:swizzle(str)
     end
     return modules.asset.ilA_img_swizzle(self, mat)
 end
+
+img.height_to_normal = modules.asset.ilA_img_height_to_normal;
 
 ffi.metatype("ilA_img", {__index=img})
 
