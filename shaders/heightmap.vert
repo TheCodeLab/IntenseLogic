@@ -5,23 +5,28 @@ in vec3 in_Texcoord;
 
 uniform sampler2D height_tex;
 uniform mat4 mvp;
+uniform mat4 imt;
 uniform vec2 size;
 
 out vec3 normal;
 
 // http://www.flipcode.com/archives/Calculating_Vertex_Normals_for_Height_Maps.shtml
-float h(float x, float y)
+float h(vec2 t)
 {
-    return texture(height_tex, vec2(x,y) / size).x;
+    return texture(height_tex, t/size).x;
 }
 void compute_normal()
 {
-    float x = in_Texcoord.x;
-    float y = in_Texcoord.y;
-    float me = h(x, y);
-    float sx = h(x>0? x-1:x, y) - me;
-    float sy = h(x, y>0? y-1:y) - me;
-    normal = -normalize(cross(vec3(-1, sx, 0), vec3(0, sy, -1)));
+    vec2 t = in_Texcoord.xy;
+    vec2 d;
+    float me;
+    
+    me = h(t);
+    d.x = h(t - vec2(1, 0)) - me;
+    d.y = h(t - vec2(0, 1)) - me;
+    vec3 N = normalize(cross(vec3(0, d.y, -1/size.y), vec3(-1/size.x, d.x, 0)));
+    vec4 normal4 = vec4(N, 0) * imt;
+    normal = normalize(normal4.xyz);
 }
 
 void main()

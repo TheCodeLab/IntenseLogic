@@ -119,7 +119,6 @@ hm:track(c)
 
 c.camera = camera()
 c.camera.projection_matrix = matrix.perspective(75, 4/3, 2, 1000).ptr
-print(c.camera.projection_matrix)
 c.camera.positionable.position = vector3(0, 0, 0).ptr
 c.camera.sensitivity = .01
 c.camera.movespeed = vector3(1,1,1).ptr
