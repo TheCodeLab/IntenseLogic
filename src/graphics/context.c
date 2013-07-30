@@ -2,6 +2,7 @@
 
 #include "util/log.h"
 #include "util/assert.h"
+#include "util/timer.h"
 #include "graphics/glutil.h"
 #include "common/event.h"
 #include "graphics/stage.h"
@@ -184,6 +185,8 @@ void render_stages(const ilE_registry* registry, const char *name, size_t size, 
     ilG_context *context = ctx;
     size_t i;
     int width, height;
+    struct timeval time, tv;
+    struct ilG_frame *iter, *temp, *frame, *last;
 
     ilG_context_makeCurrent(context);
     glfwGetFramebufferSize(context->window, &width, &height);
@@ -203,6 +206,30 @@ void render_stages(const ilE_registry* registry, const char *name, size_t size, 
         il_debug("Rendering stage %s", context->stages.data[i]->name);
         context->stages.data[i]->run(context->stages.data[i]);
     }
+    gettimeofday(&time, NULL);
+    last = IL_LIST_TAIL(context->frames_head, ll);
+    IL_LIST_ITER(context->frames_head, ll, iter, temp) {
+        timersub(&time, &iter->start, &tv);
+        if (tv.tv_sec > 0) {
+            IL_LIST_POPHEAD(context->frames_head, ll, frame);
+            timersub(&context->frames_sum, &frame->elapsed, &context->frames_sum);
+            context->num_frames--;
+            free(frame);
+        }
+    }
+    frame = calloc(1, sizeof(struct ilG_frame));
+    frame->start = time;
+    if (last) {
+        timersub(&time, &last->start, &frame->elapsed);
+    } else {
+        frame->elapsed = (struct timeval){0,0};
+    }
+    IL_LIST_APPEND(context->frames_head, ll, frame);
+    context->num_frames++;
+    timeradd(&frame->elapsed, &context->frames_sum, &context->frames_sum);
+    context->frames_average.tv_sec = context->frames_sum.tv_sec / context->num_frames;
+    context->frames_average.tv_usec = context->frames_sum.tv_usec / context->num_frames;
+    context->frames_average.tv_usec += (context->frames_sum.tv_sec % context->num_frames) * 1000000 / context->num_frames;
 }
 
 void ilG_context_setActive(ilG_context *self)

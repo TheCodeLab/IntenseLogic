@@ -4,8 +4,10 @@
 #include <stdlib.h>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
+#include <sys/time.h>
 
 #include "util/array.h"
+#include "util/list.h"
 #include "common/base.h"
 #include "graphics/bindable.h"
 
@@ -18,6 +20,11 @@ enum ilG_context_attachments {
     ILG_CONTEXT_DIFFUSE,
     ILG_CONTEXT_SPECULAR,
     ILG_CONTEXT_NUMATTACHMENTS
+};
+
+struct ilG_frame {
+    struct timeval start, elapsed;
+    IL_LIST(struct ilG_frame) ll;
 };
 
 typedef struct ilG_context {
@@ -39,6 +46,9 @@ typedef struct ilG_context {
     IL_ARRAY(struct ilG_stage*,) stages;
     IL_ARRAY(struct il_positionable*,) positionables; // tracker.c // TODO: move to geometry stage
     IL_ARRAY(struct ilG_light*,) lights; // TODO: move to lighting stage
+    struct ilG_frame frames_head;
+    struct timeval frames_sum, frames_average;
+    size_t num_frames;
 } ilG_context;
 
 extern il_type ilG_context_type;

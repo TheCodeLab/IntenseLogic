@@ -98,27 +98,34 @@ hm.drawable = heightmap(c, 100, 100)
 hm.material = heightmap.defaultShader(c)
 hm.texture = ht
 hm.position = vector3(0, 0, 0).ptr
-hm.size = vector3(100, 25, 100).ptr
+hm.size = vector3(100, 50, 100).ptr
 hm:track(c)
 
 c.camera = camera()
-c.camera.projection_matrix = matrix.perspective(75, 4/3, 2, 1000).ptr
+c.camera.projection_matrix = matrix.perspective(75, 4/3, 2, 2000).ptr
 c.camera.positionable.position = vector3(0, 0, 0).ptr
 c.camera.sensitivity = .01
 c.camera.movespeed = vector3(1,1,1).ptr
 
 lights = {
-    {vector3(50, 50, 50),   250,    vector3(.1, .1, .1)},
+    {vector3(50, 50, 50),   250,    vector3(.4, .4, .4)},
     {vector3(40, 5, 55),    25,     vector3(.3, .4, 1)},
     {vector3(70, 20, 40),   10,     vector3(1, .5, .2)},
     {vector3(20, 5, 60),    20,     vector3(.8, .7, .1)},
 }
 
-for _, t in pairs(lights) do
+print(hmt.fp, hmt.width, hmt.height, hmt.channels, hmt.bpp, hmt.depth)
+
+local w, h = 100, 100
+for i = 1, 100 do
     local l = light()
-    l.positionable.position = t[1].ptr
-    l.radius = t[2]
-    l.color = t[3].ptr
+    local pos = vector3(math.random(0,w-1), 0, math.random(0,h-1))
+    local height = hmt:getPixel(pos.x, pos.z) 
+    pos.y = height * 50 + 2
+    print(pos)
+    l.positionable.position = pos.ptr
+    l.radius = math.random(1, 15)
+    l.color = vector3(math.random(0,1), math.random(0,1), math.random(0,1)).ptr
     l:add(c)
 end
 
@@ -161,6 +168,16 @@ function render_pos(pos)
     camera_pos_label:label(label, {1,1,1,1}, "left middle")
 end
 
+local fps_label = frame()
+fps_label.context = c
+fps_label:setPosition(5, c.height - 21)
+root:addChild(fps_label)
+function render_fps(f)
+    local label = text(c, "en", "ltr", "latin", georgia, 14, string.format("FPS: %.1f", tonumber(f)))
+    fps_label:setSize(label:getSize())
+    fps_label:label(label, {1,1,1,1}, "left middle")
+end
+
 function tick(reg, name)
     local get = function(k)
         local b, _ = input.get(k)
@@ -173,9 +190,10 @@ function tick(reg, name)
     local v = vector3(x,y,z) * vector3.wrap(c.camera.movespeed)
     v = v * quaternion.wrap(c.camera.positionable.rotation)
     c.camera.positionable.position = (vector3.wrap(c.camera.positionable.position) + v).ptr
-    local bank = quaternion(vector3(0, 0, 1), r * c.camera.sensitivity)
+    local bank = quaternion(vector3(0, 0, 1), r * c.camera.sensitivity * 4)
     c.camera.positionable.rotation = (quaternion.wrap(c.camera.positionable.rotation) * bank).ptr
     render_pos(vector3(c.camera.positionable.position))
+    render_fps(1/c:averageFrametime())
 end
 
 function close(reg, name)

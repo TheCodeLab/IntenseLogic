@@ -4,6 +4,8 @@ local material  = require "graphics.material"
 local texture   = require "graphics.texture"
 local base      = require "common.base"
 
+require "util.timeval"
+
 ffi.cdef[[
 
 enum ilG_context_attachments {
@@ -13,6 +15,14 @@ enum ilG_context_attachments {
     ILG_CONTEXT_DIFFUSE,
     ILG_CONTEXT_SPECULAR,
     ILG_CONTEXT_NUMATTACHMENTS
+};
+
+struct ilG_frame {
+    struct timeval start, elapsed;
+    struct {
+        struct ilG_frame *next;
+        struct ilG_frame *last;
+    } ll;
 };
 
 typedef struct ilG_context {
@@ -46,6 +56,9 @@ typedef struct ilG_context {
         size_t size;
         size_t capacity;
     } lights;
+    struct ilG_frame frames_head;
+    struct timeval frames_sum, frames_average;
+    size_t num_frames;
 } ilG_context;
 
 extern il_type ilG_context_type;
@@ -61,6 +74,9 @@ base.wrap "il.graphics.context" {
     resize = modules.graphics.ilG_context_resize;
     setActive = modules.graphics.ilG_context_setActive;
     addStage = modules.graphics.ilG_context_addStage;
+    averageFrametime = function(self)
+        return tonumber(self.frames_average.tv_sec) + tonumber(self.frames_average.tv_usec) / 1000000
+    end
 }
 
 return modules.graphics.ilG_context_type;

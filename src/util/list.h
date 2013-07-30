@@ -59,22 +59,23 @@
 #define IL_LIST_POPHEAD(list, el, out) {    \
     (out) = IL_LIST_HEAD(list, el);         \
     if (out)                                \
-        (list)->el.next = (out)->el.next;   \
+        (list).el.next = (out)->el.next;    \
     /* in case this is the only item */     \
-    if (!(list)->el.next)                   \
-        (list)->el.last = NULL;             \
+    if (!(list).el.next)                    \
+        (list).el.last = NULL;              \
 }
 
 #define IL_LIST_POPTAIL(list, el, out) {    \
-    (out) = (list)->el.last;                \
+    (out) = (list).el.last;                 \
     if (out)                                \
-        (list)->el.last = (out)->el.last;   \
+        (list).el.last = (out)->el.last;    \
     /* in case this is the only item */     \
-    if (!list->el.last)                     \
-        (list)->el.next = NULL;             \
+    if (!(list).el.last)                    \
+        (list).el.next = NULL;              \
 }
 
 #define IL_LIST_INDEX(list, el, out, id)    \
+    (out) = (list).el.next;                 \
     while (out && id > 0) {                 \
         (out) = (out)->el.next;             \
         id--;                               \
@@ -86,18 +87,21 @@
         (list).el.next->el.last = (item);/* set the head's tail to the item */\
     (list).el.next = (item);            /* set the head to the item */        \
     (item)->el.last = (list);           /* set the item's last to the list */ \
-    if (!(list)->el.last)               /* in case we're the only item */     \
-        (list)->el.last = (item);                                             \
+    if (!(list).el.last)                /* in case we're the only item */     \
+        (list).el.last = (item);                                              \
 }
 
 #define IL_LIST_APPEND(list, el, item) {                                      \
-    if ((list)->el.last)                /* set the tail's next to the item */ \
-        (list)->el.last->el.next = (item);                                    \
-    (item)->el.last = (list)->el.last;  /* set the item's last to the tail */ \
-    (list)->el.last = (item);                  /* set the tail to the item */ \
-    if (!list)->el.next)                /* in case we're the only item */     \
-        (list)->el.next = (item);                                             \
+    if ((list).el.last)                 /* set the tail's next to the item */ \
+        (list).el.last->el.next = (item);                                     \
+    (item)->el.last = (list).el.last;   /* set the item's last to the tail */ \
+    (list).el.last = (item);            /* set the tail to the item */        \
+    if (!(list).el.next)                /* in case we're the only item */     \
+        (list).el.next = (item);                                              \
 }
+
+#define IL_LIST_ITER(list, el, item, tmp) \
+    for ((item) = (list).el.next, (tmp) = (item)? (item)->el.next : NULL; (item); (item) = (tmp), (tmp) = (tmp)? (tmp)->el.next : NULL)
 
 #endif
 
