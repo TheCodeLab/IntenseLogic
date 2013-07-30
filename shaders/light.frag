@@ -41,13 +41,18 @@ vec3 screen_to_world(vec3 sp)
     return res.xyz/res.w;
 }
 
-void main() 
+void main()
 {
     // gl_FragCoord is from (.5, .5) to (w - .5, h - .5), depth texture is 0..1, feep's function wants (0,0,-1)..(1,1,1)
     vec3 pos = screen_to_world(vec3(gl_FragCoord.xy / vec2(800,600), texture(depth, gl_FragCoord.xy).x) * 2 - 1);
     vec3 light_dir = normalize(position - pos);
     vec3 norm = texture(normal, gl_FragCoord.xy).xyz;
-    float daf = 1 - length(position - pos) / radius;
+    float dist = length(position - pos) / radius;
+    float daf = 1/pow(dist+1, 3);
+
+    if (norm == vec3(0)) {
+        discard;
+    }
 
     vec3 col = vec3(0);
     vec3 diffuse = texture(diffuse, gl_FragCoord.xy).xyz; 

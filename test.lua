@@ -27,6 +27,8 @@ local lightpass     = require "graphics.lightpass"
 local file          = require "asset.file"
 local heightmap     = require "graphics.heightmap"
 
+math.randomseed(os.time())
+
 local w = world()
 local c = context()
 c:resize(800, 600, "IntenseLogic Demo")
@@ -170,7 +172,7 @@ end
 
 local fps_label = frame()
 fps_label.context = c
-fps_label:setPosition(5, c.height - 21)
+fps_label:setPosition(5, -21, 0, 1)
 root:addChild(fps_label)
 function render_fps(f)
     local label = text(c, "en", "ltr", "latin", georgia, 14, string.format("FPS: %.1f", tonumber(f)))

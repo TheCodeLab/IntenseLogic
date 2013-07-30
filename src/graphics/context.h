@@ -49,6 +49,7 @@ typedef struct ilG_context {
     struct ilG_frame frames_head;
     struct timeval frames_sum, frames_average;
     size_t num_frames;
+    char *title;
 } ilG_context;
 
 extern il_type ilG_context_type;

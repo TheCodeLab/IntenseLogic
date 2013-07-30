@@ -2,10 +2,11 @@
 
 in vec2 texcoord;
 uniform sampler2DRect tex;
+uniform vec2 size;
 out vec3 color;
 
 void main()
 {
-    color = texture(tex, texcoord * vec2(800, 600/*textureSize(tex)*/)).xyz;
+    color = texture(tex, texcoord * size).xyz;
 }
 

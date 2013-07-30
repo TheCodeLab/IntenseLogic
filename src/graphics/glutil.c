@@ -53,10 +53,10 @@ void ilG_testError_(const char *file, int line, const char *func,
         va_list ap;
         va_start(ap, fmt);
         int len = vsnprintf(NULL, 0, fmt, ap);
-        char buf[len+1];
-        vsnprintf(buf, len+1, fmt, ap);
+        char msg[len+1];
+        vsnprintf(msg, len+1, fmt, ap);
         va_end(ap);
-        il_log_real(file, line, func, 2, "%s: %s (%i)", buf, ilG_strerror(err), err);
+        il_log_real(file, line, func, 2, "%s: %s (%i)", msg, ilG_strerror(err), err);
     }
 }
 

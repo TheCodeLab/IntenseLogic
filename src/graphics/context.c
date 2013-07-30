@@ -109,7 +109,6 @@ void ilG_context_resize(ilG_context *self, int w, int h, const char *title)
         self->texunits = calloc(sizeof(unsigned), num_texunits);
         self->num_texunits = num_texunits;
         glGenFramebuffers(1, &self->framebuffer);
-        glBindFramebuffer(GL_FRAMEBUFFER, self->framebuffer);
         glGenTextures(5, &self->fbtextures[0]);
         ilG_testError("Unable to generate framebuffer");
     }
@@ -121,7 +120,11 @@ void ilG_context_resize(ilG_context *self, int w, int h, const char *title)
 
     self->width = w;
     self->height = h;
-    ilG_testError("Unknown from before this function");
+    if (self->title) {
+        free(self->title);
+    }
+    self->title = strdup(title);
+    glBindFramebuffer(GL_FRAMEBUFFER, self->framebuffer);
     glBindTexture(GL_TEXTURE_RECTANGLE, self->fbtextures[ILG_CONTEXT_DEPTH]);
     glTexImage2D(GL_TEXTURE_RECTANGLE, 0, GL_DEPTH_COMPONENT, w, h, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_RECTANGLE, self->fbtextures[ILG_CONTEXT_DEPTH], 0);
@@ -190,6 +193,9 @@ void render_stages(const ilE_registry* registry, const char *name, size_t size, 
 
     ilG_context_makeCurrent(context);
     glfwGetFramebufferSize(context->window, &width, &height);
+    if (width != context->width || height != context->height) {
+        ilG_context_resize(context, width, height, context->title);
+    }
     glViewport(0, 0, width, height);
     il_debug("Begin render");
     static const GLenum drawbufs[] = {
