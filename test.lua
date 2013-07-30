@@ -44,31 +44,13 @@ c:addStage(s, -1)
 s = guipass(c)
 local root = frame()
 s:setRoot(root)
---[[local f = frame()
-root:addChild(f)
-f.context = c
-f:setPosition(400, 300)]]
---local layout = text(c, 'jp', 'ltr', 'han', 'DroidSansJapanese.ttf', 30, "これは日本語です")
---local layout = text(c, 'ar', 'rtl', 'arabic', 'DroidSansArabic.ttf', 30, "هذا هو عربي")
---[[local layout = text(c, 'en', 'ltr', 'latin', 'georgia.ttf', 30, "hello, world")
-print(layout:getSize())
-f:label(layout, {1, 1, 1, 1}, 'left middle')]]
---[[f = frame()
-root:addChild(f)
-f.context = c
-f:setPosition(400, 300)
-f:setSize(400, 300)
-local scribble = texture()
-scribble:setContext(c)
-scribble:fromfile("color0", "test.png")
-f:image(scribble)]]
 c:addStage(s, -1)
 -- output pass
 c:addStage(outpass(c), -1)
 
 c:setActive()
 
-local marble = texture()
+--[[local marble = texture()
 marble:setContext(c)
 marble:fromfile("color0", "white-marble-texture.png")
 
@@ -103,7 +85,7 @@ for i = 0, width*width*width-1 do
     box.position = (vector3(i % width, math.floor((i%(width*width)) / width), math.floor(i/(width*width))) * vector3(15, 15, 15)).ptr
     box:track(c)
     --print(box.position)
-end
+end]]
 
 local ht = texture()
 ht:setContext(c)
@@ -124,18 +106,22 @@ c.camera.projection_matrix = matrix.perspective(75, 4/3, 2, 1000).ptr
 c.camera.positionable.position = vector3(0, 0, 0).ptr
 c.camera.sensitivity = .01
 c.camera.movespeed = vector3(1,1,1).ptr
-local l = light()---5, -5, -5, 50, 0, 0, 1.0) -- x y z radius r g b
-l.positionable.position = vector3(50, 50, 50).ptr
-l.radius = 250
-l.color = vector3(.3, .4, 1).ptr
-l:add(c)
---[[local sig = positionable();
-w:add(sig)
-sig.position = vector3(-5, -5, -5).ptr
-sig.drawable = drawable.box;
-sig.material = material.default;
-sig.texture = texture.default;
-sig:track(c)]]
+
+lights = {
+    {vector3(50, 50, 50),   250,    vector3(.1, .1, .1)},
+    {vector3(40, 5, 55),    25,     vector3(.3, .4, 1)},
+    {vector3(70, 20, 40),   10,     vector3(1, .5, .2)},
+    {vector3(20, 5, 60),    20,     vector3(.8, .7, .1)},
+}
+
+for _, t in pairs(lights) do
+    local l = light()
+    l.positionable.position = t[1].ptr
+    l.radius = t[2]
+    l.color = t[3].ptr
+    l:add(c)
+end
+
 --[[local plain = material()
 plain:vertex(io.open("shaders/plain.vert","r"):read "*a")
 plain:fragment(io.open("shaders/plain.frag", "r"):read "*a")
@@ -152,19 +138,10 @@ for i = 0, width*width*width - 1 do
     box.texture = marble
     box.position = (vector3((i % width) + 5, math.floor((i%(width*width)) / width), math.floor(i/(width*width))) * vector3(15, 15, 15)).ptr
     box:track(c)
-end
-
-local ico = positionable()
-w:add(ico)
-ico.position = vector3(-10, 0, 0).ptr
-ico.drawable = drawable.icosahedron(c)
-ico.material = plain --material.default;
-ico.texture = texture.default;
-ico:track(c)]]
+end]]
 
 local first_mouse = true
 function mousemove(reg, name, xabs, yabs, x, y)
-    --print(string.format("mouse move by (%d, %d)", x, y))
     if first_mouse then first_mouse = false return end
     if not input.get "mouse left" then return end
     local yaw = quaternion(vector3(0, 1, 0), x * c.camera.sensitivity)
@@ -185,7 +162,6 @@ function render_pos(pos)
 end
 
 function tick(reg, name)
-    --print "tick"
     local get = function(k)
         local b, _ = input.get(k)
         return b and 1 or 0
@@ -195,10 +171,7 @@ function tick(reg, name)
     local y = get("F") - get("R")
     local r = get("Q") - get("E")
     local v = vector3(x,y,z) * vector3.wrap(c.camera.movespeed)
-    --print("r", c.camera.positionable.rotation)
-    --print("v", v)
     v = v * quaternion.wrap(c.camera.positionable.rotation)
-    --print("v'", v)
     c.camera.positionable.position = (vector3.wrap(c.camera.positionable.position) + v).ptr
     local bank = quaternion(vector3(0, 0, 1), r * c.camera.sensitivity)
     c.camera.positionable.rotation = (quaternion.wrap(c.camera.positionable.rotation) * bank).ptr
