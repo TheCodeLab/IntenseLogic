@@ -16,7 +16,7 @@ enum ilA_imgchannels {
 
 typedef struct ilA_img {
     enum ilA_imgchannels channels;
-    unsigned width, height, depth, bpp;
+    unsigned width, height, depth, bpp, fp;
     unsigned char *data;
 } ilA_img;
 
@@ -85,6 +85,21 @@ function img:swizzle(str)
 end
 
 img.height_to_normal = modules.asset.ilA_img_height_to_normal;
+
+function img:getPixel(x, y)
+    assert(type(x) == "number" and x >= 0 and x < self.width, "x out of bounds: "..tostring(x))
+    assert(type(y) == "number" and y >= 0 and y < self.height, "y out of bounds: "..tostring(y))
+    local pixel = self.data + y*self.width*self.bpp + x*self.bpp
+    if self.fp == 1 then
+        pixel = ffi.cast("float*", pixel)
+        return pixel[0]
+    else
+        pixel = ffi.cast("int*", pixel)
+        pixel = pixel[0]
+        pixel = bit.band(pixel, bit.lshift(1, self.bpp) - 1)
+        return pixel / (bit.lshift(1, self.bpp)-1)
+    end
+end
 
 ffi.metatype("ilA_img", {__index=img})
 
