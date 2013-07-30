@@ -196,6 +196,7 @@ function tick(reg, name)
     c.camera.positionable.rotation = (quaternion.wrap(c.camera.positionable.rotation) * bank).ptr
     render_pos(vector3(c.camera.positionable.position))
     render_fps(1/c:averageFrametime())
+    c.camera.projection_matrix = matrix.perspective(75, c.width/c.height, 2, 2000).ptr
 end
 
 function close(reg, name)
