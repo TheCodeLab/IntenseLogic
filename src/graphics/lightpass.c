@@ -31,6 +31,13 @@ il_type ilG_lightpass_type = {
     .parent = &ilG_stage_type
 };
 
+static void size_uniform(ilG_material *self, GLint location, void *user)
+{
+    (void)self;
+    ilG_context *context = user;
+    glUniform2f(location, context->width, context->height);
+}
+
 static void draw_lights(ilG_stage *ptr)
 { 
     struct lightpass *self = (struct lightpass*)ptr;
@@ -161,6 +168,7 @@ struct ilG_stage *ilG_lightpass(struct ilG_context* context)
     ilG_material_matrix(mtl, ILG_INVERSE | ILG_VP, "ivp");
     ilG_material_fragData(mtl, ILG_FRAGDATA_ACCUMULATION, "out_Color");
     ilG_material_matrix(mtl, ILG_MVP, "mvp");
+    ilG_material_customUniform(mtl, size_uniform, context, "size");
     if (ilG_material_link(mtl, context)) {
         return NULL;
     }
