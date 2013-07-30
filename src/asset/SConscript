@@ -8,12 +8,12 @@ inputs    = "*.c"
 Import("platform")
 Import("env")
 Import("libilutil")
-#Import("libilmath")
+Import("libilmath")
 #Import("libilcommon")
 
 asset = env.Clone()
 
-asset.Append(CPPPATH = src_dir, LIBS=["ilutil", "ilcommon"])
+asset.Append(CPPPATH = src_dir, LIBS=["ilutil", "ilcommon", "ilmath"])
 
 pkg_libs = {
     "osx":   ["libpng"],
@@ -34,7 +34,7 @@ for module in Split(inputs) :
 libilasset = asset.SharedLibrary(target = build_dir + "/" + output, 
                                        source = sources)
 Depends(libilasset, libilutil)
-#Depends(libilasset, libilmath)
+Depends(libilasset, libilmath)
 #Depends(libilasset, libilcommon)
 
 Return("libilasset")
