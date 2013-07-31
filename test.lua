@@ -116,15 +116,12 @@ lights = {
     {vector3(20, 5, 60),    20,     vector3(.8, .7, .1)},
 }
 
-print(hmt.fp, hmt.width, hmt.height, hmt.channels, hmt.bpp, hmt.depth)
-
 local w, h = 100, 100
 for i = 1, 100 do
     local l = light()
     local pos = vector3(math.random(0,w-1), 0, math.random(0,h-1))
     local height = hmt:getPixel(pos.x, pos.z) 
     pos.y = height * 50 + 2
-    print(pos)
     l.positionable.position = pos.ptr
     l.radius = math.random(1, 15)
     l.color = vector3(math.random(0,1), math.random(0,1), math.random(0,1)).ptr
