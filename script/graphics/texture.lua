@@ -30,6 +30,7 @@ void ilG_texture_setName(ilG_texture* self, const char *name);
 void ilG_texture_fromfile(ilG_texture* self, unsigned unit, const char *name);
 void ilG_texture_fromasset(ilG_texture* self, unsigned unit, const struct ilA_file* iface, struct il_base *file);
 void ilG_texture_fromimage(ilG_texture *self, unsigned unit, struct ilA_img *img);
+void ilG_texture_cubemap(ilG_texture *self, unsigned unit, struct ilA_img *faces[6]);
 unsigned int /*GLuint*/ ilG_texture_getRaw(ilG_texture *self, unsigned unit);
 
 ]]
@@ -51,6 +52,16 @@ base.wrap "il.graphics.texture" {
 
     fromimage = function(self, unit, img)
         return modules.graphics.ilG_texture_fromimage(self, tunit.toUnit(unit), img);
+    end;
+
+    cubemap = function(self, unit, textures)
+        local arr = ffi.new("struct ilA_img * [6]", textures)
+        for i = 0, 5 do
+            if arr[i].width ~= arr[i].height then
+                error("Image #"..(i+1).."'s dimensions are not square")
+            end
+        end
+        modules.graphics.ilG_texture_cubemap(self, tunit.toUnit(unit), arr)
     end;
 
     getRaw = function(self, unit)

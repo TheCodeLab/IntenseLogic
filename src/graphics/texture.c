@@ -80,11 +80,34 @@ void ilG_texture_fromGL(ilG_texture* self, unsigned unit, GLenum target, GLuint 
     };
 }
 
-void ilG_texture_fromimage(ilG_texture *self, unsigned unit, ilA_img *img)
+static GLenum getImgFormat(const ilA_img *img)
 {
-    GLenum format, internalformat, type;
+    switch (img->channels) {
+        case ILA_IMG_RGBA:  return GL_RGBA;
+        case ILA_IMG_RGB:   return GL_RGB;
+        case ILA_IMG_RG:    return GL_RG;
+        case ILA_IMG_R:     return GL_RED;
+        default: il_error("Unhandled colour format"); return 0;
+    }
+}
+
+static GLenum getImgType(const ilA_img *img)
+{
+    if (img->fp) {
+        return GL_FLOAT;
+    }
+    switch (img->depth) {
+        case 8:     return GL_UNSIGNED_BYTE;
+        case 16:    return GL_UNSIGNED_SHORT;
+        case 32:    return GL_UNSIGNED_INT;
+        default: il_error("Unhandled bit depth"); return 0;
+    }
+}
+
+static GLenum getImgIFormat(const ilA_img *img)
+{
     unsigned i;
-    const static struct {
+    static const struct {
         enum ilA_imgchannels channels;
         unsigned depth;
         unsigned fp;
@@ -109,32 +132,49 @@ void ilG_texture_fromimage(ilG_texture *self, unsigned unit, ilA_img *img)
         {0, 0, 0, 0}
     };
 
-    switch (img->channels) {
-        case ILA_IMG_RGBA:  format = GL_RGBA;   break;
-        case ILA_IMG_RGB:   format = GL_RGB;    break;
-        case ILA_IMG_RG:    format = GL_RG;     break;
-        case ILA_IMG_R:     format = GL_RED;    break;
-        default: il_error("Unhandled colour format"); return;
-    }
-    if (img->fp) {
-        type = GL_FLOAT;
-    } else {
-        switch (img->depth) {
-            case 8:     type = GL_UNSIGNED_BYTE;    break;
-            case 16:    type = GL_UNSIGNED_SHORT;   break;
-            case 32:    type = GL_UNSIGNED_INT;     break;
-            default: il_error("Unhandled bit depth"); return;
-        }
-    }
-    internalformat = format; // default
     for (i = 0; mapping_table[i].depth; i++) {
         if (mapping_table[i].channels == img->channels && mapping_table[i].fp == img->fp && mapping_table[i].depth == img->depth) {
-            internalformat = mapping_table[i].format;
-            break;
+            return mapping_table[i].format;
         }
     }
+    
+    return getImgFormat(img);
+}
 
+void ilG_texture_fromimage(ilG_texture *self, unsigned unit, ilA_img *img)
+{
+    GLenum format, internalformat, type;
+
+    format = getImgFormat(img);
+    type = getImgType(img);
+    internalformat = getImgIFormat(img);
     ilG_texture_fromdata(self, unit, GL_TEXTURE_2D, internalformat, img->width, img->height, 1, format, type, img->data);
+}
+
+void ilG_texture_cubemap(ilG_texture *self, unsigned unit, struct ilA_img *faces[6])
+{
+    unsigned i;
+    static const GLenum targets[6] = {
+        GL_TEXTURE_CUBE_MAP_POSITIVE_X,
+        GL_TEXTURE_CUBE_MAP_NEGATIVE_X,
+        GL_TEXTURE_CUBE_MAP_POSITIVE_Y,
+        GL_TEXTURE_CUBE_MAP_NEGATIVE_Y,
+        GL_TEXTURE_CUBE_MAP_POSITIVE_Z,
+        GL_TEXTURE_CUBE_MAP_NEGATIVE_Z,
+    };
+    GLuint tex;
+
+    glGenTextures(1, &tex);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, tex);
+    for (i = 0; i < 6; i++) {
+        glTexImage2D(targets[i], 0, getImgIFormat(faces[i]), faces[i]->width, 
+                     faces[i]->height, 0, getImgFormat(faces[i]), 
+                     getImgType(faces[i]), faces[i]->data);
+    }
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+
+    ilG_texture_fromGL(self, unit, GL_TEXTURE_CUBE_MAP, tex);
 }
 
 void ilG_texture_fromdata(ilG_texture* self, unsigned unit, GLenum target, 

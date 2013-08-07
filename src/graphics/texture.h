@@ -39,6 +39,7 @@ void ilG_texture_fromfile(ilG_texture* self, unsigned unit, const char *name);
 void ilG_texture_fromasset(ilG_texture* self, unsigned unit, const struct ilA_file* iface, struct il_base *file);
 void ilG_texture_fromGL(ilG_texture* self, unsigned unit, GLenum target, GLuint tex);
 void ilG_texture_fromimage(ilG_texture *self, unsigned unit, struct ilA_img *img);
+void ilG_texture_cubemap(ilG_texture *self, unsigned unit, struct ilA_img *faces[6]);
 void ilG_texture_fromdata(ilG_texture* self, unsigned unit, GLenum target, 
     GLenum internalformat, unsigned width, unsigned height, unsigned depth,
     GLenum format, GLenum type, void *data);

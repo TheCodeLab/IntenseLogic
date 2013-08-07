@@ -26,6 +26,7 @@ local mesh          = require "asset.mesh"
 local lightpass     = require "graphics.lightpass"
 local file          = require "asset.file"
 local heightmap     = require "graphics.heightmap"
+local skyboxpass    = require "graphics.skyboxpass"
 
 math.randomseed(os.time())
 
@@ -34,6 +35,15 @@ local c = context()
 c:resize(800, 600, "IntenseLogic Demo")
 c.world = w
 w.context = c
+-- skybox pass
+local skybox = texture()
+skybox:setContext(c)
+test_img = image.loadfile "test_sky.png"
+skybox:cubemap("color0", {test_img, test_img, test_img, test_img, test_img, test_img})
+local s = stage()
+s.context = c
+skyboxpass(s, skybox)
+c:addStage(s, -1)
 -- geometry pass
 local s = stage()
 s.context = c
@@ -116,10 +126,10 @@ lights = {
     {vector3(20, 5, 60),    20,     vector3(.8, .7, .1)},
 }
 
-local w, h = 100, 100
+local hw, hh = 100, 100
 for i = 1, 100 do
     local l = light()
-    local pos = vector3(math.random(0,w-1), 0, math.random(0,h-1))
+    local pos = vector3(math.random(0,hw-1), 0, math.random(0,hh-1))
     local height = hmt:getPixel(pos.x, pos.z) 
     pos.y = height * 50 + 2
     l.positionable.position = pos.ptr
@@ -135,13 +145,16 @@ plain:mtlname "Plain material"
 plain:arrayAttrib("position", "in_Position")
 plain:matrix("MVP", "mvp")
 plain:link(c)
-m = drawable.icosahedron(c)
+m = drawable.box(c)
+local tex = texture()
+tex:setContext(c)
+local width = 3
 for i = 0, width*width*width - 1 do
     local box = positionable()
     w:add(box)
     box.drawable = m
     box.material = plain
-    box.texture = marble
+    box.texture = tex
     box.position = (vector3((i % width) + 5, math.floor((i%(width*width)) / width), math.floor(i/(width*width))) * vector3(15, 15, 15)).ptr
     box:track(c)
 end]]
