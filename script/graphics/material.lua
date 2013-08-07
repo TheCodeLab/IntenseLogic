@@ -20,11 +20,13 @@ extern il_type ilG_material_type;
 extern ilG_material ilG_material_default;
 
 enum ilG_transform {
-    ILG_PROJECTION = 1,
-    ILG_VIEW = 2,
-    ILG_MODEL = 4,
-    ILG_INVERSE = 8,
-    ILG_TRANSPOSE = 16,
+    ILG_PROJECTION  = 0x1,
+    ILG_VIEW_R      = 0x2,
+    ILG_VIEW_T      = 0x4,
+    ILG_MODEL       = 0x8,
+    ILG_INVERSE     = 0x10,
+    ILG_TRANSPOSE   = 0x20,
+    ILG_VIEW = ILG_VIEW_R | ILG_VIEW_T,
     ILG_VP = ILG_PROJECTION | ILG_VIEW,
     ILG_MVP = ILG_VP | ILG_MODEL,
 };

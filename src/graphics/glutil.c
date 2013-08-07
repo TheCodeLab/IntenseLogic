@@ -149,12 +149,7 @@ il_mat ilG_computeMVP(enum ilG_transform filter, const ilG_camera* camera, const
     } else {
         mvp = il_mat_identity(NULL);
     }
-    if (filter & ILG_VIEW) {
-        il_vec4 v = il_vec3_to_vec4(camera->positionable.position, 1.0, NULL);
-        v[0] = -v[0];
-        v[1] = -v[1];
-        v[2] = -v[2];
-
+    if (filter & ILG_VIEW_R) {
         il_quat q = il_quat_copy(camera->positionable.rotation);
         q[0] = -q[0];
         q[1] = -q[1];
@@ -162,15 +157,22 @@ il_mat ilG_computeMVP(enum ilG_transform filter, const ilG_camera* camera, const
         q[3] = -q[3];
 
         il_mat rotate = il_mat_rotate(q, NULL);
-        il_mat translate = il_mat_translate(v, NULL);
-        il_mat view = il_mat_mul(rotate, translate, NULL);
-        mvp = il_mat_mul(mvp, view, mvp);
-        il_mat_free(rotate);
-        il_mat_free(translate);
-        il_mat_free(view);
         il_quat_free(q);
-        il_vec4_free(v);
+        mvp = il_mat_mul(mvp, rotate, mvp);
+        il_mat_free(rotate);
     }
+    if (filter & ILG_VIEW_T) {
+        il_vec4 v = il_vec3_to_vec4(camera->positionable.position, 1.0, NULL);
+        v[0] = -v[0];
+        v[1] = -v[1];
+        v[2] = -v[2];
+
+        il_mat translate = il_mat_translate(v, NULL);
+        il_vec4_free(v);
+        mvp = il_mat_mul(mvp, translate, mvp);
+        il_mat_free(translate);
+    }
+
     if (filter & ILG_MODEL) {
         il_mat model = il_mat_new();
         il_mat mat1 = il_mat_scale(object->size, NULL);
