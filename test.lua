@@ -38,7 +38,7 @@ w.context = c
 -- skybox pass
 local skybox = texture()
 skybox:setContext(c)
-test_img = image.loadfile "test_sky.png"
+test_img = image.loadfile "stars.png"
 skybox:cubemap("color0", {test_img, test_img, test_img, test_img, test_img, test_img})
 local s = stage()
 s.context = c
