@@ -206,8 +206,11 @@ void render_stages(const ilE_registry* registry, const char *name, size_t size, 
     };
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, context->framebuffer);
     glDrawBuffers(4, &drawbufs[0]);
-    glClearColor(1.0, 0.41, 0.72, 1.0); // hot pink
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClearColor(0.39, 0.58, 0.93, 1.0); // cornflower blue
+    ilG_testError("glClearColor");
+    glClearDepth(1.0);
+    ilG_testError("glClearDepth");
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     for (i = 0; i < context->stages.length; i++) {
         il_debug("Rendering stage %s", context->stages.data[i]->name);
         context->stages.data[i]->run(context->stages.data[i]);

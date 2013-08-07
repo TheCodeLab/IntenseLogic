@@ -10,12 +10,7 @@
 
 static void draw_geometry(ilG_stage *self)
 {
-    glClearColor(0.39, 0.58, 0.93, 1.0); // cornflower blue
-    ilG_testError("glClearColor");
-    glClearDepth(1.0);
-    ilG_testError("glClearDepth");
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    ilG_testError("glClear");
+    ilG_testError("Unknown");
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
     glDisable(GL_BLEND);
