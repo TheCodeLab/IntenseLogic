@@ -39,7 +39,7 @@ extern il_type ilG_gui_textlayout_type;
 struct ilG_context;
 
 ilG_gui_textlayout *ilG_gui_textlayout_new(struct ilG_context *ctx, const char *lang, enum ilG_gui_textdir direction, const char *script, il_base *font, const ilA_file *tc, double pt, il_string *source);
-void ilG_gui_textlayout_getSize(ilG_gui_textlayout *self, unsigned *x, unsigned *y);
+void ilG_gui_textlayout_getExtents(ilG_gui_textlayout *self, unsigned *rx, unsigned *ry, int *bx, int *by, int *ax, int *ay);
 
 ilA_img *ilG_gui_textlayout_render(ilG_gui_textlayout *self, float col[4], enum ilG_gui_textoptions opts);
 

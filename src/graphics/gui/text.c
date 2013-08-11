@@ -38,6 +38,9 @@ struct ilG_gui_textlayout {
     cairo_font_face_t *cairo_ft_face;
     hb_face_t *hb_ft_face;
     float col[4];
+    cairo_glyph_t *cairo_glyphs;
+    cairo_text_extents_t extents;
+    int have_size;
 };
 
 static void text_des(void *obj)
@@ -120,79 +123,72 @@ ilG_gui_textlayout *ilG_gui_textlayout_new(ilG_context *ctx, const char *lang, e
     return l;
 }
 
-void ilG_gui_textlayout_getSize(ilG_gui_textlayout *self, unsigned *x, unsigned *y)
+void ilG_gui_textlayout_getExtents(ilG_gui_textlayout *self, unsigned *rx, unsigned *ry, int *bx, int *by, int *ax, int *ay)
 {
-    unsigned w = self->pt*64, h = self->pt*64, i;
-    for (i = 0; i < self->glyph_count; i++) {
-        w += self->glyph_pos[i].x_advance;
-        h += self->glyph_pos[i].y_advance;
+    if (!self->have_size) {
+        self->have_size = 1;
+        cairo_surface_t *surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, 0, 0);
+        cairo_t *cr = cairo_create(surface);
+
+        il_return_on_fail(self->cairo_glyphs);
+        cairo_set_font_face(cr, self->cairo_ft_face);
+        cairo_set_font_size(cr, self->pt);
+        cairo_glyph_extents(cr, self->cairo_glyphs, self->glyph_count, &self->extents);
+        cairo_surface_destroy(surface);
+        cairo_destroy(cr);
     }
-    if (x) {
-        *x = w/64;
+    if (rx) {
+        *rx = self->extents.width;
     }
-    if (y) {
-        *y = h/64;
+    if (ry) {
+        *ry = self->extents.height + 1; // TODO: ????
+    }
+    if (bx) {
+        *bx = self->extents.x_bearing;
+    }
+    if (by) {
+        *by = self->extents.y_bearing;
+    }
+    if (ax) {
+        *ax = self->extents.x_advance;
+    }
+    if (ay) {
+        *ay = self->extents.y_advance;
     }
 }
 
 ilA_img *ilG_gui_textlayout_render(ilG_gui_textlayout *self, float col[4], enum ilG_gui_textoptions opts)
 {
     (void)opts;
-    unsigned w, h;
-    unsigned x = 0, y = self->pt;
+    unsigned w = 0, h = 0;
+    unsigned x = 0, y = 0;
+    int bx = 0, by = 0;
+    int scale = 64;
+    unsigned i;
 
     self->cairo_ft_face = cairo_ft_font_face_create_for_ft_face(self->ft_face, 0);
     self->hb_ft_face = hb_ft_face_create(self->ft_face, NULL);
 
-    ilG_gui_textlayout_getSize(self, &w, &h);
-    self->surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, w, h);
-    self->cr = cairo_create(self->surface);
-
-    /*switch(justify & ILG_GUI_HORIZMASK) {
-        case ILG_GUI_LEFTJUSTIFY:
-        x = 0;
-        break;
-        case ILG_GUI_CENTERJUSTIFY:
-        x = w/2 - tw/2;
-        break;
-        case ILG_GUI_RIGHTJUSTIFY:
-        x = w - tw;
-        break;
-        default:
-        break;
-    }
-    switch(justify & ILG_GUI_VERTMASK) {
-        case ILG_GUI_TOPJUSTIFY:
-        y = 0;
-        break;
-        case ILG_GUI_MIDDLEJUSTIFY:
-        y = h/2 - th/2;
-        break;
-        case ILG_GUI_BOTTOMJUSTIFY:
-        y = h - th;
-        break;
-        default:
-        break;
-    }*/
-
-    int scale = 64;
-
     x *= scale;
     y *= scale;
-    cairo_glyph_t cairo_glyphs[sizeof(cairo_glyph_t) * self->glyph_count];
-    unsigned i;
+    self->cairo_glyphs = calloc(self->glyph_count, sizeof(cairo_glyph_t));
     for (i = 0; i < self->glyph_count; i++) {
-        cairo_glyphs[i].index = self->glyph_info[i].codepoint;
-        cairo_glyphs[i].x = (x + self->glyph_pos[i].x_offset)/scale;
-        cairo_glyphs[i].y = (y + self->glyph_pos[i].y_offset)/scale;
+        self->cairo_glyphs[i].index = self->glyph_info[i].codepoint;
+        self->cairo_glyphs[i].x = (x + self->glyph_pos[i].x_offset)/scale;
+        self->cairo_glyphs[i].y = (y + self->glyph_pos[i].y_offset)/scale;
         x += self->glyph_pos[i].x_advance;
         y += self->glyph_pos[i].y_advance;
     }
 
+    ilG_gui_textlayout_getExtents(self, &w, &h, &bx, &by, NULL, NULL);
+    self->surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, w, h);
+    self->cr = cairo_create(self->surface);
+
+    cairo_translate(self->cr, -bx, 1-by);
     cairo_set_source_rgba(self->cr, col[0], col[1], col[2], col[3]);
     cairo_set_font_face(self->cr, self->cairo_ft_face);
     cairo_set_font_size(self->cr, self->pt);
-    cairo_show_glyphs(self->cr, cairo_glyphs, self->glyph_count);
+    cairo_show_glyphs(self->cr, self->cairo_glyphs, self->glyph_count);
     cairo_surface_flush(self->surface);
 
     ilA_img *preswizzle = ilA_img_fromdata(cairo_image_surface_get_data(self->surface), w, h, 8, ILA_IMG_RGBA);

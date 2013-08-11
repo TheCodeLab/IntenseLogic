@@ -61,12 +61,13 @@ base.wrap "il.graphics.gui.frame" {
     end;
     image = modules.graphics.ilG_gui_frame_image;
     label = function(self, layout, col, opts)
-        self:setSize(layout:getSize())
         local tex = texture()
         tex:setContext(self.context)
         tex:setName("Text Label")
         tex:fromimage("color0", layout:render(col, opts))
         self:image(tex, 1)
+        local x, y = layout:getExtents()
+        self:setSize(x,y)
     end;
     setPosition = function(self, x, y, xp, yp)
         xp = xp or 0

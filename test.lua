@@ -172,21 +172,19 @@ end
 local georgia = file.load "georgia.ttf"
 local camera_pos_label = frame()
 camera_pos_label.context = c
-camera_pos_label:setPosition(5,5)
+camera_pos_label:setPosition(5,-19, 0, 1)
 root:addChild(camera_pos_label)
 function render_pos(pos)
     local label = text(c, "en", "ltr", "latin", georgia, 14, tostring(pos))
-    camera_pos_label:setSize(label:getSize())
     camera_pos_label:label(label, {1,1,1,1}, "left middle")
 end
 
 local fps_label = frame()
 fps_label.context = c
-fps_label:setPosition(5, -21, 0, 1)
+fps_label:setPosition(5, 5, 0, 0)
 root:addChild(fps_label)
 function render_fps(f)
     local label = text(c, "en", "ltr", "latin", georgia, 14, string.format("FPS: %.1f", tonumber(f)))
-    fps_label:setSize(label:getSize())
     fps_label:label(label, {1,1,1,1}, "left middle")
 end
 
