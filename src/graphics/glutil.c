@@ -177,7 +177,7 @@ il_mat ilG_computeMVP(enum ilG_transform filter, const ilG_camera* camera, const
         il_mat model = il_mat_new();
         il_mat mat1 = il_mat_scale(object->size, NULL);
         il_mat mat2 = il_mat_translate(object->position, NULL);
-        model = il_mat_mul(mat1, mat2, model);
+        model = il_mat_mul(mat2, mat1, model);
         mat1 = il_mat_rotate(object->rotation, mat1);
         il_mat_free(mat2);
         model = il_mat_mul(mat1, model, model);
