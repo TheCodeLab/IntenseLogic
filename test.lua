@@ -104,6 +104,7 @@ ht:setContext(c)
 local hmt = image.loadfile "smooth-heightmap.png"
 ht:fromimage("height0", hmt)
 ht:fromimage("normal0", hmt:height_to_normal())
+ht:fromfile("color0", "white-marble-texture.png")
 local hm = positionable()
 w:add(hm)
 hm.drawable = heightmap(c, 100, 100)

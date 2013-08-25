@@ -10,6 +10,7 @@ uniform mat4 imt;
 uniform vec2 size;
 
 out vec3 normal;
+out vec2 texcoord;
 
 void compute_normal()
 {
@@ -22,5 +23,6 @@ void main()
     float height = texture(height_tex, in_Position.xy).x;
     gl_Position = mvp * vec4(in_Position.x, height, in_Position.y, 1.0);
     compute_normal();
+    texcoord = in_Position.xy;
 }
 
