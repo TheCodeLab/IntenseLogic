@@ -31,25 +31,7 @@ local helper        = require "demos.helper"
 
 math.randomseed(os.time())
 
-local w = world()
-local c = context()
-c:resize(800, 600, "IntenseLogic Demo")
-c.world = w
-w.context = c
--- geometry pass
-local s = stage()
-s.context = c
-geometrypass(s)
-c:addStage(s, -1)
--- gui pass
-s = guipass(c)
-local root = frame()
-s:setRoot(root)
-c:addStage(s, -1)
--- output pass
-c:addStage(outpass(c), -1)
-
-c:setActive()
+local c, w, root = helper.context{name="Box Demo",geom=true,gui=true,output=true}
 
 local plain = material()
 plain:vertex(io.open("shaders/plain.vert","r"):read "*a")

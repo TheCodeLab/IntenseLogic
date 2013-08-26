@@ -7,8 +7,59 @@ local text          = require 'graphics.gui.text'
 local event         = require 'common.event'
 local camera        = require 'graphics.camera'
 local matrix        = require 'math.matrix'
+local context       = require 'graphics.context'
+local world         = require 'common.world'
+local geometrypass  = require 'graphics.geometrypass'
+local lightpass     = require 'graphics.lightpass'
+local guipass       = require 'graphics.guipass'
+local stage         = require 'graphics.stage'
+local outpass       = require 'graphics.outpass'
+local texture       = require 'graphics.texture'
+local image         = require 'asset.image'
+local skyboxpass    = require 'graphics.skyboxpass'
 
 local helper = {}
+
+function helper.context(args)
+    local w = world()
+    local c = context()
+    c:resize(800, 600, args.name or "IntenseLogic Demo")
+    c.world = w
+    w.context = c
+    if args.skybox then -- skybox pass
+        local skybox = texture()
+        skybox:setContext(c)
+        local test_img = image.loadfile(args.skybox)
+        skybox:cubemap("color0", {test_img, test_img, test_img, test_img, test_img, test_img})
+        local s = stage()
+        s.context = c
+        skyboxpass(s, skybox)
+        c:addStage(s, -1)
+    end
+    if args.geom then -- geometry pass
+        local s = stage()
+        s.context = c
+        geometrypass(s)
+        c:addStage(s, -1)
+    end
+    if args.lights then -- light pass
+        local s = lightpass(c)
+        c:addStage(s, -1)
+    end
+    local root
+    if args.gui then-- gui pass
+        local s = guipass(c)
+        root = frame()
+        s:setRoot(root)
+        c:addStage(s, -1)
+    end
+    if args.output then -- output pass
+        c:addStage(outpass(c), -1)
+    end
+
+    c:setActive()
+    return c, w, root
+end
 
 function helper.camera(ctx, root)
     local cam = camera()

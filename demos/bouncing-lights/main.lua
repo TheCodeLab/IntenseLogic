@@ -31,37 +31,7 @@ local helper        = require "demos.helper"
 
 math.randomseed(os.time())
 
-local w = world()
-local c = context()
-c:resize(800, 600, "IntenseLogic Demo")
-c.world = w
-w.context = c
--- skybox pass
-local skybox = texture()
-skybox:setContext(c)
-test_img = image.loadfile "demos/bouncing-lights/stars.png"
-skybox:cubemap("color0", {test_img, test_img, test_img, test_img, test_img, test_img})
-local s = stage()
-s.context = c
-skyboxpass(s, skybox)
-c:addStage(s, -1)
--- geometry pass
-local s = stage()
-s.context = c
-geometrypass(s)
-c:addStage(s, -1)
--- light pass
-s = lightpass(c)
-c:addStage(s, -1)
--- gui pass
-s = guipass(c)
-local root = frame()
-s:setRoot(root)
-c:addStage(s, -1)
--- output pass
-c:addStage(outpass(c), -1)
-
-c:setActive()
+local c, w, root = helper.context{name="Bouncing Lights Demo",skybox='demos/bouncing-lights/stars.png',geom=true,lights=true,gui=true,output=true}
 
 local ht = texture()
 ht:setContext(c)
