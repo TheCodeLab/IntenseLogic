@@ -4,6 +4,8 @@
 #include <sys/stat.h>
 #include <stdio.h>
 
+#include "loader.h"
+
 char *strdup(const char*);
 
 static int print(lua_State* L)
@@ -22,7 +24,8 @@ static int print(lua_State* L)
 }
 
 // Blatantly stolen from the lua standalone interpreter
-static int traceback (lua_State *L) {
+static int traceback(lua_State *L) 
+{
   if (!lua_isstring(L, 1))  /* 'message' not a string? */
     return 1;  /* keep it intact */
   lua_getglobal(L, "debug");
@@ -41,6 +44,22 @@ static int traceback (lua_State *L) {
   return 1;
 }
 
+static int iterate_modules(lua_State *L)
+{
+    void **saveptr = (void**)lua_touserdata(L, 1);
+    if (!saveptr) {
+        saveptr = (void**)lua_newuserdata(L, sizeof(void*));
+        *saveptr = NULL;
+        return 1; // first call returns the iterator
+    }
+    const char *str = il_module_iterate(saveptr);
+    if (str) {
+        lua_pushlstring(L, str, strlen(str));
+        return 1;
+    }
+    return 0;
+}
+
 ilS_script * ilS_new()
 {
     ilS_script* self = calloc(1, sizeof(ilS_script));
@@ -50,6 +69,9 @@ ilS_script * ilS_new()
 
     lua_pushcfunction(self->L, &print);
     lua_setglobal(self->L, "print");
+
+    lua_pushcfunction(self->L, iterate_modules);
+    lua_setglobal(self->L, "iterate_modules");
 
     lua_pushcfunction(self->L, &traceback);
     self->ehandler = lua_gettop(self->L);

@@ -62,5 +62,11 @@ void il_close_module(const char *module);
  */
 il_func il_get_symbol(const char *module, const char *name);
 
+/** Iterates through a module. Call until it returns NULL.
+ * @param saveptr A pointer to store the iterator in. Initialize to NULL.
+ * @return The next module.
+ */
+const char *il_module_iterate(void **saveptr);
+
 #endif
 

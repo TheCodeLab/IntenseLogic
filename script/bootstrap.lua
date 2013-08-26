@@ -9,19 +9,20 @@ function _G.print(...)
 end
 
 local ffi = require "ffi"
--- TODO: make this not suck
+
 function _G.loadmod(name)
-    --print("load lib"..name)
-    return ffi.load("lib"..name, true)
+    local sname = name:gsub('il(.*)', '%1'):gsub('lib(.*)', '%1')
+    print('load '..name, sname)
+    modules[sname] = ffi.load("lib"..name, true)
+    return modules[sname]
 end
 
-_G.modules = {
-    util = loadmod "ilutil",
-    math = loadmod "ilmath",
-    common = loadmod "ilcommon",
-    network = loadmod "ilnetwork",
-    graphics = loadmod "ilgraphics",
-    asset = loadmod "ilasset",
-    input = loadmod "ilinput"
-}
+_G.modules = {}
+
+local saveptr = iterate_modules()
+while true do
+    local mod = iterate_modules(saveptr)
+    if not mod then break end
+    loadmod(mod)
+end
 

@@ -282,3 +282,18 @@ void il_close_module(const char *module)
     free(mod->name);
 }
 
+const char *il_module_iterate(void **saveptr)
+{
+    if (*saveptr) {
+        struct module *ptr = ((struct module *)*saveptr)->hh.next;
+        *saveptr = ptr;
+        if (ptr) {
+            return ptr->name;
+        } else {
+            return NULL;
+        }
+    }
+    *saveptr = il_loaded;
+    return il_loaded->name;
+}
+
