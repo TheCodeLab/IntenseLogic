@@ -77,7 +77,7 @@ mtl:fragData("accumulation", "out_Ambient")
 mtl:fragData("diffuse", "out_Diffuse")
 mtl:fragData("specular", "out_Specular")
 mtl:link(c)
-local m = drawnmesh "teapot.obj"
+local m = drawnmesh "demos/teapots/teapot.obj"
 local width = 3
 for i = 0, width*width*width-1 do
     local box = positionable()
