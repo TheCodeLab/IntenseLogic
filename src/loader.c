@@ -39,6 +39,23 @@ static struct module {
 } *il_loaded = NULL;
 
 static IL_ARRAY(char*,) modpaths;
+static IL_ARRAY(char*,) ignores;
+
+void il_ignore_module(const char *name)
+{
+    IL_APPEND(ignores, strdup(name));
+}
+
+static int check_ignored(const char *name)
+{
+    unsigned i;
+    for (i = 0; i < ignores.length; i++) {
+        if (strcmp(name, ignores.data[i]) == 0) {
+            return 1;
+        }
+    }
+    return 0;
+}
 
 void il_add_module_path(const char *path)
 {
@@ -73,6 +90,9 @@ void il_load_module_dir(const char *path, int argc, char **argv)
             // assume it's not a shared library if it doesn't end with SUFFIX
             continue;
         }
+        if (check_ignored(name)) {
+            continue;
+        }
         char buf[MAX_PATH];
         strcpy(buf, path);
         strcat(buf, "\\");
@@ -91,6 +111,9 @@ void il_load_module_dir(const char *path, int argc, char **argv)
     while (!readdir_r(dir, &entry, &result) && result) {
         if (strcmp(result->d_name + strlen(result->d_name) - strlen(SUFFIX), SUFFIX) != 0) {
             // assume it's not a shared library if it doesn't end with SUFFIX
+            continue;
+        }
+        if (check_ignored(result->d_name)) {
             continue;
         }
         char buf[512];

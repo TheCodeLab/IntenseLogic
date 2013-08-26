@@ -15,11 +15,12 @@
 
 #define OPTIONS \
     OPT('m', "modules", required_argument,  "Adds a directory to look for modules") \
+    OPT('i', "ignore",  required_argument,  "Ignores a module while loading") \
     OPT('r', "run",     required_argument,  "Runs a Lua script") \
     OPT(0,   "scripts", required_argument,  "Adds a directory to look for scripts") \
     OPT('h', "help",    no_argument,        "Prints this message and exits") \
     OPT('v', "version", no_argument,        "Prints the version and exits")
-static const char *optstring = "m:r:hv";
+static const char *optstring = "m:r:hvi:";
 
 #define OPT(s, l, a, h) {l, a, NULL, s},
 static struct option longopts[] = {
@@ -59,6 +60,9 @@ int main(int argc, char **argv)
             break;
             case 'r':
             IL_APPEND(scripts, strdup(optarg));
+            break;
+            case 'i':
+            il_ignore_module(optarg);
             break;
             case 'h':
             printf("IntenseLogic %s\n", il_version);

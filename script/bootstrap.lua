@@ -12,7 +12,6 @@ local ffi = require "ffi"
 
 function _G.loadmod(name)
     local sname = name:gsub('il(.*)', '%1'):gsub('lib(.*)', '%1')
-    print('load '..name, sname)
     modules[sname] = ffi.load("lib"..name, true)
     return modules[sname]
 end

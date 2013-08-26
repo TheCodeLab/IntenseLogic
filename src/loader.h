@@ -24,6 +24,11 @@ typedef int (*il_bootstrap_fn)(int argc, char **argv);
  */
 typedef const char** (*il_dependencies_fn)(int argc, char **argv);
 
+/** Sets a certain plugin to not load
+ * @param name The name of the plugin
+ */
+void il_ignore_module(const char *name);
+
 /** Adds a path to be searched when loading modules.
  * @param path The path to add to the list of module paths.
  */
