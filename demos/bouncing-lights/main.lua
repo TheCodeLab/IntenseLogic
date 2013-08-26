@@ -38,7 +38,7 @@ w.context = c
 -- skybox pass
 local skybox = texture()
 skybox:setContext(c)
-test_img = image.loadfile "stars.png"
+test_img = image.loadfile "demos/bouncing-lights/stars.png"
 skybox:cubemap("color0", {test_img, test_img, test_img, test_img, test_img, test_img})
 local s = stage()
 s.context = c
@@ -62,46 +62,9 @@ c:addStage(outpass(c), -1)
 
 c:setActive()
 
---[[local marble = texture()
-marble:setContext(c)
-marble:fromfile("color0", "white-marble-texture.png")
-
-local vf, ff = io.open("shaders/test.vert", "r"), io.open("shaders/test.frag", "r");
-local mtl = material()
-mtl:vertex(vf:read "*a")
-mtl:fragment(ff:read "*a")
-vf:close()
-ff:close()
-mtl:mtlname "Test material"
-mtl:arrayAttrib("position", "in_Position")
-mtl:arrayAttrib("texcoord", "in_Texcoord")
-mtl:arrayAttrib("normal", "in_Normal")
-mtl:arrayAttrib("diffuse", "in_Diffuse")
-mtl:arrayAttrib("specular", "in_Specular")
-mtl:matrix("MVP", "mvp")
-mtl:matrix("IMT", "imt")
-mtl:textureUnit("color0", "tex")
-mtl:fragData("normal", "out_Normal")
-mtl:fragData("accumulation", "out_Ambient")
-mtl:fragData("diffuse", "out_Diffuse")
-mtl:fragData("specular", "out_Specular")
-mtl:link(c)
-local m = drawnmesh "teapot.obj"
-local width = 3
-for i = 0, width*width*width-1 do
-    local box = positionable()
-    w:add(box)
-    box.drawable = m --drawable.box
-    box.material = mtl
-    box.texture = marble
-    box.position = (vector3(i % width, math.floor((i%(width*width)) / width), math.floor(i/(width*width))) * vector3(15, 15, 15)).ptr
-    box:track(c)
-    --print(box.position)
-end]]
-
 local ht = texture()
 ht:setContext(c)
-local hmt = image.loadfile "smooth-heightmap.png"
+local hmt = image.loadfile "demos/bouncing-lights/smooth-heightmap.png"
 ht:fromimage("height0", hmt)
 ht:fromimage("normal0", hmt:height_to_normal())
 ht:fromfile("color0", "white-marble-texture.png")
@@ -120,13 +83,6 @@ c.camera.positionable.position = vector3(0, 0, 0).ptr
 c.camera.sensitivity = .01
 c.camera.movespeed = vector3(1,1,1).ptr
 
-lights = {
-    {vector3(50, 50, 50),   250,    vector3(.4, .4, .4)},
-    {vector3(40, 5, 55),    25,     vector3(.3, .4, 1)},
-    {vector3(70, 20, 40),   10,     vector3(1, .5, .2)},
-    {vector3(20, 5, 60),    20,     vector3(.8, .7, .1)},
-}
-
 local hw, hh = 100, 100
 for i = 1, 100 do
     local l = light()
@@ -138,27 +94,6 @@ for i = 1, 100 do
     l.color = vector3(math.random(0,1), math.random(0,1), math.random(0,1)).ptr
     l:add(c)
 end
-
---[[local plain = material()
-plain:vertex(io.open("shaders/plain.vert","r"):read "*a")
-plain:fragment(io.open("shaders/plain.frag", "r"):read "*a")
-plain:mtlname "Plain material"
-plain:arrayAttrib("position", "in_Position")
-plain:matrix("MVP", "mvp")
-plain:link(c)
-m = drawable.box(c)
-local tex = texture()
-tex:setContext(c)
-local width = 3
-for i = 0, width*width*width - 1 do
-    local box = positionable()
-    w:add(box)
-    box.drawable = m
-    box.material = plain
-    box.texture = tex
-    box.position = (vector3((i % width) + 5, math.floor((i%(width*width)) / width), math.floor(i/(width*width))) * vector3(15, 15, 15)).ptr
-    box:track(c)
-end]]
 
 local first_mouse = true
 function mousemove(reg, name, xabs, yabs, x, y)
