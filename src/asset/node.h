@@ -44,7 +44,7 @@ struct ilA_dir {
     ilA_dir_lookup_fn lookup;
     ilA_dir_create_fn create;
     ilA_dir_mkdir_fn mkdir;
-    ilA_dir_delete_fn delete;
+    ilA_dir_delete_fn del;
 };
 
 /** Creates a file object from an object that resides on the real file system */

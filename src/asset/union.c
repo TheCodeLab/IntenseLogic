@@ -58,7 +58,7 @@ ilA_dir ilA_union_dir = {
     .lookup = union_lookup,
     .create = (ilA_dir_create_fn)union_derp,
     .mkdir  = (ilA_dir_mkdir_fn) union_derp,
-    .delete = (ilA_dir_delete_fn)union_derp
+    .del    = (ilA_dir_delete_fn)union_derp
 };
 
 void ilA_union_init()

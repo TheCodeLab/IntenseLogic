@@ -48,7 +48,7 @@ void ilA_delete(const ilA_dir *iface, il_base *dir, const ilA_path *path)
         il_error("Parameter is not a directory");
         return;
     }
-    iface->delete(dir, path);
+    iface->del(dir, path);
 }
 
 void *ilA_contents(const ilA_file *iface, il_base *file, size_t *size)
