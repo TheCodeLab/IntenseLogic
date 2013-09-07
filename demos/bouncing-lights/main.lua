@@ -18,7 +18,7 @@ ht:setContext(c)
 local hmt = image.loadfile "demos/bouncing-lights/smooth-heightmap.png"
 ht:fromimage("height0", hmt)
 ht:fromimage("normal0", hmt:height_to_normal())
-ht:fromfile("color0", "white-marble-texture.png")
+ht:fromfile("color0", "terrain.png")
 local hm = positionable()
 w:add(hm)
 hm.drawable = heightmap(c, 100, 100)
