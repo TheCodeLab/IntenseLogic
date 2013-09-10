@@ -22,8 +22,15 @@ extern "C" void set_world(il_world *w)
 
 extern "C" void add_heightmap(ilA_img *hm, float height)
 {
-    btCollisionShape *heightmap_shape = new btHeightfieldTerrainShape(hm->width, hm->height, hm->data, 1, 0, height, 1, PHY_UCHAR, false);
-    btDefaultMotionState *heightmap_state = new btDefaultMotionState(btTransform(btQuaternion(0,0,0,1),btVector3(hm->width/2,height/2,hm->height/2)));
+    unsigned char *mem = new unsigned char[hm->width * hm->height];
+    memcpy(mem, hm->data, hm->width*hm->height);
+    btCollisionShape *heightmap_shape = new btHeightfieldTerrainShape(hm->width+1, hm->height+1, mem, height/255.f, 0, height, 1, PHY_UCHAR, false);
+    btTransform trans = btTransform(btQuaternion(0,0,0,1), btVector3(hm->width/2, height/2, hm->height/2));
+    btVector3 min, max, scaling;
+    heightmap_shape->getAabb(trans, min, max);
+    scaling = heightmap_shape->getLocalScaling();
+    printf("Heightmap AABB: (%f %f %f) (%f %f %f)\nScaling: (%f %f %f)\n", min.x(), min.y(), min.z(), max.x(), max.y(), max.z(), scaling.x(), scaling.y(), scaling.z());
+    btDefaultMotionState *heightmap_state = new btDefaultMotionState(trans);
     btRigidBody::btRigidBodyConstructionInfo groundRigidBodyCI(0, heightmap_state, heightmap_shape, btVector3(0,0,0));
     btRigidBody* groundRigidBody = new btRigidBody(groundRigidBodyCI);
     dynamicsWorld->addRigidBody(groundRigidBody);
@@ -35,7 +42,7 @@ extern "C" void add_ball(il_positionable *pos)
     btVector3 vec = btVector3(pos->position[0], pos->position[1], pos->position[2]);
     btDefaultMotionState *state = new btDefaultMotionState(btTransform(rot, vec));
     float mass = 1.f;
-    btVector3 inertia;
+    btVector3 inertia(0,0,0);
     ball_shape->calculateLocalInertia(mass, inertia);
     btRigidBody::btRigidBodyConstructionInfo ballRigidBodyCI(mass, state, ball_shape, inertia);
     btRigidBody* ballRigidBody = new btRigidBody(ballRigidBodyCI);
@@ -46,7 +53,7 @@ extern "C" void add_ball(il_positionable *pos)
 extern "C" void update()
 {
     //printf("physics step\n");
-    dynamicsWorld->stepSimulation(1/20.f);
+    dynamicsWorld->stepSimulation(1/20.f, 10, 1/200.f);
     il_worldIterator *it = NULL;
     il_positionable *pos;
     for (pos = il_world_iterate(world, &it); pos; pos = il_world_iterate(world, &it)) {

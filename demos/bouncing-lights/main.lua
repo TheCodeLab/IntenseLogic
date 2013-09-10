@@ -32,7 +32,7 @@ local hmt = image.loadfile "demos/bouncing-lights/smooth-heightmap.png"
 ffi.C.add_heightmap(hmt, 50)
 ht:fromimage("height0", hmt)
 ht:fromimage("normal0", hmt:height_to_normal())
-ht:fromfile("color0", "terrain.png")
+ht:fromfile("color0", "demos/bouncing-lights/terrain.png")
 local hm = positionable()
 w:add(hm)
 hm.drawable = heightmap(c, 100, 100)
@@ -50,7 +50,6 @@ plain:arrayAttrib("position", "in_Position")
 plain:matrix("MVP", "mvp")
 plain:link(c)
 
-local rnd = math.random(1, 100)
 local hw, hh = 100, 100
 for i = 1, 100 do
     local l = light()
@@ -69,13 +68,14 @@ for i = 1, 100 do
     l.positionable.texture = tex
     hm.track(l.positionable, c) --ugh
     w:add(l.positionable)
-    if type(rnd) == 'number' and i == rnd then
-        rnd = l.positionable
-    end
 end
 
 --event.setPacker(event.registry, "physics.tick", event.nilPacker)
 --event.timer(event.registry, "physics.tick", 1/60)
-event.register(event.registry, "tick", function() ffi.C.update() print(string.format("(%f %f %f)", rnd.position[0], rnd.position[1], rnd.position[2])) end)
+event.register(event.registry, "input.button", function(reg, name, key) 
+    if key == ' ' then
+        event.register(event.registry, "tick", function() ffi.C.update() end)
+    end
+end)
 helper.camera(c, root)
 
