@@ -180,7 +180,7 @@ il_mat ilG_computeMVP(enum ilG_transform filter, const ilG_camera* camera, const
         model = il_mat_mul(mat2, mat1, model);
         mat1 = il_mat_rotate(object->rotation, mat1);
         il_mat_free(mat2);
-        model = il_mat_mul(mat1, model, model);
+        model = il_mat_mul(model, mat1, model);
         mvp = il_mat_mul(mvp, model, mvp);
         il_mat_free(model);
         il_mat_free(mat1);
