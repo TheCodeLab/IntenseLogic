@@ -12,7 +12,9 @@ inputs    = "*.c script/*.c"
 platform  = ARGUMENTS.get("platform", "linux")
 
 # flags
-cflags    = "-Wall -Wextra -pedantic -std=c99 -g -O0 -DDEBUG -D_POSIX_C_SOURCE=200809"
+ccflags   = "-Wall -Wextra -pedantic -g -O0 -DDEBUG"
+cflags    = "-std=c99 -D_POSIX_C_SOURCE=200809"
+cxxflags  = ""
 linkflags = "-g -L. -Lbuild"
 if platform == "mingw":
     cflags += " -DWIN32 -I/usr/i486-mingw32/include/luajit-2.0" # TODO: get rid of that monstrosity
@@ -39,9 +41,11 @@ pkg_libs = {
 
 # link libs
 VariantDir(build_dir, src_dir, duplicate = 0)
-env = Environment(CCFLAGS = cflags, LINKFLAGS = string.split(linkflags, " "))
+env = Environment(CCFLAGS=ccflags, CFLAGS = cflags, CXXFLAGS=cxxflags, LINKFLAGS = string.split(linkflags, " "))
 if 'CC' in os.environ:
     env['CC'] = os.environ['CC']
+if 'CXX' in os.environ:
+    env['CXX'] = os.environ['CXX']
 if 'LD' in os.environ:
     env['LD'] = os.environ['LD']
 if 'SHLIBSUFFIX' in os.environ:
@@ -65,9 +69,12 @@ libilinput = SConscript("src/input/SConscript", platform=platform, env=env, libi
 Export("libilinput")
 libilgraphics = SConscript("src/graphics/SConscript", platform=platform, env=env, libilutil=libilutil, libilmath=libilmath, libilcommon=libilcommon, libilasset=libilasset, libilinput=libilinput)
 Export("libilgraphics")
+#libilphysics = SConscript("src/physics/SConscript", platform=platform, env=env, libilutil=libilutil, libilcommon=libilcommon)
+#Export("libilphysics")
 libilnetwork = SConscript("src/network/SConscript", platform=platform, env=env, libilutil=libilutil)
 Export("libilnetwork")
 SConscript("test/SConscript", platform=platform, env=env)
+SConscript("demos/SConscript", platform=platform, env=env)
 
 # get sources
 sources = []
@@ -113,5 +120,6 @@ Depends(prog, libilcommon)
 Depends(prog, libilgraphics)
 Depends(prog, libilasset)
 Depends(prog, libilinput)
+#Depends(prog, libilphysics)
 Default(prog)
 

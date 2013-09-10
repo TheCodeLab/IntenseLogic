@@ -19,6 +19,7 @@ typedef struct il_world {
     il_base base;
     IL_ARRAY(struct il_positionable*,) objects;
     struct ilG_context* context;
+    struct ilP_simulation *simulation;
 } il_world;
 
 typedef struct il_worldIterator il_worldIterator;

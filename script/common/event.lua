@@ -108,8 +108,10 @@ function event.timer(registry, name, interval, ...)
     else
         error "Unknown time format for timer"
     end
-    local data, size = packers[tostring(ffi.cast("void*", registry))..name](...)
-    modules.common.ilE_globalevent(registry, name, size, data, tv)
+    local packer = packers[tostring(ffi.cast("void*", registry))..name]
+    if not packer then error("No packer for event "..name) end
+    local data, size = packer(...)
+    modules.common.ilE_globaltimer(registry, name, size, data, tv)
 end
 
 local unpackers = {}

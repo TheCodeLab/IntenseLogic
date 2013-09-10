@@ -1,0 +1,29 @@
+output    = "libbouncinglights"
+src_dir   = "#demos/bouncing-lights"
+build_dir = "#build"
+inputs    = "*.cpp"
+
+Import("platform")
+Import("env")
+Import("libilutil")
+Import("libilcommon")
+
+bouncinglights = env.Clone()
+
+bouncinglights.Append(CPPPATH = src_dir, LIBS=['ilutil', 'ilcommon'])
+
+if platform=="mingw":
+    bouncinglights.Append(LIBS=["BulletDynamics", "BulletCollision", "LinearMath", "BulletSoftBody"])
+else:
+    bouncinglights.ParseConfig("pkg-config bullet --libs --cflags")
+
+sources = []
+for module in Split(inputs) :
+    sources.extend(Glob(module))
+
+libbouncinglights = bouncinglights.SharedLibrary(target = build_dir + "/" + output, 
+                                     source = sources)
+Depends(libbouncinglights, libilutil)
+Depends(libbouncinglights, libilcommon)
+
+Return("libbouncinglights")
