@@ -47,7 +47,7 @@ void ilG_registerJoystickBackend()
 static void mousebutton(GLFWwindow *window, int button, int action, int mods)
 {
     ilI_buttonevent ev;
-    ev.button = button;
+    ev.button = button + 512;
     ev.scancode = 0;
     ev.device = 0;
     ev.action = action;

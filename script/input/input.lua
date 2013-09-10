@@ -128,15 +128,21 @@ local input = {}
 function input.buttonUnpacker(size, data)
     local ev = ffi.cast("ilI_buttonevent*", data)
     local button
-    for k, v in pairs(keysyms) do
-        if v == ev.button then
-            button = string.lower(k:sub(5, -1):gsub("_", " "))
-            break
+    local bev = tonumber(ev.button)
+    if bev >= 32 and bev < 127 then
+        button = string.char(bev)
+    else 
+        for k, v in pairs(keysyms) do
+            if v == bev then
+                button = string.lower(k:sub(5, -1):gsub("_", " "))
+                break
+            end
         end
     end
+    if not button then error("No button found for code "..tostring(bev)) end
     local mods = ""
     for k,v in pairs {S=1, C=2, A=4, W=8} do
-        if bit.band(v, ev.mods) ~= 0 then
+        if bit.band(v, tonumber(ev.mods)) ~= 0 then
             mods = mods .. k
         end
     end
