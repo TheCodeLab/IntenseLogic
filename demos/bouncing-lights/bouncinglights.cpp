@@ -20,12 +20,13 @@ extern "C" void set_world(il_world *w)
     world = w;
 }
 
-extern "C" void add_heightmap(ilA_img *hm, float height)
+extern "C" void add_heightmap(ilA_img *hm, float w, float h, float height)
 {
     unsigned char *mem = new unsigned char[hm->width * hm->height];
     memcpy(mem, hm->data, hm->width*hm->height);
     btCollisionShape *heightmap_shape = new btHeightfieldTerrainShape(hm->width+1, hm->height+1, mem, height/255.f, 0, height, 1, PHY_UCHAR, false);
-    btTransform trans = btTransform(btQuaternion(0,0,0,1), btVector3(hm->width/2, height/2, hm->height/2));
+    heightmap_shape->setLocalScaling(btVector3(w/hm->width, 1, h/hm->height));
+    btTransform trans = btTransform(btQuaternion(0,0,0,1), btVector3(w/2, height/2, h/2));
     btVector3 min, max, scaling;
     heightmap_shape->getAabb(trans, min, max);
     scaling = heightmap_shape->getLocalScaling();
@@ -89,12 +90,31 @@ extern "C" int il_bootstrap(int argc, char **argv)
     dynamicsWorld->setGravity(btVector3(0,-10,0));
     ball_shape = new btSphereShape(.25);
 
-    btCollisionShape* groundShape = new btStaticPlaneShape(btVector3(0,1,0),1);
-    btDefaultMotionState *groundMotionState = new btDefaultMotionState(btTransform(btQuaternion(0,0,0,1),btVector3(0,-50,0)));
-    btRigidBody::btRigidBodyConstructionInfo groundRigidBodyCI(0,groundMotionState,groundShape,btVector3(0,0,0));
-    btRigidBody* groundRigidBody = new btRigidBody(groundRigidBodyCI);
-    groundRigidBody->setRestitution(1.0);
-    dynamicsWorld->addRigidBody(groundRigidBody);
+    btScalar arenaWidth = 128;
+    int i;
+    btCollisionShape* groundShape[4];
+    btDefaultMotionState *groundMotionState[4]; 
+    btRigidBody* groundRigidBody[4];
+    btVector3 norms[4] = {
+        btVector3(1, 0, 0),
+        btVector3(-1, 0, 0),
+        btVector3(0, 0, 1),
+        btVector3(0, 0, -1)
+    };
+    btVector3 positions[4] = {
+        btVector3(0, 0, 0),
+        btVector3(arenaWidth, 0, 0),
+        btVector3(0, 0, 0),
+        btVector3(0, 0, arenaWidth)
+    };
+    for (i = 0; i < 4; i++) {
+        groundShape[i] = new btStaticPlaneShape(norms[i],1);
+        groundMotionState[i] = new btDefaultMotionState(btTransform(btQuaternion(0,0,0,1),positions[i]));
+        btRigidBody::btRigidBodyConstructionInfo groundRigidBodyCI(0,groundMotionState[i],groundShape[i],btVector3(0,0,0));
+        groundRigidBody[i] = new btRigidBody(groundRigidBodyCI);
+        groundRigidBody[i]->setRestitution(0.5);
+        dynamicsWorld->addRigidBody(groundRigidBody[i]);
+    }
 
     return 0;
 }

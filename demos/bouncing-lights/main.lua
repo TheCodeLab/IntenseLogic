@@ -15,7 +15,7 @@ local drawable      = require "graphics.drawable"
 ffi.cdef [[
 
 void set_world(il_world *w);
-void add_heightmap(ilA_img *hm, float height);
+void add_heightmap(ilA_img *hm, float w, float h, float height);
 void add_ball(il_positionable *pos);
 void update();
 
@@ -28,8 +28,8 @@ ffi.C.set_world(w)
 
 local ht = texture()
 ht:setContext(c)
-local hmt = image.loadfile "demos/bouncing-lights/smooth-heightmap.png"
-ffi.C.add_heightmap(hmt, 50)
+local hmt = image.loadfile "demos/bouncing-lights/arena-heightmap.png"
+ffi.C.add_heightmap(hmt, 256, 256, 50)
 ht:fromimage("height0", hmt)
 ht:fromimage("normal0", hmt:height_to_normal())
 ht:fromfile("color0", "demos/bouncing-lights/terrain.png")
@@ -39,7 +39,7 @@ hm.drawable = heightmap(c, 100, 100)
 hm.material = heightmap.defaultShader(c)
 hm.texture = ht
 hm.position = vector3(0, 0, 0).ptr
-hm.size = vector3(100, 50, 100).ptr
+hm.size = vector3(128, 64, 128).ptr
 hm:track(c)
 
 local plain = material()
@@ -50,12 +50,11 @@ plain:arrayAttrib("position", "in_Position")
 plain:matrix("MVP", "mvp")
 plain:link(c)
 
-local hw, hh = 100, 100
-for i = 1, 100 do
+local hw, hh = 128, 128
+for i = 1, 300 do
     local l = light()
-    local pos = vector3(math.random(0,hw-1), 0, math.random(0,hh-1))
-    local height = hmt:getPixel(pos.x, pos.z) 
-    pos.y = 100 --height * 50 + 2
+    local pos = vector3(math.random(0,hw-1), math.random(16,48), math.random(0,hh-1))
+    --local height = hmt:getPixel(pos.x, pos.z) 
     l.positionable.position = pos.ptr
     l.positionable.size = vector3(.25, .25, .25).ptr
     l.radius = math.random(1, 15)
