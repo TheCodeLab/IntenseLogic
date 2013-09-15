@@ -56,7 +56,7 @@ extern "C" void add_ball(il_positionable *pos)
 extern "C" void update()
 {
     //printf("physics step\n");
-    dynamicsWorld->stepSimulation(1/20.f, 10, 1/200.f);
+    dynamicsWorld->stepSimulation(1/20.f, 10, 1/60.f);
     il_worldIterator *it = NULL;
     il_positionable *pos;
     for (pos = il_world_iterate(world, &it); pos; pos = il_world_iterate(world, &it)) {
