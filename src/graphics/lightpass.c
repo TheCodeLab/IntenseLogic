@@ -167,7 +167,7 @@ struct ilG_stage *ilG_lightpass(struct ilG_context* context)
     ilG_material_textureUnit(mtl, ILG_TUNIT_NONE, "specular");
     ilG_material_matrix(mtl, ILG_INVERSE | ILG_VP, "ivp");
     ilG_material_fragData(mtl, ILG_FRAGDATA_ACCUMULATION, "out_Color");
-    ilG_material_matrix(mtl, ILG_MVP, "mvp");
+    ilG_material_matrix(mtl, ILG_MODEL_T | ILG_VP, "mvp");
     ilG_material_customUniform(mtl, size_uniform, context, "size");
     if (ilG_material_link(mtl, context)) {
         return NULL;
