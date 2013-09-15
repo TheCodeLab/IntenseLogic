@@ -57,6 +57,7 @@ for i = 1, 100 do
     local height = hmt:getPixel(pos.x, pos.z) 
     pos.y = 100 --height * 50 + 2
     l.positionable.position = pos.ptr
+    l.positionable.size = vector3(.25, .25, .25).ptr
     l.radius = math.random(1, 15)
     l.color = vector3(math.random(0,1), math.random(0,1), math.random(0,1)).ptr
     l:add(c)

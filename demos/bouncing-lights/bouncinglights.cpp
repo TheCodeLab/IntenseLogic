@@ -85,7 +85,7 @@ extern "C" int il_bootstrap(int argc, char **argv)
     solver = new btSequentialImpulseConstraintSolver;
     dynamicsWorld = new btDiscreteDynamicsWorld(dispatcher,broadphase,solver,collisionConfiguration);
     dynamicsWorld->setGravity(btVector3(0,-10,0));
-    ball_shape = new btSphereShape(1);
+    ball_shape = new btSphereShape(.25);
 
     btCollisionShape* groundShape = new btStaticPlaneShape(btVector3(0,1,0),1);
     btDefaultMotionState *groundMotionState = new btDefaultMotionState(btTransform(btQuaternion(0,0,0,1),btVector3(0,-50,0)));
