@@ -49,7 +49,7 @@ void main()
     vec3 light_dir = normalize(position - pos);
     vec3 norm = texture(normal, gl_FragCoord.xy).xyz;
     float dist = length(position - pos) / radius;
-    float daf = 1 - dist;
+    float daf = max(0, 1 - dist);
 
     vec3 col = vec3(0);
     vec3 diffuse = texture(diffuse, gl_FragCoord.xy).xyz; 

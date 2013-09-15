@@ -7,6 +7,7 @@
 #include "graphics/textureunit.h"
 #include "graphics/shape.h"
 #include "graphics/texture.h"
+#include "graphics/fragdata.h"
 
 static ilG_material *skybox_shader(ilG_context *context)
 {
@@ -21,6 +22,10 @@ static ilG_material *skybox_shader(ilG_context *context)
     ilG_material_arrayAttrib(self, ILG_ARRATTR_POSITION, "in_Position");
     ilG_material_textureUnit(self, ILG_TUNIT_COLOR0, "skytex");
     ilG_material_matrix(self, ILG_VIEW_R | ILG_PROJECTION, "mat");
+    ilG_material_fragData(self, ILG_FRAGDATA_ACCUMULATION, "out_Color");
+    ilG_material_fragData(self, ILG_FRAGDATA_NORMAL, "out_Normal");
+    ilG_material_fragData(self, ILG_FRAGDATA_DIFFUSE, "out_Diffuse");
+    ilG_material_fragData(self, ILG_FRAGDATA_SPECULAR, "out_Specular");
     if (ilG_material_link(self, context)) {
         il_unref(self);
         return NULL;
@@ -43,6 +48,8 @@ static void draw_sky(ilG_stage *self)
     ilG_bindable_action(context->textureb,  context->texture);
     ilG_bindable_action(context->drawableb, context->drawable);
     glEnable(GL_DEPTH_TEST);
+    glClearDepth(1.0);
+    glClear(GL_DEPTH_BUFFER_BIT);
 }
 
 void ilG_skyboxpass(ilG_stage *self, ilG_texture *skytex)
