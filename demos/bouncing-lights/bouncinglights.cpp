@@ -33,6 +33,7 @@ extern "C" void add_heightmap(ilA_img *hm, float height)
     btDefaultMotionState *heightmap_state = new btDefaultMotionState(trans);
     btRigidBody::btRigidBodyConstructionInfo groundRigidBodyCI(0, heightmap_state, heightmap_shape, btVector3(0,0,0));
     btRigidBody* groundRigidBody = new btRigidBody(groundRigidBodyCI);
+    groundRigidBody->setRestitution(1.0);
     dynamicsWorld->addRigidBody(groundRigidBody);
 }
 
@@ -46,6 +47,7 @@ extern "C" void add_ball(il_positionable *pos)
     ball_shape->calculateLocalInertia(mass, inertia);
     btRigidBody::btRigidBodyConstructionInfo ballRigidBodyCI(mass, state, ball_shape, inertia);
     btRigidBody* ballRigidBody = new btRigidBody(ballRigidBodyCI);
+    ballRigidBody->setRestitution(1.0);
     dynamicsWorld->addRigidBody(ballRigidBody);
     il_base_set(pos, "rigidbody", ballRigidBody, sizeof(btRigidBody), IL_VOID);
 }
@@ -91,6 +93,7 @@ extern "C" int il_bootstrap(int argc, char **argv)
     btDefaultMotionState *groundMotionState = new btDefaultMotionState(btTransform(btQuaternion(0,0,0,1),btVector3(0,-50,0)));
     btRigidBody::btRigidBodyConstructionInfo groundRigidBodyCI(0,groundMotionState,groundShape,btVector3(0,0,0));
     btRigidBody* groundRigidBody = new btRigidBody(groundRigidBodyCI);
+    groundRigidBody->setRestitution(1.0);
     dynamicsWorld->addRigidBody(groundRigidBody);
 
     return 0;
