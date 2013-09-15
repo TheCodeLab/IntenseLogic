@@ -57,7 +57,7 @@ void main()
     vec4 spec = texture(specular, gl_FragCoord.xy);
     col += spec.xyz * pow(max(0, dot(normalize(2 * dot(light_dir, norm) * norm - light_dir), normalize(camera - pos))), spec.w * 255);
 
-    out_Color = col * daf * color;
+    out_Color = max(vec3(0), col * daf * color);
     out_Normal = vec3(0);
     out_Diffuse = vec3(0);
     out_Specular = vec3(0);
