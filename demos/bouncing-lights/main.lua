@@ -23,7 +23,7 @@ void update();
 
 math.randomseed(os.time())
 
-local c, w, root = helper.context{name="Bouncing Lights Demo",skybox='demos/bouncing-lights/stars.png',geom=true,lights=false--[[true]],gui=true,output=true}
+local c, w, root = helper.context{name="Bouncing Lights Demo",skybox='demos/bouncing-lights/stars.png',geom=true,lights=true,gui=true,output=true}
 ffi.C.set_world(w)
 
 local ht = texture()
