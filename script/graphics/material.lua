@@ -23,11 +23,14 @@ enum ilG_transform {
     ILG_PROJECTION  = 0x1,
     ILG_VIEW_R      = 0x2,
     ILG_VIEW_T      = 0x4,
-    ILG_MODEL       = 0x8,
-    ILG_INVERSE     = 0x10,
-    ILG_TRANSPOSE   = 0x20,
+    ILG_MODEL_R     = 0x8,
+    ILG_MODEL_T     = 0x10,
+    ILG_MODEL_S     = 0x20,
+    ILG_INVERSE     = 0x40,
+    ILG_TRANSPOSE   = 0x80,
     ILG_VIEW = ILG_VIEW_R | ILG_VIEW_T,
     ILG_VP = ILG_PROJECTION | ILG_VIEW,
+    ILG_MODEL = ILG_MODEL_R | ILG_MODEL_T | ILG_MODEL_S,
     ILG_MVP = ILG_VP | ILG_MODEL,
 };
 

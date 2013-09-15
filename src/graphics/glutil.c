@@ -172,18 +172,20 @@ il_mat ilG_computeMVP(enum ilG_transform filter, const ilG_camera* camera, const
         mvp = il_mat_mul(mvp, translate, mvp);
         il_mat_free(translate);
     }
-
-    if (filter & ILG_MODEL) {
-        il_mat model = il_mat_new();
-        il_mat mat1 = il_mat_scale(object->size, NULL);
-        il_mat mat2 = il_mat_translate(object->position, NULL);
-        model = il_mat_mul(mat2, mat1, model);
-        mat1 = il_mat_rotate(object->rotation, mat1);
-        il_mat_free(mat2);
-        model = il_mat_mul(model, mat1, model);
-        mvp = il_mat_mul(mvp, model, mvp);
-        il_mat_free(model);
-        il_mat_free(mat1);
+    if (filter & ILG_MODEL_T) {
+        il_mat mat = il_mat_translate(object->position, NULL);
+        mvp = il_mat_mul(mvp, mat, mvp);
+        il_mat_free(mat);
+    }
+    if (filter & ILG_MODEL_S) {
+        il_mat mat = il_mat_scale(object->size, NULL);
+        mvp = il_mat_mul(mvp, mat, mvp);
+        il_mat_free(mat);
+    }
+    if (filter & ILG_MODEL_R) {
+        il_mat mat = il_mat_rotate(object->rotation, NULL);
+        mvp = il_mat_mul(mvp, mat, mvp);
+        il_mat_free(mat);
     }
     if (filter & ILG_INVERSE) {
         //printf("filter %i camera<%p> object<%p>\n", filter, camera, object);
