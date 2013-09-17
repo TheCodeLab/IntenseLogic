@@ -151,10 +151,10 @@ il_mat ilG_computeMVP(enum ilG_transform filter, const ilG_camera* camera, const
     }
     if (filter & ILG_VIEW_R) {
         il_quat q = il_quat_copy(camera->positionable.rotation);
-        q[0] = -q[0];
+        /*q[0] = -q[0];
         q[1] = -q[1];
         q[2] = -q[2];
-        q[3] = -q[3];
+        q[3] = -q[3];*/
 
         il_mat rotate = il_mat_rotate(q, NULL);
         il_quat_free(q);
