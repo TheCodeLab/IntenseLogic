@@ -78,5 +78,51 @@ event.register(event.registry, "input.button", function(reg, name, key)
         event.register(event.registry, "tick", function() ffi.C.update() end)
     end
 end)
-camera(c, root)
+
+function clamp(low, high, n)
+    return math.max(low, math.min(high, n))
+end
+
+function lerp(a, b, t)
+    return a + (b-a)*t
+end
+
+function collision(pos, old) -- TODO: Fix the ground collisions so they aren't so janky
+    local x, y, z = false, false, false
+    if pos.x < 0 then
+        x = -old.x
+    elseif pos.x > hw then
+        x = hw - old.x
+    end
+    if pos.z < 0 then
+        z = -old.z
+    elseif pos.z > hh then
+        z = hh - old.z
+    end
+    local hpos = vector3(pos.x * 4, 0, pos.z * 4)
+    local lx = clamp(0, 511, math.floor(hpos.x))
+    local ly = clamp(0, 511, math.floor(hpos.z))
+    local hx = clamp(0, 511, math.ceil(hpos.x))
+    local hy = clamp(0, 511, math.ceil(hpos.z))
+    local height = lerp(
+        lerp(
+            hmt:getPixel(lx, ly),
+            hmt:getPixel(lx, hy),
+            hpos.x - lx
+        ),
+        lerp(
+            hmt:getPixel(hx, ly),
+            hmt:getPixel(hx, hy),
+            hpos.x - lx
+        ),
+        hpos.z - ly
+    )
+    height = (height / 255) * 64 + 1.8 -- 1.8 is player height
+    if pos.y < height then
+        y = height-old.y
+    end
+    return {x, y, z}
+end
+
+camera(c, root, collision)
 
