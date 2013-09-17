@@ -11,6 +11,7 @@ local helper        = require "demos.helper"
 local event         = require "common.event"
 local ffi           = require "ffi"
 local drawable      = require "graphics.drawable"
+local camera        = require "demos.bouncing-lights.camera"
 
 ffi.cdef [[
 
@@ -77,5 +78,5 @@ event.register(event.registry, "input.button", function(reg, name, key)
         event.register(event.registry, "tick", function() ffi.C.update() end)
     end
 end)
-helper.camera(c, root)
+camera(c, root)
 
