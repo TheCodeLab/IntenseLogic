@@ -89,15 +89,16 @@ img.height_to_normal = modules.asset.ilA_img_height_to_normal;
 function img:getPixel(x, y)
     assert(type(x) == "number" and x >= 0 and x < self.width, "x out of bounds: "..tostring(x))
     assert(type(y) == "number" and y >= 0 and y < self.height, "y out of bounds: "..tostring(y))
-    local pixel = self.data + y*self.width*self.bpp + x*self.bpp
+    local pixel = self.data + (y*self.width*self.bpp/8) + (x*self.bpp/8)
     if self.fp == 1 then
         pixel = ffi.cast("float*", pixel)
         return pixel[0]
     else
-        pixel = ffi.cast("int*", pixel)
+        assert(self.bpp == 8)
+        pixel = ffi.cast("unsigned char*", pixel) -- TODO: Other bit sizes
         pixel = pixel[0]
-        pixel = bit.band(pixel, bit.lshift(1, self.bpp) - 1)
-        return pixel / (bit.lshift(1, self.bpp)-1)
+        --pixel = bit.band(pixel, bit.lshift(1, self.bpp) - 1)
+        return pixel --/ (bit.lshift(1, self.bpp)-1)
     end
 end
 
