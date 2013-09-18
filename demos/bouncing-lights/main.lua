@@ -16,6 +16,8 @@ local camera        = require "demos.bouncing-lights.camera"
 ffi.cdef [[
 
 void set_world(il_world *w);
+void set_camera(ilG_camera *cam);
+void set_walk_direction(il_vec3 vec);
 void add_heightmap(ilA_img *hm, float w, float h, float height);
 void add_ball(il_positionable *pos);
 void update();
@@ -30,7 +32,7 @@ ffi.C.set_world(w)
 local ht = texture()
 ht:setContext(c)
 local hmt = image.loadfile "demos/bouncing-lights/arena-heightmap.png"
-ffi.C.add_heightmap(hmt, 256, 256, 50)
+ffi.C.add_heightmap(hmt, 128, 128, 50)
 ht:fromimage("height0", hmt)
 ht:fromimage("normal0", hmt:height_to_normal())
 ht:fromfile("color0", "demos/bouncing-lights/terrain.png")
@@ -75,54 +77,10 @@ end
 --event.timer(event.registry, "physics.tick", 1/60)
 event.register(event.registry, "input.button", function(reg, name, key) 
     if key == ' ' then
-        event.register(event.registry, "tick", function() ffi.C.update() end)
+        -- TODO: Add objects here instead of at startup
     end
 end)
+event.register(event.registry, "tick", function() ffi.C.update() end)
 
-function clamp(low, high, n)
-    return math.max(low, math.min(high, n))
-end
-
-function lerp(a, b, t)
-    return a + (b-a)*t
-end
-
-function collision(pos, old) -- TODO: Fix the ground collisions so they aren't so janky
-    local x, y, z = false, false, false
-    if pos.x < 0 then
-        x = -old.x
-    elseif pos.x > hw then
-        x = hw - old.x
-    end
-    if pos.z < 0 then
-        z = -old.z
-    elseif pos.z > hh then
-        z = hh - old.z
-    end
-    local hpos = vector3(pos.x * 4, 0, pos.z * 4)
-    local lx = clamp(0, 511, math.floor(hpos.x))
-    local ly = clamp(0, 511, math.floor(hpos.z))
-    local hx = clamp(0, 511, math.ceil(hpos.x))
-    local hy = clamp(0, 511, math.ceil(hpos.z))
-    local height = lerp(
-        lerp(
-            hmt:getPixel(lx, ly),
-            hmt:getPixel(lx, hy),
-            hpos.x - lx
-        ),
-        lerp(
-            hmt:getPixel(hx, ly),
-            hmt:getPixel(hx, hy),
-            hpos.x - lx
-        ),
-        hpos.z - ly
-    )
-    height = (height / 255) * 64 + 1.8 -- 1.8 is player height
-    if pos.y < height then
-        y = height-old.y
-    end
-    return {x, y, z}
-end
-
-camera(c, root, collision)
+camera(c, root)
 

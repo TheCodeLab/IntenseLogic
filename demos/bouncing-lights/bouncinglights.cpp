@@ -1,10 +1,13 @@
 #include <btBulletDynamicsCommon.h>
 #include <BulletCollision/CollisionShapes/btHeightfieldTerrainShape.h>
+#include <BulletDynamics/Character/btKinematicCharacterController.h>
+#include <BulletCollision/CollisionDispatch/btGhostObject.h>
 
 extern "C" {
 #include "asset/image.h"
 #include "common/positionable.h"
 #include "common/world.h"
+#include "graphics/camera.h"
 }
 
 static btBroadphaseInterface* broadphase;
@@ -14,10 +17,36 @@ static btSequentialImpulseConstraintSolver* solver;
 static btDiscreteDynamicsWorld* dynamicsWorld;
 static btCollisionShape *ball_shape;
 static il_world *world;
+static ilG_camera *camera;
+static btKinematicCharacterController *player;
+static btPairCachingGhostObject *ghostObject;
+static btSphereShape *playerShape;
+static btVector3 playerWalk;
 
 extern "C" void set_world(il_world *w)
 {
     world = w;
+}
+
+extern "C" void set_camera(ilG_camera *cam)
+{
+    camera = cam;
+    playerShape = new btSphereShape(1);
+    ghostObject = new btPairCachingGhostObject();
+    ghostObject->setCollisionShape(playerShape);
+    player = new btKinematicCharacterController(ghostObject, playerShape, .5, 2);
+    player->setGravity(0);
+    dynamicsWorld->addCollisionObject(ghostObject);
+    dynamicsWorld->addAction(player);
+    playerWalk = btVector3(0,0,0);
+    il_vec3 vec = cam->positionable.position;
+    il_quat rot = cam->positionable.rotation;
+    ghostObject->setWorldTransform(btTransform(btQuaternion(rot[0], rot[1], rot[2], rot[3]), btVector3(vec[0], vec[1], vec[2])));
+}
+
+extern "C" void set_walk_direction(il_vec3 vec)
+{
+    playerWalk = btVector3(vec[0], vec[1], vec[2]);
 }
 
 extern "C" void add_heightmap(ilA_img *hm, float w, float h, float height)
@@ -56,6 +85,7 @@ extern "C" void add_ball(il_positionable *pos)
 extern "C" void update()
 {
     //printf("physics step\n");
+    player->setWalkDirection(playerWalk);
     dynamicsWorld->stepSimulation(1/20.f, 10, 1/60.f);
     il_worldIterator *it = NULL;
     il_positionable *pos;
@@ -77,6 +107,11 @@ extern "C" void update()
         pos->rotation[2] = rot.getZ();
         pos->rotation[3] = rot.getW();
     }
+    btTransform trans = ghostObject->getWorldTransform();
+    btVector3 vec = trans.getOrigin();
+    camera->positionable.position[0] = vec.x();
+    camera->positionable.position[1] = vec.y();
+    camera->positionable.position[2] = vec.z();
 }
 
 extern "C" int il_bootstrap(int argc, char **argv)

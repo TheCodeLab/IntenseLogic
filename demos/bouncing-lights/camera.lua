@@ -7,15 +7,17 @@ local frame         = require "graphics.gui.frame"
 local text          = require "graphics.gui.text"
 local event         = require "common.event"
 local input         = require "input.input"
+local ffi           = require "ffi"
 
-return function(ctx, root, collision)
+return function(ctx, root)
     local cam = camera()
     ctx.camera = cam
     cam.projection_matrix = matrix.perspective(75, 4/3, .5, 512).ptr
     cam.positionable.position = vector3(64, 16, 64).ptr
     cam.positionable.rotation = quaternion(0, 0, 1, math.pi).ptr
     cam.sensitivity = .01
-    cam.movespeed = vector3(1,1,1).ptr
+    cam.movespeed = vector3(1/3,1/3,1/3).ptr
+    ffi.C.set_camera(cam)
 
     local yaw = 0
     local pitch = 0
@@ -61,11 +63,7 @@ return function(ctx, root, collision)
         local v = vector3(x,y,z) * vector3.wrap(cam.movespeed)
         local old = vector3.wrap(cam.positionable.position)
         v = v * quaternion.wrap(cam.positionable.rotation) 
-        local collides = collision(v + old, old)
-        v.x = collides[1] or v.x
-        v.y = collides[2] or v.y
-        v.z = collides[3] or v.z
-        cam.positionable.position = (old + v).ptr
+        ffi.C.set_walk_direction(v.ptr)
         render_pos(vector3(cam.positionable.position))
         render_fps(1/ctx:averageFrametime())
         cam.projection_matrix = matrix.perspective(75, ctx.width/ctx.height, 2, 2000).ptr
