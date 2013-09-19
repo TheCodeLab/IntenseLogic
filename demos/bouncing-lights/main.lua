@@ -53,31 +53,30 @@ plain:arrayAttrib("position", "in_Position")
 plain:matrix("MVP", "mvp")
 plain:link(c)
 
-local hw, hh = 128, 128
-for i = 1, 300 do
-    local l = light()
-    local pos = vector3(math.random(0,hw-1), math.random(16,48), math.random(0,hh-1))
-    --local height = hmt:getPixel(pos.x, pos.z) 
-    l.positionable.position = pos.ptr
-    l.positionable.size = vector3(.25, .25, .25).ptr
-    l.radius = math.random(1, 15)
-    l.color = vector3(math.random(0,1), math.random(0,1), math.random(0,1)).ptr
-    l:add(c)
-    ffi.C.add_ball(l.positionable)
-    l.positionable.drawable = drawable.box(c)
-    l.positionable.material = plain
-    local tex = texture()
-    tex:setContext(c)
-    l.positionable.texture = tex
-    hm.track(l.positionable, c) --ugh
-    w:add(l.positionable)
-end
-
 --event.setPacker(event.registry, "physics.tick", event.nilPacker)
 --event.timer(event.registry, "physics.tick", 1/60)
 event.register(event.registry, "input.button", function(reg, name, key) 
     if key == ' ' then
-        -- TODO: Add objects here instead of at startup
+        print("Placing lights.")
+        local hw, hh = 128, 128
+        for i = 1, 300 do
+            local l = light()
+            local pos = vector3(math.random(0,hw-1), math.random(16,48), math.random(0,hh-1))
+            --local height = hmt:getPixel(pos.x, pos.z) 
+            l.positionable.position = pos.ptr
+            l.positionable.size = vector3(.25, .25, .25).ptr
+            l.radius = math.random(1, 15)
+            l.color = vector3(math.random(0,1), math.random(0,1), math.random(0,1)).ptr
+            l:add(c)
+            ffi.C.add_ball(l.positionable)
+            l.positionable.drawable = drawable.box(c)
+            l.positionable.material = plain
+            local tex = texture()
+            tex:setContext(c)
+            l.positionable.texture = tex
+            hm.track(l.positionable, c) --ugh
+            w:add(l.positionable)
+        end
     end
 end)
 event.register(event.registry, "tick", function() ffi.C.update() end)
