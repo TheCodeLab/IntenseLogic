@@ -2,6 +2,7 @@
 #include <BulletCollision/CollisionShapes/btHeightfieldTerrainShape.h>
 #include <BulletDynamics/Character/btKinematicCharacterController.h>
 #include <BulletCollision/CollisionDispatch/btGhostObject.h>
+#include <BulletCollision/CollisionDispatch/btCollisionObject.h>
 
 extern "C" {
 #include "asset/image.h"
@@ -34,9 +35,10 @@ extern "C" void set_camera(ilG_camera *cam)
     playerShape = new btSphereShape(1);
     ghostObject = new btPairCachingGhostObject();
     ghostObject->setCollisionShape(playerShape);
+    ghostObject->setCollisionFlags(btCollisionObject::CF_CHARACTER_OBJECT);
     player = new btKinematicCharacterController(ghostObject, playerShape, .5, 2);
     player->setGravity(0);
-    dynamicsWorld->addCollisionObject(ghostObject);
+    dynamicsWorld->addCollisionObject(ghostObject,btBroadphaseProxy::CharacterFilter, btBroadphaseProxy::StaticFilter|btBroadphaseProxy::AllFilter);
     dynamicsWorld->addAction(player);
     playerWalk = btVector3(0,0,0);
     il_vec3 vec = cam->positionable.position;
@@ -86,6 +88,7 @@ extern "C" void update()
 {
     //printf("physics step\n");
     player->setWalkDirection(playerWalk);
+    player->playerStep(dynamicsWorld, 1/20.f);
     dynamicsWorld->stepSimulation(1/20.f, 10, 1/60.f);
     il_worldIterator *it = NULL;
     il_positionable *pos;
@@ -118,6 +121,7 @@ extern "C" int il_bootstrap(int argc, char **argv)
 {
     (void)argc; (void)argv;
     broadphase = new btDbvtBroadphase();
+    broadphase->getOverlappingPairCache()->setInternalGhostPairCallback(new btGhostPairCallback());
     collisionConfiguration = new btDefaultCollisionConfiguration();
     dispatcher = new btCollisionDispatcher(collisionConfiguration);
     solver = new btSequentialImpulseConstraintSolver;
