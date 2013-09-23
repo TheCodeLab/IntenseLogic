@@ -38,7 +38,7 @@ void il_add_module_path(const char *path);
  * @param module The name of the module to load.
  * @param argc The argument count passed to main.
  * @param argv The arguments passed to main.
- * @return Whether the module was loaded. Zero indicates failure.
+ * @return Whether the module was loaded. Zero indicates success.
  */
 int il_load_module(const char *module, int argc, char **argv);
 

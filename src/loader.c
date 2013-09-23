@@ -184,7 +184,7 @@ int il_load_module(const char *name, int argc, char **argv)
     }
     HASH_FIND_STR(il_loaded, sname, mod); // look it up to see if it's already loaded
     if (mod) {
-        return 1;
+        return 0;
     }
     
     // look through our search paths for the module
@@ -229,7 +229,7 @@ int il_load_module(const char *name, int argc, char **argv)
     if (deps) {
         const char **mods = deps(argc, argv);
         for (i = 0; mods[i]; i++) {
-            if (!il_load_module(mods[i], argc, argv)) {
+            if (il_load_module(mods[i], argc, argv)) {
                 fprintf(stderr, "*** Failed to load module %s: Dependency %s failed to load", path, mods[i]);
                 goto fail;
             }
@@ -259,7 +259,7 @@ int il_load_module(const char *name, int argc, char **argv)
 fail:
     //free(sname);
     free(path);
-    return 0;
+    return 1;
 }
 
 il_func il_get_symbol(const char *module, const char *name)
