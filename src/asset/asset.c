@@ -11,6 +11,6 @@ int il_bootstrap(int argc, char **argv)
     ilA_stdiofile_init();
     ilA_stdiodir_init();
 
-    return 1;
+    return 0;
 }
 

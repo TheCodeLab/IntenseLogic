@@ -146,7 +146,7 @@ int il_bootstrap(int argc, char **argv)
     // register events
     event_setup();
 
-    return 1;
+    return 0;
 }
 
 static void quit(const ilE_registry* registry, const char *name, size_t size, const void *data, void * ctx)

@@ -26,6 +26,6 @@ void il_math_free(void *ptr)
 int il_bootstrap(int argc, char **argv)
 {
     (void)argc, (void)argv;
-    return 1;
+    return 0;
 }
 
