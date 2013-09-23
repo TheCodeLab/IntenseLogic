@@ -44,6 +44,7 @@ extern "C" void set_camera(ilG_camera *cam)
     il_vec3 vec = cam->positionable.position;
     il_quat rot = cam->positionable.rotation;
     ghostObject->setWorldTransform(btTransform(btQuaternion(rot[0], rot[1], rot[2], rot[3]), btVector3(vec[0], vec[1], vec[2])));
+    player->warp(btVector3(vec[0], vec[1], vec[2]));
 }
 
 extern "C" void set_walk_direction(il_vec3 vec)
@@ -88,7 +89,6 @@ extern "C" void update()
 {
     //printf("physics step\n");
     player->setWalkDirection(playerWalk);
-    player->playerStep(dynamicsWorld, 1/20.f);
     dynamicsWorld->stepSimulation(1/20.f, 10, 1/60.f);
     il_worldIterator *it = NULL;
     il_positionable *pos;
