@@ -52,6 +52,15 @@ return function(ctx, root)
         fps_label:label(label, {1,1,1,1}, "left middle")
     end
 
+    local lights_label = frame()
+    lights_label.context = ctx
+    lights_label:setPosition(5, 20, 0, 0)
+    root:addChild(lights_label)
+    local render_numlights = function()
+        local label = text(ctx, "en", "ltr", "latin", georgia, 14, string.format("Lights: %d", _G.num_lights))
+        lights_label:label(label, {1,1,1,1}, "left middle")
+    end
+
     local tick = function(reg, name)
         local get = function(k)
             local b, _ = input.get(k)
@@ -66,6 +75,7 @@ return function(ctx, root)
         ffi.C.set_walk_direction(v.ptr)
         render_pos(vector3(cam.positionable.position))
         render_fps(1/ctx:averageFrametime())
+        render_numlights()
         cam.projection_matrix = matrix.perspective(75, ctx.width/ctx.height, 2, 2000).ptr
     end
 

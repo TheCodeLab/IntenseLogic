@@ -53,13 +53,15 @@ plain:arrayAttrib("position", "in_Position")
 plain:matrix("MVP", "mvp")
 plain:link(c)
 
+_G.num_lights = 0
 --event.setPacker(event.registry, "physics.tick", event.nilPacker)
 --event.timer(event.registry, "physics.tick", 1/60)
-event.register(event.registry, "input.button", function(reg, name, key) 
-    if key == ' ' then
+event.register(event.registry, "input.button", function(reg, name, key, scancode, device, isDown, mods) 
+    if key == ' ' and isDown then
         print("Placing lights.")
         local hw, hh = 128, 128
-        for i = 1, 300 do
+        num_lights = num_lights + 100
+        for i = 1, 100 do
             local l = light()
             local pos = vector3(math.random(0,hw-1), math.random(16,48), math.random(0,hh-1))
             --local height = hmt:getPixel(pos.x, pos.z) 
