@@ -20,6 +20,7 @@ static ilG_material *skybox_shader(ilG_context *context)
     ilG_material_fragment_file(self, "skybox.frag");
     ilG_material_name(self, "Skybox Shader");
     ilG_material_arrayAttrib(self, ILG_ARRATTR_POSITION, "in_Position");
+    ilG_material_arrayAttrib(self, ILG_ARRATTR_TEXCOORD, "in_Texcoord");
     ilG_material_textureUnit(self, ILG_TUNIT_COLOR0, "skytex");
     ilG_material_matrix(self, ILG_VIEW_R | ILG_PROJECTION, "mat");
     ilG_material_fragData(self, ILG_FRAGDATA_ACCUMULATION, "out_Color");

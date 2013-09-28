@@ -21,12 +21,21 @@ void set_walk_direction(il_vec3 vec);
 void add_heightmap(ilA_img *hm, float w, float h, float height);
 void add_ball(il_positionable *pos);
 void update();
+void debug_draw();
 
 ]]
 
 math.randomseed(os.time())
 
-local c, w, root = helper.context{name="Bouncing Lights Demo",skybox='demos/bouncing-lights/stars.png',geom=true,lights=true,gui=true,output=true}
+local skybox = {
+    'demos/bouncing-lights/north.png',
+    'demos/bouncing-lights/south.png',
+    'demos/bouncing-lights/up.png',
+    'demos/bouncing-lights/down.png',
+    'demos/bouncing-lights/west.png',
+    'demos/bouncing-lights/east.png',
+}
+local c, w, root = helper.context{name="Bouncing Lights Demo",skybox=skybox,geom=true,lights=true,gui=true,output=true}
 ffi.C.set_world(w)
 
 local ht = texture()
@@ -84,4 +93,6 @@ end)
 event.register(event.registry, "tick", function() ffi.C.update() end)
 
 camera(c, root)
+
+--ffi.C.debug_draw()
 
