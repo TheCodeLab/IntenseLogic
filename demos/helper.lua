@@ -23,6 +23,7 @@ local helper = {}
 function helper.context(args)
     local w = world()
     local c = context()
+    c:build()
     c:resize(800, 600, args.name or "IntenseLogic Demo")
     c.world = w
     w.context = c

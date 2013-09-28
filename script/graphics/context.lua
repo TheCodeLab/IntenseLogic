@@ -17,6 +17,11 @@ enum ilG_context_attachments {
     ILG_CONTEXT_NUMATTACHMENTS
 };
 
+enum ilG_context_profile {
+    ILG_CONTEXT_CORE,
+    ILG_CONTEXT_COMPATIBILITY
+};
+
 struct ilG_frame {
     struct timeval start, elapsed;
     struct {
@@ -27,8 +32,42 @@ struct ilG_frame {
 
 typedef struct ilG_context {
     il_base base;
-    struct GLFWwindow *window;
+    /* Creation parameters */
     int complete;
+    int contextMajor;
+    int contextMinor;
+    int forwardCompat;
+    enum ilG_context_profile profile;
+    int debugContext;
+    int experimental;
+    int startWidth;
+    int startHeight;
+    char *initialTitle;
+    /* Context management */
+    int valid;
+    struct GLFWwindow *window;
+    unsigned int fbtextures[ILG_CONTEXT_NUMATTACHMENTS], framebuffer;
+    int width, height;
+    struct {
+        struct ilG_state **data;
+        size_t length;
+        size_t capacity;
+    } stages; 
+    struct {
+        struct il_positionable **data;
+        size_t length;
+        size_t capacity;
+    } positionables;
+    struct {
+        struct ilG_light **data;
+        size_t length;
+        size_t capacity;
+    } lights;
+    struct ilG_frame frames_head;
+    struct timeval frames_sum, frames_average;
+    size_t num_frames;
+    char *title;
+    /* Drawing */
     struct ilG_drawable3d* drawable;
     struct ilG_material* material;
     struct ilG_texture* texture;
@@ -39,41 +78,26 @@ typedef struct ilG_context {
     unsigned *texunits;
     size_t num_texunits;
     size_t num_active;
-    /*GLuint*/ unsigned int fbtextures[ILG_CONTEXT_NUMATTACHMENTS], framebuffer;
-    int width, height;
-    struct {
-        struct ilG_stage **data;
-        size_t size;
-        size_t capacity;
-    } stages;
-    struct {
-        struct il_positionable **data;
-        size_t size;
-        size_t capacity;
-    } positionables;
-    struct {
-        struct ilG_light **data;
-        size_t size;
-        size_t capacity;
-    } lights;
-    struct ilG_frame frames_head;
-    struct timeval frames_sum, frames_average;
-    size_t num_frames;
 } ilG_context;
 
 extern il_type ilG_context_type;
 
+void ilG_context_build(ilG_context *self);
 void ilG_context_resize(ilG_context *self, int w, int h, const char *title);
+void ilG_context_makeCurrent(ilG_context *self);
 void ilG_context_setActive(ilG_context*);
 void ilG_context_addStage(ilG_context* self, struct ilG_stage* stage, int num);
+void ilG_context_clearStages(ilG_context *self);
 
 ]]
 
 base.wrap "il.graphics.context" {
     struct = "ilG_context";
-    resize = modules.graphics.ilG_context_resize;
-    setActive = modules.graphics.ilG_context_setActive;
-    addStage = modules.graphics.ilG_context_addStage;
+    build       = modules.graphics.ilG_context_build;
+    resize      = modules.graphics.ilG_context_resize;
+    setActive   = modules.graphics.ilG_context_setActive;
+    addStage    = modules.graphics.ilG_context_addStage;
+    clearStages = modules.graphics.ilG_context_clearStages;
     averageFrametime = function(self)
         return tonumber(self.frames_average.tv_sec) + tonumber(self.frames_average.tv_usec) / 1000000
     end

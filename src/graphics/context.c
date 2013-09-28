@@ -21,6 +21,21 @@ void context_cons(void *obj)
     }
     self->base.registry = ilE_registry_new();
     ilE_registry_forward(self->base.registry, ilG_context_type.registry);
+    self->contextMajor = 3;
+#ifdef __APPLE__
+    self->contextMinor = 2;
+    self->forwardCompat = 1;
+#else
+    self->contextMinor = 1;
+#endif
+    self->profile = ILG_CONTEXT_NONE;
+#ifdef DEBUG
+    self->debugContext = 1;
+#endif
+    self->experimental = 1;
+    self->startWidth = 800;
+    self->startHeight = 600;
+    self->initialTitle = "IntenseLogic";
 }
 
 static void context_des(void *obj)
@@ -55,62 +70,73 @@ il_type ilG_context_type = {
     .parent = NULL
 };
 
-void ilG_context_resize(ilG_context *self, int w, int h, const char *title)
+void ilG_context_build(ilG_context *self)
 {
-    if (!self->window) {
-        glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-#ifdef __APPLE__
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
-        glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+    glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, self->contextMajor);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, self->contextMinor);
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, self->forwardCompat? GL_TRUE : GL_FALSE);
+    switch (self->profile) {
+        case ILG_CONTEXT_NONE:
+        break;
+        case ILG_CONTEXT_CORE:
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-#else
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
-#endif
-#ifdef DEBUG
-        glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
-#endif
-        if (!(self->window = glfwCreateWindow(w, h, title, NULL, NULL))) { // TODO: allow context sharing + monitor specification
-            il_fatal("glfwOpenWindow() failed - are you sure you have OpenGL 3.1?");
-        }
-        ilG_registerInputBackend(self);
-        glfwSetWindowUserPointer(self->window, self);
-        ilG_context_makeCurrent(self);
-        glfwSwapInterval(0);
-        glewExperimental = GL_TRUE; // TODO: find out why IL crashes without this
-        GLenum err = glewInit();
-        if (GLEW_OK != err) {
-            il_fatal("glewInit() failed: %s", glewGetErrorString(err));
-        }
-        il_log("Using GLEW %s", glewGetString(GLEW_VERSION));
+        break;
+        case ILG_CONTEXT_COMPATIBILITY:
+        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_COMPAT_PROFILE);
+        break;
+        default:
+        il_error("Invalid profile");
+        return;
+    }
+    glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, self->debugContext? GL_TRUE : GL_FALSE);
+    if (!(self->window = glfwCreateWindow(self->startWidth, self->startHeight, self->initialTitle, NULL, NULL))) { // TODO: allow context sharing + monitor specification
+        il_fatal("glfwOpenWindow() failed - are you sure you have OpenGL 3.1?");
+    }
+    ilG_registerInputBackend(self);
+    glfwSetWindowUserPointer(self->window, self);
+    ilG_context_makeCurrent(self);
+    glfwSwapInterval(0);
+    glewExperimental = self->experimental? GL_TRUE : GL_FALSE; // TODO: find out why IL crashes without this
+    GLenum err = glewInit();
+    if (GLEW_OK != err) {
+        il_fatal("glewInit() failed: %s", glewGetErrorString(err));
+    }
+    il_log("Using GLEW %s", glewGetString(GLEW_VERSION));
 
 #ifndef __APPLE__
-        if (!GLEW_VERSION_3_1) {
-            il_error("GL version 3.1 is required, your Segfault Insurance is now invalid");
-        } else {
-            il_log("OpenGL Version %s", glGetString(GL_VERSION));
-        }
+    if (!GLEW_VERSION_3_1) {
+        il_error("GL version 3.1 is required, you have %s: crashes are on you", glGetString(GL_VERSION));
+    } else {
+        il_log("OpenGL Version %s", glGetString(GL_VERSION));
+    }
 #endif
 
-        IL_GRAPHICS_TESTERROR("Unknown");
-#ifdef DEBUG
-        if (GLEW_ARB_debug_output) {
-            glDebugMessageCallbackARB((GLDEBUGPROCARB)&error_cb, NULL);
-            glEnable(GL_DEBUG_OUTPUT);
-            il_log("ARB_debug_output present, enabling advanced errors");
-            IL_GRAPHICS_TESTERROR("glDebugMessageCallbackARB()");
-        } else {
-            il_log("ARB_debug_output missing");
-        }
-#endif
-        GLint num_texunits;
-        glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &num_texunits);
-        ilG_testError("glGetIntegerv");
-        self->texunits = calloc(sizeof(unsigned), num_texunits);
-        self->num_texunits = num_texunits;
-        glGenFramebuffers(1, &self->framebuffer);
-        glGenTextures(5, &self->fbtextures[0]);
-        ilG_testError("Unable to generate framebuffer");
+    IL_GRAPHICS_TESTERROR("Unknown");
+    if (self->debugContext && GLEW_ARB_debug_output) {
+        glDebugMessageCallbackARB((GLDEBUGPROCARB)&error_cb, NULL);
+        glEnable(GL_DEBUG_OUTPUT);
+        il_log("ARB_debug_output present, enabling advanced errors");
+        IL_GRAPHICS_TESTERROR("glDebugMessageCallbackARB()");
+    } else {
+        il_log("ARB_debug_output missing");
+    }
+    GLint num_texunits;
+    glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &num_texunits);
+    ilG_testError("glGetIntegerv");
+    self->texunits = calloc(sizeof(unsigned), num_texunits);
+    self->num_texunits = num_texunits;
+    glGenFramebuffers(1, &self->framebuffer);
+    glGenTextures(5, &self->fbtextures[0]);
+    ilG_testError("Unable to generate framebuffer");
+    self->complete = 1;
+}
+
+void ilG_context_resize(ilG_context *self, int w, int h, const char *title)
+{
+    if (!self->complete) {
+        il_error("Resizing incomplete context");
+        return;
     }
 
     // GL setup
@@ -163,7 +189,7 @@ void ilG_context_resize(ilG_context *self, int w, int h, const char *title)
         il_error("Unable to create framebuffer for context: %s", status_str);
         return;
     }
-    self->complete = 1;
+    self->valid = 1;
 }
 
 void ilG_context_makeCurrent(ilG_context *self)
@@ -182,6 +208,11 @@ void ilG_context_addStage(ilG_context* self, ilG_stage* stage, int num)
     IL_INSERT(self->stages, (size_t)num, stage);
 }
 
+void ilG_context_clearStages(ilG_context *self)
+{
+    self->stages.length = 0;
+}
+
 void render_stages(const ilE_registry* registry, const char *name, size_t size, const void *data, void * ctx)
 {
     (void)registry, (void)name, (void)size, (void)data;
@@ -190,6 +221,11 @@ void render_stages(const ilE_registry* registry, const char *name, size_t size, 
     int width, height;
     struct timeval time, tv;
     struct ilG_frame *iter, *temp, *frame, *last;
+
+    if (!context->complete || !context->valid) {
+        il_error("Rendering invalid context");
+        return;
+    }
 
     ilG_context_makeCurrent(context);
     glfwGetFramebufferSize(context->window, &width, &height);
