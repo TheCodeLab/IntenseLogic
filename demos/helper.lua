@@ -29,8 +29,18 @@ function helper.context(args)
     if args.skybox then -- skybox pass
         local skybox = texture()
         skybox:setContext(c)
-        local test_img = image.loadfile(args.skybox)
-        skybox:cubemap("color0", {test_img, test_img, test_img, test_img, test_img, test_img})
+        if type(args.skybox) == "string" then 
+            local test_img = image.loadfile(args.skybox)
+            skybox:cubemap("color0", {test_img, test_img, test_img, test_img, test_img, test_img})
+        elseif type(args.skybox) == "table" then
+            local imgs = {}
+            for i, v in ipairs(args.skybox) do
+                imgs[i] = image.loadfile(v)
+            end
+            skybox:cubemap("color0", imgs)
+        else
+            error("Expected string or table")
+        end
         local s = stage()
         s.context = c
         skyboxpass(s, skybox)
