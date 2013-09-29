@@ -70,6 +70,23 @@ il_type ilG_context_type = {
     .parent = NULL
 };
 
+void ilG_context_hint(ilG_context *self, enum ilG_context_hint hint, int param)
+{
+#define HINT(v, f) case v: self->f = param; break;
+    switch (hint) {
+        HINT(ILG_CONTEXT_MAJOR, contextMajor)
+        HINT(ILG_CONTEXT_MINOR, contextMinor)
+        HINT(ILG_CONTEXT_FORWARD_COMPAT, forwardCompat)
+        HINT(ILG_CONTEXT_PROFILE, profile)
+        HINT(ILG_CONTEXT_DEBUG, debugContext)
+        HINT(ILG_CONTEXT_EXPERIMENTAL, experimental)
+        HINT(ILG_CONTEXT_WIDTH, startWidth)
+        HINT(ILG_CONTEXT_HEIGHT, startHeight)
+        default:
+        il_error("Invalid hint");
+    }
+}
+
 void ilG_context_build(ilG_context *self)
 {
     glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
@@ -82,7 +99,7 @@ void ilG_context_build(ilG_context *self)
         case ILG_CONTEXT_CORE:
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
         break;
-        case ILG_CONTEXT_COMPATIBILITY:
+        case ILG_CONTEXT_COMPAT:
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_COMPAT_PROFILE);
         break;
         default:

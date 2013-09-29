@@ -18,8 +18,20 @@ enum ilG_context_attachments {
 };
 
 enum ilG_context_profile {
+    ILG_CONTEXT_NONE,
     ILG_CONTEXT_CORE,
-    ILG_CONTEXT_COMPATIBILITY
+    ILG_CONTEXT_COMPAT
+};
+
+enum ilG_context_hint {
+    ILG_CONTEXT_MAJOR,
+    ILG_CONTEXT_MINOR,
+    ILG_CONTEXT_FORWARD_COMPAT,
+    ILG_CONTEXT_PROFILE,
+    ILG_CONTEXT_DEBUG,
+    ILG_CONTEXT_EXPERIMENTAL,
+    ILG_CONTEXT_WIDTH,
+    ILG_CONTEXT_HEIGHT
 };
 
 struct ilG_frame {
@@ -82,6 +94,7 @@ typedef struct ilG_context {
 
 extern il_type ilG_context_type;
 
+void ilG_context_hint(ilG_context *self, enum ilG_context_hint hint, int param);
 void ilG_context_build(ilG_context *self);
 void ilG_context_resize(ilG_context *self, int w, int h, const char *title);
 void ilG_context_makeCurrent(ilG_context *self);
@@ -100,7 +113,23 @@ base.wrap "il.graphics.context" {
     clearStages = modules.graphics.ilG_context_clearStages;
     averageFrametime = function(self)
         return tonumber(self.frames_average.tv_sec) + tonumber(self.frames_average.tv_usec) / 1000000
-    end
+    end;
+    hint = function(self, name, val)
+        if type(val) == 'string' then
+            val = modules.graphics["ILG_CONTEXT_"..val:upper()]
+        end
+        modules.graphics.ilG_context_hint(self, modules.graphics["ILG_CONTEXT_"..string.upper(name)], val)
+    end;
+    __newindex = function(self, k, v)
+        hint('major')
+        hint('minor')
+        hint('forward_compat')
+        hint('profile')
+        hint('debug')
+        hint('experimental')
+        hint('width')
+        hint('height')
+    end;
 }
 
 return modules.graphics.ilG_context_type;

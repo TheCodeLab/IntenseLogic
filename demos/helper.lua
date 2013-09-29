@@ -20,13 +20,19 @@ local skyboxpass    = require 'graphics.skyboxpass'
 
 local helper = {}
 
-function helper.context(args)
+function helper.context(args, hints)
     local w = world()
     local c = context()
+    if args.hints then
+        for k, v in pairs(args.hints) do
+            c:hint(k, v)
+        end
+    end
     c:build()
     c:resize(800, 600, args.name or "IntenseLogic Demo")
     c.world = w
     w.context = c
+    local pipe = {}
     if args.skybox then -- skybox pass
         local skybox = texture()
         skybox:setContext(c)
@@ -46,16 +52,19 @@ function helper.context(args)
         s.context = c
         skyboxpass(s, skybox)
         c:addStage(s, -1)
+        pipe[#pipe+1] = s
     end
     if args.geom then -- geometry pass
         local s = stage()
         s.context = c
         geometrypass(s)
         c:addStage(s, -1)
+        pipe[#pipe+1] = s
     end
     if args.lights then -- light pass
         local s = lightpass(c)
         c:addStage(s, -1)
+        pipe[#pipe+1] = s
     end
     local root
     if args.gui then-- gui pass
@@ -63,13 +72,16 @@ function helper.context(args)
         root = frame()
         s:setRoot(root)
         c:addStage(s, -1)
+        pipe[#pipe+1] = s
     end
     if args.output then -- output pass
-        c:addStage(outpass(c), -1)
+        local s = outpass(c)
+        c:addStage(s, -1)
+        pipe[#pipe+1] = s
     end
 
     c:setActive()
-    return c, w, root
+    return c, w, root, pipe
 end
 
 function helper.camera(ctx, root)
