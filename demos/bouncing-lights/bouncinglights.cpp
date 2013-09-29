@@ -5,11 +5,23 @@
 #include <BulletCollision/CollisionDispatch/btCollisionObject.h>
 #include <GL/glew.h>
 
+#include <iostream>
+#include <utility>
+#include <thread>
+#include <chrono>
+
+using namespace std;
+
 extern "C" {
+#include <GL/glew.h>
+#include <GLFW/glfw3.h>
 #include "asset/image.h"
 #include "common/positionable.h"
 #include "common/world.h"
 #include "graphics/camera.h"
+#include "graphics/glutil.h"
+#include "math/matrix.h"
+#include "graphics/stage.h"
 }
 
 static btBroadphaseInterface* broadphase;
@@ -24,6 +36,32 @@ static btKinematicCharacterController *player;
 static btPairCachingGhostObject *ghostObject;
 static btSphereShape *playerShape;
 static btVector3 playerWalk;
+static ilG_stage debugstage;
+
+extern "C" void debug_draw(ilG_stage *self)
+{
+    (void)self;
+    glMatrixMode(GL_PROJECTION);
+    il_mat m = ilG_computeMVP(ILG_PROJECTION, camera, NULL);
+    glLoadMatrixf(m);
+    il_mat_free(m);
+
+    glMatrixMode(GL_MODELVIEW);
+    m = ilG_computeMVP(ILG_VIEW, camera, NULL);
+    glLoadMatrixf(m);
+    il_mat_free(m);
+
+    dynamicsWorld->debugDrawWorld();
+    std::this_thread::sleep_for(std::chrono::milliseconds(16));
+}
+
+extern "C" ilG_stage *init_stage(ilG_context *context)
+{
+    debugstage.context = context;
+    debugstage.run = debug_draw;
+    debugstage.name = "Bullet Debug Draw";
+    return &debugstage;
+}
 
 #ifdef WIN32
 #define ex __declspec(dllexport)

@@ -26,6 +26,7 @@ void add_ball(il_positionable *pos);
 void update();
 void debug_draw();
 void custom_data_func(struct ilG_material *self, il_positionable *pos, GLuint loc, void *user);
+ilG_stage *init_stage(ilG_context *context);
 
 ]]
 
@@ -39,16 +40,18 @@ local skybox = {
     'demos/bouncing-lights/west.png',
     'demos/bouncing-lights/east.png',
 }
-local c, w, root = helper.context { name="Bouncing Lights Demo",
-                                    skybox=skybox,
-                                    geom=true,
-                                    lights=true,
-                                    transparency=true,
-                                    gui=true,
-                                    output=true,
-                                    hints = {hdr=1}}
+local c, w, root, pipe1 = helper.context { name="Bouncing Lights Demo",
+                                           skybox=skybox,
+                                           geom=true,
+                                           lights=true,
+                                           transparency=true,
+                                           gui=true,
+                                           output=true,
+                                           hints = {hdr=1} }
 
 modules.bouncinglights.set_world(w)
+local pipe2 = {ffi.C.init_stage(c)}
+ffi.C.set_world(w)
 
 local ht = texture()
 ht:setContext(c)
@@ -80,6 +83,7 @@ _G.num_lights = 0
 --event.timer(event.registry, "physics.tick", 1/60)
 local sphere = drawnmesh("demos/bouncing-lights/sphere.obj")
 --drawable.setattr(sphere, "istransparent", true)
+local debug_rendering = false
 event.register(event.registry, "input.button", function(reg, name, key, scancode, device, isDown, mods)
     if key == '1' and isDown then
         glow:vertex(io.open("demos/bouncing-lights/glow.vert","r"):read "*a")
@@ -110,6 +114,21 @@ event.register(event.registry, "input.button", function(reg, name, key, scancode
             l.positionable.texture = tex
             hm.track(l.positionable, c) --ugh
             w:add(l.positionable)
+        end
+    end
+    if key == 'G' and isDown then
+        print("Toggling debug rendering")
+        debug_rendering = not debug_rendering
+        if debug_rendering then
+            c:clearStages()
+            for _, s in pairs(pipe2) do
+                c:addStage(s, -1)
+            end
+        else
+            c:clearStages()
+            for _, s in pairs(pipe1) do
+                c:addStage(s, -1)
+            end
         end
     end
 end)
