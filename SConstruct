@@ -14,7 +14,7 @@ platform  = ARGUMENTS.get("platform", "linux")
 # flags
 ccflags   = "-Wall -Wextra -pedantic -g -O0 -DDEBUG"
 cflags    = "-std=c99 -D_POSIX_C_SOURCE=200809"
-cxxflags  = ""
+cxxflags  = "-std=c++11"
 linkflags = "-g -L. -Lbuild"
 if platform == "mingw":
     cflags += " -DWIN32 -I/usr/i486-mingw32/include/luajit-2.0" # TODO: get rid of that monstrosity
