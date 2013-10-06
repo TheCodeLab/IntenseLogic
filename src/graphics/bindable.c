@@ -26,7 +26,7 @@ void ilG_bindable_unbind(const ilG_bindable *self, void *obj)
 
 void ilG_bindable_swap(const ilG_bindable **self, void **ptr, void *new)
 {
-    if (*ptr == new) {
+    if (*ptr == new || !new) {
         return;
     }
     if (*self && *ptr) {

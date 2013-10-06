@@ -17,6 +17,7 @@ local outpass       = require 'graphics.outpass'
 local texture       = require 'graphics.texture'
 local image         = require 'asset.image'
 local skyboxpass    = require 'graphics.skyboxpass'
+local transpass     = require 'graphics.transparencypass'
 
 local helper = {}
 
@@ -63,6 +64,13 @@ function helper.context(args, hints)
     end
     if args.lights then -- light pass
         local s = lightpass(c)
+        c:addStage(s, -1)
+        pipe[#pipe+1] = s
+    end
+    if args.transparency then -- transparency pass
+        local s = stage()
+        s.context = c
+        transpass(s)
         c:addStage(s, -1)
         pipe[#pipe+1] = s
     end

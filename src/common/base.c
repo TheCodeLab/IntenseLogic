@@ -222,7 +222,11 @@ size_t il_sizeof(const il_type* self)
 il_type *il_typeof(void *obj)
 {
     il_return_null_on_fail(obj);
-    return ((il_base*) obj)->type;
+    il_type *T = ((il_base*) obj)->type;
+    if (!T) {
+        il_error("No type for object %p", obj);
+    }
+    return T;
 }
 
 void *il_new(il_type *type)
@@ -272,7 +276,8 @@ const char *il_name(il_type *type)
 
 const void *il_cast(il_type* T, const char *to)
 {
-    il_return_null_on_fail(T && to);
+    il_return_null_on_fail(T);
+    il_return_null_on_fail(to);
     il_typeclass *tc;
     HASH_FIND_STR(T->typeclasses, to, tc);
     return tc;

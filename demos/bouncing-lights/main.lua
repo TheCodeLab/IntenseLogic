@@ -35,7 +35,13 @@ local skybox = {
     'demos/bouncing-lights/west.png',
     'demos/bouncing-lights/east.png',
 }
-local c, w, root = helper.context{name="Bouncing Lights Demo",skybox=skybox,geom=true,lights=true,gui=true,output=true}
+local c, w, root = helper.context { name="Bouncing Lights Demo",
+                                    skybox=skybox,
+                                    geom=true,
+                                    lights=true,
+                                    transparency=true,
+                                    gui=true,
+                                    output=true }
 ffi.C.set_world(w)
 
 local ht = texture()
