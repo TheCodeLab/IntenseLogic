@@ -7,6 +7,8 @@
 #include "graphics/stage.h"
 #include "graphics/context.h"
 #include "graphics/glutil.h"
+#include "graphics/arrayattrib.h"
+#include "graphics/drawable3d.h"
 
 static void draw_geometry(ilG_stage *self)
 {
@@ -30,7 +32,11 @@ static void draw_geometry(ilG_stage *self)
         pos = ilG_trackGetPositionable(iter);
         context->positionable = pos;
 
-        ilG_bindable_swap(&context->drawableb, (void**)&context->drawable, ilG_trackGetDrawable(iter));
+        ilG_drawable3d *drawable = ilG_trackGetDrawable(iter);
+        if (ILG_TESTATTR(drawable->attrs, ILG_ARRATTR_ISTRANSPARENT)) {
+            continue;
+        }
+        ilG_bindable_swap(&context->drawableb, (void**)&context->drawable, drawable);
         ilG_bindable_swap(&context->materialb, (void**)&context->material, ilG_trackGetMaterial(iter));
         ilG_bindable_swap(&context->textureb,  (void**)&context->texture,  ilG_trackGetTexture(iter));
 

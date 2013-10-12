@@ -19,6 +19,15 @@ struct rinfo {
 
 static void draw_transparency(ilG_stage *self)
 {
+    ilG_testError("Unknown");
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
+    glFrontFace(GL_CCW);
+    glCullFace(GL_BACK);
+    ilG_testError("glEnable");
+
     ilG_context *context = self->context;
     ilG_trackiterator *iter = ilG_trackiterator_new(context);
     ilG_drawable3d *drawable = NULL;

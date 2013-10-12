@@ -12,6 +12,7 @@ local event         = require "common.event"
 local ffi           = require "ffi"
 local drawable      = require "graphics.drawable"
 local camera        = require "demos.bouncing-lights.camera"
+local drawnmesh     = require "graphics.mesh"
 
 ffi.cdef [[
 
@@ -60,17 +61,27 @@ hm.position = vector3(0, 0, 0).ptr
 hm.size = vector3(128, 64, 128).ptr
 hm:track(c)
 
-local plain = material()
-plain:vertex(io.open("shaders/plain.vert","r"):read "*a")
-plain:fragment(io.open("shaders/plain.frag", "r"):read "*a")
-plain:mtlname "Plain material"
-plain:arrayAttrib("position", "in_Position")
-plain:matrix("MVP", "mvp")
-plain:link(c)
+ffi.cdef [[
+void glUniform4f(int location, float v0, float v1, float v2, float v3);
+]]
+local function customdatafunc(self, uniform, user)
+    ffi.C.glUniform4f(uniform, 0.0, 0.0, 1.0, 0.25)
+end
+
+local glow = material()
+glow:vertex(io.open("demos/bouncing-lights/glow.vert","r"):read "*a")
+glow:fragment(io.open("demos/bouncing-lights/glow.frag", "r"):read "*a")
+glow:mtlname "Glow material"
+glow:arrayAttrib("position", "in_Position")
+glow:matrix("MVP", "mvp")
+glow:customConstant(customdatafunc, "col")
+glow:link(c)
 
 _G.num_lights = 0
 --event.setPacker(event.registry, "physics.tick", event.nilPacker)
 --event.timer(event.registry, "physics.tick", 1/60)
+local sphere = drawnmesh("demos/bouncing-lights/sphere.obj")
+drawable.setattr(sphere, "istransparent", true)
 event.register(event.registry, "input.button", function(reg, name, key, scancode, device, isDown, mods) 
     if key == ' ' and isDown then
         print("Placing lights.")
@@ -86,8 +97,8 @@ event.register(event.registry, "input.button", function(reg, name, key, scancode
             l.color = vector3(math.random(0,1), math.random(0,1), math.random(0,1)).ptr
             l:add(c)
             ffi.C.add_ball(l.positionable)
-            l.positionable.drawable = drawable.box(c)
-            l.positionable.material = plain
+            l.positionable.drawable = sphere
+            l.positionable.material = glow
             local tex = texture()
             tex:setContext(c)
             l.positionable.texture = tex
