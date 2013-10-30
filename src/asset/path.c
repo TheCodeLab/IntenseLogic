@@ -32,15 +32,18 @@ ilA_path* ilA_path_string(il_string *path)
 #else
     delim = "/";
 #endif
+    size_t drops = 0;
     for (tok = strsep(&saveptr, delim); tok; tok = strsep(&saveptr, delim)) {
         if (strcmp(tok, ".") == 0 || strcmp(tok, "") == 0) {
             continue;
         } else if (strcmp(tok, "..") == 0) {
-            if (p->nodes.length < 1) {
-                continue;
+            if (p->nodes.length > drops) {
+                il_string_unref(p->nodes.data[p->nodes.length-1]);
+                --p->nodes.length;
+            } else {
+                ++drops;
+                IL_APPEND(p->nodes, il_string_sub(path, tok-orig, tok-orig+strlen(tok)));
             }
-            il_string_unref(p->nodes.data[p->nodes.length-1]);
-            --p->nodes.length;
         } else {
             IL_APPEND(p->nodes, il_string_sub(path, tok-orig, tok-orig+strlen(tok)));
         }
