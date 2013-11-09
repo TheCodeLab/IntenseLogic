@@ -3,6 +3,7 @@ local ffi = require "ffi"
 local base = require "common.base"
 local ilstring = require "util.ilstring"
 local file = require "asset.file"
+local image = require "asset.image"
 
 ffi.cdef [[
 
