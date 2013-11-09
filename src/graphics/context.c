@@ -87,8 +87,12 @@ void ilG_context_hint(ilG_context *self, enum ilG_context_hint hint, int param)
     }
 }
 
-void ilG_context_build(ilG_context *self)
+int ilG_context_build(ilG_context *self)
 {
+    if (self->complete) {
+        il_error("Context already complete");
+        return 0;
+    }
     glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, self->contextMajor);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, self->contextMinor);
@@ -104,11 +108,12 @@ void ilG_context_build(ilG_context *self)
         break;
         default:
         il_error("Invalid profile");
-        return;
+        return 0;
     }
     glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, self->debugContext? GL_TRUE : GL_FALSE);
     if (!(self->window = glfwCreateWindow(self->startWidth, self->startHeight, self->initialTitle, NULL, NULL))) { // TODO: allow context sharing + monitor specification
-        il_fatal("glfwOpenWindow() failed - are you sure you have OpenGL 3.1?");
+        il_error("glfwOpenWindow() failed - are you sure you have OpenGL 3.1?");
+        return 0;
     }
     ilG_registerInputBackend(self);
     glfwSetWindowUserPointer(self->window, self);
@@ -147,13 +152,14 @@ void ilG_context_build(ilG_context *self)
     glGenTextures(5, &self->fbtextures[0]);
     ilG_testError("Unable to generate framebuffer");
     self->complete = 1;
+    return 1;
 }
 
-void ilG_context_resize(ilG_context *self, int w, int h, const char *title)
+int ilG_context_resize(ilG_context *self, int w, int h, const char *title)
 {
     if (!self->complete) {
         il_error("Resizing incomplete context");
-        return;
+        return 0;
     }
 
     // GL setup
@@ -204,9 +210,10 @@ void ilG_context_resize(ilG_context *self, int w, int h, const char *title)
             default:                                            status_str = "???";                                             break;
         }
         il_error("Unable to create framebuffer for context: %s", status_str);
-        return;
+        return 0;
     }
     self->valid = 1;
+    return 1;
 }
 
 void ilG_context_makeCurrent(ilG_context *self)
@@ -294,9 +301,26 @@ void render_stages(const ilE_registry* registry, const char *name, size_t size, 
     context->frames_average.tv_usec += (context->frames_sum.tv_sec % context->num_frames) * 1000000 / context->num_frames;
 }
 
-void ilG_context_setActive(ilG_context *self)
+int ilG_context_setActive(ilG_context *self)
 {
+    if (!self->complete) {
+        il_error("Incomplete context");
+        return 0;
+    }
+    if (!self->valid) {
+        il_error("Invalid context");
+        return 0;
+    }
+    if (!self->camera) {
+        il_error("No camera");
+        return 0;
+    }
+    if (!self->world) {
+        il_error("No world");
+        return 0;
+    }
     ilE_register(ilG_registry, "tick", ILE_DONTCARE, ILE_MAIN, render_stages, self);
+    return 1;
 }
 
 static GLvoid error_cb(GLenum source, GLenum type, GLuint id, GLenum severity,

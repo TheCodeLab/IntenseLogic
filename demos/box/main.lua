@@ -29,3 +29,5 @@ box:track(c)
 
 helper.camera(c, root)
 
+c:setActive()
+

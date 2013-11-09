@@ -111,5 +111,7 @@ event.register(event.registry, "tick", function() ffi.C.update() end)
 
 camera(c, root)
 
+c:setActive()
+
 --ffi.C.debug_draw()
 

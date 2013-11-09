@@ -64,3 +64,5 @@ end
 
 helper.camera(c, root)
 
+c:setActive()
+

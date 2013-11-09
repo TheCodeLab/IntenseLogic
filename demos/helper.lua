@@ -88,7 +88,7 @@ function helper.context(args, hints)
         pipe[#pipe+1] = s
     end
 
-    c:setActive()
+    --c:setActive()
     return c, w, root, pipe
 end
 

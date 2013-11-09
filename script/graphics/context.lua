@@ -95,10 +95,10 @@ typedef struct ilG_context {
 extern il_type ilG_context_type;
 
 void ilG_context_hint(ilG_context *self, enum ilG_context_hint hint, int param);
-void ilG_context_build(ilG_context *self);
-void ilG_context_resize(ilG_context *self, int w, int h, const char *title);
+int ilG_context_build(ilG_context *self);
+int ilG_context_resize(ilG_context *self, int w, int h, const char *title);
 void ilG_context_makeCurrent(ilG_context *self);
-void ilG_context_setActive(ilG_context*);
+int ilG_context_setActive(ilG_context*);
 void ilG_context_addStage(ilG_context* self, struct ilG_stage* stage, int num);
 void ilG_context_clearStages(ilG_context *self);
 
@@ -106,9 +106,24 @@ void ilG_context_clearStages(ilG_context *self);
 
 base.wrap "il.graphics.context" {
     struct = "ilG_context";
-    build       = modules.graphics.ilG_context_build;
-    resize      = modules.graphics.ilG_context_resize;
-    setActive   = modules.graphics.ilG_context_setActive;
+    build = function(...)
+        local res = modules.graphics.ilG_context_build(...)
+        if res == 0 then
+            error "ilG_context_build"
+        end
+    end;
+    resize = function(...)
+        local res = modules.graphics.ilG_context_resize(...)
+        if res == 0 then
+            error "ilG_context_resize"
+        end
+    end;
+    setActive = function(...)
+        local res = modules.graphics.ilG_context_setActive(...)
+        if res == 0 then
+            error "ilG_context_setActive"
+        end
+    end;
     addStage    = modules.graphics.ilG_context_addStage;
     clearStages = modules.graphics.ilG_context_clearStages;
     averageFrametime = function(self)

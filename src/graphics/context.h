@@ -85,10 +85,10 @@ typedef struct ilG_context {
 extern il_type ilG_context_type;
 
 void ilG_context_hint(ilG_context *self, enum ilG_context_hint hint, int param);
-void ilG_context_build(ilG_context *self);
-void ilG_context_resize(ilG_context *self, int w, int h, const char *title);
+int /*success*/ ilG_context_build(ilG_context *self);
+int /*success*/ ilG_context_resize(ilG_context *self, int w, int h, const char *title);
 void ilG_context_makeCurrent(ilG_context *self);
-void ilG_context_setActive(ilG_context*);
+int /*success*/ ilG_context_setActive(ilG_context*);
 void ilG_context_addStage(ilG_context* self, struct ilG_stage* stage, int num);
 void ilG_context_clearStages(ilG_context *self);
 
