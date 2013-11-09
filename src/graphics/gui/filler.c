@@ -9,6 +9,7 @@
 #include "graphics/context.h"
 #include "graphics/material.h"
 #include "graphics/arrayattrib.h"
+#include "graphics/fragdata.h"
 
 static ilG_material *get_shader(ilG_context *context)
 {
@@ -21,14 +22,17 @@ static ilG_material *get_shader(ilG_context *context)
     ilG_material_vertex_file(mtl, "colorfill.vert");
     ilG_material_fragment_file(mtl, "colorfill.frag");
     ilG_material_arrayAttrib(mtl, ILG_ARRATTR_POSITION, "in_Position");
+    ilG_material_fragData(mtl, ILG_FRAGDATA_ACCUMULATION, "out_Color");
     if (ilG_material_link(mtl, context)) {
         return NULL;
     }
     il_base_set(&context->base, "il.graphics.gui.frame.shader", mtl, 0, IL_OBJECT|IL_LOCAL_BIT);
-    GLuint col = glGetUniformLocation(mtl->program, "color"),
-           pos = glGetUniformLocation(mtl->program, "position");
-    il_base_set(&context->base, "il.graphics.gui.frame.color_loc", &col, sizeof(GLuint), IL_VOID|IL_LOCAL_BIT);
-    il_base_set(&context->base, "il.graphics.gui.frame.pos_loc", &pos, sizeof(GLuint), IL_VOID|IL_LOCAL_BIT);
+    GLuint *col = malloc(sizeof(GLuint)),
+           *pos = malloc(sizeof(GLuint)); 
+    *col = glGetUniformLocation(mtl->program, "color");
+    *pos = glGetUniformLocation(mtl->program, "position");
+    il_base_set(&context->base, "il.graphics.gui.frame.color_loc", col, sizeof(GLuint), IL_VOID|IL_LOCAL_BIT);
+    il_base_set(&context->base, "il.graphics.gui.frame.pos_loc", pos, sizeof(GLuint), IL_VOID|IL_LOCAL_BIT);
     return mtl;
 }
 
