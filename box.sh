@@ -1,1 +1,1 @@
-LD_LIBRARY_PATH=build build/il -r demos/box/main.lua -m build
+LD_LIBRARY_PATH=build:$LD_LIBRARY_PATH build/il -r demos/box/main.lua -m build
