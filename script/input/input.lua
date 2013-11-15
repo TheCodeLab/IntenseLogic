@@ -146,7 +146,7 @@ function input.buttonUnpacker(size, data)
             mods = mods .. k
         end
     end
-    return button, ev.scancode, ev.device, ev.action == 1, mods
+    return button, tonumber(ev.scancode), tonumber(ev.device), ev.action ~= 0, mods
 end
 
 function input.inputUnpackers(reg)

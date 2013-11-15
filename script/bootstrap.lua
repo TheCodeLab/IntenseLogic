@@ -1,11 +1,11 @@
 local oldprint=print
 function _G.print(...)
     local t = {...}
-    local s = tostring(t[1])
-    for i = 2, #t do
-        s = s.."\t"..tostring(t[i])
+    local t2 = {}
+    for _, v in pairs(t) do
+        t2[#t2+1] = tostring(v)
     end
-    oldprint(s)
+    oldprint(table.concat(t2, '\t'))
 end
 
 local ffi = require "ffi"

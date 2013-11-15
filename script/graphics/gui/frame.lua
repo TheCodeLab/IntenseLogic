@@ -60,6 +60,7 @@ base.wrap "il.graphics.gui.frame" {
         return modules.graphics.ilG_gui_frame_filler(self, v)
     end;
     image = modules.graphics.ilG_gui_frame_image;
+    click = modules.graphics.ilG_gui_click;
     label = function(self, layout, col, opts)
         local tex = texture()
         tex:setContext(self.context)
