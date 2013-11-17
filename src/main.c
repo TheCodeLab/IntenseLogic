@@ -89,6 +89,8 @@ int main(int argc, char **argv)
     }
 
     fprintf(stderr, "MAIN: Initializing engine.\n");
+    fprintf(stderr, "MAIN: IntenseLogic %s\n", il_version);
+    fprintf(stderr, "MAIN: Built %s\n", __DATE__);
 
     if (!has_modules) {
         il_load_module_dir("modules", argc, argv); // default path
