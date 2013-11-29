@@ -31,7 +31,8 @@ enum ilG_context_hint {
     ILG_CONTEXT_DEBUG,
     ILG_CONTEXT_EXPERIMENTAL,
     ILG_CONTEXT_WIDTH,
-    ILG_CONTEXT_HEIGHT
+    ILG_CONTEXT_HEIGHT,
+    ILG_CONTEXT_HDR
 };
 
 struct ilG_frame {

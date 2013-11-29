@@ -86,12 +86,12 @@ struct ilG_stage *ilG_outpass(struct ilG_context *context)
     
     ilG_material *material = ilG_material_new();
     ilG_material_vertex_file(material, "post.vert");
-    ilG_material_fragment_file(material, "post.frag");
     ilG_material_name(material, "Post Processing Shader");
     ilG_material_arrayAttrib(material, ILG_ARRATTR_POSITION, "in_Position");
     ilG_material_arrayAttrib(material, ILG_ARRATTR_TEXCOORD, "in_Texcoord");
-    ilG_material_textureUnit(material, ILG_TUNIT_NONE, "tex");
     ilG_material_customUniform(material, size_uniform, context, "size");
+    ilG_material_textureUnit(material, ILG_TUNIT_NONE, "tex");
+    ilG_material_fragment_file(material, context->hdr? "hdr.frag" : "post.frag");
     if (ilG_material_link(material, context)) {
         return NULL;
     }

@@ -82,6 +82,7 @@ void ilG_context_hint(ilG_context *self, enum ilG_context_hint hint, int param)
         HINT(ILG_CONTEXT_EXPERIMENTAL, experimental)
         HINT(ILG_CONTEXT_WIDTH, startWidth)
         HINT(ILG_CONTEXT_HEIGHT, startHeight)
+        HINT(ILG_CONTEXT_HDR, hdr)
         default:
         il_error("Invalid hint");
     }
@@ -179,7 +180,7 @@ int ilG_context_resize(ilG_context *self, int w, int h, const char *title)
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_RECTANGLE, self->fbtextures[ILG_CONTEXT_DEPTH], 0);
     ilG_testError("Unable to create depth buffer");
     glBindTexture(GL_TEXTURE_RECTANGLE, self->fbtextures[ILG_CONTEXT_ACCUM]);
-    glTexImage2D(GL_TEXTURE_RECTANGLE, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+    glTexImage2D(GL_TEXTURE_RECTANGLE, 0, GL_RGBA, w, h, 0, GL_RGBA, self->hdr? GL_FLOAT : GL_UNSIGNED_BYTE, NULL);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_RECTANGLE, self->fbtextures[ILG_CONTEXT_ACCUM], 0);
     ilG_testError("Unable to create accumulation buffer");
     glBindTexture(GL_TEXTURE_RECTANGLE, self->fbtextures[ILG_CONTEXT_NORMAL]);

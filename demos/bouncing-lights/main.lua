@@ -42,7 +42,8 @@ local c, w, root = helper.context { name="Bouncing Lights Demo",
                                     lights=true,
                                     transparency=true,
                                     gui=true,
-                                    output=true }
+                                    output=true,
+                                    hints = {hdr=1}}
 ffi.C.set_world(w)
 
 local ht = texture()
