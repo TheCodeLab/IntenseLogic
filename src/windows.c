@@ -98,6 +98,13 @@ char *strdup(const char* str)
     return new;
 }
 
+char *strndup(const char *str, size_t len)
+{
+    char *new = malloc(strnlen(str, len) + 1);
+    strncpy(new, str, len);
+    return new;
+}
+
 /*
 * Copyright (c) 2004 Darren Tucker.
 *

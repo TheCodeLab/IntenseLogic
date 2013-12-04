@@ -21,14 +21,15 @@ pkg_libs = {
     "osx":   ["glfw3", "glew", "harfbuzz", "cairo", "harfbuzz-icu"],
     "arch":  ["glfw3", "glew", "gl", "harfbuzz", "harfbuzz-icu", "cairo"],
     "linux": ["gl", "glfw3", "glew", "harfbuzz", "cairo"],
+    "mingw": ["freetype2"]
 }
 
 if platform=="mingw":
-    graphics.Append(LIBS=["glfw", "glew32", "opengl32", "png", "z", "harfbuzz", "harfbuzz-icu", "cairo"])
-else:
-    for lib in pkg_libs[platform]:
-        graphics.ParseConfig("pkg-config " + lib + " --cflags --libs")
-        graphics.ParseConfig("freetype-config --cflags --libs")
+    graphics.Append(LIBS=["opengl32", "glew32", "glfw3", "png", "z", "harfbuzz", "harfbuzz-icu", "cairo"])
+
+for lib in pkg_libs[platform]:
+    graphics.ParseConfig("pkg-config " + lib + " --cflags --libs")
+    graphics.ParseConfig("freetype-config --cflags --libs")
 
 sources = []
 for module in Split(inputs) :
