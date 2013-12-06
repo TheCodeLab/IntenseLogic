@@ -44,12 +44,13 @@ local c, w, root = helper.context { name="Bouncing Lights Demo",
                                     gui=true,
                                     output=true,
                                     hints = {hdr=1}}
-ffi.C.set_world(w)
+
+modules.bouncinglights.set_world(w)
 
 local ht = texture()
 ht:setContext(c)
 local hmt = image.loadfile "demos/bouncing-lights/arena-heightmap.png"
-ffi.C.add_heightmap(hmt, 128, 128, 50)
+modules.bouncinglights.add_heightmap(hmt, 128, 128, 50)
 ht:fromimage("height0", hmt)
 ht:fromimage("normal0", hmt:height_to_normal())
 ht:fromfile("color0", "demos/bouncing-lights/terrain.png")
@@ -66,7 +67,7 @@ ffi.cdef [[
 void glUniform4f(int location, float v0, float v1, float v2, float v3);
 ]]
 local function customdatafunc(self, uniform, user)
-    ffi.C.glUniform4f(uniform, 0.0, 0.0, 1.0, 0.25)
+    modules.bouncinglights.glUniform4f(uniform, 0.0, 0.0, 1.0, 0.25)
 end
 
 local glow = material()
@@ -97,7 +98,7 @@ event.register(event.registry, "input.button", function(reg, name, key, scancode
             l.radius = math.random(1, 15)
             l.color = vector3(math.random(0,1), math.random(0,1), math.random(0,1)).ptr
             l:add(c)
-            ffi.C.add_ball(l.positionable)
+            modules.bouncinglights.add_ball(l.positionable)
             l.positionable.drawable = sphere
             l.positionable.material = glow
             local tex = texture()
@@ -108,11 +109,11 @@ event.register(event.registry, "input.button", function(reg, name, key, scancode
         end
     end
 end)
-event.register(event.registry, "tick", function() ffi.C.update() end)
+event.register(event.registry, "tick", function() modules.bouncinglights.update() end)
 
 camera(c, root)
 
 c:setActive()
 
---ffi.C.debug_draw()
+--modules.bouncinglights.debug_draw()
 

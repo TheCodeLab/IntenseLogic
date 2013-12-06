@@ -17,7 +17,7 @@ return function(ctx, root)
     cam.positionable.rotation = quaternion(0, 0, 1, math.pi).ptr
     cam.sensitivity = .01
     cam.movespeed = vector3(1/3,1/3,1/3).ptr
-    ffi.C.set_camera(cam)
+    modules.bouncinglights.set_camera(cam)
 
     local yaw = 0
     local pitch = 0
@@ -72,7 +72,7 @@ return function(ctx, root)
         local v = vector3(x,y,z) * vector3.wrap(cam.movespeed)
         local old = vector3.wrap(cam.positionable.position)
         v = v * quaternion.wrap(cam.positionable.rotation) 
-        ffi.C.set_walk_direction(v.ptr)
+        modules.bouncinglights.set_walk_direction(v.ptr)
         render_pos(vector3(cam.positionable.position))
         render_fps(1/ctx:averageFrametime())
         render_numlights()
