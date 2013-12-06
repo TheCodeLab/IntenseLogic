@@ -17,7 +17,7 @@ cflags    = "-std=c99 -D_POSIX_C_SOURCE=200809"
 cxxflags  = "-std=c++11"
 linkflags = "-g -L. -Lbuild"
 if platform == "mingw":
-    cflags += " -DWIN32 -I/usr/i486-mingw32/include/luajit-2.0" # TODO: get rid of that monstrosity
+    cflags += " -DWIN32 -I/usr/x86_64-w64-mingw32/include/luajit-2.1 " # TODO: Fix this
     linkflags += " -Wl,--export-all-symbols"
 else:
     linkflags += " -rdynamic" # assume ELF because I'm terrible
@@ -41,19 +41,10 @@ pkg_libs = {
 
 # link libs
 VariantDir(build_dir, src_dir, duplicate = 0)
-env = Environment(CCFLAGS=ccflags, CFLAGS = cflags, CXXFLAGS=cxxflags, LINKFLAGS = string.split(linkflags, " "))
-if 'CC' in os.environ:
-    env['CC'] = os.environ['CC']
-if 'CXX' in os.environ:
-    env['CXX'] = os.environ['CXX']
-if 'LD' in os.environ:
-    env['LD'] = os.environ['LD']
-if 'SHLIBSUFFIX' in os.environ:
-    env['SHLIBSUFFIX'] = os.environ['SHLIBSUFFIX']
-if 'PROGSUFFIX' in os.environ:
-    env['PROGSUFFIX'] = os.environ['PROGSUFFIX']
-
-env.Append(CPPPATH = [src_dir])
+env = Environment(ENV=os.environ)
+for item in os.environ:
+    env[item] = os.environ[item]
+env.Append(CCFLAGS=ccflags, CFLAGS = cflags, CXXFLAGS=cxxflags, LINKFLAGS = string.split(linkflags, " "), CPPPATH = [src_dir])
 
 Export("platform")
 Export("env")

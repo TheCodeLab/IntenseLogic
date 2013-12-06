@@ -12,10 +12,9 @@ bouncinglights = env.Clone()
 
 bouncinglights.Append(CPPPATH = src_dir, LIBS=['ilutil', 'ilcommon'])
 
-if platform=="mingw":
-    bouncinglights.Append(LIBS=["BulletDynamics", "BulletCollision", "LinearMath", "BulletSoftBody"])
-else:
-    bouncinglights.ParseConfig("pkg-config bullet --libs --cflags")
+#if platform=="mingw":
+#    bouncinglights.Append(LIBS=["BulletDynamics", "BulletCollision", "LinearMath", "BulletSoftBody"])
+bouncinglights.ParseConfig("pkg-config bullet --libs --cflags")
 
 sources = []
 for module in Split(inputs) :

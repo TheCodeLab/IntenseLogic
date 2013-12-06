@@ -29,7 +29,8 @@ if platform=="mingw":
 
 for lib in pkg_libs[platform]:
     graphics.ParseConfig("pkg-config " + lib + " --cflags --libs")
-    graphics.ParseConfig("freetype-config --cflags --libs")
+
+#graphics.ParseConfig("freetype-config --cflags --libs")
 
 sources = []
 for module in Split(inputs) :
