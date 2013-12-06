@@ -111,6 +111,10 @@ ilA_img *ilA_img_loadasset(const ilA_file *iface, il_base *file)
 {
     size_t size;
     void *data = ilA_contents(iface, file, &size);
+    if (!data) {
+        il_error("Unable to load file");
+        return NULL;
+    }
     return ilA_img_load(data, size);
 }
 
