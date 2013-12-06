@@ -172,7 +172,9 @@ ilA_mesh *ilA_mesh_parseObj(const char *filename, const char *data, size_t lengt
 {
     struct obj *obj = calloc(1, sizeof(struct obj));
     ilA_mesh *mesh;
-    char *str = strndup(data, length), *saveptr = str, *ptr, error[1024], col_str[8];
+    char *str = malloc(length+1), *saveptr = str, *ptr, error[1024], col_str[8];
+    strncpy(str, data, length);
+    str[length] = 0;
     int line = 0, col;
     size_t i, j, v = 0, num_vertices = 0;
 
@@ -235,6 +237,7 @@ ilA_mesh *ilA_mesh_parseObj(const char *filename, const char *data, size_t lengt
             v++;
         }
     }
+    free(str);
     return mesh;
 }
 
