@@ -74,7 +74,13 @@ return function(ctx, root)
         v = v * quaternion.wrap(cam.positionable.rotation) 
         modules.bouncinglights.set_walk_direction(v.ptr)
         render_pos(vector3(cam.positionable.position))
-        render_fps(1/ctx:averageFrametime())
+        local avg = ctx:averageFrametime()
+        print(avg)
+        if avg == 0 then
+            render_fps(0)
+        else
+            render_fps(1/avg)
+        end
         render_numlights()
         cam.projection_matrix = matrix.perspective(75, ctx.width/ctx.height, 2, 2000).ptr
     end

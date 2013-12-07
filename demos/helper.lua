@@ -144,7 +144,13 @@ function helper.camera(ctx, root)
         local bank = quaternion(vector3(0, 0, 1), r * cam.sensitivity * 4)
         cam.positionable.rotation = (quaternion.wrap(cam.positionable.rotation) * bank).ptr
         render_pos(vector3(cam.positionable.position))
-        render_fps(1/ctx:averageFrametime())
+        local avg = ctx:averageFrametime()
+        print(avg)
+        if avg == 0 then
+            render_fps(0)
+        else
+            render_fps(1/avg)
+        end
         cam.projection_matrix = matrix.perspective(75, ctx.width/ctx.height, 2, 2000).ptr
     end
 
