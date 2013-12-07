@@ -237,7 +237,6 @@ ilA_mesh *ilA_mesh_parseObj(const char *filename, const char *data, size_t lengt
             v++;
         }
     }
-    free(str);
     return mesh;
 }
 
