@@ -75,7 +75,6 @@ return function(ctx, root)
         modules.bouncinglights.set_walk_direction(v.ptr)
         render_pos(vector3(cam.positionable.position))
         local avg = ctx:averageFrametime()
-        print(avg)
         if avg == 0 then
             render_fps(0)
         else
