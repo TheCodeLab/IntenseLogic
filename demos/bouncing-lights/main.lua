@@ -23,6 +23,7 @@ void add_heightmap(ilA_img *hm, float w, float h, float height);
 void add_ball(il_positionable *pos);
 void update();
 void debug_draw();
+void custom_data_func(struct ilG_material *self, GLuint loc, void *user);
 
 ]]
 
@@ -63,12 +64,13 @@ hm.position = vector3(0, 0, 0).ptr
 hm.size = vector3(128, 64, 128).ptr
 hm:track(c)
 
-ffi.cdef [[
+--[=[ffi.cdef [[
 void glUniform4f(int location, float v0, float v1, float v2, float v3);
 ]]
 local function customdatafunc(self, uniform, user)
-    modules.bouncinglights.glUniform4f(uniform, 0.0, 0.0, 1.0, 0.25)
-end
+    print "hi"
+    ffi.C.glUniform4f(uniform, 0.0, 0.0, 1.0, 0.25)
+end]=]
 
 local glow = material()
 glow:vertex(io.open("demos/bouncing-lights/glow.vert","r"):read "*a")
@@ -76,7 +78,7 @@ glow:fragment(io.open("demos/bouncing-lights/glow.frag", "r"):read "*a")
 glow:mtlname "Glow material"
 glow:arrayAttrib("position", "in_Position")
 glow:matrix("MVP", "mvp")
-glow:customConstant(customdatafunc, "col")
+glow:customConstant(modules.bouncinglights.custom_data_func, "col")
 glow:link(c)
 
 _G.num_lights = 0

@@ -3,6 +3,7 @@
 #include <BulletDynamics/Character/btKinematicCharacterController.h>
 #include <BulletCollision/CollisionDispatch/btGhostObject.h>
 #include <BulletCollision/CollisionDispatch/btCollisionObject.h>
+#include <GL/glew.h>
 
 extern "C" {
 #include "asset/image.h"
@@ -23,6 +24,11 @@ static btKinematicCharacterController *player;
 static btPairCachingGhostObject *ghostObject;
 static btSphereShape *playerShape;
 static btVector3 playerWalk;
+
+extern "C" void custom_data_func(struct ilG_material *self, GLuint loc, void *user)
+{
+    glUniform4f(loc, 0.0, 0.0, 1.0, 0.25);
+}
 
 extern "C" void set_world(il_world *w)
 {

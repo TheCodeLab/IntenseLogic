@@ -12,8 +12,11 @@ bouncinglights = env.Clone()
 
 bouncinglights.Append(CPPPATH = src_dir, LIBS=['ilutil', 'ilcommon'])
 
-#if platform=="mingw":
-#    bouncinglights.Append(LIBS=["BulletDynamics", "BulletCollision", "LinearMath", "BulletSoftBody"])
+if platform=="mingw":
+    bouncinglights.Append(LIBS=['opengl32', 'glew32'])
+else:
+    bouncinglights.ParseConfig("pkg-config gl --libs --cflags")
+    bouncinglights.ParseConfig("pkg-config glew --libs --cflags")
 bouncinglights.ParseConfig("pkg-config bullet --libs --cflags")
 
 sources = []
