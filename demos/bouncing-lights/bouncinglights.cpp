@@ -25,17 +25,17 @@ static btPairCachingGhostObject *ghostObject;
 static btSphereShape *playerShape;
 static btVector3 playerWalk;
 
-extern "C" void custom_data_func(struct ilG_material *self, GLuint loc, void *user)
+extern "C" __declspec(dllexport) void custom_data_func(struct ilG_material *self, GLuint loc, void *user)
 {
     glUniform4f(loc, 0.0, 0.0, 1.0, 0.25);
 }
 
-extern "C" void set_world(il_world *w)
+extern "C" __declspec(dllexport) void set_world(il_world *w)
 {
     world = w;
 }
 
-extern "C" void set_camera(ilG_camera *cam)
+extern "C" __declspec(dllexport) void set_camera(ilG_camera *cam)
 {
     camera = cam;
     playerShape = new btSphereShape(1);
@@ -53,12 +53,12 @@ extern "C" void set_camera(ilG_camera *cam)
     player->warp(btVector3(vec[0], vec[1], vec[2]));
 }
 
-extern "C" void set_walk_direction(il_vec3 vec)
+extern "C" __declspec(dllexport) void set_walk_direction(il_vec3 vec)
 {
     playerWalk = btVector3(vec[0], vec[1], vec[2]);
 }
 
-extern "C" void add_heightmap(ilA_img *hm, float w, float h, float height)
+extern "C" __declspec(dllexport) void add_heightmap(ilA_img *hm, float w, float h, float height)
 {
     unsigned char *mem = new unsigned char[hm->width * hm->height];
     memcpy(mem, hm->data, hm->width*hm->height);
@@ -68,7 +68,6 @@ extern "C" void add_heightmap(ilA_img *hm, float w, float h, float height)
     btVector3 min, max, scaling;
     heightmap_shape->getAabb(trans, min, max);
     scaling = heightmap_shape->getLocalScaling();
-    printf("Heightmap AABB: (%f %f %f) (%f %f %f)\nScaling: (%f %f %f)\n", min.x(), min.y(), min.z(), max.x(), max.y(), max.z(), scaling.x(), scaling.y(), scaling.z());
     btDefaultMotionState *heightmap_state = new btDefaultMotionState(trans);
     btRigidBody::btRigidBodyConstructionInfo groundRigidBodyCI(0, heightmap_state, heightmap_shape, btVector3(0,0,0));
     btRigidBody* groundRigidBody = new btRigidBody(groundRigidBodyCI);
@@ -76,7 +75,7 @@ extern "C" void add_heightmap(ilA_img *hm, float w, float h, float height)
     dynamicsWorld->addRigidBody(groundRigidBody);
 }
 
-extern "C" void add_ball(il_positionable *pos)
+extern "C" __declspec(dllexport) void add_ball(il_positionable *pos)
 {
     btQuaternion rot = btQuaternion(pos->rotation[0], pos->rotation[1], pos->rotation[2], pos->rotation[3]);
     btVector3 vec = btVector3(pos->position[0], pos->position[1], pos->position[2]);
@@ -91,9 +90,8 @@ extern "C" void add_ball(il_positionable *pos)
     il_base_set(pos, "rigidbody", ballRigidBody, sizeof(btRigidBody), IL_VOID);
 }
 
-extern "C" void update()
+extern "C" __declspec(dllexport) void update()
 {
-    //printf("physics step\n");
     player->setWalkDirection(playerWalk);
     dynamicsWorld->stepSimulation(1/20.f, 10, 1/60.f);
     il_worldIterator *it = NULL;
@@ -103,7 +101,6 @@ extern "C" void update()
         if (!body) {
             continue;
         }
-        //printf("update %p\n", body);
         btTransform trans;
         body->getMotionState()->getWorldTransform(trans);
         btVector3 vec = trans.getOrigin();
@@ -123,7 +120,7 @@ extern "C" void update()
     camera->positionable.position[2] = vec.z();
 }
 
-extern "C" int il_bootstrap(int argc, char **argv)
+extern "C" __declspec(dllexport) int il_bootstrap(int argc, char **argv)
 {
     (void)argc; (void)argv;
     broadphase = new btDbvtBroadphase();
