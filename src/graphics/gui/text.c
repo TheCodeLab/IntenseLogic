@@ -3,9 +3,9 @@
 #include <GL/glew.h>
 #include <ft2build.h>
 #include FT_FREETYPE_H
-#include <freetype/ftadvanc.h>
-#include <freetype/ftsnames.h>
-#include <freetype/tttables.h>
+#include FT_ADVANCES_H
+#include FT_SFNT_NAMES_H
+#include FT_TRUETYPE_TABLES_H
 
 #include <harfbuzz/hb.h>
 #include <harfbuzz/hb-ft.h>

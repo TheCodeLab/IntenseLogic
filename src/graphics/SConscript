@@ -18,9 +18,9 @@ graphics = env.Clone()
 graphics.Append(CFLAGS="-DIL_IN_GRAPHICS", CPPPATH = src_dir, LIBS=["ilcommon","ilutil","ilmath","ilasset","ilinput"])
 
 pkg_libs = {
-    "osx":   ["glfw3", "glew", "harfbuzz", "cairo", "harfbuzz-icu"],
-    "arch":  ["glfw3", "glew", "gl", "harfbuzz", "harfbuzz-icu", "cairo"],
-    "linux": ["gl", "glfw3", "glew", "harfbuzz", "cairo"],
+    "osx":   ["glfw3", "glew", "harfbuzz", "cairo", "harfbuzz-icu", "freetype2"],
+    "arch":  ["glfw3", "glew", "gl", "harfbuzz", "harfbuzz-icu", "cairo", "freetype2"],
+    "linux": ["gl", "glfw3", "glew", "harfbuzz", "cairo", "freetype2"],
     "mingw": ["freetype2"]
 }
 

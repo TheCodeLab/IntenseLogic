@@ -324,7 +324,7 @@ int ilG_context_setActive(ilG_context *self)
     return 1;
 }
 
-static GLvoid error_cb(GLenum source, GLenum type, GLuint id, GLenum severity,
+static APIENTRY GLvoid error_cb(GLenum source, GLenum type, GLuint id, GLenum severity,
                        GLsizei length, const GLchar* message, GLvoid* user)
 {
     (void)id, (void)severity, (void)length, (void)user;
