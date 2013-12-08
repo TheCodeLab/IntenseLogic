@@ -230,7 +230,7 @@ int il_load_module(const char *name, int argc, char **argv)
         const char **mods = deps(argc, argv);
         for (i = 0; mods[i]; i++) {
             if (il_load_module(mods[i], argc, argv)) {
-                fprintf(stderr, "*** Failed to load module %s: Dependency %s failed to load", path, mods[i]);
+                fprintf(stderr, "*** Failed to load module %s: Dependency %s failed to load\n", path, mods[i]);
                 goto fail;
             }
         }
