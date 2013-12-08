@@ -317,6 +317,9 @@ const char *il_module_iterate(void **saveptr)
         }
     }
     *saveptr = il_loaded;
+    if (!il_loaded) {
+        return NULL;
+    }
     return il_loaded->name;
 }
 
