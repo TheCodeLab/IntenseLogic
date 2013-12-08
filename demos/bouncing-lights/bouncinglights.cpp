@@ -33,6 +33,7 @@ static btVector3 playerWalk;
 
 extern "C" ex void custom_data_func(struct ilG_material *self, il_positionable *pos, GLuint loc, void *user)
 {
+    (void)self; (void)user;
     float *col = (float*)il_base_get(pos, "color", NULL, NULL);
     if (!col) {
         //printf("NULL colour\n");
