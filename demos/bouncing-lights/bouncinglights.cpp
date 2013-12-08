@@ -31,9 +31,15 @@ static btVector3 playerWalk;
 #define ex
 #endif
 
-extern "C" ex void custom_data_func(struct ilG_material *self, GLuint loc, void *user)
+extern "C" ex void custom_data_func(struct ilG_material *self, il_positionable *pos, GLuint loc, void *user)
 {
-    glUniform4f(loc, 0.0, 0.0, 1.0, 0.25);
+    float *col = (float*)il_base_get(pos, "color", NULL, NULL);
+    if (!col) {
+        //printf("NULL colour\n");
+        return;
+    }
+    //printf("%p: %f %f %f %f\n", pos, col[0], col[1], col[2], col[3]);
+    glUniform4f(loc, col[0], col[1], col[2], col[3]);
 }
 
 extern "C" ex void set_world(il_world *w)

@@ -4,6 +4,7 @@ local texture       = require "graphics.texture"
 local material      = require "graphics.material"
 local positionable  = require "common.positionable"
 local vector3       = require "math.vector3"
+local vector4       = require "math.vector4"
 local light         = require "graphics.light"
 local image         = require "asset.image"
 local heightmap     = require "graphics.heightmap"
@@ -13,6 +14,7 @@ local ffi           = require "ffi"
 local drawable      = require "graphics.drawable"
 local camera        = require "demos.bouncing-lights.camera"
 local drawnmesh     = require "graphics.mesh"
+local base          = require "common.base"
 
 ffi.cdef [[
 
@@ -23,7 +25,7 @@ void add_heightmap(ilA_img *hm, float w, float h, float height);
 void add_ball(il_positionable *pos);
 void update();
 void debug_draw();
-void custom_data_func(struct ilG_material *self, GLuint loc, void *user);
+void custom_data_func(struct ilG_material *self, il_positionable *pos, GLuint loc, void *user);
 
 ]]
 
@@ -64,28 +66,20 @@ hm.position = vector3(0, 0, 0).ptr
 hm.size = vector3(128, 64, 128).ptr
 hm:track(c)
 
---[=[ffi.cdef [[
-void glUniform4f(int location, float v0, float v1, float v2, float v3);
-]]
-local function customdatafunc(self, uniform, user)
-    print "hi"
-    ffi.C.glUniform4f(uniform, 0.0, 0.0, 1.0, 0.25)
-end]=]
-
 local glow = material()
 glow:vertex(io.open("demos/bouncing-lights/glow.vert","r"):read "*a")
 glow:fragment(io.open("demos/bouncing-lights/glow.frag", "r"):read "*a")
 glow:mtlname "Glow material"
 glow:arrayAttrib("position", "in_Position")
 glow:matrix("MVP", "mvp")
-glow:customConstant(modules.bouncinglights.custom_data_func, "col")
+glow:posFunc(modules.bouncinglights.custom_data_func, "col")
 glow:link(c)
 
 _G.num_lights = 0
 --event.setPacker(event.registry, "physics.tick", event.nilPacker)
 --event.timer(event.registry, "physics.tick", 1/60)
 local sphere = drawnmesh("demos/bouncing-lights/sphere.obj")
-drawable.setattr(sphere, "istransparent", true)
+--drawable.setattr(sphere, "istransparent", true)
 event.register(event.registry, "input.button", function(reg, name, key, scancode, device, isDown, mods) 
     if key == ' ' and isDown then
         print("Placing lights.")
@@ -98,8 +92,10 @@ event.register(event.registry, "input.button", function(reg, name, key, scancode
             l.positionable.position = pos.ptr
             l.positionable.size = vector3(.25, .25, .25).ptr
             l.radius = math.random(1, 15)
-            l.color = vector3(math.random(0,1), math.random(0,1), math.random(0,1)).ptr
+            local col = vector3(math.random(0,1), math.random(0,1), math.random(0,1)).normal
+            l.color = col.ptr
             l:add(c)
+            base.set(l.positionable, "color", ffi.new("float[4]", col.x+1000, col.y, col.z, 1.0), bit.bor(modules.bouncinglights.IL_ARRAY_BIT, modules.bouncinglights.IL_FLOAT), 4)
             modules.bouncinglights.add_ball(l.positionable)
             l.positionable.drawable = sphere
             l.positionable.material = glow

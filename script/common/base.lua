@@ -23,14 +23,17 @@ typedef struct UT_hash_handle {
    unsigned hashv;                   /* result of hash-fcn(key)        */
 } UT_hash_handle;
 
+/** Enumeration of types supported by object storage */
 enum il_storagetype {
-    IL_VOID,
-    IL_STRING,
-    IL_INT,
-    IL_FLOAT,
-    IL_STORAGE,
-    IL_OBJECT,
-    IL_LUA,
+    IL_VOID,                /**< C void* */
+    IL_STRING,              /**< Null terminated C string */
+    IL_INT,                 /**< C int type */
+    IL_FLOAT,               /**< C float type */
+    IL_STORAGE,             /**< Nested key-value storage */
+    IL_OBJECT,              /**< The value has an il_base in it */
+    IL_LUA,                 /**< The value is the result of luaL_ref() */
+    IL_LOCAL_BIT = 0x70,    /**< second high bit determines whether or not to do network sync */
+    IL_ARRAY_BIT = 0x80     /**< high bit is array signifier */
 };
 
 struct il_storage;
@@ -292,15 +295,17 @@ end
 -- @tparam storage v The storage
 -- @tparam string name The key
 -- @param val The value to convert to a storage-compatible type
-function base.set(v, name, val)
+function base.set(v, name, val, t, s)
     --assert(ffi.istype("struct il_storage**", v), "Expected storage")
     --if v == nil then error "null storage" end
     assert(type(name) == "string", "Expected string")
-    local t
+    --local t
     if ffi.istype("struct il_storage", val) then
         t = "IL_STORAGE"
     elseif ffi.istype("il_base", val) then
         t = "IL_OBJECT"
+    elseif type(val) == 'cdata' then
+        assert(t)
     else
         t = ({string="IL_STRING", number="IL_FLOAT"})[type(val)]
         if not t then t = "IL_LUA" end
@@ -322,6 +327,9 @@ function base.set(v, name, val)
         table.insert(debug.getregistry(), val)
         ptr = ffi.new("int[1]", #debug.getregistry())
         size = ffi.sizeof("int")
+    else
+        ptr = val
+        size = s
     end
     if ffi.istype("il_type", v) then
         modules.common.il_type_set(v, name, ptr, size, t)

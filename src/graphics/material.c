@@ -28,9 +28,16 @@ struct matrixinfo {
     enum ilG_transform type;
 };
 
-struct mtlfunc {
+struct bindfunc {
     char *location;
-    ilG_material_customDataFunc func;
+    ilG_material_onBindFunc func;
+    GLint uniform;
+    void *user;
+};
+
+struct posfunc {
+    char *location;
+    ilG_material_onPosFunc func;
     GLint uniform;
     void *user;
 };
@@ -38,7 +45,8 @@ struct mtlfunc {
 struct ilG_material_config {
     IL_ARRAY(struct textureunit,) texunits;    
     IL_ARRAY(struct matrixinfo,) matrices;
-    IL_ARRAY(struct mtlfunc,) funcs;
+    IL_ARRAY(struct bindfunc,) bindfuncs;
+    IL_ARRAY(struct posfunc,) posfuncs;
     il_string *vertsource;
     il_string *fragsource;
     char* attriblocs[ILG_ARRATTR_NUMATTRS];
@@ -66,8 +74,8 @@ static void mtl_bind(void *obj)
             ilG_bindMVP(mtl->config->matrices.data[i].uniform, mtl->config->matrices.data[i].type, mtl->context->camera, NULL);
         }
     }
-    for (i = 0; i < mtl->config->funcs.length; i++) {
-        mtl->config->funcs.data[i].func(mtl, mtl->config->funcs.data[i].uniform, mtl->config->funcs.data[i].user);
+    for (i = 0; i < mtl->config->bindfuncs.length; i++) {
+        mtl->config->bindfuncs.data[i].func(mtl, mtl->config->bindfuncs.data[i].uniform, mtl->config->bindfuncs.data[i].user);
     }
 }
 
@@ -90,6 +98,9 @@ static void mtl_update(void *obj)
             // otherwise it was bound in bind()
             ilG_bindMVP(mtl->config->matrices.data[i].uniform, mtl->config->matrices.data[i].type, mtl->context->camera, mtl->context->positionable);
         }
+    }
+    for (i = 0; i < mtl->config->posfuncs.length; i++) {
+        mtl->config->posfuncs.data[i].func(mtl, mtl->context->positionable, mtl->config->posfuncs.data[i].uniform, mtl->config->posfuncs.data[i].user);
     }
 }
 
@@ -194,15 +205,26 @@ void ilG_material_matrix(ilG_material* self, enum ilG_transform type, const char
     IL_APPEND(self->config->matrices, mat);
 }
 
-void ilG_material_customUniform(ilG_material* self, ilG_material_customDataFunc func, void *user, const char *location)
+void ilG_material_bindFunc(ilG_material* self, ilG_material_onBindFunc func, void *user, const char *location)
 {
-    struct mtlfunc f = (struct mtlfunc) {
+    struct bindfunc f = (struct bindfunc) {
         strdup(location),
         func,
         0,
         user
     };
-    IL_APPEND(self->config->funcs, f);
+    IL_APPEND(self->config->bindfuncs, f);
+}
+
+void ilG_material_posFunc(ilG_material* self, ilG_material_onPosFunc func, void *user, const char *location)
+{
+    struct posfunc f = (struct posfunc) {
+        strdup(location),
+        func,
+        0,
+        user
+    };
+    IL_APPEND(self->config->posfuncs, f);
 }
 
 int /*failure*/ ilG_material_link(ilG_material* self, ilG_context *ctx)
@@ -249,8 +271,11 @@ int /*failure*/ ilG_material_link(ilG_material* self, ilG_context *ctx)
         self->config->matrices.data[i].uniform = glGetUniformLocation(self->program, self->config->matrices.data[i].location);
     }
     ilG_testError("Error binding matrices");
-    for (i = 0; i < self->config->funcs.length; i++) {
-        self->config->funcs.data[i].uniform = glGetUniformLocation(self->program, self->config->funcs.data[i].location);
+    for (i = 0; i < self->config->bindfuncs.length; i++) {
+        self->config->bindfuncs.data[i].uniform = glGetUniformLocation(self->program, self->config->bindfuncs.data[i].location);
+    }
+    for (i = 0; i < self->config->posfuncs.length; i++) {
+        self->config->posfuncs.data[i].uniform = glGetUniformLocation(self->program, self->config->posfuncs.data[i].location);
     }
 
     self->valid = 1;

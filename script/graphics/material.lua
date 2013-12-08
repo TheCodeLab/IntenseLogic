@@ -16,7 +16,8 @@ typedef struct ilG_material {
     char *name;
 } ilG_material;
 
-typedef void(* ilG_material_customDataFunc)(ilG_material *self, int uniform, void *user);
+typedef void(* ilG_material_onBindFunc)(ilG_material *self, int uniform, void *user);
+typedef void(* ilG_material_onPosFunc)(ilG_material *self, struct il_positionable *pos, int uniform, void *user);
 
 extern il_type ilG_material_type;
 extern ilG_material ilG_material_default;
@@ -43,7 +44,8 @@ void ilG_material_arrayAttrib(ilG_material*, unsigned long attrib, const char *l
 void ilG_material_fragData(ilG_material*, unsigned long attrib, const char *location);
 void ilG_material_textureUnit(ilG_material*, unsigned long type, const char *location);
 void ilG_material_matrix(ilG_material*, enum ilG_transform, const char *location);
-void ilG_material_customUniform(ilG_material*, ilG_material_customDataFunc func, void *user, const char *location);
+void ilG_material_bindFunc(ilG_material*, ilG_material_onBindFunc func, void *user, const char *location);
+void ilG_material_posFunc(ilG_material*, ilG_material_onPosFunc func, void *user, const char *location);
 int /*failure*/ ilG_material_link(ilG_material*, struct ilG_context *ctx);
 
 ]]
@@ -119,8 +121,12 @@ base.wrap "il.graphics.material" {
         modules.graphics.ilG_material_matrix(self, mode, loc)
     end;
 
-    customConstant = function(self, fn, loc)
-        modules.graphics.ilG_material_customUniform(self, fn, nil, loc)
+    bindFunc = function(self, fn, loc)
+        modules.graphics.ilG_material_bindFunc(self, fn, nil, loc)
+    end;
+
+    posFunc = function(self, fn, loc)
+        modules.graphics.ilG_material_posFunc(self, fn, nil, loc)
     end;
 
     link = function(self, ctx)

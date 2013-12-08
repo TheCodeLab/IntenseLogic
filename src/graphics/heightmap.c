@@ -86,7 +86,7 @@ ilG_material *ilG_heightmap_shader(ilG_context *context)
     ilG_material_fragData(mat, ILG_FRAGDATA_SPECULAR, "out_Specular");
     ilG_material_matrix(mat, ILG_MVP, "mvp");
     ilG_material_matrix(mat, ILG_INVERSE | ILG_MODEL | ILG_TRANSPOSE, "imt");
-    ilG_material_customUniform(mat, width_uniform, NULL, "size");
+    ilG_material_bindFunc(mat, width_uniform, NULL, "size");
     if (ilG_material_link(mat, context)) {
         il_unref(mat);
         return NULL;
