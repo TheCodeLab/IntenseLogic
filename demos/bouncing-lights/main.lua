@@ -80,7 +80,12 @@ _G.num_lights = 0
 --event.timer(event.registry, "physics.tick", 1/60)
 local sphere = drawnmesh("demos/bouncing-lights/sphere.obj")
 --drawable.setattr(sphere, "istransparent", true)
-event.register(event.registry, "input.button", function(reg, name, key, scancode, device, isDown, mods) 
+event.register(event.registry, "input.button", function(reg, name, key, scancode, device, isDown, mods)
+    if key == '1' and isDown then
+        glow:vertex(io.open("demos/bouncing-lights/glow.vert","r"):read "*a")
+        glow:fragment(io.open("demos/bouncing-lights/glow.frag", "r"):read "*a")
+        glow:link(c)
+    end
     if key == ' ' and isDown then
         print("Placing lights.")
         local hw, hh = 128, 128
@@ -95,7 +100,8 @@ event.register(event.registry, "input.button", function(reg, name, key, scancode
             local col = vector3(math.random(0,1), math.random(0,1), math.random(0,1)).normal
             l.color = col.ptr
             l:add(c)
-            base.set(l.positionable, "color", ffi.new("float[4]", col.x+1000, col.y, col.z, 1.0), bit.bor(modules.bouncinglights.IL_ARRAY_BIT, modules.bouncinglights.IL_FLOAT), 4)
+            local m = 1
+            base.set(l.positionable, "color", ffi.new("float[4]", col.x*m, col.y*m, col.z*m, 1.0), bit.bor(modules.bouncinglights.IL_ARRAY_BIT, modules.bouncinglights.IL_FLOAT), 4)
             modules.bouncinglights.add_ball(l.positionable)
             l.positionable.drawable = sphere
             l.positionable.material = glow

@@ -121,6 +121,9 @@ static void material_init(void *obj)
 
 void ilG_material_vertex(ilG_material* self, il_string *source) 
 {
+    if (self->config->vertsource) {
+        il_string_unref(self->config->vertsource);
+    }
     self->config->vertsource = il_string_ref(source);
 }
 
@@ -146,6 +149,9 @@ void ilG_material_vertex_file(ilG_material *self, const char *filename)
 
 void ilG_material_fragment(ilG_material* self, il_string *source)
 {
+    if (self->config->fragsource) {
+        il_string_unref(self->config->fragsource);
+    }
     self->config->fragsource = il_string_ref(source);
 }
 

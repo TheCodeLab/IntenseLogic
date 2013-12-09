@@ -38,7 +38,9 @@ enum ilG_transform {
 };
 
 void ilG_material_vertex(ilG_material*, il_string *source);
+void ilG_material_vertex_file(ilG_material *self, const char *filename);
 void ilG_material_fragment(ilG_material*, il_string *source);
+void ilG_material_fragment_file(ilG_material *self, const char *filename);
 void ilG_material_name(ilG_material*, const char* name);
 void ilG_material_arrayAttrib(ilG_material*, unsigned long attrib, const char *location);
 void ilG_material_fragData(ilG_material*, unsigned long attrib, const char *location);
@@ -58,8 +60,16 @@ base.wrap "il.graphics.material" {
         modules.graphics.ilG_material_vertex(self, ilstring(source))
     end;
 
+    vertex_file = function(self, file)
+        modules.graphics.ilG_material_vertex_file(self, file)
+    end;
+
     fragment = function(self, source)
         modules.graphics.ilG_material_fragment(self, ilstring(source))
+    end;
+
+    fragment_file = function(self, file)
+        modules.graphics.ilG_material_fragment_file(self, file)
     end;
 
     mtlname = modules.graphics.ilG_material_name;
