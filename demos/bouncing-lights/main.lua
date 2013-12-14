@@ -40,50 +40,58 @@ local skybox = {
     'demos/bouncing-lights/west.png',
     'demos/bouncing-lights/east.png',
 }
-local c, w, root, pipe1 = helper.context { name="Bouncing Lights Demo",
-                                           skybox=skybox,
-                                           geom=true,
-                                           lights=true,
-                                           transparency=true,
-                                           gui=true,
-                                           output=true,
-                                           hints = {hdr=1} }
-
+local c, w, root, pipe
+local debug_draw = true
+if not debug_draw then 
+    c, w, root, pipe = helper.context { name="Bouncing Lights Demo",
+                                        skybox=skybox,
+                                        geom=true,
+                                        lights=true,
+                                        transparency=true,
+                                        gui=true,
+                                        output=true,
+                                        hints = {hdr=1} }
+else
+    c, w, root, pipe = helper.context { name="Bouncing Lights Demo - Bullet Debug",
+                                        --gui=true,
+                                        --output=true,
+                                        hints = {hdr=0, major=2, minor=1, use_default_fb=1} }
+    c:addStage(modules.bouncinglights.init_stage(c), 0)
+end
 modules.bouncinglights.set_world(w)
-local pipe2 = {ffi.C.init_stage(c)}
-ffi.C.set_world(w)
 
-local ht = texture()
-ht:setContext(c)
 local hmt = image.loadfile "demos/bouncing-lights/arena-heightmap.png"
 modules.bouncinglights.add_heightmap(hmt, 128, 128, 50)
-ht:fromimage("height0", hmt)
-ht:fromimage("normal0", hmt:height_to_normal())
-ht:fromfile("color0", "demos/bouncing-lights/terrain.png")
-local hm = positionable()
-w:add(hm)
-hm.drawable = heightmap(c, 100, 100)
-hm.material = heightmap.defaultShader(c)
-hm.texture = ht
-hm.position = vector3(0, 0, 0).ptr
-hm.size = vector3(128, 64, 128).ptr
-hm:track(c)
-
 local glow = material()
-glow:vertex(io.open("demos/bouncing-lights/glow.vert","r"):read "*a")
-glow:fragment(io.open("demos/bouncing-lights/glow.frag", "r"):read "*a")
-glow:mtlname "Glow material"
-glow:arrayAttrib("position", "in_Position")
-glow:matrix("MVP", "mvp")
-glow:posFunc(modules.bouncinglights.custom_data_func, "col")
-glow:link(c)
+if not debug_draw then
+    local ht = texture()
+    ht:setContext(c)
+    ht:fromimage("height0", hmt)
+    ht:fromimage("normal0", hmt:height_to_normal())
+    ht:fromfile("color0", "demos/bouncing-lights/terrain.png")
+    local hm = positionable()
+    w:add(hm)
+    hm.drawable = heightmap(c, 100, 100)
+    hm.material = heightmap.defaultShader(c)
+    hm.texture = ht
+    hm.position = vector3(0, 0, 0).ptr
+    hm.size = vector3(128, 64, 128).ptr
+    hm:track(c)
+
+    glow:vertex(io.open("demos/bouncing-lights/glow.vert","r"):read "*a")
+    glow:fragment(io.open("demos/bouncing-lights/glow.frag", "r"):read "*a")
+    glow:mtlname "Glow material"
+    glow:arrayAttrib("position", "in_Position")
+    glow:matrix("MVP", "mvp")
+    glow:posFunc(modules.bouncinglights.custom_data_func, "col")
+    glow:link(c)
+end
 
 _G.num_lights = 0
 --event.setPacker(event.registry, "physics.tick", event.nilPacker)
 --event.timer(event.registry, "physics.tick", 1/60)
 local sphere = drawnmesh("demos/bouncing-lights/sphere.obj")
 --drawable.setattr(sphere, "istransparent", true)
-local debug_rendering = false
 event.register(event.registry, "input.button", function(reg, name, key, scancode, device, isDown, mods)
     if key == '1' and isDown then
         glow:vertex(io.open("demos/bouncing-lights/glow.vert","r"):read "*a")
@@ -112,23 +120,8 @@ event.register(event.registry, "input.button", function(reg, name, key, scancode
             local tex = texture()
             tex:setContext(c)
             l.positionable.texture = tex
-            hm.track(l.positionable, c) --ugh
+            positionable.track(l.positionable, c) --ugh
             w:add(l.positionable)
-        end
-    end
-    if key == 'G' and isDown then
-        print("Toggling debug rendering")
-        debug_rendering = not debug_rendering
-        if debug_rendering then
-            c:clearStages()
-            for _, s in pairs(pipe2) do
-                c:addStage(s, -1)
-            end
-        else
-            c:clearStages()
-            for _, s in pairs(pipe1) do
-                c:addStage(s, -1)
-            end
         end
     end
 end)

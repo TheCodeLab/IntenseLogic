@@ -38,7 +38,13 @@ static btSphereShape *playerShape;
 static btVector3 playerWalk;
 static ilG_stage debugstage;
 
-extern "C" void debug_draw(ilG_stage *self)
+#ifdef WIN32
+#define ex extern "C" __declspec(dllexport)
+#else
+#define ex extern "C"
+#endif
+
+ex void debug_draw(ilG_stage *self)
 {
     (void)self;
     glMatrixMode(GL_PROJECTION);
@@ -55,7 +61,7 @@ extern "C" void debug_draw(ilG_stage *self)
     std::this_thread::sleep_for(std::chrono::milliseconds(16));
 }
 
-extern "C" ilG_stage *init_stage(ilG_context *context)
+ex ilG_stage *init_stage(ilG_context *context)
 {
     debugstage.context = context;
     debugstage.run = debug_draw;
@@ -63,13 +69,7 @@ extern "C" ilG_stage *init_stage(ilG_context *context)
     return &debugstage;
 }
 
-#ifdef WIN32
-#define ex __declspec(dllexport)
-#else
-#define ex
-#endif
-
-extern "C" ex void custom_data_func(struct ilG_material *self, il_positionable *pos, GLuint loc, void *user)
+ex void custom_data_func(struct ilG_material *self, il_positionable *pos, GLuint loc, void *user)
 {
     (void)self; (void)user;
     float *col = (float*)il_base_get(pos, "color", NULL, NULL);
@@ -81,12 +81,12 @@ extern "C" ex void custom_data_func(struct ilG_material *self, il_positionable *
     glUniform4f(loc, col[0], col[1], col[2], col[3]);
 }
 
-extern "C" ex void set_world(il_world *w)
+ex void set_world(il_world *w)
 {
     world = w;
 }
 
-extern "C" ex void set_camera(ilG_camera *cam)
+ex void set_camera(ilG_camera *cam)
 {
     camera = cam;
     playerShape = new btSphereShape(1);
@@ -104,12 +104,12 @@ extern "C" ex void set_camera(ilG_camera *cam)
     player->warp(btVector3(vec[0], vec[1], vec[2]));
 }
 
-extern "C" ex void set_walk_direction(il_vec3 vec)
+ex void set_walk_direction(il_vec3 vec)
 {
     playerWalk = btVector3(vec[0], vec[1], vec[2]);
 }
 
-extern "C" ex void add_heightmap(ilA_img *hm, float w, float h, float height)
+ex void add_heightmap(ilA_img *hm, float w, float h, float height)
 {
     unsigned char *mem = new unsigned char[hm->width * hm->height];
     memcpy(mem, hm->data, hm->width*hm->height);
@@ -126,7 +126,7 @@ extern "C" ex void add_heightmap(ilA_img *hm, float w, float h, float height)
     dynamicsWorld->addRigidBody(groundRigidBody);
 }
 
-extern "C" ex void add_ball(il_positionable *pos)
+ex void add_ball(il_positionable *pos)
 {
     btQuaternion rot = btQuaternion(pos->rotation[0], pos->rotation[1], pos->rotation[2], pos->rotation[3]);
     btVector3 vec = btVector3(pos->position[0], pos->position[1], pos->position[2]);
@@ -141,7 +141,7 @@ extern "C" ex void add_ball(il_positionable *pos)
     il_base_set(pos, "rigidbody", ballRigidBody, sizeof(btRigidBody), IL_VOID);
 }
 
-extern "C" ex void update()
+ex void update()
 {
     player->setWalkDirection(playerWalk);
     dynamicsWorld->stepSimulation(1/20.f, 10, 1/60.f);
@@ -171,7 +171,7 @@ extern "C" ex void update()
     camera->positionable.position[2] = vec.z();
 }
 
-extern "C" ex int il_bootstrap(int argc, char **argv)
+ex int il_bootstrap(int argc, char **argv)
 {
     (void)argc; (void)argv;
     broadphase = new btDbvtBroadphase();

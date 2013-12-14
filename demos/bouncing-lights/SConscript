@@ -10,7 +10,7 @@ Import("libilcommon")
 
 bouncinglights = env.Clone()
 
-bouncinglights.Append(CPPPATH = src_dir, LIBS=['ilutil', 'ilcommon'])
+bouncinglights.Append(CPPPATH = src_dir, LIBS=['ilutil', 'ilcommon', 'ilmath', 'ilgraphics'])
 
 if platform=="mingw":
     bouncinglights.Append(LIBS=['opengl32', 'glew32'])

@@ -33,32 +33,35 @@ return function(ctx, root)
         cam.positionable.rotation = (quaternion(0, 1, 0, -yaw) * quaternion(1, 0, 0, pitch) * quaternion(0, 0, 1, math.pi)).ptr
     end
 
-    local georgia = file.load "georgia.ttf"
-    local camera_pos_label = frame()
-    camera_pos_label.context = ctx
-    camera_pos_label:setPosition(5,-19, 0, 1)
-    root:addChild(camera_pos_label)
-    local render_pos = function(pos)
-        local label = text(ctx, "en", "ltr", "latin", georgia, 14, tostring(pos)..string.format(" (%d %d)", pitch * 180 / math.pi, yaw * 180 / math.pi))
-        camera_pos_label:label(label, {1,1,1,1}, "left middle")
-    end
+    local render_pos, render_numlights, render_fps
+    if root then
+        local georgia = file.load "georgia.ttf"
+        local camera_pos_label = frame()
+        camera_pos_label.context = ctx
+        camera_pos_label:setPosition(5,-19, 0, 1)
+        root:addChild(camera_pos_label)
+        render_pos = function(pos)
+            local label = text(ctx, "en", "ltr", "latin", georgia, 14, tostring(pos)..string.format(" (%d %d)", pitch * 180 / math.pi, yaw * 180 / math.pi))
+            camera_pos_label:label(label, {1,1,1,1}, "left middle")
+        end
 
-    local fps_label = frame()
-    fps_label.context = ctx
-    fps_label:setPosition(5, 5, 0, 0)
-    root:addChild(fps_label)
-    local render_fps = function(f)
-        local label = text(ctx, "en", "ltr", "latin", georgia, 14, string.format("FPS: %.1f", tonumber(f)))
-        fps_label:label(label, {1,1,1,1}, "left middle")
-    end
+        local fps_label = frame()
+        fps_label.context = ctx
+        fps_label:setPosition(5, 5, 0, 0)
+        root:addChild(fps_label)
+        render_fps = function(f)
+            local label = text(ctx, "en", "ltr", "latin", georgia, 14, string.format("FPS: %.1f", tonumber(f)))
+            fps_label:label(label, {1,1,1,1}, "left middle")
+        end
 
-    local lights_label = frame()
-    lights_label.context = ctx
-    lights_label:setPosition(5, 20, 0, 0)
-    root:addChild(lights_label)
-    local render_numlights = function()
-        local label = text(ctx, "en", "ltr", "latin", georgia, 14, string.format("Lights: %d", _G.num_lights))
-        lights_label:label(label, {1,1,1,1}, "left middle")
+        local lights_label = frame()
+        lights_label.context = ctx
+        lights_label:setPosition(5, 20, 0, 0)
+        root:addChild(lights_label)
+        render_numlights = function()
+            local label = text(ctx, "en", "ltr", "latin", georgia, 14, string.format("Lights: %d", _G.num_lights))
+            lights_label:label(label, {1,1,1,1}, "left middle")
+        end
     end
 
     local tick = function(reg, name)
@@ -73,14 +76,16 @@ return function(ctx, root)
         local old = vector3.wrap(cam.positionable.position)
         v = v * quaternion.wrap(cam.positionable.rotation) 
         modules.bouncinglights.set_walk_direction(v.ptr)
-        render_pos(vector3(cam.positionable.position))
-        local avg = ctx:averageFrametime()
-        if avg == 0 then
-            render_fps(0)
-        else
-            render_fps(1/avg)
+        if root then
+            render_pos(vector3(cam.positionable.position))
+            local avg = ctx:averageFrametime()
+            if avg == 0 then
+                render_fps(0)
+            else
+                render_fps(1/avg)
+            end
+            render_numlights()
         end
-        render_numlights()
         cam.projection_matrix = matrix.perspective(75, ctx.width/ctx.height, 2, 2000).ptr
     end
 
