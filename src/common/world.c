@@ -36,7 +36,7 @@ il_positionable * il_world_iterate(il_world* self,
     if (*iter == NULL)
         *iter = calloc(1, sizeof(il_worldIterator));
 
-    if ((*iter)->n > self->objects.length)
+    if ((*iter)->n >= self->objects.length)
         return NULL;
 
     return self->objects.data[(*iter)->n++];
