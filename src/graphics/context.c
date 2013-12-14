@@ -83,6 +83,7 @@ void ilG_context_hint(ilG_context *self, enum ilG_context_hint hint, int param)
         HINT(ILG_CONTEXT_WIDTH, startWidth)
         HINT(ILG_CONTEXT_HEIGHT, startHeight)
         HINT(ILG_CONTEXT_HDR, hdr)
+        HINT(ILG_CONTEXT_USE_DEFAULT_FB, use_default_fb)
         default:
         il_error("Invalid hint");
     }
@@ -149,6 +150,10 @@ int ilG_context_build(ilG_context *self)
     ilG_testError("glGetIntegerv");
     self->texunits = calloc(sizeof(unsigned), num_texunits);
     self->num_texunits = num_texunits;
+    if (self->use_default_fb) {
+        self->complete = 1;
+        return 1;
+    }
     glGenFramebuffers(1, &self->framebuffer);
     glGenTextures(5, &self->fbtextures[0]);
     ilG_testError("Unable to generate framebuffer");
@@ -174,6 +179,10 @@ int ilG_context_resize(ilG_context *self, int w, int h, const char *title)
         free(self->title);
     }
     self->title = strdup(title);
+    if (self->use_default_fb) {
+        self->valid = 1;
+        return 1;
+    }
     glBindFramebuffer(GL_FRAMEBUFFER, self->framebuffer);
     glBindTexture(GL_TEXTURE_RECTANGLE, self->fbtextures[ILG_CONTEXT_DEPTH]);
     glTexImage2D(GL_TEXTURE_RECTANGLE, 0, GL_DEPTH_COMPONENT, w, h, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
@@ -259,14 +268,18 @@ void render_stages(const ilE_registry* registry, const char *name, size_t size, 
     }
     glViewport(0, 0, width, height);
     il_debug("Begin render");
-    static const GLenum drawbufs[] = {
-        GL_COLOR_ATTACHMENT0,   // accumulation
-        GL_COLOR_ATTACHMENT1,   // normal
-        GL_COLOR_ATTACHMENT2,   // diffuse
-        GL_COLOR_ATTACHMENT3    // specular
-    };
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, context->framebuffer);
-    glDrawBuffers(4, &drawbufs[0]);
+    if (context->use_default_fb) {
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    } else {
+        static const GLenum drawbufs[] = {
+            GL_COLOR_ATTACHMENT0,   // accumulation
+            GL_COLOR_ATTACHMENT1,   // normal
+            GL_COLOR_ATTACHMENT2,   // diffuse
+            GL_COLOR_ATTACHMENT3    // specular
+        };
+        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, context->framebuffer);
+        glDrawBuffers(4, &drawbufs[0]);
+    }
     glClearColor(0.39, 0.58, 0.93, 1.0); // cornflower blue
     ilG_testError("glClearColor");
     glClearDepth(1.0);
@@ -275,6 +288,9 @@ void render_stages(const ilE_registry* registry, const char *name, size_t size, 
     for (i = 0; i < context->stages.length; i++) {
         il_debug("Rendering stage %s", context->stages.data[i]->name);
         context->stages.data[i]->run(context->stages.data[i]);
+    }
+    if (context->use_default_fb) {
+        glfwSwapBuffers(context->window);
     }
     gettimeofday(&time, NULL);
     last = IL_LIST_TAIL(context->frames_head, ll);

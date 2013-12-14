@@ -37,7 +37,8 @@ enum ilG_context_hint {
     ILG_CONTEXT_EXPERIMENTAL,
     ILG_CONTEXT_WIDTH,
     ILG_CONTEXT_HEIGHT,
-    ILG_CONTEXT_HDR
+    ILG_CONTEXT_HDR,
+    ILG_CONTEXT_USE_DEFAULT_FB,
 };
 
 struct ilG_frame {
@@ -45,7 +46,7 @@ struct ilG_frame {
     IL_LIST(struct ilG_frame) ll;
 };
 
-typedef struct ilG_context {
+typedef struct ilG_context { // **remember to update context.lua**
     il_base base;
     /* Creation parameters */
     int complete;
@@ -58,6 +59,7 @@ typedef struct ilG_context {
     int startWidth;
     int startHeight;
     int hdr;
+    int use_default_fb;
     char *initialTitle;
     /* Context management */
     int valid;
