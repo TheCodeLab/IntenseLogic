@@ -33,12 +33,13 @@ enum ilG_context_hint {
     ILG_CONTEXT_MINOR,
     ILG_CONTEXT_FORWARD_COMPAT,
     ILG_CONTEXT_PROFILE,
-    ILG_CONTEXT_DEBUG,
+    ILG_CONTEXT_DEBUG_CONTEXT,
     ILG_CONTEXT_EXPERIMENTAL,
     ILG_CONTEXT_WIDTH,
     ILG_CONTEXT_HEIGHT,
     ILG_CONTEXT_HDR,
     ILG_CONTEXT_USE_DEFAULT_FB,
+    ILG_CONTEXT_DEBUG_RENDER,
 };
 
 struct ilG_frame {
@@ -54,12 +55,13 @@ typedef struct ilG_context { // **remember to update context.lua**
     int contextMinor;
     int forwardCompat;
     enum ilG_context_profile profile;
-    int debugContext;
+    int debug_context;
     int experimental;
     int startWidth;
     int startHeight;
     int hdr;
     int use_default_fb;
+    int debug_render;
     char *initialTitle;
     /* Context management */
     int valid;

@@ -75,12 +75,13 @@ void ilG_context_hint(ilG_context *self, enum ilG_context_hint hint, int param)
         HINT(ILG_CONTEXT_MINOR, contextMinor)
         HINT(ILG_CONTEXT_FORWARD_COMPAT, forwardCompat)
         HINT(ILG_CONTEXT_PROFILE, profile)
-        HINT(ILG_CONTEXT_DEBUG, debugContext)
+        HINT(ILG_CONTEXT_DEBUG_CONTEXT, debug_context)
         HINT(ILG_CONTEXT_EXPERIMENTAL, experimental)
         HINT(ILG_CONTEXT_WIDTH, startWidth)
         HINT(ILG_CONTEXT_HEIGHT, startHeight)
         HINT(ILG_CONTEXT_HDR, hdr)
         HINT(ILG_CONTEXT_USE_DEFAULT_FB, use_default_fb)
+        HINT(ILG_CONTEXT_DEBUG_RENDER, debug_render)
         default:
         il_error("Invalid hint");
     }
@@ -109,7 +110,7 @@ int ilG_context_build(ilG_context *self)
         il_error("Invalid profile");
         return 0;
     }
-    glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, self->debugContext? GL_TRUE : GL_FALSE);
+    glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, self->debug_context? GL_TRUE : GL_FALSE);
     if (!(self->window = glfwCreateWindow(self->startWidth, self->startHeight, self->initialTitle, NULL, NULL))) { // TODO: allow context sharing + monitor specification
         il_error("glfwOpenWindow() failed - are you sure you have OpenGL 3.1?");
         return 0;
@@ -134,7 +135,7 @@ int ilG_context_build(ilG_context *self)
 #endif
 
     IL_GRAPHICS_TESTERROR("Unknown");
-    if (self->debugContext && GLEW_ARB_debug_output) {
+    if (GLEW_ARB_debug_output) {
         glDebugMessageCallbackARB((GLDEBUGPROCARB)&error_cb, NULL);
         glEnable(GL_DEBUG_OUTPUT);
         il_log("ARB_debug_output present, enabling advanced errors");
@@ -277,7 +278,7 @@ void render_stages(const ilE_registry* registry, const char *name, size_t size, 
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, context->framebuffer);
         glDrawBuffers(4, &drawbufs[0]);
     }
-    if (context->debugContext) {
+    if (context->debug_render) {
         glClearColor(0.39, 0.58, 0.93, 1.0); // cornflower blue
     } else {
         glClearColor(0, 0, 0, 1.0);

@@ -48,7 +48,7 @@ c, w, root, pipe = helper.context { name="Bouncing Lights Demo",
                                     transparency=true,
                                     gui=true,
                                     output=true,
-                                    hints = {hdr=1} }
+                                    hints = {hdr=1,debug_context=1} }
 local pipe2 = {pipe[1], pipe[2], pipe[3], pipe[4], modules.bouncinglights.init_stage(c), pipe[5], pipe[6]}
 --c:addStage(pipe2[5], 5)
 modules.bouncinglights.set_world(w)

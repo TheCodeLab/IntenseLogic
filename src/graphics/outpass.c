@@ -58,7 +58,7 @@ static void out_pass(ilG_stage *ptr)
     ilG_material* material = context->material = self->material;
     // prepare the GL state for outputting to the default framebuffer
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    if (context->debugContext) {
+    if (context->debug_render) {
         glClearColor(0.196, 0.804, 0.196, 1.0); // lime green
     } else {
         glClearColor(0, 0, 0, 1.0);
