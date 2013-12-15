@@ -119,6 +119,7 @@ event.register(event.registry, "input.button", function(reg, name, key, scancode
     if key == 'B' and isDown then
         print("Toggling debug rendering")
         debugRender = not debugRender
+        c:hint("debug_render", debugRender and 1 or 0)
         c:clearStages()
         local p = debugRender and pipe2 or pipe
         local t = {}
