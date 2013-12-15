@@ -7,14 +7,14 @@
 
 #include <iostream>
 #include <utility>
-#include <thread>
-#include <chrono>
+
+#include "debugdraw.hpp"
 
 using namespace std;
+using namespace il::bouncinglights;
 
 extern "C" {
 #include <GL/glew.h>
-#include <GLFW/glfw3.h>
 #include "asset/image.h"
 #include "common/positionable.h"
 #include "common/world.h"
@@ -37,6 +37,7 @@ static btPairCachingGhostObject *ghostObject;
 static btSphereShape *playerShape;
 static btVector3 playerWalk;
 static ilG_stage debugstage;
+static DebugDraw *debugdraw;
 
 #ifdef WIN32
 #define ex extern "C" __declspec(dllexport)
@@ -47,22 +48,14 @@ static ilG_stage debugstage;
 ex void debug_draw(ilG_stage *self)
 {
     (void)self;
-    glMatrixMode(GL_PROJECTION);
-    il_mat m = ilG_computeMVP(ILG_PROJECTION, camera, NULL);
-    glLoadMatrixf(m);
-    il_mat_free(m);
-
-    glMatrixMode(GL_MODELVIEW);
-    m = ilG_computeMVP(ILG_VIEW, camera, NULL);
-    glLoadMatrixf(m);
-    il_mat_free(m);
-
-    dynamicsWorld->debugDrawWorld();
-    std::this_thread::sleep_for(std::chrono::milliseconds(16));
+    debugdraw->render();
 }
 
 ex ilG_stage *init_stage(ilG_context *context)
 {
+    debugdraw = new DebugDraw(context);
+    dynamicsWorld->setDebugDrawer(debugdraw);
+
     debugstage.context = context;
     debugstage.run = debug_draw;
     debugstage.name = "Bullet Debug Draw";
@@ -113,12 +106,14 @@ ex void add_heightmap(ilA_img *hm, float w, float h, float height)
 {
     unsigned char *mem = new unsigned char[hm->width * hm->height];
     memcpy(mem, hm->data, hm->width*hm->height);
-    btCollisionShape *heightmap_shape = new btHeightfieldTerrainShape(hm->width+1, hm->height+1, mem, height/255.f, 0, height, 1, PHY_UCHAR, false);
+    btCollisionShape *heightmap_shape = new btHeightfieldTerrainShape(hm->width, hm->height, mem, height/255.f, 0, height, 1, PHY_UCHAR, false);
     heightmap_shape->setLocalScaling(btVector3(w/hm->width, 1, h/hm->height));
     btTransform trans = btTransform(btQuaternion(0,0,0,1), btVector3(w/2, height/2, h/2));
     btVector3 min, max, scaling;
     heightmap_shape->getAabb(trans, min, max);
+    //printf("min(%f %f %f) max(%f %f %f)\n", min.x(), min.y(), min.z(), max.x(), max.y(), max.z());
     scaling = heightmap_shape->getLocalScaling();
+    //printf("scale(%f %f %f)\n", scaling.x(), scaling.y(), scaling.z());
     btDefaultMotionState *heightmap_state = new btDefaultMotionState(trans);
     btRigidBody::btRigidBodyConstructionInfo groundRigidBodyCI(0, heightmap_state, heightmap_shape, btVector3(0,0,0));
     btRigidBody* groundRigidBody = new btRigidBody(groundRigidBodyCI);
@@ -141,7 +136,7 @@ ex void add_ball(il_positionable *pos)
     il_base_set(pos, "rigidbody", ballRigidBody, sizeof(btRigidBody), IL_VOID);
 }
 
-ex void update()
+ex void update(int debug)
 {
     player->setWalkDirection(playerWalk);
     dynamicsWorld->stepSimulation(1/20.f, 10, 1/60.f);
@@ -169,6 +164,10 @@ ex void update()
     camera->positionable.position[0] = vec.x();
     camera->positionable.position[1] = vec.y();
     camera->positionable.position[2] = vec.z();
+    debugdraw->clear();
+    if (debug) {
+        dynamicsWorld->debugDrawWorld();
+    }
 }
 
 ex int il_bootstrap(int argc, char **argv)
