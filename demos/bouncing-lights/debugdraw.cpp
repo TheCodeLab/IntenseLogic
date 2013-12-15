@@ -22,7 +22,7 @@ extern "C" {
 
 DebugDraw::DebugDraw(ilG_context *ctx) : context(ctx)
 {
-    debugMode = DBG_DrawAabb | DBG_DrawWireframe;
+    debugMode = DBG_DrawAabb;
     mat = (ilG_material*)ilG_material_new();
     ilG_material_name(mat, "Bullet Line Renderer");
     ilG_material_arrayAttrib(mat, ILG_ARRATTR_POSITION, "in_Position");
@@ -38,11 +38,15 @@ DebugDraw::DebugDraw(ilG_context *ctx) : context(ctx)
     glVertexAttribPointer(ILG_ARRATTR_AMBIENT, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)offsetof(Vertex, col));
     glEnableVertexAttribArray(ILG_ARRATTR_POSITION);
     glEnableVertexAttribArray(ILG_ARRATTR_AMBIENT);
+    glBufferData(GL_ARRAY_BUFFER, 0, NULL, GL_DYNAMIC_DRAW);
+    count = 0;
 }
 
 void DebugDraw::render()
 {
-    //printf("render: %zu\n", lines.size()/2);
+    //printf("render: %u\n", count/2);
+    glDisable(GL_BLEND);
+    glDisable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);
     ilG_bindable_unbind(context->drawableb, context->drawable);
     context->drawable = NULL;
@@ -50,8 +54,16 @@ void DebugDraw::render()
     ilG_bindable_swap(&context->materialb, (void**)&context->material, mat);
     glBindVertexArray(vao);
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glDrawArrays(GL_LINES, 0, count);
+}
+
+void DebugDraw::upload()
+{
+    //printf("upload %zu lines\n", lines.size()/2);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
     glBufferData(GL_ARRAY_BUFFER, lines.size() * sizeof(Vertex), lines.data(), GL_DYNAMIC_DRAW);
-    glDrawArrays(GL_LINES, 0, lines.size());
+    count = lines.size();
+    lines.clear();
 }
 
 void DebugDraw::compile()
@@ -61,11 +73,6 @@ void DebugDraw::compile()
     if (ilG_material_link(mat, context)) {
 
     }
-}
-
-void DebugDraw::clear()
-{
-    lines.clear();
 }
 
 void DebugDraw::drawLine(const btVector3 &from, const btVector3 &to, const btVector3 &color)

@@ -164,9 +164,9 @@ ex void update(int debug)
     camera->positionable.position[0] = vec.x();
     camera->positionable.position[1] = vec.y();
     camera->positionable.position[2] = vec.z();
-    debugdraw->clear();
     if (debug) {
         dynamicsWorld->debugDrawWorld();
+        debugdraw->upload();
     }
 }
 

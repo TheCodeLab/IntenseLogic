@@ -25,12 +25,13 @@ class DebugDraw : public btIDebugDraw {
     std::vector<Vertex> lines;
     GLuint vbo, vao;
     int debugMode;
+    unsigned count;
     ilG_context *context;
 public:
     DebugDraw(ilG_context *ctx);
     void render();
     void compile();
-    void clear();
+    void upload();
     void drawLine(const btVector3 &from, const btVector3 &to, const btVector3 &color);
     void drawLine(const btVector3 &from, const btVector3 &to, const btVector3 &fromColor, const btVector3 &toColor);
     void reportErrorWarning(const char *str);
