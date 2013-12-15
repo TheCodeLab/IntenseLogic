@@ -62,6 +62,50 @@ return function(ctx, root)
             local label = text(ctx, "en", "ltr", "latin", georgia, 14, string.format("Lights: %d", _G.num_lights))
             lights_label:label(label, {1,1,1,1}, "left middle")
         end
+
+        do 
+            local controls_box = frame()
+            controls_box.context = ctx
+            controls_box:setPosition(-205, 5, 1, 0)
+            controls_box:setSize(200, 0, 0, 1)
+            root:addChild(controls_box)
+            local q_label = frame()
+            q_label.context = ctx
+            q_label:setPosition(0, 0, 0, 0)
+            controls_box:addChild(q_label)
+            local label = text(ctx, "en", "ltr", "latin", georgia, 14, "Press '?' for controls.")
+            q_label:label(label, {1,1,1,1}, "left middle")
+            do
+                local hint_box = frame()
+                hint_box.context = ctx
+                hint_box:setPosition(0, 20, 0, 0)
+                hint_box:setSize(0, -20, 1, 1)
+                local msgs = {
+                    "1: Reload shaders",
+                    "Space: Add 100 lights",
+                    "B: Toggle debug rendering"
+                }
+                for i, v in ipairs(msgs) do
+                    local f = frame()
+                    f.context = ctx
+                    f:setPosition(-200, i * 20 - 20, 1, 0)
+                    hint_box:addChild(f)
+                    local label = text(ctx, "en", "ltr", "latin", georgia, 14, v)
+                    f:label(label, {1,1,1,1}, "left middle")
+                end
+                local isShown = false
+                event.register(event.registry, "input.button", function(reg, name, key, scancode, device, isDown, mods)
+                    if isDown and key == '/' then
+                        isShown = not isShown
+                        if isShown then
+                            controls_box:addChild(hint_box)
+                        else
+                            hint_box:pop()
+                        end
+                    end
+                end)
+            end
+        end
     end
 
     local tick = function(reg, name)

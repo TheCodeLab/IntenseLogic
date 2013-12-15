@@ -111,3 +111,16 @@ void ilG_gui_addChild(ilG_gui_frame *parent, ilG_gui_frame *child)
     child->parent = parent;
 }
 
+void ilG_gui_pop(ilG_gui_frame *node)
+{
+    ilG_gui_frame *parent = node->parent;
+    unsigned i;
+    for (i = 0; i < parent->children.length; i++) {
+        if (parent->children.data[i] == node) {
+            parent->children.data[i] = parent->children.data[--parent->children.length];
+            break;
+        }
+    }
+    node->parent = NULL;
+}
+

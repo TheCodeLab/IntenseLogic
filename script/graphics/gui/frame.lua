@@ -44,6 +44,7 @@ enum ilG_gui_inputaction ilG_gui_click(ilG_gui_frame *top, int x, int y, int but
 void ilG_gui_hover(ilG_gui_frame *top, int x, int y);
 void ilG_gui_draw(ilG_gui_frame *top);
 void ilG_gui_addChild(ilG_gui_frame *parent, ilG_gui_frame *child);
+void ilG_gui_pop(ilG_gui_frame *node);
 
 ]]
 
@@ -93,8 +94,16 @@ base.wrap "il.graphics.gui.frame" {
         self.rect.b.yp = self.rect.a.yp + hp
     end;
     addChild = modules.graphics.ilG_gui_addChild;
+    pop = modules.graphics.ilG_gui_pop;
     abs = modules.graphics.ilG_gui_frame_abs;
     contains = modules.graphics.ilG_gui_frame_contains;
+    getChildren = function(self)
+        local t = {}
+        for i = 0, self.children.length-1 do
+            t[#t+1] = self.children.data[i]
+        end
+        return t
+    end
 }
 
 return modules.graphics.ilG_gui_frame_type;

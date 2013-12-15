@@ -42,6 +42,7 @@ enum ilG_gui_inputaction ilG_gui_click(ilG_gui_frame *top, int x, int y, int but
 void ilG_gui_hover(ilG_gui_frame *top, int x, int y);
 void ilG_gui_draw(ilG_gui_frame *top);
 void ilG_gui_addChild(ilG_gui_frame *parent, ilG_gui_frame *child);
+void ilG_gui_pop(ilG_gui_frame *node);
 
 #endif
 
