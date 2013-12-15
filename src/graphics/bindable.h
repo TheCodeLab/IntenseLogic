@@ -16,7 +16,7 @@ void ilG_bindable_bind(const ilG_bindable *self, void *obj);
 void ilG_bindable_action(const ilG_bindable *self, void *obj);
 void ilG_bindable_unbind(const ilG_bindable *self, void *obj);
 
-void ilG_bindable_swap(const ilG_bindable **self, void **ptr, void *new);
+void ilG_bindable_swap(const ilG_bindable **self, void **ptr, void *to);
 
 #endif
 
