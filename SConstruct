@@ -12,7 +12,7 @@ inputs    = "*.c script/*.c"
 platform  = ARGUMENTS.get("platform", "linux")
 
 # flags
-ccflags   = "-Wall -Wextra -pedantic -g -O0 -DDEBUG"
+ccflags   = "-Wall -Wextra -pedantic -g -O0"
 cflags    = "-std=c99 -D_POSIX_C_SOURCE=200809"
 cxxflags  = "-std=c++11"
 linkflags = "-g -L. -Lbuild"

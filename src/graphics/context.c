@@ -29,9 +29,6 @@ void context_cons(void *obj)
     self->contextMinor = 1;
 #endif
     self->profile = ILG_CONTEXT_NONE;
-#ifdef DEBUG
-    self->debugContext = 1;
-#endif
     self->experimental = 1;
     self->startWidth = 800;
     self->startHeight = 600;
@@ -280,7 +277,11 @@ void render_stages(const ilE_registry* registry, const char *name, size_t size, 
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, context->framebuffer);
         glDrawBuffers(4, &drawbufs[0]);
     }
-    glClearColor(0.39, 0.58, 0.93, 1.0); // cornflower blue
+    if (context->debugContext) {
+        glClearColor(0.39, 0.58, 0.93, 1.0); // cornflower blue
+    } else {
+        glClearColor(0, 0, 0, 1.0);
+    }
     ilG_testError("glClearColor");
     glClearDepth(1.0);
     ilG_testError("glClearDepth");
