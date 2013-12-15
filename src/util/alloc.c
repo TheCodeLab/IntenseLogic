@@ -65,7 +65,7 @@ il_allocator* il_allocator_new(const il_allocator *allocator, il_alloc_fn alloc,
 }
 
 #ifndef _ISOC11_SOURCE
-void *aligned_alloc(size_t align, size_t size)
+static void *aligned_malloc(size_t align, size_t size)
 {
     char *ptr = malloc(size + align);
     char *aligned = (char*)((size_t)(ptr + align) & (~(align-1)));
@@ -78,6 +78,11 @@ static void aligned_free(void *ptr)
     free((char*)ptr - ((char*)ptr)[-1]);
 }
 #else
+static void *aligned_malloc(size_t align, size_t size)
+{
+    return aligned_alloc(align, size);
+}
+
 static void aligned_free(void* ptr)
 {
     free(ptr);
@@ -86,7 +91,7 @@ static void aligned_free(void* ptr)
 
 static void *alloc_aligned(void *user, size_t size)
 {
-    void *ptr = aligned_alloc(*(int*)user, size);
+    void *ptr = aligned_malloc(*(int*)user, size);
     memset(ptr, 0, size);
     return ptr;
 }

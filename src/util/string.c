@@ -106,7 +106,7 @@ int il_string_resize(il_string *self, size_t size)
         return 1;
     }
     char *buf = calloc(1, size);
-    memcpy(buf, self->data, size);
+    memcpy(buf, self->data, self->length);
     free(self->data);
     self->data = self->start = buf;
     self->capacity = size;

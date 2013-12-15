@@ -12,7 +12,7 @@
 /** If e evaluates to false, then print an error containing the expression, and return NULL */
 #define il_return_null_on_fail(e) il_return_val_on_fail(e, NULL)
 /** If e evaluates to false, then pritn an error containing the expression, and return v */
-#define il_return_val_on_fail(e, v) if (!e) {il_error("assertion " #e " failed"); return v;}
+#define il_return_val_on_fail(e, v) if (!(e)) {il_error("assertion " #e " failed"); return v;}
 
 #endif
 
