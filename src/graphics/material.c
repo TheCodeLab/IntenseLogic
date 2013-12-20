@@ -300,7 +300,7 @@ il_type ilG_material_type = {
     .parent = NULL
 };
 
-static ilG_bindable material_bindable = {
+struct ilG_bindable ilG_material_bindable = {
     .name = "il.graphics.bindable",
     //.hh = {0},
     .bind = mtl_bind,
@@ -312,7 +312,7 @@ ilG_material ilG_material_default;
 
 void ilG_material_init()
 {
-    il_impl(&ilG_material_type, &material_bindable);
+    il_impl(&ilG_material_type, &ilG_material_bindable);
 
     // TODO: decide what to do with default material; as materials require a context value when being linked, and there may be multiple contexts
     /*memset(&ilG_material_default, 0, sizeof(ilG_material));

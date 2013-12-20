@@ -29,6 +29,7 @@ typedef void (*ilG_material_onPosFunc)(ilG_material *self, il_positionable *pos,
 
 extern il_type ilG_material_type;
 extern ilG_material ilG_material_default;
+extern ilG_bindable ilG_material_bindable;
 
 #define ilG_material_new() il_new(&ilG_material_type)
 void ilG_material_vertex(ilG_material*, il_string *source);
