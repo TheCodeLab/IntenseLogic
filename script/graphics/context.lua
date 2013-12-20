@@ -85,6 +85,11 @@ typedef struct ilG_context {
     struct timeval frames_sum, frames_average;
     size_t num_frames;
     char *title;
+    struct {
+        struct ilG_context_resizecb *data;
+        size_t length;
+        size_t capacity;
+    } resize_callbacks;
     /* Drawing */
     struct ilG_drawable3d* drawable;
     struct ilG_material* material;

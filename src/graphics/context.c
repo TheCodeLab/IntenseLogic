@@ -220,6 +220,18 @@ int ilG_context_resize(ilG_context *self, int w, int h, const char *title)
         il_error("Unable to create framebuffer for context: %s", status_str);
         return 0;
     }
+    unsigned i;
+    for (i = 0; i < self->resize_callbacks.length; i++) {
+        int res = self->resize_callbacks.data[i].func(
+            self->resize_callbacks.data[i].self, 
+            self, w, h, 
+            self->resize_callbacks.data[i].user
+        );
+        if (res) {
+            il_error("Resize callback %i <fbo %p> failed", i, self->resize_callbacks.data[i].self);
+            return 0;
+        }
+    }
     self->valid = 1;
     return 1;
 }
@@ -265,6 +277,11 @@ void ilG_context_bind_for_outpass(ilG_context *self)
     glBindFramebuffer(GL_READ_FRAMEBUFFER, self->framebuffer);
     //glDrawBuffers(1, &drawbufs[0]);
     glReadBuffer(GL_COLOR_ATTACHMENT0);
+}
+
+void ilG_context_addResizeCallback(ilG_context *self, struct ilG_context_resizecb cb)
+{
+    IL_APPEND(self->resize_callbacks, cb);
 }
 
 void render_stages(const ilE_registry* registry, const char *name, size_t size, const void *data, void * ctx)

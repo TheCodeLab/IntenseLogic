@@ -150,11 +150,11 @@ void ilG_fbo_swap(ilG_fbo *self, unsigned target1, unsigned target2)
     self->textures[target2] = tex;
 }
 
-int /*failure*/ ilG_fbo_build(ilG_fbo *self, ilG_context *ctx)
+static int build_textures(ilG_fbo *self, ilG_context *ctx)
 {
-    il_return_val_on_fail(ctx, 1);
-    il_log("Building framebuffer \"%s\"", self->name);
     unsigned i;
+
+    il_log("Building framebuffer \"%s\"", self->name);
     glBindFramebuffer(GL_FRAMEBUFFER, self->fbo);
     for (i = 0; i < self->num; i++) {
         struct target *t = self->targets + i;
@@ -180,7 +180,28 @@ int /*failure*/ ilG_fbo_build(ilG_fbo *self, ilG_context *ctx)
         il_error("Unable to create framebuffer for context: %s", status_str);
         return 1;
     }
-    self->complete = 1;
     return 0;
+}
+
+static int resize_cb(ilG_fbo *self, ilG_context *context, unsigned w, unsigned h, void *user )
+{
+    (void)user; (void)w; (void)h;
+    int res = build_textures(self, context);
+    self->complete = !res;
+    return res;
+}
+
+int /*failure*/ ilG_fbo_build(ilG_fbo *self, ilG_context *ctx)
+{
+    il_return_val_on_fail(ctx, 1);
+    struct ilG_context_resizecb cb = (struct ilG_context_resizecb) {
+        .func = resize_cb,
+        .user = NULL,
+        .self = self
+    };
+    ilG_context_addResizeCallback(ctx, cb);
+    int res = build_textures(self, ctx);
+    self->complete = !res;
+    return res;
 }
 
