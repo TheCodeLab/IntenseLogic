@@ -245,6 +245,28 @@ void ilG_context_clearStages(ilG_context *self)
     self->stages.length = 0;
 }
 
+void ilG_context_bindFB(ilG_context *self)
+{
+    static const GLenum drawbufs[] = {
+        GL_COLOR_ATTACHMENT0,   // accumulation
+        GL_COLOR_ATTACHMENT1,   // normal
+        GL_COLOR_ATTACHMENT2,   // diffuse
+        GL_COLOR_ATTACHMENT3    // specular
+    };
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, self->framebuffer);
+    glDrawBuffers(4, &drawbufs[0]);
+}
+
+void ilG_context_bind_for_outpass(ilG_context *self)
+{
+    static const GLenum drawbufs[] = {
+        GL_COLOR_ATTACHMENT0    // accumulation
+    };
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, self->framebuffer);
+    //glDrawBuffers(1, &drawbufs[0]);
+    glReadBuffer(GL_COLOR_ATTACHMENT0);
+}
+
 void render_stages(const ilE_registry* registry, const char *name, size_t size, const void *data, void * ctx)
 {
     (void)registry, (void)name, (void)size, (void)data;
@@ -269,14 +291,7 @@ void render_stages(const ilE_registry* registry, const char *name, size_t size, 
     if (context->use_default_fb) {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     } else {
-        static const GLenum drawbufs[] = {
-            GL_COLOR_ATTACHMENT0,   // accumulation
-            GL_COLOR_ATTACHMENT1,   // normal
-            GL_COLOR_ATTACHMENT2,   // diffuse
-            GL_COLOR_ATTACHMENT3    // specular
-        };
-        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, context->framebuffer);
-        glDrawBuffers(4, &drawbufs[0]);
+        ilG_context_bindFB(context);
     }
     if (context->debug_render) {
         glClearColor(0.39, 0.58, 0.93, 1.0); // cornflower blue

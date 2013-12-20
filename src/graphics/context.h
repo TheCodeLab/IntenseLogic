@@ -97,6 +97,8 @@ void ilG_context_makeCurrent(ilG_context *self);
 int /*success*/ ilG_context_setActive(ilG_context*);
 void ilG_context_addStage(ilG_context* self, struct ilG_stage* stage, int num);
 void ilG_context_clearStages(ilG_context *self);
+void ilG_context_bindFB(ilG_context *self);
+void ilG_context_bind_for_outpass(ilG_context *self);
 
 #endif
 
