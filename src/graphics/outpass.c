@@ -9,11 +9,16 @@
 #include "graphics/glutil.h"
 #include "graphics/arrayattrib.h"
 #include "graphics/textureunit.h"
+#include "graphics/framebuffer.h"
+#include "graphics/fragdata.h"
 
 struct outpass {
     ilG_stage stage;
     ilG_material *material;
+    ilG_material *horizblur, *vertblur;
+    ilG_fbo *front, *result;
     GLuint vao, vbo;
+    unsigned w, h;
     int which;
 };
 
@@ -41,8 +46,8 @@ static void fullscreenTexture(struct outpass *self)
 static void size_uniform(ilG_material *self, GLint location, void *user)
 {
     (void)self;
-    ilG_context *context = user;
-    glUniform2f(location, context->width, context->height);
+    struct outpass *out = user;
+    glUniform2f(location, out->w, out->h);
 }
 
 static void out_pass(ilG_stage *ptr)
@@ -55,7 +60,7 @@ static void out_pass(ilG_stage *ptr)
         return;
     }
     ilG_testError("Unknown");
-    ilG_material* material = context->material = self->material;
+    ilG_bindable_unbind(context->materialb, context->material);
     // prepare the GL state for outputting to the default framebuffer
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     if (context->debug_render) {
@@ -66,41 +71,138 @@ static void out_pass(ilG_stage *ptr)
     glClear(GL_COLOR_BUFFER_BIT);
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
-    ilG_bindable_bind(il_cast(il_typeof(material), "il.graphics.bindable"), material);
-    // no action() as we don't deal with positionables here
-    // setup to do postprocessing
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_RECTANGLE, context->fbtextures[self->which]); // bind the framebuffer we want to display
     ilG_testError("Error setting up for post processing");
+
+    self->w = context->width;
+    self->h = context->height;
+    // no action() as we don't deal with positionables here
+    ilG_bindable_bind(&ilG_material_bindable, self->material);
     fullscreenTexture(self);
-    ilG_testError("Error post processing");
-    ilG_bindable_unbind(il_cast(il_typeof(material), "il.graphics.bindable"), material);
-    context->material = NULL;
-    ilG_testError("Error cleaning up shaders");
+    ilG_bindable_unbind(&ilG_material_bindable, self->material);
+
+    if (context->hdr) {
+        unsigned i;
+        int swapped = 0;
+        for (i = 0; i < 4; i++) {
+            unsigned w = context->width / (1<<i),
+                     h = context->height / (1<<i);
+            self->w = w; self->h = h;
+            
+            // Into the front buffer,
+            ilG_fbo_bind(self->front, ILG_FBO_WRITE);
+            // from the context,
+            ilG_context_bind_for_outpass(context);
+            // downscale.
+            glBlitFramebuffer(0,0, context->width,context->height,
+                              0,0, w,h,
+                              GL_COLOR_BUFFER_BIT,
+                              GL_LINEAR);
+
+            // From the front buffer,
+            glBindTexture(GL_TEXTURE_RECTANGLE, ilG_fbo_getTex(self->front, 0));
+            // into the result buffer,
+            ilG_fbo_bind(self->result, ILG_FBO_RW);
+            glViewport(0,0, w,h);
+            // do a horizontal blur.
+            ilG_bindable_bind(&ilG_material_bindable, self->horizblur);
+            fullscreenTexture(self);
+            ilG_bindable_unbind(&ilG_material_bindable, self->horizblur);
+
+            // Into the screen,
+            glBindFramebuffer(GL_FRAMEBUFFER, 0);
+            glViewport(0, 0, context->width, context->height);
+            // blend,
+            glEnable(GL_BLEND);
+            // additively,
+            glBlendFunc(GL_ONE, GL_ONE);
+            // from the result buffer,
+            glBindTexture(GL_TEXTURE_RECTANGLE, ilG_fbo_getTex(self->result, 0));
+            // do a vertical blur.
+            ilG_bindable_bind(&ilG_material_bindable, self->vertblur);
+            fullscreenTexture(self);
+            ilG_bindable_unbind(&ilG_material_bindable, self->vertblur);
+            glDisable(GL_BLEND);
+
+            swapped = !swapped;
+        }
+        ilG_context_bindFB(context);
+    }
+
     glfwSwapBuffers(context->window);
+    ilG_testError("outpass");
 }
 
 struct ilG_stage *ilG_outpass(struct ilG_context *context)
 {
     struct outpass *self = il_new(&ilG_outpass_type);
+    ilG_material *m;
     
     self->stage.context = context;
     self->stage.run = out_pass;
     self->stage.name = "Screen Output";
+
+    if (context->hdr) {
+        ilG_fbo *f = self->front = ilG_fbo_new();
+        ilG_fbo_numTargets(f, 1);
+        ilG_fbo_name(f, ilG_fbo_self, "Blur Front Buffer");
+        ilG_fbo_size_rel(f, 0, 1.0, 1.0);
+        ilG_fbo_texture(f, 0, GL_TEXTURE_RECTANGLE, GL_RGB, GL_COLOR_ATTACHMENT0);
+        if (ilG_fbo_build(f, context)) {
+            return NULL;
+        }
+
+        f = self->result = ilG_fbo_new();
+        ilG_fbo_numTargets(f, 1);
+        ilG_fbo_name(f, ilG_fbo_self, "Horizontal Result Buffer");
+        ilG_fbo_size_rel(f, 0, 1.0, 1.0);
+        ilG_fbo_texture(f, 0, GL_TEXTURE_RECTANGLE, GL_RGB, GL_COLOR_ATTACHMENT0);
+        if (ilG_fbo_build(f, context)) {
+            return NULL;
+        }
+
+        m = ilG_material_new();
+        ilG_material_vertex_file(m, "post.vert");
+        ilG_material_name(m, "Horizontal Blur Shader");
+        ilG_material_arrayAttrib(m, ILG_ARRATTR_POSITION, "in_Position");
+        ilG_material_arrayAttrib(m, ILG_ARRATTR_TEXCOORD, "in_Texcoord");
+        ilG_material_fragData(m, 0, "out_Color");
+        ilG_material_bindFunc(m, size_uniform, self, "size");
+        ilG_material_textureUnit(m, ILG_TUNIT_NONE, "tex");
+        ilG_material_fragment_file(m, "horizblur.frag");
+        if (ilG_material_link(m, context)) {
+            return NULL;
+        }
+        self->horizblur = m;
+
+        m = ilG_material_new();
+        ilG_material_vertex_file(m, "post.vert");
+        ilG_material_name(m, "Vertical Blur Shader");
+        ilG_material_arrayAttrib(m, ILG_ARRATTR_POSITION, "in_Position");
+        ilG_material_arrayAttrib(m, ILG_ARRATTR_TEXCOORD, "in_Texcoord");
+        ilG_material_fragData(m, 0, "out_Color");
+        ilG_material_bindFunc(m, size_uniform, self, "size");
+        ilG_material_textureUnit(m, ILG_TUNIT_NONE, "tex");
+        ilG_material_fragment_file(m, "vertblur.frag");
+        if (ilG_material_link(m, context)) {
+            return NULL;
+        }
+        self->vertblur = m;
+    }
     
-    ilG_material *material = ilG_material_new();
-    ilG_material_vertex_file(material, "post.vert");
-    ilG_material_name(material, "Post Processing Shader");
-    ilG_material_arrayAttrib(material, ILG_ARRATTR_POSITION, "in_Position");
-    ilG_material_arrayAttrib(material, ILG_ARRATTR_TEXCOORD, "in_Texcoord");
-    ilG_material_bindFunc(material, size_uniform, context, "size");
-    ilG_material_textureUnit(material, ILG_TUNIT_NONE, "tex");
-    ilG_material_fragment_file(material, context->hdr? "hdr.frag" : "post.frag");
-    if (ilG_material_link(material, context)) {
+    m = ilG_material_new();
+    ilG_material_vertex_file(m, "post.vert");
+    ilG_material_name(m, "Tone Mapping Shader");
+    ilG_material_arrayAttrib(m, ILG_ARRATTR_POSITION, "in_Position");
+    ilG_material_arrayAttrib(m, ILG_ARRATTR_TEXCOORD, "in_Texcoord");
+    ilG_material_bindFunc(m, size_uniform, self, "size");
+    ilG_material_textureUnit(m, ILG_TUNIT_NONE, "tex");
+    ilG_material_fragment_file(m, context->hdr? "hdr.frag" : "post.frag");
+    if (ilG_material_link(m, context)) {
         return NULL;
     }
-    ilG_testError("Error creating material");
-    self->material = material;
+    self->material = m;
 
     static const float data[] = {
         0, 0,
