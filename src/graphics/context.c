@@ -405,7 +405,10 @@ static APIENTRY GLvoid error_cb(GLenum source, GLenum type, GLuint id, GLenum se
         case GL_DEBUG_SEVERITY_LOW_ARB:     sseverity="LOW";    break;
         default: sseverity="???";
     }
-    il_log("OpenGL %s %s (%s): %s\n", ssource, stype,
-            sseverity, message);
+    char msg[length];
+    strncpy(msg, message, length);
+    msg[length-1] = 0; // cut off newline
+    il_log("OpenGL %s %s (%s): %s", ssource, stype,
+            sseverity, msg);
 }
 
