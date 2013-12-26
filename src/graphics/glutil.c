@@ -56,7 +56,7 @@ void ilG_testError_(const char *file, int line, const char *func,
         char msg[len+1];
         vsnprintf(msg, len+1, fmt, ap);
         va_end(ap);
-        il_log_real(file, line, func, 2, "%s: %s (%i)", msg, ilG_strerror(err), err);
+        il_log_real(il_prettifyFile(file), line, func, 2, "%s: %s (%i)", msg, ilG_strerror(err), err);
     }
 }
 

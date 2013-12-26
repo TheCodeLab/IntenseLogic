@@ -14,12 +14,17 @@ extern const char *il_log_prefixes[5];
 #define il_prettifyFile(name) \
   (strstr(name, "src/")?strstr(name, "src/")+4:name)
 
+#define il_log_raw(msg) \
+    fprintf(stderr, "%s\n", msg);
+
 /** The underlying macro for logging */
 #define il_log_real(file, line, func, lvl, ...) \
     if (il_can_log(file, lvl)) { \
-        char buf[4096]; \
-        snprintf(buf, 4096, __VA_ARGS__); \
-        fprintf(stderr, "(%s:%i %s): %s%s\n", file, line, func, il_log_prefixes[lvl], buf);\
+        char _buf[4096]; \
+        snprintf(_buf, 4096, __VA_ARGS__); \
+        char _msg[4096]; \
+        snprintf(_msg, 4096, "(%s:%i %s) %s%s", file, line, func, il_log_prefixes[lvl], _buf);\
+        il_log_raw(_msg); \
     }
 
 /** For information that would only be useful to a programmer */

@@ -17,8 +17,8 @@ static int print(lua_State* L)
     res = lua_getinfo(L, "nSl", &ar);
     if (!res) return -1;
 
-    fprintf(stderr, "(%s:%i %s): %s\n", ar.short_src, ar.currentline, ar.name, 
-            lua_tostring(L, -1));
+    fprintf(stderr, "(%s:%i%s%s) %s\n", ar.short_src, ar.currentline, 
+            ar.name? " " : "", ar.name? ar.name : "", lua_tostring(L, -1));
 
     return 0;
 }

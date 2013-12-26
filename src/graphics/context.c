@@ -380,35 +380,36 @@ static APIENTRY GLvoid error_cb(GLenum source, GLenum type, GLuint id, GLenum se
     (void)id, (void)severity, (void)length, (void)user;
     const char *ssource;
     switch(source) {
-        case GL_DEBUG_SOURCE_API_ARB:               ssource="API";              break;
-        case GL_DEBUG_SOURCE_WINDOW_SYSTEM_ARB:     ssource="Window System";    break;
-        case GL_DEBUG_SOURCE_SHADER_COMPILER_ARB:   ssource="Shader Compiler";  break;
-        case GL_DEBUG_SOURCE_THIRD_PARTY_ARB:       ssource="Third Party";      break;
-        case GL_DEBUG_SOURCE_APPLICATION_ARB:       ssource="Application";      break;
-        case GL_DEBUG_SOURCE_OTHER_ARB:             ssource="Other";            break;
+        case GL_DEBUG_SOURCE_API_ARB:               ssource=" API";              break;
+        case GL_DEBUG_SOURCE_WINDOW_SYSTEM_ARB:     ssource=" Window System";    break;
+        case GL_DEBUG_SOURCE_SHADER_COMPILER_ARB:   ssource=" Shader Compiler";  break;
+        case GL_DEBUG_SOURCE_THIRD_PARTY_ARB:       ssource=" Third Party";      break;
+        case GL_DEBUG_SOURCE_APPLICATION_ARB:       ssource=" Application";      break;
+        case GL_DEBUG_SOURCE_OTHER_ARB:             ssource="";            break;
         default: ssource="???";
     }
     const char *stype;
     switch(type) {
-        case GL_DEBUG_TYPE_ERROR_ARB:               stype="Error";                  break;
-        case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR_ARB: stype="Deprecated Behaviour";   break;
-        case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR_ARB:  stype="Undefined Behaviour";    break;
-        case GL_DEBUG_TYPE_PORTABILITY_ARB:         stype="Portability";            break;
-        case GL_DEBUG_TYPE_PERFORMANCE_ARB:         stype="Performance";            break;
-        case GL_DEBUG_TYPE_OTHER_ARB:               stype="Other";                  break;
+        case GL_DEBUG_TYPE_ERROR_ARB:               stype=" error";                 break;
+        case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR_ARB: stype=" deprecated behaviour";  break;
+        case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR_ARB:  stype=" undefined behaviour";   break;
+        case GL_DEBUG_TYPE_PORTABILITY_ARB:         stype=" portability issue";     break;
+        case GL_DEBUG_TYPE_PERFORMANCE_ARB:         stype=" performance issue";     break;
+        case GL_DEBUG_TYPE_OTHER_ARB:               stype="";                       break;
         default: stype="???";
     }
     const char *sseverity;
     switch(severity) {
-        case GL_DEBUG_SEVERITY_HIGH_ARB:    sseverity="HIGH";   break;
-        case GL_DEBUG_SEVERITY_MEDIUM_ARB:  sseverity="MEDIUM"; break;
-        case GL_DEBUG_SEVERITY_LOW_ARB:     sseverity="LOW";    break;
+        case GL_DEBUG_SEVERITY_HIGH_ARB:    sseverity="high";   break;
+        case GL_DEBUG_SEVERITY_MEDIUM_ARB:  sseverity="medium"; break;
+        case GL_DEBUG_SEVERITY_LOW_ARB:     sseverity="low";    break;
         default: sseverity="???";
     }
     char msg[length];
     strncpy(msg, message, length);
     msg[length-1] = 0; // cut off newline
-    il_log("OpenGL %s %s (%s): %s", ssource, stype,
-            sseverity, msg);
+    char buf[4096];
+    sprintf(buf, "(OpenGL%s) %s%s: %s", ssource, sseverity, stype, msg);
+    il_log_raw(buf);
 }
 
