@@ -271,9 +271,9 @@ void ilG_context_bindFB(ilG_context *self)
 
 void ilG_context_bind_for_outpass(ilG_context *self)
 {
-    static const GLenum drawbufs[] = {
+    /*static const GLenum drawbufs[] = {
         GL_COLOR_ATTACHMENT0    // accumulation
-    };
+    };*/
     glBindFramebuffer(GL_READ_FRAMEBUFFER, self->framebuffer);
     //glDrawBuffers(1, &drawbufs[0]);
     glReadBuffer(GL_COLOR_ATTACHMENT0);
@@ -304,6 +304,14 @@ void render_stages(const ilE_registry* registry, const char *name, size_t size, 
         ilG_context_resize(context, width, height, context->title);
     }
     glViewport(0, 0, width, height);
+    context->material       = NULL;
+    context->materialb      = NULL;
+    context->drawable       = NULL;
+    context->drawableb      = NULL;
+    context->texture        = NULL;
+    context->textureb       = NULL;
+    context->positionable   = NULL;
+
     il_debug("Begin render");
     if (context->use_default_fb) {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
