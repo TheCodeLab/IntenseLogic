@@ -130,6 +130,9 @@ static void out_pass(ilG_stage *ptr)
         ilG_context_bindFB(context);
     }
 
+    context->material = NULL;
+    context->materialb = NULL;
+
     glfwSwapBuffers(context->window);
     ilG_testError("outpass");
 }
