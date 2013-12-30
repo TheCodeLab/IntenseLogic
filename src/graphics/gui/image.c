@@ -10,6 +10,7 @@
 #include "graphics/gui/quad.h"
 #include "graphics/texture.h"
 #include "util/assert.h"
+#include "graphics/glutil.h"
 
 struct image_ctx {
     ilG_texture *tex;
@@ -24,6 +25,7 @@ static void image_draw(ilG_gui_frame *self, ilG_gui_rect where)
 {
     struct image_ctx *ctx = il_base_get(self, "il.graphics.gui.image.ctx", NULL, NULL);
     ilG_material *shader = il_base_get(self->context, "il.graphics.gui.image.shader", NULL, NULL);
+    ilG_testError("Unknown");
     if (!shader) {
         shader = ilG_material_new();
         ilG_material_vertex_file(shader, "gui_image.vert");
@@ -62,6 +64,7 @@ static void image_draw(ilG_gui_frame *self, ilG_gui_rect where)
     ilG_bindable_action(self->context->textureb,  self->context->texture);
     ilG_bindable_action(self->context->drawableb, self->context->drawable);
     glDisable(GL_BLEND);
+    ilG_testError("image_draw");
 }
 
 void ilG_gui_frame_image(ilG_gui_frame *self, ilG_texture *tex, int premultiplied)

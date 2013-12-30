@@ -247,6 +247,12 @@ int /*failure*/ ilG_material_link(ilG_material* self, ilG_context *ctx)
     self->vertshader = ilG_makeShader(GL_VERTEX_SHADER, self->config->vertsource);
     self->fragshader = ilG_makeShader(GL_FRAGMENT_SHADER, self->config->fragsource);
     self->program = glCreateProgram();
+    /*if (GLEW_KHR_debug) {
+        glObjectLabel(GL_PROGRAM, self->program, strlen(self->name), self->name);
+        char buf[1024];
+        glGetObjectLabel(GL_PROGRAM, self->program, 1024, NULL, buf);
+        printf("Program %u labelled %s\n", self->program, buf);
+    }*/
     if (!glIsShader(self->vertshader) || !glIsShader(self->fragshader) || !glIsProgram(self->program)) {
         self->valid = 0;
         return 1;

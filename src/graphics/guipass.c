@@ -3,6 +3,7 @@
 #include "graphics/gui.h"
 #include "graphics/stage.h"
 #include "graphics/context.h"
+#include "graphics/glutil.h"
 
 struct guipass {
     ilG_stage stage;
@@ -12,6 +13,7 @@ struct guipass {
 void gui_run(ilG_stage *ptr)
 {
     struct guipass *self = (struct guipass*)ptr;
+    ilG_testError("Unknown");
     if (self->root) {
         glDisable(GL_CULL_FACE);
         glDisable(GL_DEPTH_TEST);
@@ -23,6 +25,7 @@ void gui_run(ilG_stage *ptr)
         };
         ilG_gui_draw(self->root);
     }
+    ilG_testError("gui_run");
 }
 
 struct ilG_stage *ilG_guipass(struct ilG_context *context)

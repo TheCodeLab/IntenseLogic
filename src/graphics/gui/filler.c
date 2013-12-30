@@ -10,6 +10,7 @@
 #include "graphics/material.h"
 #include "graphics/arrayattrib.h"
 #include "graphics/fragdata.h"
+#include "graphics/glutil.h"
 
 static ilG_material *get_shader(ilG_context *context)
 {
@@ -38,6 +39,7 @@ static ilG_material *get_shader(ilG_context *context)
 
 static void filler_draw(ilG_gui_frame *self, ilG_gui_rect where)
 {
+    ilG_testError("Unknown");
     ilG_drawable3d *quad = ilG_quad(self->context);
     ilG_material *shader = get_shader(self->context);
     float *col = il_base_get(&self->base, "il.graphics.gui.frame.fillcolor", NULL, NULL);
@@ -54,6 +56,7 @@ static void filler_draw(ilG_gui_frame *self, ilG_gui_rect where)
     float w = self->context->width, h = self->context->height;
     glUniform4f(*pos_loc, where.a.x/w, where.a.y/h, where.b.x/w, where.b.y/h);
     ilG_bindable_action(self->context->drawableb, self->context->drawable);
+    ilG_testError("filler_draw");
 }
 
 void ilG_gui_frame_filler(ilG_gui_frame *self, float col[4])
