@@ -135,13 +135,13 @@ int ilG_context_build(ilG_context *self)
 #endif
 
     IL_GRAPHICS_TESTERROR("Unknown");
-    if (GLEW_ARB_debug_output) {
-        glDebugMessageCallbackARB((GLDEBUGPROCARB)&error_cb, NULL);
+    if (GLEW_KHR_debug) {
+        glDebugMessageCallback((GLDEBUGPROC)&error_cb, NULL);
         glEnable(GL_DEBUG_OUTPUT);
-        il_log("ARB_debug_output present, enabling advanced errors");
-        IL_GRAPHICS_TESTERROR("glDebugMessageCallbackARB()");
+        il_log("KHR_debug present, enabling advanced errors");
+        IL_GRAPHICS_TESTERROR("glDebugMessageCallback()");
     } else {
-        il_log("ARB_debug_output missing");
+        il_log("KHR_debug missing");
     }
     GLint num_texunits;
     glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &num_texunits);
@@ -377,7 +377,7 @@ int ilG_context_setActive(ilG_context *self)
 static APIENTRY GLvoid error_cb(GLenum source, GLenum type, GLuint id, GLenum severity,
                        GLsizei length, const GLchar* message, GLvoid* user)
 {
-    (void)id, (void)severity, (void)length, (void)user;
+    (void)user;
     const char *ssource;
     switch(source) {
         case GL_DEBUG_SOURCE_API_ARB:               ssource=" API";              break;
@@ -405,11 +405,13 @@ static APIENTRY GLvoid error_cb(GLenum source, GLenum type, GLuint id, GLenum se
         case GL_DEBUG_SEVERITY_LOW_ARB:     sseverity="low";    break;
         default: sseverity="???";
     }
-    char msg[length];
-    strncpy(msg, message, length);
-    msg[length-1] = 0; // cut off newline
+    char msg[length+1];
+    strncpy(msg, message, length+1);
+    if (msg[length-1] == '\n') {
+        msg[length-1] = 0; // cut off newline
+    }
     char buf[4096];
-    sprintf(buf, "(OpenGL%s) %s%s: %s", ssource, sseverity, stype, msg);
+    sprintf(buf, "(OpenGL%s) %s%s #%u: %s", ssource, sseverity, stype, id, msg);
     il_log_raw(buf);
 }
 
