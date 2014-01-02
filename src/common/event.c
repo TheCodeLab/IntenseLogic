@@ -15,7 +15,7 @@
 
 char *strdup(const char*);
 
-static struct event_base *ilE_base;
+struct event_base *ilE_base;
 ilE_registry *il_registry;
 
 enum flags {
