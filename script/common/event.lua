@@ -101,7 +101,7 @@ function event.timer(registry, name, interval, ...)
     local tv = ffi.new("struct timeval")
     if type(interval) == "number" then -- floating point number in seconds
         tv.tv_sec = math.floor(interval)
-        tv.tv_usec = interval - math.floor(interval)
+        tv.tv_usec = (interval - math.floor(interval)) * 1000000
     elseif type(interval) == "table" then -- table of second/usecond
         tv.tv_sec = interval[1] or interval.sec
         tv.tv_usec = interval[2] or interval.usec
