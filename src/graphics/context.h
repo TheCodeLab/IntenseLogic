@@ -103,6 +103,8 @@ typedef struct ilG_context { // **remember to update context.lua**
 
 extern il_type ilG_context_type;
 
+#define ilG_context_new() (ilG_context*)il_new(&ilG_context_type)
+
 void ilG_context_hint(ilG_context *self, enum ilG_context_hint hint, int param);
 int /*success*/ ilG_context_build(ilG_context *self);
 int /*success*/ ilG_context_resize(ilG_context *self, int w, int h, const char *title);
