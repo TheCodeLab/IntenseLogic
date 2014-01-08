@@ -179,13 +179,13 @@ il_mat ilG_computeMVP(enum ilG_transform filter, const ilG_camera* camera, const
         mvp = il_mat_mul(mvp, mat, mvp);
         il_mat_free(mat);
     }
-    if (filter & ILG_MODEL_S) {
-        il_mat mat = il_mat_scale(object->size, NULL);
+    if (filter & ILG_MODEL_R) {
+        il_mat mat = il_mat_rotate(object->rotation, NULL);
         mvp = il_mat_mul(mvp, mat, mvp);
         il_mat_free(mat);
     }
-    if (filter & ILG_MODEL_R) {
-        il_mat mat = il_mat_rotate(object->rotation, NULL);
+    if (filter & ILG_MODEL_S) {
+        il_mat mat = il_mat_scale(object->size, NULL);
         mvp = il_mat_mul(mvp, mat, mvp);
         il_mat_free(mat);
     }
