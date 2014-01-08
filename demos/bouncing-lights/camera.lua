@@ -30,7 +30,7 @@ return function(ctx, root)
         pitch = pitch - y * cam.sensitivity
         yaw = yaw % (math.pi*2)
         pitch = math.max(-math.pi/2, math.min(math.pi/2, pitch))
-        cam.positionable.rotation = (quaternion(0, 1, 0, -yaw) * quaternion(1, 0, 0, pitch) * quaternion(0, 0, 1, math.pi)).ptr
+        cam.positionable.rotation = (quaternion(vector3(0, 1, 0), -yaw) * quaternion(vector3(1, 0, 0), pitch) * quaternion(vector3(0, 0, 1), math.pi)).ptr
     end
 
     local render_pos, render_numlights, render_fps

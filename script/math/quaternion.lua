@@ -109,16 +109,25 @@ end
 function quaternion.create(...)
     vector3 = vector3 or require "math.vector3"
     local args = {...};
-    if #args == 3 then -- YPR
+    if #args == 1 then
+        if ffi.istype("il_quat", args[1]) then
+            return quaternion.wrap(args[1])
+        elseif quaternion.check(args[1]) then
+            return quaternion.wrap(modules.math.il_quat_copy(args[1].ptr))
+        else
+            assert(false)
+        end
+    elseif #args == 3 then -- YPR
         assert(type(args[1]) == "number" and type(args[2]) == "number" and type(args[3]) == "number")
         return quaternion.wrap(modules.math.il_quat_fromYPR(args[1], args[2], args[3], nil))
     elseif #args == 2 then -- axis angle with vec3
         assert(vector3.check(args[1]))
         assert(type(args[2]) == "number")
         return quaternion.wrap(modules.math.il_quat_fromAxisAngle(args[1].x, args[1].y, args[1].z, args[2], nil))
-    elseif #args == 4 then -- axis angle from numbers
+    elseif #args == 4 then -- raw quaternion
         assert(type(args[1]) == "number" and type(args[2]) == "number" and type(args[3]) == "number" and type(args[4]) == "number")
-        return quaternion.wrap(modules.math.il_quat_fromAxisAngle(args[1], args[2], args[3], args[4], nil))
+        --return quaternion.wrap(modules.math.il_quat_fromAxisAngle(args[1], args[2], args[3], args[4], nil))
+        return quaternion.wrap(modules.math.il_quat_set(nil, args[1], args[2], args[3], args[4]))
     end
     error "Don't know how to handle args"
 end
