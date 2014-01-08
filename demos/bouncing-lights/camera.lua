@@ -14,7 +14,7 @@ return function(ctx, root)
     ctx.camera = cam
     cam.projection_matrix = matrix.perspective(75, 4/3, .5, 512).ptr
     cam.positionable.position = vector3(64, 32, 64).ptr
-    cam.positionable.rotation = quaternion(0, 0, 1, math.pi).ptr
+    cam.positionable.rotation = quaternion(vector3(0, 0, 1), math.pi).ptr
     cam.sensitivity = .01
     cam.movespeed = vector3(1/3,1/3,1/3).ptr
     modules.bouncinglights.set_camera(cam)
