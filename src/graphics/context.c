@@ -1,5 +1,7 @@
 #include "context.h"
 
+#include <string.h>
+
 #include "util/log.h"
 #include "util/assert.h"
 #include "util/timer.h"
@@ -173,13 +175,15 @@ int ilG_context_resize(ilG_context *self, int w, int h, const char *title)
 
     self->width = w;
     self->height = h;
-    if (self->title) {
-        free(self->title);
-    }
-    self->title = strdup(title);
-    if (self->use_default_fb) {
-        self->valid = 1;
-        return 1;
+    if (title != self->title && title) {
+        if (self->title) {
+            free(self->title);
+        }
+        self->title = strdup(title);
+        if (self->use_default_fb) {
+            self->valid = 1;
+            return 1;
+        }
     }
     glBindFramebuffer(GL_FRAMEBUFFER, self->framebuffer);
     glBindTexture(GL_TEXTURE_RECTANGLE, self->fbtextures[ILG_CONTEXT_DEPTH]);

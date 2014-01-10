@@ -12,10 +12,10 @@ inputs    = "*.c script/*.c"
 platform  = ARGUMENTS.get("platform", "linux")
 
 # flags
-ccflags   = "-Wall -Wextra -pedantic -g -O0"
+ccflags   = "-Wall -Wextra -pedantic -g -O0 -fsanitize=address"
 cflags    = "-std=c99 -D_POSIX_C_SOURCE=200809"
 cxxflags  = "-std=c++11"
-linkflags = "-g -L. -Lbuild"
+linkflags = "-g -L. -Lbuild -fsanitize=address"
 if platform == "mingw":
     cflags += " -DWIN32 -I/usr/x86_64-w64-mingw32/include/luajit-2.1 " # TODO: Fix this
     linkflags += " -Wl,--export-all-symbols"
@@ -94,7 +94,7 @@ env.Append(LIBS = libs[platform])
 for lib in pkg_libs[platform] :
     env.ParseConfig("pkg-config " + lib + " --cflags --libs")
 
-lf=""
+lf=linkflags
 if platform=="osx":
     lf = "-pagezero_size 10000 -image_base 100000000"
 
