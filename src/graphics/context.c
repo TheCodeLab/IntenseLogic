@@ -339,7 +339,6 @@ void render_stages(const ilE_registry* registry, const char *name, size_t size, 
         glfwSwapBuffers(context->window);
     }
     gettimeofday(&time, NULL);
-    last = IL_LIST_TAIL(context->frames_head, ll);
     IL_LIST_ITER(context->frames_head, ll, iter, temp) {
         timersub(&time, &iter->start, &tv);
         if (tv.tv_sec > 0) {
@@ -349,6 +348,7 @@ void render_stages(const ilE_registry* registry, const char *name, size_t size, 
             free(frame);
         }
     }
+    last = IL_LIST_TAIL(context->frames_head, ll);
     frame = calloc(1, sizeof(struct ilG_frame));
     frame->start = time;
     if (last) {
