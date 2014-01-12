@@ -27,7 +27,7 @@ extern const char *il_log_prefixes[5];
         il_log_raw(_msg); \
     }
 
-/** For information that would only be useful to a programmer */
+/** For information that would only be useful to someone debugging the module itself */
 #define il_debug(...)      il_log_real(il_prettifyFile(__FILE__), __LINE__, __func__, 4, __VA_ARGS__)
 /** Informative messages */
 #define il_log(...)        il_log_real(il_prettifyFile(__FILE__), __LINE__, __func__, 3, __VA_ARGS__)

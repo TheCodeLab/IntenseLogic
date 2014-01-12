@@ -3,9 +3,9 @@
 
 #include "common/event.h"
 
-/** Key mapping table */
+/** Key mapping table.
+ * Most of these were lifted off of GFLW so they wouldn't have to be arbitrarily assigned and remapped. */
 enum ilI_key {
-    // most of these were lifted off of GFLW so they wouldn't have to be arbitrarily assigned and remapped
     ILI_KEY_WORLD_1         = 161, /* non-US #1 */
     ILI_KEY_WORLD_2         = 162, /* non-US #2 */
     ILI_KEY_ESCAPE          = 256,
@@ -131,19 +131,27 @@ typedef struct ilI_backend {
 } ilI_backend;
 
 typedef struct ilI_handler {
+    /** Event handler for when a mouse, keyboard, or joystick button is pushed. */
     ilE_handler *button;
+    /** Event for when a character is generated. Use for text input. */
     ilE_handler *character;
+    /** Event for when the mouse moves. */
     ilE_handler *mousemove;
+    /** Event for when the mouse enters the window. */
     ilE_handler *mouseenter;
+    /** Event for when the mousewheel is scrolled. */
     ilE_handler *mousescroll;
 } ilI_handler;
 
-/** Registers a new input backend, the memory must last until application exit */
+/** Registers a new input backend, the memory must last until application exit 
+ * @return The ID of the backend */
 int ilI_register(ilI_backend *backend);
 /** Returns the name of the specified backend, allocated with strdup(3), the user must free it */
 char *ilI_backend_getName(int input);
+/** Initialize an ilI_handler, creating all of the event handlers and forwarding them to #ilI_globalHandler */
 void ilI_handler_init(ilI_handler *self);
 
+/** Accumulates all of the input events */
 extern ilI_handler ilI_globalHandler;
 
 #endif
