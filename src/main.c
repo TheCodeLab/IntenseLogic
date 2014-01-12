@@ -44,6 +44,7 @@ int main(int argc, char **argv)
     size_t i;
     ilS_script *s = ilS_new();
     void (*loop)();
+    void (*quit)();
 
     opterr = 0; // we don't want to print an error if another package uses an option
     while ((opt = getopt_long(argc, argv, optstring, longopts, &idx)) != -1) {
@@ -143,6 +144,8 @@ int main(int argc, char **argv)
         return 1;
     }
     loop();
+    quit = (void(*)())il_get_symbol("ilcommon", "ilE_quit");
+    quit();
 
     return 0;
 }

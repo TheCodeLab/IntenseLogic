@@ -253,7 +253,6 @@ il_type ilG_texture_type = {
     .destructor = NULL,
     .copy = NULL,
     .name = "il.graphics.texture",
-    .registry = NULL,
     .size = sizeof(ilG_texture),
     .parent = NULL
 };

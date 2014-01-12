@@ -52,7 +52,8 @@ static void mousebutton(GLFWwindow *window, int button, int action, int mods)
     ev.device = 0;
     ev.action = action;
     ev.mods = mods;
-    ilE_objectevent(glfwGetWindowUserPointer(window), "input.button", sizeof(ilI_buttonevent), &ev);
+    ilG_context *ctx = glfwGetWindowUserPointer(window);
+    ilE_handler_fire(ctx->input_handler.button, sizeof(ilI_buttonevent), &ev);
 }
 
 static void cursorpos(GLFWwindow *window, double x, double y)
@@ -66,18 +67,21 @@ static void cursorpos(GLFWwindow *window, double x, double y)
     int arr[4] = {x,y, x-old[0], y-old[1]};
     old[0] = x;
     old[1] = y;
-    ilE_objectevent(glfwGetWindowUserPointer(window), "input.mousemove", sizeof(int) * 4, &arr);
+    ilG_context *context = glfwGetWindowUserPointer(window);
+    ilE_handler_fire(context->input_handler.mousemove, sizeof(int) * 4, &arr);
 }
 
 static void cursorenter(GLFWwindow *window, int entered)
 {
-    ilE_objectevent(glfwGetWindowUserPointer(window), "input.mouseenter", sizeof(int), &entered);
+    ilG_context *ctx = glfwGetWindowUserPointer(window);
+    ilE_handler_fire(ctx->input_handler.mouseenter, sizeof(int), &entered);
 }
  
 static void scroll(GLFWwindow *window, double x, double y)
 {
     float arr[2] = {x,y};
-    ilE_objectevent(glfwGetWindowUserPointer(window), "input.mousescroll", sizeof(int) * 2, &arr);
+    ilG_context *ctx = glfwGetWindowUserPointer(window);
+    ilE_handler_fire(ctx->input_handler.mousescroll, sizeof(int) * 2, &arr);
 }
  
 static void keyfun(GLFWwindow *window, int key, int scancode, int action, int mods)
@@ -88,17 +92,20 @@ static void keyfun(GLFWwindow *window, int key, int scancode, int action, int mo
     ev.device = 0;
     ev.action = action;
     ev.mods = mods;
-    ilE_objectevent(glfwGetWindowUserPointer(window), "input.button", sizeof(ilI_buttonevent), &ev);
+    ilG_context *ctx = glfwGetWindowUserPointer(window);
+    ilE_handler_fire(ctx->input_handler.button, sizeof(ilI_buttonevent), &ev);
 }
  
 static void charfun(GLFWwindow *window, unsigned int character)
 {
-    ilE_objectevent(glfwGetWindowUserPointer(window), "input.character", sizeof(unsigned int), &character);
+    ilG_context *ctx = glfwGetWindowUserPointer(window);
+    ilE_handler_fire(ctx->input_handler.character, sizeof(unsigned int), &character);
 }
 
 static void closewindow(GLFWwindow *window)
 {
-    ilE_objectevent(glfwGetWindowUserPointer(window), "graphics.close", 0, NULL);
+    ilG_context *ctx = glfwGetWindowUserPointer(window);
+    ilE_handler_fire(ctx->close, sizeof(ilG_context), ctx);
 }
 
 void ilG_registerInputBackend(ilG_context *ctx)
@@ -108,12 +115,12 @@ void ilG_registerInputBackend(ilG_context *ctx)
     backend->get = win_getkey;
     backend->user = ctx;
     ilI_register(backend);
-    glfwSetKeyCallback(         ctx->window, keyfun);
-    glfwSetCharCallback(        ctx->window, charfun);
-    glfwSetMouseButtonCallback( ctx->window, mousebutton);
-    glfwSetCursorPosCallback(   ctx->window, cursorpos);
-    glfwSetCursorEnterCallback( ctx->window, cursorenter);
-    glfwSetScrollCallback(      ctx->window, scroll);
-    glfwSetWindowCloseCallback( ctx->window, closewindow);
+    glfwSetKeyCallback          (ctx->window, keyfun);
+    glfwSetCharCallback         (ctx->window, charfun);
+    glfwSetMouseButtonCallback  (ctx->window, mousebutton);
+    glfwSetCursorPosCallback    (ctx->window, cursorpos);
+    glfwSetCursorEnterCallback  (ctx->window, cursorenter);
+    glfwSetScrollCallback       (ctx->window, scroll);
+    glfwSetWindowCloseCallback  (ctx->window, closewindow);
 }
 

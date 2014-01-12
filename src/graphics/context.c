@@ -9,20 +9,15 @@
 #include "common/event.h"
 #include "graphics/stage.h"
 #include "graphics/graphics.h"
+#include "input/input.h"
 
 static GLvoid error_cb(GLenum source, GLenum type, GLuint id, GLenum severity,
                        GLsizei length, const GLchar* message, GLvoid* user);
 void ilG_registerInputBackend(ilG_context *ctx);
 
-void context_cons(void *obj)
+static void context_cons(void *obj)
 {
     ilG_context *self = obj;
-    if (!ilG_context_type.registry) {
-        ilG_context_type.registry = ilE_registry_new();
-        ilE_registry_forward(ilG_context_type.registry, il_registry);
-    }
-    self->base.registry = ilE_registry_new();
-    ilE_registry_forward(self->base.registry, ilG_context_type.registry);
     self->contextMajor = 3;
 #ifdef __APPLE__
     self->contextMinor = 2;
@@ -35,6 +30,9 @@ void context_cons(void *obj)
     self->startWidth = 800;
     self->startHeight = 600;
     self->initialTitle = "IntenseLogic";
+    self->resize    = ilE_handler_new_with_name("il.graphics.context.resize");
+    self->close     = ilE_handler_new_with_name("il.graphics.context.close");
+    ilI_handler_init(&self->input_handler);
 }
 
 static void context_des(void *obj)
@@ -65,7 +63,6 @@ il_type ilG_context_type = {
     .copy = NULL,
     .name = "il.graphics.context",
     .size = sizeof(ilG_context),
-    .registry = NULL,
     .parent = NULL
 };
 
@@ -122,6 +119,17 @@ int ilG_context_build(ilG_context *self)
     ilG_context_makeCurrent(self);
     glfwSwapInterval(0);
     glewExperimental = self->experimental? GL_TRUE : GL_FALSE; // TODO: find out why IL crashes without this
+    struct timeval tv;
+    tv.tv_sec = 0;
+    GLFWmonitor *mon = glfwGetWindowMonitor(self->window); // NULL if windowed mode
+    if (mon) {
+        const GLFWvidmode* mode = glfwGetVideoMode(mon);
+        tv.tv_usec = 1000000 / mode->refreshRate;
+    } else {
+        tv.tv_usec = 1000000 / 250; // TODO: Unlimited framerates, proper vsync
+    }
+    self->tick = ilE_handler_timer(&tv);
+    ilE_handler_name(self->tick, "il.graphics.context.tick");
     GLenum err = glewInit();
     if (GLEW_OK != err) {
         il_fatal("glewInit() failed: %s", glewGetErrorString(err));
@@ -224,18 +232,7 @@ int ilG_context_resize(ilG_context *self, int w, int h, const char *title)
         il_error("Unable to create framebuffer for context: %s", status_str);
         return 0;
     }
-    unsigned i;
-    for (i = 0; i < self->resize_callbacks.length; i++) {
-        int res = self->resize_callbacks.data[i].func(
-            self->resize_callbacks.data[i].self, 
-            self, w, h, 
-            self->resize_callbacks.data[i].user
-        );
-        if (res) {
-            il_error("Resize callback %i <fbo %p> failed", i, self->resize_callbacks.data[i].self);
-            return 0;
-        }
-    }
+    ilE_handler_fire(self->resize, sizeof(ilG_context), self);
     self->valid = 1;
     return 1;
 }
@@ -283,19 +280,16 @@ void ilG_context_bind_for_outpass(ilG_context *self)
     glReadBuffer(GL_COLOR_ATTACHMENT0);
 }
 
-void ilG_context_addResizeCallback(ilG_context *self, struct ilG_context_resizecb cb)
+void render_stages(const ilE_handler* registry, size_t size, const void *data, void * ctx)
 {
-    IL_APPEND(self->resize_callbacks, cb);
-}
-
-void render_stages(const ilE_registry* registry, const char *name, size_t size, const void *data, void * ctx)
-{
-    (void)registry, (void)name, (void)size, (void)data;
+    (void)registry, (void)size, (void)data;
     ilG_context *context = ctx;
     size_t i;
     int width, height;
     struct timeval time, tv;
     struct ilG_frame *iter, *temp, *frame, *last;
+
+    glfwPollEvents();
 
     if (!context->complete || !context->valid) {
         il_error("Rendering invalid context");
@@ -382,7 +376,7 @@ int ilG_context_setActive(ilG_context *self)
         il_error("No world");
         return 0;
     }
-    ilE_register(ilG_registry, "tick", ILE_DONTCARE, ILE_MAIN, render_stages, self);
+    ilE_register(self->tick, ILE_BEFORE, ILE_MAIN, render_stages, self);
     return 1;
 }
 

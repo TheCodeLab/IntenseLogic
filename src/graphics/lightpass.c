@@ -26,7 +26,6 @@ il_type ilG_lightpass_type = {
     .destructor = NULL,
     .copy = NULL,
     .name = "il.graphics.lightpass",
-    .registry = NULL,
     .size = sizeof(struct lightpass),
     .parent = &ilG_stage_type
 };

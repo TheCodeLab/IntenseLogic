@@ -230,7 +230,6 @@ il_type ilG_shape_type = {
     .destructor = NULL,
     .copy = NULL,
     .name = "il.graphics.shape",
-    .registry = NULL,
     .size = sizeof(struct ilG_shape),
     .parent = &ilG_drawable3d_type
 };

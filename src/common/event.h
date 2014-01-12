@@ -14,7 +14,7 @@
 struct il_type;
 struct il_base;
 
-typedef struct ilE_registry ilE_registry;
+typedef struct ilE_handler ilE_handler;
 
 /** The behaviour when registering an event hook, on how important it is */
 enum ilE_behaviour {
@@ -38,39 +38,33 @@ enum ilE_fdevent {
     ILE_WRITE = 4,      /**< When the FD is ready to be written to, call the handlers */
 };
 
-typedef void(*ilE_callback)(const ilE_registry* registry, const char *name, size_t size, const void *data, void * ctx);
+typedef void(*ilE_callback)(const ilE_handler* registry, size_t size, const void *data, void * ctx);
 
-/** Creates a new registry */
-ilE_registry* ilE_registry_new();
+/** Creates a new handler */
+ilE_handler *ilE_handler_new();
+ilE_handler *ilE_handler_new_with_name(const char *name);
+ilE_handler *ilE_handler_timer(const struct timeval *tv);
+ilE_handler *ilE_handler_watch(int fd, enum ilE_fdevent what);
+void ilE_handler_destroy(ilE_handler *self);
 
-/** Sets a registry to forward all of the events it receives to another registry */
-void ilE_registry_forward(ilE_registry *from, ilE_registry *to);
+void ilE_handler_name(ilE_handler *self, const char *name);
 
-/** Fires an event for a registry */
-void ilE_globalevent(   ilE_registry* registry, const char *name, size_t size, const void *data);
-/** Fires an event to a type */
-void ilE_typeevent  (   struct il_type* type,   const char *name, size_t size, const void *data);
-/** Fires an event to an object */
-void ilE_objectevent(   struct il_base* base,   const char *name, size_t size, const void *data);
-
-/** Starts a timer on a registry */
-void ilE_globaltimer(   ilE_registry* registry, const char *name, size_t size, const void *data, struct timeval tv);
-/** Starts a timer on a type */
-void ilE_typetimer  (   struct il_type* type,   const char *name, size_t size, const void *data, struct timeval tv);
-/** Starts a timer on an object */
-void ilE_objecttimer(   struct il_base* base,   const char *name, size_t size, const void *data, struct timeval tv);
-
-/** Watches for the given fd events on the specified registry */
-void ilE_watchfd(ilE_registry* registry, const char *name, int fd, int what);
+/** Fires an event for a handler*/
+void ilE_handler_fire(ilE_handler *self, size_t size, const void *data);
+void ilE_handler_fireasync(ilE_handler *self, size_t size, const void *data);
 
 /** Registers a handler for a given event */
-int ilE_register(ilE_registry* registry, const char *name, enum ilE_behaviour behaviour, enum ilE_threading threads, ilE_callback callback, void * ctx);
+int ilE_register_real(ilE_handler* self, const char *name, enum ilE_behaviour behaviour, enum ilE_threading threads, ilE_callback callback, void * ctx);
+#define ilE_register(self, b, t, cb, ctx) ilE_register_real(self, __func__, b, t, cb, ctx)
+/** Unregisters a handler */
+void ilE_unregister(ilE_handler *self, int handle);
 
 /** Prints all of the currently registered handlers for the specified registry */
-void ilE_dumpHooks(ilE_registry *registry);
+void ilE_dump(ilE_handler *self);
 
-/** Registry for the common module */
-extern ilE_registry* il_registry;
+extern ilE_handler *ilE_shutdown;
+extern ilE_handler *ilE_shutdownCallbacks;
+extern ilE_handler *ilE_shutdownHandlers;
 
 #endif
 

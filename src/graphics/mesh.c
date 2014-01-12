@@ -42,7 +42,6 @@ il_type ilG_mesh_type = {
     .destructor = NULL,
     .copy = NULL,
     .name = "il.graphics.mesh",
-    .registry = NULL,
     .size = sizeof(struct ilG_mesh),
     .parent = &ilG_drawable3d_type
 };

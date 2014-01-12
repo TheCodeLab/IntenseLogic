@@ -10,6 +10,7 @@
 #include "util/list.h"
 #include "common/base.h"
 #include "graphics/bindable.h"
+#include "input/input.h"
 
 struct ilG_stage;
 
@@ -50,15 +51,6 @@ struct ilG_frame {
 struct ilG_fbo;
 struct ilG_context;
 
-struct ilG_context_resizecb {
-    int /* failure */ (*func)( struct ilG_fbo *self, 
-                               struct ilG_context *context, 
-                               unsigned w, unsigned h, 
-                               void *user );
-    void *user;
-    struct ilG_fbo *self;
-};
-
 typedef struct ilG_context { // **remember to update context.lua**
     il_base base;
     /* Creation parameters */
@@ -87,7 +79,10 @@ typedef struct ilG_context { // **remember to update context.lua**
     struct timeval frames_sum, frames_average;
     size_t num_frames;
     char *title;
-    IL_ARRAY(struct ilG_context_resizecb,) resize_callbacks;
+    ilE_handler *tick,          // NULL
+                *resize,        // ilG_context
+                *close;         // ilG_context
+    ilI_handler input_handler;
     /* Drawing */
     struct ilG_drawable3d* drawable;
     struct ilG_material* material;
@@ -114,7 +109,6 @@ void ilG_context_addStage(ilG_context* self, struct ilG_stage* stage, int num);
 void ilG_context_clearStages(ilG_context *self);
 void ilG_context_bindFB(ilG_context *self);
 void ilG_context_bind_for_outpass(ilG_context *self);
-void ilG_context_addResizeCallback(ilG_context *self, struct ilG_context_resizecb cb);
 
 #endif
 

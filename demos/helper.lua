@@ -101,7 +101,7 @@ function helper.camera(ctx, root)
     cam.movespeed = vector3(1,1,1).ptr
 
     local first_mouse = true
-    local mousemove = function(reg, name, xabs, yabs, x, y)
+    local mousemove = function(hnd, xabs, yabs, x, y)
         if first_mouse then first_mouse = false return end
         if not input.get "mouse left" then return end
         local yaw = quaternion(vector3(0, 1, 0), x * cam.sensitivity)
@@ -129,7 +129,7 @@ function helper.camera(ctx, root)
         fps_label:label(label, {1,1,1,1}, "left middle")
     end
 
-    local tick = function(reg, name)
+    local ontick = function(hnd)
         local get = function(k)
             local b, _ = input.get(k)
             return b and 1 or 0
@@ -157,9 +157,11 @@ function helper.camera(ctx, root)
         event.event(event.registry, "shutdown")
     end
 
-    event.register(event.registry, "tick", tick)
-    event.register(event.registry, "input.mousemove", mousemove)
-    event.register(event.registry, "graphics.close", close)
+    local tick = event(1/20, "helper.tick")
+    event.register(tick, ontick)
+    event.register(input.mousemove, mousemove)
+    event.setPacker(ctx.close, event.nilPacker) -- TODO: Move this somewhere else
+    event.register(ctx.close, close)
 end
 
 return helper

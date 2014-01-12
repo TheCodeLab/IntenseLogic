@@ -9,7 +9,6 @@ il_type ilG_stage_type = {
     .destructor = NULL,
     .copy = NULL,
     .name = "il.graphics.stage",
-    .registry = NULL,
     .size = sizeof(ilG_stage),
     .parent = NULL
 };

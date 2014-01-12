@@ -1,6 +1,8 @@
 #ifndef ILI_INPUT_H
 #define ILI_INPUT_H
 
+#include "common/event.h"
+
 /** Key mapping table */
 enum ilI_key {
     // most of these were lifted off of GFLW so they wouldn't have to be arbitrarily assigned and remapped
@@ -128,10 +130,21 @@ typedef struct ilI_backend {
     void *user;
 } ilI_backend;
 
+typedef struct ilI_handler {
+    ilE_handler *button;
+    ilE_handler *character;
+    ilE_handler *mousemove;
+    ilE_handler *mouseenter;
+    ilE_handler *mousescroll;
+} ilI_handler;
+
 /** Registers a new input backend, the memory must last until application exit */
 int ilI_register(ilI_backend *backend);
 /** Returns the name of the specified backend, allocated with strdup(3), the user must free it */
 char *ilI_backend_getName(int input);
+void ilI_handler_init(ilI_handler *self);
+
+extern ilI_handler ilI_globalHandler;
 
 #endif
 

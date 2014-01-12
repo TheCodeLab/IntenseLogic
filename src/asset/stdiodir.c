@@ -50,7 +50,6 @@ il_type il_stdiodir_type = {
     .destructor = stdiodir_des,
     .copy = NULL,
     .name = "il.asset.stdiodir",
-    .registry = NULL,
     .size = sizeof(struct stdiodir),
     .parent = NULL
 };

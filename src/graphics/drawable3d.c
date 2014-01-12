@@ -15,7 +15,6 @@ il_type ilG_drawable3d_type = {
     .destructor = NULL,
     .copy = NULL,
     .name = "il.graphics.drawable3d",
-    .registry = NULL,
     .size = sizeof(ilG_drawable3d),
     .parent = NULL
 };

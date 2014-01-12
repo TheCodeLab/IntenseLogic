@@ -33,7 +33,6 @@ il_type ilA_prefix_type = {
     .destructor = prefix_des,
     .copy = NULL,
     .name = "il.asset.prefix",
-    .registry = NULL,
     .size = sizeof(struct prefix),
     .parent = NULL
 };

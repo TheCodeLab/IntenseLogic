@@ -22,7 +22,6 @@ il_type ilG_light_type = {
     .destructor = NULL,
     .copy = NULL,
     .name = "il.graphics.light",
-    .registry = NULL,
     .size = sizeof(ilG_light),
     .parent = &il_positionable_type
 };

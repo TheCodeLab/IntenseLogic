@@ -47,7 +47,6 @@ static const char *help[] = {
 };
 #undef OPT*/
 
-ilE_registry *ilG_registry;
 il_base *ilG_shaders_dir;
 const ilA_dir *ilG_shaders_iface;
 
@@ -73,21 +72,9 @@ static void glfw_setup()
     ilG_registerJoystickBackend();
 }
 
-static void update(const ilE_registry* registry, const char *name, size_t size, const void *data, void * ctx)
-{
-    (void)registry, (void)name, (void)size, (void)data, (void)ctx;
-    glfwPollEvents();
-}
-
 static void event_setup()
 {
-    ilG_registry = ilE_registry_new();
-    ilE_register(ilG_registry, "tick", ILE_DONTCARE, ILE_MAIN, update, NULL);
-    ilE_register(il_registry, "shutdown", ILE_DONTCARE, ILE_MAIN, &quit, NULL);
-    struct timeval tv;
-    tv.tv_sec = 0;
-    tv.tv_usec = 1000000.0/60; // TODO: get some proper refresh rate code instead of hardcoding 60fps
-    ilE_globaltimer(ilG_registry, "tick", 0, NULL, tv); // kick off the draw loop
+    ilE_register(ilE_shutdown, ILE_DONTCARE, ILE_MAIN, &quit, NULL);
 }
 
 const char **il_dependencies(int argc, char **argv)
@@ -149,9 +136,9 @@ int il_bootstrap(int argc, char **argv)
     return 0;
 }
 
-static void quit(const ilE_registry* registry, const char *name, size_t size, const void *data, void * ctx)
+static void quit(const ilE_handler *handler, size_t size, const void *data, void * ctx)
 {
-    (void)registry, (void)name, (void)size, (void)data, (void)ctx;
+    (void)handler, (void)size, (void)data, (void)ctx;
     glfwTerminate();
 }
 

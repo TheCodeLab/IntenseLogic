@@ -58,7 +58,6 @@ struct il_type {
     il_base_free_fn destructor;     /** Called when il_unref() sees a zero-count object */
     il_base_copy_fn copy;           /** Called when il_copy() is invoked */
     const char *name;               /** The name of the type */
-    ilE_registry *registry;         /** Registry of event handlers */
     size_t size;                    /** Size of the structure this type object represents */
     il_type *parent;                /** Parent type */
 };
@@ -71,7 +70,6 @@ struct il_base {
     il_base *gc_next;               /** Unused */
     IL_ARRAY(il_base**,) weak_refs; /** Weak references, see il_weakref() */
     il_type *type;                  /** Type object for this instance */
-    ilE_registry *registry;         /** Registry of event handlers */
 };
 
 void *il_ref(void *obj);
@@ -100,10 +98,6 @@ void il_type_set(il_type* self, const char *key, void *data, size_t size, enum i
 void *il_base_get(void* self, const char *key, size_t *size, enum il_storagetype *tag);
 /** Wrapper for il_storage_set() */
 void il_base_set(void* self, const char *key, void *data, size_t size, enum il_storagetype tag);
-/** Returns the registry in the object, creating it if it doesn't exist */
-ilE_registry *il_base_registry(il_base *self);
-/** Returns the registry in the type, creating it if it doesn't exist */
-ilE_registry *il_type_registry(il_type *self);
 size_t il_sizeof(const il_type *self);
 /** Returns the type object for any il_base */
 il_type *il_typeof(void *obj);

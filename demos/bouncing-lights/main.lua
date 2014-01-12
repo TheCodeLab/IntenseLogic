@@ -15,6 +15,7 @@ local drawable      = require "graphics.drawable"
 local camera        = require "demos.bouncing-lights.camera"
 local drawnmesh     = require "graphics.mesh"
 local base          = require "common.base"
+local input         = require "input.input"
 
 ffi.cdef [[
 
@@ -84,7 +85,7 @@ _G.num_lights = 0
 local sphere = drawnmesh("demos/bouncing-lights/sphere.obj")
 --drawable.setattr(sphere, "istransparent", true)
 local debugRender = false --true
-event.register(event.registry, "input.button", function(reg, name, key, scancode, device, isDown, mods)
+event.register(input.button, function(hnd, key, scancode, device, isDown, mods)
     if key == '1' and isDown then
         glow:vertex(io.open("demos/bouncing-lights/glow.vert","r"):read "*a")
         glow:fragment(io.open("demos/bouncing-lights/glow.frag", "r"):read "*a")
@@ -130,9 +131,10 @@ event.register(event.registry, "input.button", function(reg, name, key, scancode
         print("Stages loaded: "..table.concat(t, " -> "))
     end
 end)
-event.register(event.registry, "tick", function() modules.bouncinglights.update(debugRender and 1 or 0) end)
+local tick = event(1/20, "bouncinglights.tick")
+event.register(tick, function() modules.bouncinglights.update(debugRender and 1 or 0) end)
 
-camera(c, root)
+camera(c, root, tick)
 
 c:setActive()
 

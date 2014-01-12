@@ -69,7 +69,6 @@ il_type ilG_gui_textlayout_type = {
     .destructor = text_des,
     .copy = NULL, 
     .name = "il.graphics.gui.textlayout",
-    .registry = NULL,
     .size = sizeof(ilG_gui_textlayout),
     .parent = NULL
 };

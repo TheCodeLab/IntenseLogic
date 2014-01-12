@@ -57,7 +57,6 @@ struct il_type {
     il_base_free_fn destructor;
     il_base_copy_fn copy;
     const char *name;
-    struct ilE_registry *registry;
     size_t size;
     il_type *parent;
 };
@@ -73,7 +72,6 @@ struct il_base {
         size_t capacity;
     } weak_refs;
     il_type *type;
-    struct ilE_registry *registry;
 };
 
 void *il_ref(void *obj);
@@ -86,8 +84,6 @@ void *il_type_get(il_type* self, const char *key, size_t *size, enum il_storaget
 void il_type_set(il_type* self, const char *key, void *data, size_t size, enum il_storagetype tag);
 void *il_base_get(il_base* self, const char *key, size_t *size, enum il_storagetype *tag);
 void il_base_set(il_base* self, const char *key, void *data, size_t size, enum il_storagetype tag);
-struct ilE_registry *il_base_registry(il_base *self);
-struct ilE_registry *il_type_registry(il_type *self);
 size_t il_sizeof(const il_type* self);
 il_type *il_typeof(void *obj);
 il_base *il_new(il_type *type);
@@ -335,40 +331,6 @@ function base.set(v, name, val, t, s)
         modules.common.il_type_set(v, name, ptr, size, t)
     else
         modules.common.il_base_set(ffi.cast("il_base*",v), name, ptr, size, t)
-    end
-end
-
---- Fires an event for the given base or type
--- @see event.event
-function base.event(self, name, ...)
-    event = event or require "common.event"
-    if ffi.istype("il_base", self) then
-        event.event(modules.common.ilE_base_registry(self), name, ...)
-    elseif ffi.istype("il_type", self) then
-        event.event(modules.common.ilE_type_registry(self), name, ...)
-    end
-end
-
---- Sets a timer for the given base or type
--- @see event.timer
-function base.timer(self, name, ...)
-    event = event or require "common.event"
-    if ffi.istype("il_base", self) then
-        event.timer(modules.common.ilE_base_registry(self), name, ...)
-    elseif ffi.istype("il_type", self) then
-        event.timer(modules.common.ilE_type_registry(self), name, ...)
-    end
-
-end
-
---- Registers a hook for the given base or type
--- @see event.register
-function base.register(self, name, fn)
-    event = event or require "common.event"
-    if ffi.istype("il_base", self) then
-        event.register(modules.common.ilE_base_registry(self), name, fn)
-    elseif ffi.istype("il_type", self) then
-        event.register(modules.common.ilE_type_registry(self), name, fn)
     end
 end
 

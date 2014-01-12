@@ -301,7 +301,6 @@ il_type ilG_material_type = {
     .destructor = NULL,
     .copy = NULL,
     .name = "il.graphics.material",
-    .registry = NULL,
     .size = sizeof(ilG_material),
     .parent = NULL
 };

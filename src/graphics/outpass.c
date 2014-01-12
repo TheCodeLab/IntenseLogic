@@ -29,7 +29,6 @@ il_type ilG_outpass_type = {
     .destructor = NULL,
     .copy = NULL,
     .name = "il.graphics.outpass",
-    .registry = NULL,
     .size = sizeof(struct outpass),
     .parent = &ilG_stage_type
 };

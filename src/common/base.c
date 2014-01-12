@@ -187,33 +187,15 @@ void il_base_set(void* self, const char *key, void *data, size_t size, enum il_s
     il_storage_set(&((il_base*)self)->storage, key, data, size, tag);
 }
 
-ilE_registry *il_base_registry(il_base *self)
-{
-    il_return_null_on_fail(self);
-    if (!self->registry) {
-        self->registry = ilE_registry_new();
-    }
-    return self->registry;
-}
-
-ilE_registry *il_type_registry(il_type *self)
-{
-    il_return_null_on_fail(self);
-    if (!self->registry) {
-        self->registry = ilE_registry_new();
-    }
-    return self->registry;
-}
-
 size_t il_sizeof(const il_type* self)
 {
     il_return_val_on_fail(self, 0);
     size_t size = self->size;
     if (size < sizeof(il_base)) {
-        il_warning("Size of type %s is abnormally small: %zu bytes, should be at least %zu bytes", self->name, size, sizeof(il_base));
+        il_warning("Size of type %s<%p> is abnormally small: %zu bytes, should be at least %zu bytes", self->name, self, size, sizeof(il_base));
         size = sizeof(il_base);
     } else if (self->parent && size < self->parent->size) {
-        il_warning("Size of type %s is abnormally small: %zu bytes, parent type is %zu bytes", self->name, size, self->parent->size);
+        il_warning("Size of type %s<%p> is abnormally small: %zu bytes, parent type is %zu bytes", self->name, self, size, self->parent->size);
         size = self->parent->size;
     }
     return size;

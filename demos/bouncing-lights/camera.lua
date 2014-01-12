@@ -9,7 +9,7 @@ local event         = require "common.event"
 local input         = require "input.input"
 local ffi           = require "ffi"
 
-return function(ctx, root)
+return function(ctx, root, tick)
     local cam = camera()
     ctx.camera = cam
     cam.projection_matrix = matrix.perspective(75, 4/3, .5, 512).ptr
@@ -23,7 +23,7 @@ return function(ctx, root)
     local pitch = 0
 
     local first_mouse = true
-    local mousemove = function(reg, name, xabs, yabs, x, y)
+    local mousemove = function(hnd, xabs, yabs, x, y)
         if first_mouse then first_mouse = false return end
         if not input.get "mouse left" then return end
         yaw = yaw + x * cam.sensitivity
@@ -94,7 +94,7 @@ return function(ctx, root)
                     f:label(label, {1,1,1,1}, "left middle")
                 end
                 local isShown = false
-                event.register(event.registry, "input.button", function(reg, name, key, scancode, device, isDown, mods)
+                event.register(input.button, function(hnd, key, scancode, device, isDown, mods)
                     if isDown and key == '/' then
                         isShown = not isShown
                         if isShown then
@@ -108,7 +108,7 @@ return function(ctx, root)
         end
     end
 
-    local tick = function(reg, name)
+    local ontick = function(hnd)
         local get = function(k)
             local b, _ = input.get(k)
             return b and 1 or 0
@@ -133,12 +133,13 @@ return function(ctx, root)
         cam.projection_matrix = matrix.perspective(75, ctx.width/ctx.height, 2, 2000).ptr
     end
 
-    local close = function(reg, name)
-        event.event(event.registry, "shutdown")
+    local close = function(hnd)
+        event.fire(event.shutdown)
     end
 
-    event.register(event.registry, "tick", tick)
-    event.register(event.registry, "input.mousemove", mousemove)
-    event.register(event.registry, "graphics.close", close)
+    event.register(tick, ontick)
+    event.register(input.mousemove, mousemove)
+    event.setPacker(ctx.close, event.nilPacker) -- TODO: Move this somewhere else
+    event.register(ctx.close, close)
 end
 

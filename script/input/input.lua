@@ -22,6 +22,16 @@ typedef struct ilI_buttonevent {
     enum ilI_mod mods;
 } ilI_buttonevent;
 
+typedef struct ilI_handler {
+    ilE_handler *button;
+    ilE_handler *character;
+    ilE_handler *mousemove;
+    ilE_handler *mouseenter;
+    ilE_handler *mousescroll;
+} ilI_handler;
+
+extern ilI_handler ilI_globalHandler;
+
 ]]
 
 keysyms = {
@@ -125,6 +135,12 @@ keysyms = {
 
 local input = {}
 
+input.button        = modules.input.ilI_globalHandler.button
+input.character     = modules.input.ilI_globalHandler.character
+input.mousemove     = modules.input.ilI_globalHandler.mousemove
+input.mouseenter    = modules.input.ilI_globalHandler.mouseenter
+input.mousescroll   = modules.input.ilI_globalHandler.mousescroll
+
 function input.buttonUnpacker(size, data)
     local ev = ffi.cast("ilI_buttonevent*", data)
     local button
@@ -149,15 +165,15 @@ function input.buttonUnpacker(size, data)
     return button, tonumber(ev.scancode), tonumber(ev.device), ev.action ~= 0, mods
 end
 
-function input.inputUnpackers(reg)
-    event.setUnpacker(reg, "input.button", input.buttonUnpacker)
-    event.setUnpacker(reg, "input.mousemove", event.arrayUnpacker("int", 4))
-    event.setUnpacker(reg, "input.mouseenter", event.typeUnpacker("int"))
-    event.setUnpacker(reg, "input.mousescroll", event.arrayUnpacker("float", 2))
-    event.setUnpacker(reg, "input.character", event.typeUnpacker("unsigned int"))
+function input.inputUnpackers(hnd)
+    event.setUnpacker(hnd.button, input.buttonUnpacker)
+    event.setUnpacker(hnd.mousemove, event.arrayUnpacker("int", 4))
+    event.setUnpacker(hnd.mouseenter, event.typeUnpacker("int"))
+    event.setUnpacker(hnd.mousescroll, event.arrayUnpacker("float", 2))
+    event.setUnpacker(hnd.character, event.typeUnpacker("unsigned int"))
 end
 
-input.inputUnpackers(event.registry)
+input.inputUnpackers(input)
 
 function input.get(key)
     local ret = ffi.new("int[1]")

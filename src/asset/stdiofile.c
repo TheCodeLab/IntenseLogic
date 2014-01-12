@@ -152,7 +152,6 @@ il_type il_stdiofile_type = {
     .destructor = stdiofile_des,
     .copy = NULL,
     .name = "il.asset.stdiofile",
-    .registry = NULL,
     .size = sizeof(struct stdiofile),
     .parent = NULL
 };

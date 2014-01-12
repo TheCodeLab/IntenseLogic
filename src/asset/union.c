@@ -48,7 +48,6 @@ il_type ilA_union_type = {
     .destructor = union_des,
     .copy = NULL,
     .name = "il.asset.union",
-    .registry = NULL,
     .size = sizeof(struct ilunion),
     .parent = NULL
 };

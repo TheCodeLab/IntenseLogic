@@ -16,7 +16,6 @@ il_type ilG_camera_type = {
     .destructor = NULL,
     .copy = NULL,
     .name = "il.graphics.camera",
-    .registry = NULL,
     .size = sizeof(ilG_camera),
     .parent = &il_positionable_type
 };

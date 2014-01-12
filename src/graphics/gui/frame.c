@@ -8,7 +8,6 @@ il_type ilG_gui_frame_type = {
     .copy = NULL,
     .name = "il.graphics.gui.frame",
     .size = sizeof(ilG_gui_frame),
-    .registry = NULL,
     .parent = NULL
 };
 
