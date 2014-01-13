@@ -34,6 +34,8 @@ ilE_handler *ilE_handler_timer(const struct timeval *tv);
 ilE_handler *ilE_handler_watch(int fd, enum ilE_fdevent what);
 void ilE_handler_destroy(ilE_handler *self);
 
+const char *ilE_handler_getName(const ilE_handler *self);
+
 void ilE_handler_name(ilE_handler *self, const char *name);
 
 void ilE_handler_fire(ilE_handler *self, size_t size, const void *data);
@@ -52,7 +54,12 @@ extern ilE_handler *ilE_shutdownHandlers;
 local event = {}
 
 ffi.metatype("ilE_handler", {
-    __index = function(t,k) return event[k] end
+    __index = function(t,k) 
+        if k == "name" then
+            return ffi.string(modules.common.ilE_handler_getName(t))
+        end
+        return event[k]
+    end
 })
 
 event.shutdown = modules.common.ilE_shutdown
@@ -154,7 +161,7 @@ event.defaultUnpackers(event.registry)
 -- @return Returns the size and data if it was unsuccessful, otherwise returns a value based on the type of the event.
 function event.unpack(handler, size, data)
     local key = tostring(ffi.cast("void*", handler)) --string.format("%p", handler)
-    assert(unpackers[key], "No unpacker")
+    assert(unpackers[key], "No unpacker for "..handler.name)
     return unpackers[key](size, data)
 end
 
@@ -162,7 +169,12 @@ local callbacks = {}
 
 function lua_dispatch(handler, size, data, ctx)
     local key = tostring(ffi.cast("void*", handler)) --string.format("%p", handler);
-    local args = {event.unpack(handler, size, data)}
+    local args = {xpcall(function()event.unpack(handler, size, data) end, function(s) print(debug.traceback(s,2)) end)}
+    if not args[1] then
+        return
+    else
+        table.remove(args, 1)
+    end
     if not callbacks[key] then return end
     for i = 1, #callbacks[key] do
         local f = function()

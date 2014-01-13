@@ -114,6 +114,7 @@ ilE_handler* ilE_handler_new()
 {
     ilE_handler* h = calloc(1, sizeof(ilE_handler));
     h->type = NORMAL_HND;
+    sprintf(h->name, "Normal Handler <%p>", h);
     return h;
 }
 
@@ -131,6 +132,7 @@ ilE_handler *ilE_handler_timer(const struct timeval *tv)
     memcpy(&h->data.tv, tv, sizeof(struct timeval));
     h->ev = event_new(ilE_base, -1, EV_TIMEOUT|EV_PERSIST, &timer_dispatch, h);
     event_add(h->ev, tv);
+    sprintf(h->name, "Timer Handler <%p>: %fs interval", h, tv->tv_sec + tv->tv_usec/1000000.0);
     return h;
 }
 
@@ -145,6 +147,23 @@ ilE_handler *ilE_handler_watch(int fd, enum ilE_fdevent what)
     h->data.file.fdevent = what;
     h->ev = event_new(ilE_base, fd, events, &file_dispatch, h);
     event_add(h->ev, NULL);
+    char what_str[128] = {0};
+    if (what & ILE_READ) {
+        strcat(what_str, "read");
+    }
+    if (what & ILE_READASARG) {
+        if (!(what & ILE_READ)) {
+            strcat(what_str, "read");
+        }
+        strcat(what_str, " from buffer");
+    }
+    if (what & ILE_WRITE) {
+        if ((what & ILE_READ) || (what & ILE_READASARG)) {
+            strcat(what_str, " + ");
+        }
+        strcat(what_str, "write");
+    }
+    sprintf(h->name, "File Watcher <%p>: Watching %s on %i", h, what_str, fd);
     return h;
 }
 
@@ -155,6 +174,11 @@ void ilE_handler_destroy(ilE_handler *self)
     }
     IL_FREE(self->callbacks);
     event_free(self->ev);
+}
+
+const char *ilE_handler_getName(const ilE_handler *self)
+{
+    return self->name;
 }
 
 void ilE_handler_name(ilE_handler *self, const char *name)

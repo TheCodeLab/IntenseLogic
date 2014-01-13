@@ -72,6 +72,9 @@ ilE_handler *ilE_handler_watch(int fd, enum ilE_fdevent what);
 /*! Destroy a handler. Make sure all callbacks have been cleaned up first! */
 void ilE_handler_destroy(ilE_handler *self);
 
+/*! Gets the current name of the handler. Data lasts for lifetime of handler. */
+const char *ilE_handler_getName(const ilE_handler *self);
+
 /*! Set a name. Used for introspective purposes such as debugging. */
 void ilE_handler_name(ilE_handler *self, const char *name);
 
