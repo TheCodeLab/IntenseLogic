@@ -212,6 +212,7 @@ void ilE_handler_fireasync(ilE_handler *self, size_t size, const void *data)
     memcpy(ev->data, data, size);
     struct event *e = event_new(ilE_base, -1, 0, normal_dispatch, ev);
     event_add(e, NULL);
+    event_active(e, 0, 0);
 }
 
 int ilE_register_real(ilE_handler* self, const char *name, enum ilE_behaviour behaviour, enum ilE_threading threads, ilE_callback callback, void * ctx)
