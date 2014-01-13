@@ -64,7 +64,7 @@ ffi.metatype("ilE_handler", {
 
 event.shutdown = modules.common.ilE_shutdown
 event.shutdownCallbacks = modules.common.ilE_shutdownCallbacks
-event.ilE_shutdownHandlers = modules.common.ilE_shutdownHandlers
+event.shutdownHandlers = modules.common.ilE_shutdownHandlers
 
 local packers = {}
 
@@ -209,6 +209,23 @@ function event.register(handler, fn)
     callbacks[key][#callbacks[key] + 1] = fn;
 end
 
+local lua_handlers = {}
+
+event.register(event.shutdownHandlers, function()
+    for _, v in pairs(lua_handlers) do
+        modules.common.ilE_handler_destroy(v)
+    end
+end)
+
+function event.destroy(hnd)
+    for i, v in pairs(lua_handlers) do
+        if v == hnd then
+            table.remove(lua_handlers, i)
+        end
+    end
+    modules.common.ilE_handler_destroy(hnd)
+end
+
 function event.create(arg, name)
     local h
     if not arg then -- normal
@@ -235,6 +252,7 @@ function event.create(arg, name)
     end
     h:setPacker(event.nilPacker)
     h:setUnpacker(event.nilUnpacker)
+    lua_handlers[#lua_handlers+1] = h
     return h
 end
 

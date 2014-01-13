@@ -91,6 +91,7 @@ typedef struct ilG_context {
                 *resizeWin,     // ilG_context
                 *close;         // ilG_context
     ilI_handler input_handler;
+    int tick_id, close_id, close2_id;
     /* Drawing */
     struct ilG_drawable3d* drawable;
     struct ilG_material* material;

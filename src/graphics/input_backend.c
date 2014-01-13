@@ -105,7 +105,7 @@ static void charfun(GLFWwindow *window, unsigned int character)
 static void closewindow(GLFWwindow *window)
 {
     ilG_context *ctx = glfwGetWindowUserPointer(window);
-    ilE_handler_fire(ctx->close, sizeof(ilG_context), ctx);
+    ilE_handler_fireasync(ctx->close, sizeof(ilG_context), ctx); // prevents closing the window while we're still rendering
 }
 
 void ilG_registerInputBackend(ilG_context *ctx)

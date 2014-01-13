@@ -15,6 +15,9 @@ static GLvoid error_cb(GLenum source, GLenum type, GLuint id, GLenum severity,
                        GLsizei length, const GLchar* message, GLvoid* user);
 void ilG_registerInputBackend(ilG_context *ctx);
 
+static void on_close(const ilE_handler *handler, size_t size, const void *data, void *ctx);
+static void on_close2(const ilE_handler *handler, size_t size, const void *data, void *ctx);
+
 static void context_cons(void *obj)
 {
     ilG_context *self = obj;
@@ -32,6 +35,8 @@ static void context_cons(void *obj)
     self->initialTitle = "IntenseLogic";
     self->resize    = ilE_handler_new_with_name("il.graphics.context.resize");
     self->close     = ilE_handler_new_with_name("il.graphics.context.close");
+    self->close_id  = ilE_register(self->close, ILE_BEFORE, ILE_ANY, &on_close, self);
+    self->close2_id = ilE_register(self->close, ILE_AFTER, ILE_ANY, &on_close2, self);
     ilI_handler_init(&self->input_handler);
 }
 
@@ -53,6 +58,9 @@ static void context_des(void *obj)
     IL_FREE(self->stages);
     glDeleteFramebuffers(1, &self->framebuffer);
     glDeleteTextures(5, &self->fbtextures[0]);
+    ilE_unregister(self->close, self->close_id);
+    ilE_unregister(self->close, self->close2_id);
+    ilE_handler_destroy(self->close);
 }
 
 il_type ilG_context_type = {
@@ -280,7 +288,7 @@ void ilG_context_bind_for_outpass(ilG_context *self)
     glReadBuffer(GL_COLOR_ATTACHMENT0);
 }
 
-void render_stages(const ilE_handler* registry, size_t size, const void *data, void * ctx)
+static void render_stages(const ilE_handler* registry, size_t size, const void *data, void * ctx)
 {
     (void)registry, (void)size, (void)data;
     ilG_context *context = ctx;
@@ -358,6 +366,22 @@ void render_stages(const ilE_handler* registry, size_t size, const void *data, v
     context->frames_average.tv_usec += (context->frames_sum.tv_sec % context->num_frames) * 1000000 / context->num_frames;
 }
 
+static void on_close(const ilE_handler *handler, size_t size, const void *data, void *ctx)
+{
+    (void)handler; (void)size; (void)data;
+    ilG_context *self = ctx;
+    ilE_unregister(self->tick, self->tick_id);
+}
+
+static void on_close2(const ilE_handler *handler, size_t size, const void *data, void *ctx)
+{
+    (void)handler, (void)size, (void)data;
+    ilG_context *self = ctx;
+    ilE_handler_destroy(self->tick);
+    ilE_handler_destroy(self->resize);
+    //il_unref(self);
+}
+
 int ilG_context_setActive(ilG_context *self)
 {
     if (!self->complete) {
@@ -376,7 +400,7 @@ int ilG_context_setActive(ilG_context *self)
         il_error("No world");
         return 0;
     }
-    ilE_register(self->tick, ILE_BEFORE, ILE_MAIN, render_stages, self);
+    self->tick_id = ilE_register(self->tick, ILE_BEFORE, ILE_MAIN, render_stages, self);
     return 1;
 }
 

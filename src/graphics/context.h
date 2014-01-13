@@ -112,6 +112,7 @@ typedef struct ilG_context { // **remember to update context.lua**
                 *resize,        ///< Event which is called when the window is resized. Takes ilG_context as parameter.
                 *close;         ///< Event which is called when the alt+F4 is pressed or the close button is clicked. Takes ilG_context as a parameter.
     ilI_handler input_handler;  ///< Collection of events which are called when the relavent events occur in the window. All events are forwarded to ilI_globalHandler.
+    int tick_id, close_id, close2_id;
     /* Drawing */
     struct ilG_drawable3d* drawable;
     struct ilG_material* material;

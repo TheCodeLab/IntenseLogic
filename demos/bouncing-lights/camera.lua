@@ -139,7 +139,7 @@ return function(ctx, root, tick)
 
     event.register(tick, ontick)
     event.register(input.mousemove, mousemove)
-    event.setPacker(ctx.close, event.nilPacker) -- TODO: Move this somewhere else
+    event.setUnpacker(ctx.close, event.nilUnpacker) -- TODO: Move this somewhere else
     event.register(ctx.close, close)
 end
 

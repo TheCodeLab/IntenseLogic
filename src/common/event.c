@@ -116,7 +116,7 @@ ilE_handler* ilE_handler_new()
 {
     ilE_handler* h = calloc(1, sizeof(ilE_handler));
     h->type = NORMAL_HND;
-    sprintf(h->name, "Normal Handler <%p>", h);
+    sprintf(h->name, "Normal Handler");
     return h;
 }
 
@@ -134,7 +134,7 @@ ilE_handler *ilE_handler_timer(const struct timeval *tv)
     memcpy(&h->data.tv, tv, sizeof(struct timeval));
     h->ev = event_new(ilE_base, -1, EV_TIMEOUT|EV_PERSIST, &timer_dispatch, h);
     event_add(h->ev, tv);
-    sprintf(h->name, "Timer Handler <%p>: %fs interval", h, tv->tv_sec + tv->tv_usec/1000000.0);
+    sprintf(h->name, "Timer Handler: %fs interval", tv->tv_sec + tv->tv_usec/1000000.0);
     IL_APPEND(persistent_handlers, h);
     return h;
 }
@@ -166,7 +166,7 @@ ilE_handler *ilE_handler_watch(int fd, enum ilE_fdevent what)
         }
         strcat(what_str, "write");
     }
-    sprintf(h->name, "File Watcher <%p>: Watching %s on %i", h, what_str, fd);
+    sprintf(h->name, "File Watcher: Watching %s on %i", what_str, fd);
     IL_APPEND(persistent_handlers, h);
     return h;
 }
@@ -176,14 +176,16 @@ void ilE_handler_destroy(ilE_handler *self)
     unsigned i;
     for (i = 0; i < persistent_handlers.length; i++) {
         if (self == persistent_handlers.data[i]) {
-            persistent_handlers.data[i] = NULL;
+            persistent_handlers.data[i] = persistent_handlers.data[--persistent_handlers.length];
         }
     }
     if (self->callbacks.length > 0) {
         il_warning("%zu callbacks still registered for %s <%p>", self->callbacks.length, self->name, self);
     }
     IL_FREE(self->callbacks);
-    event_free(self->ev);
+    if (self->ev) {
+        event_free(self->ev);
+    }
     free(self);
 }
 
@@ -288,18 +290,30 @@ static void shutdownHandlers(const ilE_handler *hnd, size_t size, const void *da
     ilE_handler_fire(ilE_shutdownHandlers, 0, NULL);
 }
 
+static void showRemaining(const ilE_handler *hnd, size_t size, const void *data, void *ctx)
+{
+    (void)hnd, (void)size, (void)data, (void)ctx;
+    ilE_dumpAll();
+}
+
+static int shutdownCallbacks_id, shutdownHandlers_id, showRemaining_id;
+
 void ilE_init()
 {
     ilE_base = event_base_new();
     ilE_shutdown = ilE_handler_new();
-    ilE_register(ilE_shutdown, ILE_AFTER, ILE_ANY, shutdownCallbacks, NULL);
+    shutdownCallbacks_id = ilE_register(ilE_shutdown, ILE_AFTER, ILE_ANY, shutdownCallbacks, NULL);
     ilE_shutdownCallbacks = ilE_handler_new();
-    ilE_register(ilE_shutdownCallbacks, ILE_AFTER, ILE_ANY, shutdownHandlers, NULL);
+    shutdownCallbacks_id = ilE_register(ilE_shutdownCallbacks, ILE_AFTER, ILE_ANY, shutdownHandlers, NULL);
     ilE_shutdownHandlers = ilE_handler_new();
+    showRemaining_id = ilE_register(ilE_shutdownHandlers, ILE_AFTER, ILE_ANY, showRemaining, NULL);
 }
 
 void ilE_quit()
 {
+    ilE_unregister(ilE_shutdown, shutdownCallbacks_id);
+    ilE_unregister(ilE_shutdownCallbacks, shutdownHandlers_id);
+    ilE_unregister(ilE_shutdownHandlers, showRemaining_id);
     ilE_handler_destroy(ilE_shutdown);
     ilE_handler_destroy(ilE_shutdownCallbacks);
     ilE_handler_destroy(ilE_shutdownHandlers);
@@ -323,8 +337,13 @@ void ilE_dump(ilE_handler *self)
 void ilE_dumpAll()
 {
     size_t i;
+    if (persistent_handlers.length > 0) {
+        fprintf(stderr, "=== Some persistent handlers have not been destroyed, preventing shutdown:\n");
+    }
     for (i = 0; i < persistent_handlers.length; i++) {
-        ilE_dump(persistent_handlers.data[i]);
+        if (persistent_handlers.data[i]) {
+            ilE_dump(persistent_handlers.data[i]);
+        }
     }
 }
 

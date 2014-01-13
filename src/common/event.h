@@ -89,7 +89,7 @@ void ilE_handler_fireasync(ilE_handler *self, size_t size, const void *data);
  * @see ilE_unregister */
 int ilE_register_real(ilE_handler* self, const char *name, enum ilE_behaviour behaviour, enum ilE_threading threads, ilE_callback callback, void * ctx);
 /*! Convienience wrapper which sets the name to __func__ */
-#define ilE_register(self, b, t, cb, ctx) ilE_register_real(self, __func__, b, t, cb, ctx)
+#define ilE_register(self, b, t, cb, ctx) ilE_register_real(self, #cb, b, t, cb, ctx)
 /*! Deletes a callback - use this on all your registered callbacks before destroying a handler. */
 void ilE_unregister(ilE_handler *self, int handle);
 
