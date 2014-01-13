@@ -96,6 +96,9 @@ void ilE_unregister(ilE_handler *self, int handle);
 /*! Dumps a list of all the callbacks currently set to stderr. 
  * Uses the naming information provided by the other functions. */
 void ilE_dump(ilE_handler *self);
+/*! Dumps all currently running handlers (timers, file watches).
+ * Useful for finding why the engine won't shutdown. */
+void ilE_dumpAll();
 
 /*! Called to shutdown the engine. */
 extern ilE_handler *ilE_shutdown;

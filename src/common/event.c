@@ -21,6 +21,8 @@ static void ilE_handler_fire_forced(ilE_handler *self, size_t size, const void *
 
 struct event_base *ilE_base;
 
+static IL_ARRAY(ilE_handler*,) persistent_handlers;
+
 struct ilE_event {
     ilE_handler *handler;
     uint8_t size;
@@ -133,6 +135,7 @@ ilE_handler *ilE_handler_timer(const struct timeval *tv)
     h->ev = event_new(ilE_base, -1, EV_TIMEOUT|EV_PERSIST, &timer_dispatch, h);
     event_add(h->ev, tv);
     sprintf(h->name, "Timer Handler <%p>: %fs interval", h, tv->tv_sec + tv->tv_usec/1000000.0);
+    IL_APPEND(persistent_handlers, h);
     return h;
 }
 
@@ -145,7 +148,7 @@ ilE_handler *ilE_handler_watch(int fd, enum ilE_fdevent what)
     h->type = FILE_HND;
     h->data.file.fd = fd;
     h->data.file.fdevent = what;
-    h->ev = event_new(ilE_base, fd, events, &file_dispatch, h);
+    h->ev = event_new(ilE_base, fd, events|EV_PERSIST, &file_dispatch, h);
     event_add(h->ev, NULL);
     char what_str[128] = {0};
     if (what & ILE_READ) {
@@ -164,16 +167,24 @@ ilE_handler *ilE_handler_watch(int fd, enum ilE_fdevent what)
         strcat(what_str, "write");
     }
     sprintf(h->name, "File Watcher <%p>: Watching %s on %i", h, what_str, fd);
+    IL_APPEND(persistent_handlers, h);
     return h;
 }
 
 void ilE_handler_destroy(ilE_handler *self)
 {
+    unsigned i;
+    for (i = 0; i < persistent_handlers.length; i++) {
+        if (self == persistent_handlers.data[i]) {
+            persistent_handlers.data[i] = NULL;
+        }
+    }
     if (self->callbacks.length > 0) {
         il_warning("%zu callbacks still registered for %s <%p>", self->callbacks.length, self->name, self);
     }
     IL_FREE(self->callbacks);
     event_free(self->ev);
+    free(self);
 }
 
 const char *ilE_handler_getName(const ilE_handler *self)
@@ -307,7 +318,14 @@ void ilE_dump(ilE_handler *self)
         struct callback *cb = &self->callbacks.data[i];
         fprintf(stderr, "\t%s <%p> behaviour:%u threading:%u ctx<%p>\n", cb->name, cb->callback, cb->behaviour, cb->threading, cb->ctx);
     }
-    fprintf(stderr, "End of registry dump.\n");
+}
+
+void ilE_dumpAll()
+{
+    size_t i;
+    for (i = 0; i < persistent_handlers.length; i++) {
+        ilE_dump(persistent_handlers.data[i]);
+    }
 }
 
 ilE_handler *ilE_shutdown;
