@@ -228,6 +228,17 @@ void ilE_handler_fireasync(ilE_handler *self, size_t size, const void *data)
     event_active(e, 0, 0);
 }
 
+static void append_before_afters(ilE_handler *self, struct callback cb)
+{
+    ssize_t i;
+    for (i = self->callbacks.length - 1; i > 0; i--) {
+        if (self->callbacks.data[i].behaviour != ILE_AFTER) {
+            break;
+        }
+    }
+    IL_INSERT(self->callbacks, (size_t)i, cb);
+}
+
 int ilE_register_real(ilE_handler* self, const char *name, enum ilE_behaviour behaviour, enum ilE_threading threads, ilE_callback callback, void * ctx)
 {
     struct callback cb; 
@@ -243,24 +254,37 @@ int ilE_register_real(ilE_handler* self, const char *name, enum ilE_behaviour be
         self->callbacks.length = 0;
     }
 
-    if (behaviour == ILE_BEFORE) {
-        if (self->callbacks.length < 1) {
-            IL_SET(self->callbacks, 0, cb); // first
-        } else {
-            if (self->callbacks.data[0].behaviour == ILE_DONTCARE) {
-                // move the first element to the last spot so we can get at it
-                IL_APPEND(self->callbacks, self->callbacks.data[0]);
-            } else {
-                // we shift the entire list to the right
-                struct callback * unused;
-                IL_INDEXORZERO(self->callbacks, self->callbacks.length, unused);
-                memmove(&self->callbacks.data[1], &self->callbacks.data[0], sizeof(struct callback) * (self->callbacks.length-1));
-                IL_SET(self->callbacks, 0, cb);
+    if (self->callbacks.length < 1) {
+        IL_SET(self->callbacks, 0, cb); // first element, no need to sort list
+    } else if (behaviour == ILE_BEFORE) {
+        // For this case, we want to move an element that doesn't care where it is out of the way, to make room for one that wants to run at the start.
+        // B = ILE_BEFORE
+        // A = ILE_AFTER
+        // D = ILE_DONTCARE
+        // M = Where we want to be
+        // N = New spot for element we had to shift out of the way to get where we want to be
+        // BBBB M DDDDDDDDDDDDDD N AAAA
+        size_t i;
+        // find M
+        for (i = 0; i < self->callbacks.length; i++) {
+            if (self->callbacks.data[i].behaviour != ILE_BEFORE) {
+                break;
             }
         }
-    } else {
-        // can be appended
+        if (i < self->callbacks.length // M exists
+            && self->callbacks.data[i].behaviour == ILE_DONTCARE) // and M can be swapped to another spot
+        {
+            append_before_afters(self, self->callbacks.data[i]);
+            IL_SET(self->callbacks, i, cb);
+        } else if (i < self->callbacks.length) { // M exists, but can't be swapped (there are no DONTCAREs)
+            IL_INSERT(self->callbacks, i, cb);
+        }
+    } else if (behaviour == ILE_DONTCARE) {
+        append_before_afters(self, cb);
+    } else if (behaviour == ILE_AFTER) {
         IL_APPEND(self->callbacks, cb);
+    } else {
+        il_error("Unknown enum value %u", behaviour);
     }
 
     return cb.handle;
@@ -301,11 +325,11 @@ static int shutdownCallbacks_id, shutdownHandlers_id, showRemaining_id;
 void ilE_init()
 {
     ilE_base = event_base_new();
-    ilE_shutdown = ilE_handler_new();
+    ilE_shutdown = ilE_handler_new_with_name("il.event.shutdown");
     shutdownCallbacks_id = ilE_register(ilE_shutdown, ILE_AFTER, ILE_ANY, shutdownCallbacks, NULL);
-    ilE_shutdownCallbacks = ilE_handler_new();
+    ilE_shutdownCallbacks = ilE_handler_new_with_name("il.event.shutdownCallbacks");
     shutdownCallbacks_id = ilE_register(ilE_shutdownCallbacks, ILE_AFTER, ILE_ANY, shutdownHandlers, NULL);
-    ilE_shutdownHandlers = ilE_handler_new();
+    ilE_shutdownHandlers = ilE_handler_new_with_name("il.event.shutdownHandlers");
     showRemaining_id = ilE_register(ilE_shutdownHandlers, ILE_AFTER, ILE_ANY, showRemaining, NULL);
 }
 
@@ -330,7 +354,29 @@ void ilE_dump(ilE_handler *self)
     fprintf(stderr, "Registry dump of handler %s <%p>:\n", self->name, self);
     for (i = 0; i < self->callbacks.length; i++) {
         struct callback *cb = &self->callbacks.data[i];
-        fprintf(stderr, "\t%s <%p> behaviour:%u threading:%u ctx<%p>\n", cb->name, cb->callback, cb->behaviour, cb->threading, cb->ctx);
+        char behaviour_str[64], threading_str[64];
+#define e2s(p, e, s) case e: strcpy(p, s); break
+#define b2s(n) e2s(behaviour_str, ILE_##n, #n)
+        switch (cb->behaviour) {
+            b2s(DONTCARE);
+            b2s(BEFORE);
+            b2s(AFTER);
+            b2s(OVERRIDE);
+            default:
+            strcpy(behaviour_str, "???");
+        }
+#undef b2s
+#define t2s(n) e2s(threading_str, ILE_##n, #n)
+        switch (cb->threading) {
+            t2s(ANY);
+            t2s(MAIN);
+            t2s(TLS);
+            default:
+            strcpy(behaviour_str, "???");
+        }
+#undef t2s
+#undef e2s
+        fprintf(stderr, "\t%s <%p> behaviour:%s threading:%s ctx<%p>\n", cb->name, cb->callback, behaviour_str, threading_str, cb->ctx);
     }
 }
 
