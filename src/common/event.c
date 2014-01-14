@@ -236,7 +236,7 @@ static void append_before_afters(ilE_handler *self, struct callback cb)
             break;
         }
     }
-    IL_INSERT(self->callbacks, (size_t)i, cb);
+    IL_INSERT(self->callbacks, (size_t)i+1, cb);
 }
 
 int ilE_register_real(ilE_handler* self, const char *name, enum ilE_behaviour behaviour, enum ilE_threading threads, ilE_callback callback, void * ctx)
