@@ -93,14 +93,14 @@ event.defaultPackers(event.registry)
 -- @param ... Data to pass with the event
 function event.fire(handler, ...)
     local key = tostring(ffi.cast("void*", handler)) --string.format("%p", handler)
-    if not packers[key] then error("No packer for event "..ffi.string(handler.name)) end
+    if not packers[key] then error("No packer for handler "..handler.name) end
     local data, size = packers[key](...)
     modules.common.ilE_handler_fire(handler, size, data)
 end
 
 function event.fireAsync(handler, ...)
     local key = tostring(ffi.cast("void*", handler)) --string.format("%p", handler)
-    if not packers[key] then error("No packer for event "..ffi.string(handler.name)) end
+    if not packers[key] then error("No packer for handler "..handler.name) end
     local data, size = packers[key](...)
     modules.common.ilE_handler_fireasync(handler, size, data)
 end
@@ -169,12 +169,13 @@ local callbacks = {}
 
 function lua_dispatch(handler, size, data, ctx)
     local key = tostring(ffi.cast("void*", handler)) --string.format("%p", handler);
-    local args = {xpcall(function()event.unpack(handler, size, data) end, function(s) print(debug.traceback(s,2)) end)}
+    local args = {xpcall(function() return event.unpack(handler, size, data) end, function(s) print(debug.traceback(s,2)) end)}
     if not args[1] then
         return
     else
         table.remove(args, 1)
     end
+    --print(handler.name, #args, unpack(args))
     if not callbacks[key] then return end
     for i = 1, #callbacks[key] do
         local f = function()
