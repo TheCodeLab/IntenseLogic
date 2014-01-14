@@ -12,15 +12,18 @@ inputs    = "*.c script/*.c"
 platform  = ARGUMENTS.get("platform", "linux")
 
 # flags
-ccflags   = "-Wall -Wextra -pedantic -g -O0 -fsanitize=address"
+ccflags   = "-Wall -Wextra -pedantic -g -O0"
 cflags    = "-std=c99 -D_POSIX_C_SOURCE=200809"
 cxxflags  = "-std=c++11"
-linkflags = "-g -L. -Lbuild -fsanitize=address"
+linkflags = "-g -L. -Lbuild"
 if platform == "mingw":
     cflags += " -DWIN32 -I/usr/x86_64-w64-mingw32/include/luajit-2.1 " # TODO: Fix this
     linkflags += " -Wl,--export-all-symbols"
 else:
     linkflags += " -rdynamic" # assume ELF because I'm terrible
+if "CC" in os.environ and "clang" in os.environ["CC"]:
+  ccflags   += " -fsanitize=address"
+  linkflags += " -fsanitize=address"
 
 # libs
 lib_dirs = ["/usr/lib", "/usr/local/lib"]
