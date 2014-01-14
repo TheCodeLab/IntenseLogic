@@ -1,7 +1,7 @@
 #include "base.h"
 
 #include "util/log.h"
-#include "util/assert.h"
+#include "util/ilassert.h"
 
 char *strdup(const char*);
 size_t strnlen(const char*,size_t);

@@ -2,7 +2,7 @@
 
 #include <stdlib.h>
 
-#include "util/assert.h"
+#include "util/ilassert.h"
 #include "util/alloc.h"
 
 static il_allocator *aligned_16;

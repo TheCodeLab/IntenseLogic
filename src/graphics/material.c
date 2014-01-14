@@ -13,7 +13,7 @@
 #include "graphics/fragdata.h"
 #include "util/array.h"
 #include "asset/node.h"
-#include "util/assert.h"
+#include "util/ilassert.h"
 #include "graphics/graphics.h"
 
 struct textureunit {

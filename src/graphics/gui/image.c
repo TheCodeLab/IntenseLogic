@@ -9,7 +9,7 @@
 #include "graphics/context.h"
 #include "graphics/gui/quad.h"
 #include "graphics/texture.h"
-#include "util/assert.h"
+#include "util/ilassert.h"
 #include "graphics/glutil.h"
 
 struct image_ctx {

@@ -1,7 +1,7 @@
 #include "image.h"
 
 #include "math/vector.h"
-#include "util/assert.h"
+#include "util/ilassert.h"
 
 ilA_img *ilA_img_height_to_normal(const ilA_img *self)
 {
