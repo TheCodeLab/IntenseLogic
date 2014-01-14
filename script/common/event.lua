@@ -208,6 +208,18 @@ function event.register(handler, fn)
     end
 
     callbacks[key][#callbacks[key] + 1] = fn;
+    return fn
+end
+
+function event.unregister(handler, id)
+    local key = tostring(ffi.cast("void*", handler))
+    for i, v in pairs(callbacks[key]) do
+        if v == id then
+            table.remove(callbacks, i)
+            return
+        end
+    end
+    error "No such id"
 end
 
 local lua_handlers = {}
