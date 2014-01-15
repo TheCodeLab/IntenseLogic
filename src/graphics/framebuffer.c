@@ -1,6 +1,6 @@
 #include "framebuffer.h"
 
-#include "util/assert.h"
+#include "util/ilassert.h"
 #include "graphics/context.h"
 #include "util/log.h"
 

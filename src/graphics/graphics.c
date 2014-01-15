@@ -63,7 +63,8 @@ static void glfw_setup()
 {
     glfwSetErrorCallback(glew_error);
     if (!glfwInit()) {
-        il_fatal("glfwInit() failed");
+        il_error("glfwInit() failed");
+        abort();
     }
 
     int major, minor, rev;
@@ -82,6 +83,7 @@ const char **il_dependencies(int argc, char **argv)
     (void)argc, (void)argv;
     static const char *deps[] = {
         "ilcommon",
+        "ilutil",
         NULL
     };
     return deps;

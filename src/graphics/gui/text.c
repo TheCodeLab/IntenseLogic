@@ -14,7 +14,7 @@
 #include <cairo/cairo.h>
 #include <cairo/cairo-ft.h>
 
-#include "util/assert.h"
+#include "util/ilassert.h"
 #include "graphics/context.h"
 
 struct ilG_gui_textlayout {

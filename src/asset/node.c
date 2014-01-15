@@ -1,7 +1,7 @@
 #include "node.h"
 
 #include "util/log.h"
-#include "util/assert.h"
+#include "util/ilassert.h"
 
 il_base *ilA_lookup(const ilA_dir *iface, il_base *dir, const ilA_path *path)
 {

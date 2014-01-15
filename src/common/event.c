@@ -13,7 +13,7 @@
 #include "util/log.h"
 #include "util/array.h"
 #include "util/uthash.h"
-#include "util/assert.h"
+#include "util/ilassert.h"
 
 char *strdup(const char*);
 

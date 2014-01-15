@@ -3,7 +3,8 @@
 #include <string.h>
 
 #include "util/log.h"
-#include "util/assert.h"
+#include "util/logger.h"
+#include "util/ilassert.h"
 #include "util/timer.h"
 #include "graphics/glutil.h"
 #include "common/event.h"
@@ -140,7 +141,8 @@ int ilG_context_build(ilG_context *self)
     ilE_handler_name(self->tick, "il.graphics.context.tick");
     GLenum err = glewInit();
     if (GLEW_OK != err) {
-        il_fatal("glewInit() failed: %s", glewGetErrorString(err));
+        il_error("glewInit() failed: %s", glewGetErrorString(err));
+        return 0;
     }
     il_log("Using GLEW %s", glewGetString(GLEW_VERSION));
 
@@ -440,8 +442,21 @@ static APIENTRY GLvoid error_cb(GLenum source, GLenum type, GLuint id, GLenum se
     if (msg[length-1] == '\n') {
         msg[length-1] = 0; // cut off newline
     }
-    char buf[4096];
-    sprintf(buf, "(OpenGL%s) %s%s #%u: %s", ssource, sseverity, stype, id, msg);
-    il_log_raw(buf);
+
+    char source_buf[64];
+    snprintf(source_buf, 64, "OpenGL%s", ssource);
+
+    const char *msg_fmt = "%s%s #%u: %s";
+    size_t len = snprintf(NULL, 0, msg_fmt, sseverity, stype, id, msg);
+    char msg_buf[len+1];
+    snprintf(msg_buf, len+1, msg_fmt, sseverity, stype, id, msg);
+
+    il_logmsg *lmsg = il_logmsg_new(1);
+    il_logmsg_setLevel(lmsg, IL_NOTIFY);
+    il_logmsg_copyMessage(lmsg, msg_buf);
+    il_logmsg_copyBtString(lmsg, 0, source_buf);
+
+    il_logger *logger = il_logger_stderr; // TODO
+    il_logger_log(logger, lmsg);
 }
 

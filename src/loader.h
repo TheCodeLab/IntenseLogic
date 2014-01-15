@@ -65,7 +65,51 @@ void il_close_module(const char *module);
  * @param name The name of the symbol to get.
  * @return The address of the symbol.
  */
+#ifdef IL_DLSYM_LOADER
+#include <dlfcn.h>
+static il_func il_get_symbol(const char *module, const char *name)
+{
+    static il_func (*sym)(const char*,const char*);
+    if (!sym) {
+        sym = (il_func(*)(const char*,const char*))dlsym(0, "il_get_symbol");
+    }
+    return sym(module, name);
+}
+#else
 il_func il_get_symbol(const char *module, const char *name);
+#endif
+
+#define il_gen_arglist(a,b) a b 
+#define il_gen_calllist(a,b) b 
+
+#define il_gen_noret_symbol(mod, name, args) \
+    static void name(args(il_gen_arglist)) \
+    { \
+        static void *sym;                       \
+        static int have_sym;                    \
+        if (!have_sym) {                        \
+            sym = il_get_symbol(mod, #name);    \
+            have_sym = 1;                       \
+        }                                       \
+        if (sym) {                              \
+            ((void (*)(args(il_gen_arglist)))sym)(args(il_gen_calllist)); \
+        }                                       \
+    }
+
+#define il_gen_symbol(mod, def, ret, name, args) \
+    static ret name(args(il_gen_arglist)) \
+    {                                           \
+        static void *sym;                       \
+        static int have_sym;                    \
+        if (!have_sym) {                        \
+            sym = il_get_symbol(mod, #name);    \
+            have_sym = 1;                       \
+        }                                       \
+        if (sym) {                              \
+            return ((ret (*)(args(il_gen_arglist)))sym)(args(il_gen_calllist)); \
+        }                                       \
+        return def;                             \
+    }
 
 /** Iterates through a module. Call until it returns NULL.
  * @param saveptr A pointer to store the iterator in. Initialize to NULL.

@@ -9,6 +9,7 @@
 #include "graphics/camera.h"
 #include "common/positionable.h"
 #include "util/log.h"
+#include "util/logger.h"
 
 const char * ilG_strerror(GLenum err)
 {
@@ -52,11 +53,20 @@ void ilG_testError_(const char *file, int line, const char *func,
     if ((err = glGetError()) != GL_NO_ERROR) {
         va_list ap;
         va_start(ap, fmt);
-        int len = vsnprintf(NULL, 0, fmt, ap);
-        char msg[len+1];
-        vsnprintf(msg, len+1, fmt, ap);
+        char msg[4096];
+        vsnprintf(msg, 4096, fmt, ap);
         va_end(ap);
-        il_log_real(il_prettifyFile(file), line, func, 2, "%s: %s (%i)", msg, ilG_strerror(err), err);
+
+        char reason[64];
+        snprintf(reason, 64, "%s (%i)", ilG_strerror(err), err);
+        
+        il_logmsg *lmsg = il_logmsg_new(1);
+        il_logmsg_setLevel(lmsg, IL_ERROR);
+        il_logmsg_copyMessage(lmsg, msg);
+        il_logmsg_copyReason(lmsg, reason);
+        il_logmsg_setBtFile(lmsg, 0, file, line, func);
+        il_logger *logger = il_logger_stderr; // TODO
+        il_logger_log(logger, lmsg);
     }
 }
 
