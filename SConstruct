@@ -12,18 +12,26 @@ inputs    = "*.c script/*.c"
 platform  = ARGUMENTS.get("platform", "linux")
 
 # flags
-ccflags   = "-Wall -Wextra -pedantic -g -O0"
+ccflags   = "-Wall -Wextra -pedantic"
 cflags    = "-std=c99 -D_POSIX_C_SOURCE=200809"
 cxxflags  = "-std=c++11"
-linkflags = "-g -L. -Lbuild"
+linkflags = "-L. -Lbuild"
 if platform == "mingw":
     cflags += " -DWIN32 -I/usr/x86_64-w64-mingw32/include/luajit-2.1 " # TODO: Fix this
     linkflags += " -Wl,--export-all-symbols"
 else:
     linkflags += " -rdynamic" # assume ELF because I'm terrible
+
+# clang-specific flags
 if "CC" in os.environ and "clang" in os.environ["CC"]:
-  ccflags   += " -fsanitize=address"
-  linkflags += " -fsanitize=address"
+    ccflags   += " -fsanitize=address"
+    linkflags += " -fsanitize=address"
+
+# debug mode
+build_mode = mymode = ARGUMENTS.get("mode", "debug")
+if build_mode != "release":
+    ccflags   += " -g -O0"
+    linkflags += " -g"
 
 # libs
 lib_dirs = ["/usr/lib", "/usr/local/lib"]
@@ -47,7 +55,8 @@ VariantDir(build_dir, src_dir, duplicate = 0)
 env = Environment(ENV=os.environ)
 for item in os.environ:
     env[item] = os.environ[item]
-env.Append(CCFLAGS=ccflags, CFLAGS = cflags, CXXFLAGS=cxxflags, LINKFLAGS = string.split(linkflags, " "), CPPPATH = [src_dir])
+env.Append(CCFLAGS=" ", CFLAGS=" ", CXXFLAGS=" ", LINKFLAGS=" ") # Make CFLAGS/etc in env work right.
+env.Append(CCFLAGS=ccflags, CFLAGS = cflags, CXXFLAGS=cxxflags, LINKFLAGS = linkflags, CPPPATH = [src_dir])
 
 Export("platform")
 Export("env")

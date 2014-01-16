@@ -14,7 +14,7 @@ for module in Split(inputs) :
     sources.extend(Glob(src_dir + "/" + module))
 
 testenv = env.Clone()
-testenv.Append(LIBS=["-lilmath","-lilutil","-lm"])
+testenv.Append(LIBS=["-lilmath","-lilutil","-lm","-ldl"])
 
 objects = testenv.Object(source = sources)
 
