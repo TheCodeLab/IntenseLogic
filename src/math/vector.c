@@ -9,148 +9,107 @@
 #include <xmmintrin.h>
 #endif
 
-#include "ilmath.h"
-
-il_vec4 il_vec4_new()
-{
-    il_vec4 v = il_math_alloc(sizeof(float) * 4);
-    return v;
-}
-
-il_vec2 il_vec2_new()
-{
-    il_vec2 v = il_math_alloc(sizeof(double) * 2);
-    return v;
-}
-
-void il_vec4_free(il_vec4 vec)
-{
-    il_math_free(vec);
-}
-
-void il_vec2_free(il_vec2 vec)
-{
-    il_math_free(vec);
-}
-
-il_vec4 il_vec4_copy(il_vec4 vec)
-{
-    il_vec4 res = il_vec4_new();
-    memcpy(res, vec, sizeof(float) * 4);
-    return res;
-}
-
-il_vec2 il_vec2_copy(il_vec2 vec)
-{
-    il_vec2 res = il_vec2_new();
-    memcpy(res, vec, sizeof(double) * 2);
-    return res;
-}
-
 ///////////////////////////////////////////////////////////////////////////////
 // vec4 operations
 
-il_vec4 il_vec4_set(il_vec4 vec, float x, float y, float z, float w)
+il_vec4 il_vec4_new(float x, float y, float z, float w)
 {
-    if (!vec) {
-        vec = il_vec4_new();
-    }
-    vec[0] = x;
-    vec[1] = y;
-    vec[2] = z;
-    vec[3] = w;
+    il_vec4 vec;
+    vec.x = x;
+    vec.y = y;
+    vec.z = z;
+    vec.w = w;
     return vec;
+}
+il_vec4 il_vec4_fromarr(float* arr)
+{
+    il_vec4 vec;
+    vec.x = arr[0];
+    vec.y = arr[1];
+    vec.z = arr[2];
+    vec.w = arr[3];
+    return vec;    
 }
 
 char *il_vec4_print(const il_vec4 v, char *buf, unsigned length)
 {
-    unsigned flen = snprintf(NULL, 0, "(% .2f % .2f % .2f % .2f)", v[0], v[1], v[2], v[3]);
+    unsigned flen = snprintf(NULL, 0, "(% .2f % .2f % .2f % .2f)", v.x, v.y, v.z, v.w);
     ++flen;
     if (!buf || flen > length) {
         buf = realloc(buf, flen);
     }
-    snprintf(buf, flen, "(% .2f % .2f % .2f % .2f)", v[0], v[1], v[2], v[3]);
+    snprintf(buf, flen, "(% .2f % .2f % .2f % .2f)", v.x, v.y, v.z, v.w);
     return buf;
 }
 
-il_vec4 il_vec4_add(const il_vec4 a, const il_vec4 b, il_vec4 vec)
+il_vec4 il_vec4_add(const il_vec4 a, const il_vec4 b)
 {
-    if (!vec) {
-       vec = il_vec4_new();
-    }
+    il_vec4 vec;
 #ifdef IL_SSE
-    _mm_store_ps(vec, _mm_add_ps(_mm_load_ps(a), _mm_load_ps(b)));
+    _mm_store_ps(&vec, _mm_add_ps(_mm_load_ps(&a), _mm_load_ps(&b)));
 #else
-    vec[0] = a[0] + b[0];
-    vec[1] = a[1] + b[1];
-    vec[2] = a[2] + b[2];
-    vec[3] = a[3] + b[3];
+    vec.x = a.x + b.x;
+    vec.y = a.y + b.y;
+    vec.z = a.z + b.z;
+    vec.w = a.w + b.w;
 #endif
     return vec;
 }
 
-il_vec4 il_vec4_sub(const il_vec4 a, const il_vec4 b, il_vec4 vec)
+il_vec4 il_vec4_sub(const il_vec4 a, const il_vec4 b)
 {
-    if (!vec) {
-       vec = il_vec4_new();
-    }
+    il_vec4 vec;
 #ifdef IL_SSE
-    _mm_store_ps(vec, _mm_sub_ps(_mm_load_ps(a), _mm_load_ps(b)));
+    _mm_store_ps(&vec, _mm_sub_ps(_mm_load_ps(&a), _mm_load_ps(&b)));
 #else
-    vec[0] = a[0] - b[0];
-    vec[1] = a[1] - b[1];
-    vec[2] = a[2] - b[2];
-    vec[3] = a[3] - b[3];
+    vec.x = a.x - b.x;
+    vec.y = a.y - b.y;
+    vec.z = a.z - b.z;
+    vec.w = a.w - b.w;
 #endif
     return vec;
 }
 
-il_vec4 il_vec4_mul(const il_vec4 a, const il_vec4 b, il_vec4 vec)
+il_vec4 il_vec4_mul(const il_vec4 a, const il_vec4 b)
 {
-    if (!vec) {
-       vec = il_vec4_new();
-    }
+    il_vec4 vec;
 #ifdef IL_SSE
-    _mm_store_ps(vec, _mm_mul_ps(_mm_load_ps(a), _mm_load_ps(b)));
+    _mm_store_ps(&vec, _mm_mul_ps(_mm_load_ps(&a), _mm_load_ps(&b)));
 #else
-    vec[0] = a[0] * b[0];
-    vec[1] = a[1] * b[1];
-    vec[2] = a[2] * b[2];
-    vec[3] = a[3] * b[3];
+    vec.x = a.x * b.x;
+    vec.y = a.y * b.y;
+    vec.z = a.z * b.z;
+    vec.w = a.w * b.w;
 #endif
     return vec;
 }
 
-il_vec4 il_vec4_div(const il_vec4 a, const il_vec4 b, il_vec4 vec)
+il_vec4 il_vec4_div(const il_vec4 a, const il_vec4 b)
 {
-    if (!vec) {
-       vec = il_vec4_new();
-    }
+    il_vec4 vec;
 #ifdef IL_SSE
-    _mm_store_ps(vec, _mm_div_ps(_mm_load_ps(a), _mm_load_ps(b)));
+    _mm_store_ps(&vec, _mm_div_ps(_mm_load_ps(&a), _mm_load_ps(&b)));
 #else
-    vec[0] = a[0] / b[0];
-    vec[1] = a[1] / b[1];
-    vec[2] = a[2] / b[2];
-    vec[3] = a[3] / b[3];
+    vec.x = a.x / b.x;
+    vec.y = a.y / b.y;
+    vec.z = a.z / b.z;
+    vec.w = a.w / b.w;
 #endif
     return vec;
 }
 
 float il_vec4_dot(const il_vec4 a, const il_vec4 b)
 {
-    return a[0] * b[0] + a[1] * b[1] + a[2] * b[2] + a[3] * b[3];
+    return a.x * b.x + a.y * b.y + a.z * b.z + a.w * b.w;
 }
 
-il_vec3 il_vec4_to_vec3(const il_vec4 a, il_vec3 vec)
+il_vec3 il_vec4_to_vec3(const il_vec4 a)
 {
-    if (!vec) {
-        vec = il_vec3_new();
-    }
-    vec[0] = a[0] / a[3];
-    vec[1] = a[1] / a[3];
-    vec[2] = a[2] / a[3];
-    vec[3] = 1.0;
+    il_vec3 vec;
+    vec.x = a.x / a.w;
+    vec.y = a.y / a.w;
+    vec.z = a.z / a.w;
+    vec.w = 1.0;
     return vec;
 }
 
@@ -162,11 +121,8 @@ float il_vec4_len(const il_vec4 a)
 ///////////////////////////////////////////////////////////////////////////////
 // vec3 operations
 
-il_vec3 il_vec3_rotate(const il_vec3 a, const il_quat q, il_vec3 vec)
+il_vec3 il_vec3_rotate(const il_vec3 a, const il_quat q)
 {
-    if (!vec) {
-        vec = il_vec3_new();
-    }
     /* From glm/gtc/quaternion.inl
                 typename detail::tquat<T>::value_type Two(2);
 
@@ -179,68 +135,54 @@ il_vec3 il_vec3_rotate(const il_vec3 a, const il_quat q, il_vec3 vec)
 
 		return v + uv + uuv;
     */
-    il_vec3 uv, uuv, qv;
-    qv = il_vec3_set(NULL, q[0], q[1], q[2]);
-    uv = il_vec3_cross(qv, a, NULL);
-    uuv = il_vec3_cross(qv, uv, NULL);
-    uv[0] *= 2*q[3];
-    uv[1] *= 2*q[3];
-    uv[2] *= 2*q[3];
-    uuv[0] *= 2;
-    uuv[1] *= 2;
-    uuv[2] *= 2;
+    il_vec3 uv, uuv, qv, vec;
+    qv = il_vec3_new(q.x, q.y, q.z);
+    uv = il_vec3_cross(qv, a);
+    uuv = il_vec3_cross(qv, uv);
+    uv.x *= 2*q.w;
+    uv.y *= 2*q.w;
+    uv.z *= 2*q.w;
+    uuv.x *= 2;
+    uuv.y *= 2;
+    uuv.z *= 2;
 
-    vec = il_vec3_add(a, uv, vec);
-    vec = il_vec3_add(vec, uuv, vec);
-
-    il_vec3_free(uv);
-    il_vec3_free(uuv);
-    il_vec3_free(qv);
+    vec = il_vec3_add(a, uv);
+    vec = il_vec3_add(vec, uuv);
 
     return vec;
 }
 
-il_vec3 il_vec3_cross(const il_vec3 a, const il_vec3 b, il_vec3 vec)
+il_vec3 il_vec3_cross(const il_vec3 a, const il_vec3 b)
 {
-    if (!vec) {
-        vec = il_vec3_new();
-    }
-    float n[3];
-    n[0] = a[1] * b[2] - b[1] * a[2];
-    n[1] = a[2] * b[0] - b[2] * a[0];
-    n[2] = a[0] * b[1] - b[0] * a[1];
-    vec[0] = n[0];
-    vec[1] = n[1];
-    vec[2] = n[2];
+    il_vec3 vec;
+    vec.x = a.y * b.z - b.y * a.z;
+    vec.y = a.z * b.x - b.z * a.x;
+    vec.z = a.x * b.y - b.x * a.y;
     return vec;
 }
 
 float il_vec3_dot(const il_vec3 a, const il_vec3 b)
 {
-    return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+    return a.x * b.x + a.y * b.y + a.z * b.z;
 }
 
-il_vec3 il_vec3_normal(const il_vec3 a, il_vec3 vec)
+il_vec3 il_vec3_normal(const il_vec3 a)
 {
-    if (!vec) {
-        vec = il_vec3_new();
-    }
+    il_vec3 vec;
     float len = il_vec3_len(a);
-    vec[0] = a[0]/len;
-    vec[1] = a[1]/len;
-    vec[2] = a[2]/len;
+    vec.x = a.x/len;
+    vec.y = a.y/len;
+    vec.z = a.z/len;
     return vec;
 }
 
-il_vec4 il_vec3_to_vec4(const il_vec3 a, float w, il_vec4 vec)
+il_vec4 il_vec3_to_vec4(const il_vec3 a, float w)
 {
-    if (!vec) {
-        vec = il_vec4_new();
-    }
-    vec[0] = a[0];
-    vec[1] = a[1];
-    vec[2] = a[2];
-    vec[3] = w;
+    il_vec4 vec;
+    vec.x = a.x;
+    vec.y = a.y;
+    vec.z = a.z;
+    vec.w = w;
     return vec;
 }
 
@@ -252,58 +194,50 @@ float il_vec3_len(const il_vec3 a)
 ///////////////////////////////////////////////////////////////////////////////
 // vec2 operations
 
-il_vec2 il_vec2_add(il_vec2 a, il_vec2 b, il_vec2 vec)
+il_vec2 il_vec2_add(il_vec2 a, il_vec2 b)
 {
-     if (!vec) {
-         vec = il_vec2_new();
-     }
+    il_vec2 vec;
 #ifdef IL_SSE
-    _mm_store_pd(vec, _mm_add_pd(_mm_load_pd(a), _mm_load_pd(b)));
+    _mm_store_pd(&vec, _mm_add_pd(_mm_load_pd(&a), _mm_load_pd(&b)));
 #else
-    vec[0] = a[0] + b[0];
-    vec[1] = a[1] + b[1];
+    vec.x = a.x + b.x;
+    vec.y = a.y + b.y;
 #endif
     return vec;
 }
 
-il_vec2 il_vec2_sub(il_vec2 a, il_vec2 b, il_vec2 vec)
+il_vec2 il_vec2_sub(il_vec2 a, il_vec2 b)
 {
-     if (!vec) {
-         vec = il_vec2_new();
-     }
+    il_vec2 vec;
 #ifdef IL_SSE
-    _mm_store_pd(vec, _mm_sub_pd(_mm_load_pd(a), _mm_load_pd(b)));
+    _mm_store_pd(&vec, _mm_sub_pd(_mm_load_pd(&a), _mm_load_pd(&b)));
 #else
-    vec[0] = a[0] - b[0];
-    vec[1] = a[1] - b[1];
+    vec.x = a.x - b.x;
+    vec.y = a.y - b.y;
 #endif
     return vec;
 }
 
-il_vec2 il_vec2_mul(il_vec2 a, il_vec2 b, il_vec2 vec)
+il_vec2 il_vec2_mul(il_vec2 a, il_vec2 b)
 {
-     if (!vec) {
-         vec = il_vec2_new();
-     }
+    il_vec2 vec;
 #ifdef IL_SSE
-    _mm_store_pd(vec, _mm_mul_pd(_mm_load_pd(a), _mm_load_pd(b)));
+    _mm_store_pd(&vec, _mm_mul_pd(_mm_load_pd(&a), _mm_load_pd(&b)));
 #else
-    vec[0] = a[0] * b[0];
-    vec[1] = a[1] * b[1];
+    vec.x = a.x * b.x;
+    vec.y = a.y * b.y;
 #endif
     return vec;
 }
 
-il_vec2 il_vec2_div(il_vec2 a, il_vec2 b, il_vec2 vec)
+il_vec2 il_vec2_div(il_vec2 a, il_vec2 b)
 {
-     if (!vec) {
-         vec = il_vec2_new();
-     }
+    il_vec2 vec;
 #ifdef IL_SSE
-    _mm_store_pd(vec, _mm_div_pd(_mm_load_pd(a), _mm_load_pd(b)));
+    _mm_store_pd(&vec, _mm_div_pd(_mm_load_pd(&a), _mm_load_pd(&b)));
 #else
-    vec[0] = a[0] / b[0];
-    vec[1] = a[1] / b[1];
+    vec.x = a.x / b.x;
+    vec.y = a.y / b.y;
 #endif
     return vec;
 }
