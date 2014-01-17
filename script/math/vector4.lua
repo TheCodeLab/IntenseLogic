@@ -42,7 +42,6 @@ local sub = c_wrap(modules.math.il_vec4_sub)
 local mul = c_wrap(modules.math.il_vec4_mul)
 local div = c_wrap(modules.math.il_vec4_div)
 
-local axis = {"x", "y", "z", "w"}
 local function index(t, k)
     vector3 = vector3 or require "math.vector3"
     if k == "len" or k == "length" then
@@ -58,7 +57,7 @@ local function index(t, k)
     elseif k == "w" then
         return t.ptr.w;
     end
-    return vector4[axis[k]]
+    return vector4[k]
 end
 
 local function newindex(t, k, v)

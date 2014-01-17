@@ -24,7 +24,6 @@ local quaternion = {}
 --- FFI CType of quaternions
 quaternion.type = ffi.typeof("il_quat");
 
-local axis = {"x", "y", "z", "w"}
 function index(t,k)
     vector3 = vector3 or require "math.vector3"
     if k == "x" then
@@ -44,7 +43,7 @@ function index(t,k)
     elseif k == "normal" then
         return quaternion.wrap(il_quat_normalize(t.ptr))
     end
-    return quaternion[axis[k]]
+    return quaternion[k]
 end
 
 function newindex(t, k, v)

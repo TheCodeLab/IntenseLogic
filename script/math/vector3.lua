@@ -61,7 +61,6 @@ local function mul(a,b)
     end
 end
 
-local axis = {"x", "y", "z"}
 local function index(t, k)
     if k == "x" then
         return t.ptr.x
@@ -77,7 +76,7 @@ local function index(t, k)
         vector4 = vector4 or require "math.vector4"
         return vector4.wrap(modules.math.il_vec3_to_vec4(t.ptr))
     end
-    return vector3[axis[k]]
+    return vector3[k]
 end
 
 local function newindex(t, k, v)
