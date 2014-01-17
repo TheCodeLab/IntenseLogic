@@ -8,19 +8,15 @@ local vector3;
 
 ffi.cdef [[
 
-il_vec4 il_vec4_new();
-void il_vec4_free(il_vec4 vec);
-il_vec4 il_vec4_copy(il_vec4 vec);
-
-il_vec4 il_vec4_set(il_vec4 vec, float x, float y, float z, float w);
+il_vec4 il_vec4_new(float x, float y, float z, float w);
 char *il_vec4_print(const il_vec4 v, char *buf, unsigned length);
 
-il_vec4 il_vec4_add(const il_vec4 a, const il_vec4 b, il_vec4 vec);
-il_vec4 il_vec4_sub(const il_vec4 a, const il_vec4 b, il_vec4 vec);
-il_vec4 il_vec4_mul(const il_vec4 a, const il_vec4 b, il_vec4 vec);
-il_vec4 il_vec4_div(const il_vec4 a, const il_vec4 b, il_vec4 vec);
+il_vec4 il_vec4_add(const il_vec4 a, const il_vec4 b);
+il_vec4 il_vec4_sub(const il_vec4 a, const il_vec4 b);
+il_vec4 il_vec4_mul(const il_vec4 a, const il_vec4 b);
+il_vec4 il_vec4_div(const il_vec4 a, const il_vec4 b);
 float il_vec4_dot(const il_vec4 a, const il_vec4 b);
-il_vec3 il_vec4_to_vec3(const il_vec4 a, il_vec4 vec);
+il_vec3 il_vec4_to_vec3(const il_vec4 a);
 float il_vec4_len(const il_vec4 a);
 
 ]]
@@ -37,7 +33,7 @@ local function c_wrap(c)
             b = vector4(b, b, b, b)
         end
         assert(vector4.check(b))
-        return vector4.wrap(c(a.ptr, b.ptr, nil))
+        return vector4.wrap(c(a.ptr, b.ptr))
     end
 end
 
@@ -46,37 +42,38 @@ local sub = c_wrap(modules.math.il_vec4_sub)
 local mul = c_wrap(modules.math.il_vec4_mul)
 local div = c_wrap(modules.math.il_vec4_div)
 
+local axis = {"x", "y", "z", "w"}
 local function index(t, k)
     vector3 = vector3 or require "math.vector3"
     if k == "len" or k == "length" then
         return modules.math.il_vec4_len(t.ptr)
     elseif k == "vec3" then
-        return vector3.wrap(modules.math.il_vec4_to_vec3(t.ptr, nil))
+        return vector3.wrap(modules.math.il_vec4_to_vec3(t.ptr))
     elseif k == "x" then
-        return t.ptr[0];
+        return t.ptr.x;
     elseif k == "y" then
-        return t.ptr[1];
+        return t.ptr.y;
     elseif k == "z" then
-        return t.ptr[2];
+        return t.ptr.z;
     elseif k == "w" then
-        return t.ptr[3];
+        return t.ptr.w;
     end
-    return vector4[k]
+    return vector4[axis[k]]
 end
 
 local function newindex(t, k, v)
     assert(type(v) == "number")
     if k == "x" then
-        t.ptr[0] = v
+        t.ptr.x = v
         return
     elseif k == "y" then
-        t.ptr[1] = v
+        t.ptr.y = v
         return
     elseif k == "z" then
-        t.ptr[2] = v
+        t.ptr.z = v
         return
     elseif k == "w" then
-        t.ptr[3] = v
+        t.ptr.w = v
         return
     end
     error("Invalid key "..tostring(k).." in vector4")
@@ -132,9 +129,9 @@ end
 -- w is optional; x may be a table
 function vector4.create(x, y, z, w)
     if not x then
-        return vector3.wrap(modules.math.il_vec4_new())
+        return vector3.wrap(modules.math.il_vec4_new(0, 0, 0, 0))
     elseif type(x) == "number" and not y then
-        return vector4.wrap(modules.math.il_vec4_set(nil, x, x, x, x))
+        return vector4.wrap(modules.math.il_vec4_new(x, x, x, x))
     elseif vector4.check(x) then
         return vector4.wrap(modules.math.il_vec4_copy(x.ptr))
     elseif ffi.istype(vector4.type, x) then
@@ -143,7 +140,7 @@ function vector4.create(x, y, z, w)
         assert(type(y) == "number" and
                type(z) == "number" and
                type(w) == "number")
-        return vector4.wrap(modules.math.il_vec4_set(nil, x, y, z, w))
+        return vector4.wrap(modules.math.il_vec4_new(x, y, z, w))
     end
 end
 

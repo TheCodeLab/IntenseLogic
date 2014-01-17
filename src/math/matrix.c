@@ -10,7 +10,7 @@
 
 // SSE code copied from GLM which is under the MIT license: http://glm.g-truc.net/copying.txt
 
-il_mat il_zero_mat() {
+il_mat il_mat_zero() {
   return il_mat_new(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 }
 il_mat il_mat_new(float d00, float d01, float d02, float d03,
@@ -50,7 +50,7 @@ il_mat il_mat_fromarray(float* arr)
 
 il_mat il_mat_mul(const il_mat a, const il_mat b)
 {
-    il_mat res = il_zero_mat();
+    il_mat res = il_mat_zero();
 #ifdef IL_SSE
     __mm128 r1[4], r2[4];
     int i;

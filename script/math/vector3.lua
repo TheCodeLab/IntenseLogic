@@ -8,22 +8,18 @@ require "math.vector4"
 
 ffi.cdef [[
 
-//#define il_vec3_new il_vec4_new
-//#define il_vec3_free il_vec4_free
-//#define il_vec3_copy il_vec4_copy
-
-//#define il_vec3_set(v, x, y, z) ((il_vec3)il_vec4_set((il_vec4)v, x, y, z, 1.0))
+//#define il_vec3_new(x, y, z) il_vec4_new(x, y, z, 1.0)
 char *il_vec3_print(const il_vec3 v, char *buf, unsigned length);
 
-//#define il_vec3_add(a, b, v) ((il_vec3)il_vec4_add((il_vec4)a, (il_vec4)b, (il_vec4)v))
-//#define il_vec3_sub(a, b, v) ((il_vec3)il_vec4_sub((il_vec4)a, (il_vec4)b, (il_vec4)v))
-//#define il_vec3_mul(a, b, v) ((il_vec3)il_vec4_mul((il_vec4)a, (il_vec4)b, (il_vec4)v))
-//#define il_vec3_div(a, b, v) ((il_vec3)il_vec4_div((il_vec4)a, (il_vec4)b, (il_vec4)v))
-il_vec3 il_vec3_rotate(const il_vec3 a, const il_quat q, il_vec3 vec);
-il_vec3 il_vec3_cross(const il_vec3 a, const il_vec3 b, il_vec3 vec);
+//#define il_vec3_add il_vec4_add
+//#define il_vec3_sub il_vec4_sub
+//#define il_vec3_mul il_vec4_mul
+//#define il_vec3_div il_vec4_div
+il_vec3 il_vec3_rotate(const il_vec3 a, const il_quat q);
+il_vec3 il_vec3_cross(const il_vec3 a, const il_vec3 b);
 float il_vec3_dot(const il_vec3 a, const il_vec3 b);
-il_vec3 il_vec3_normal(const il_vec3 a, il_vec3 vec);
-il_vec4 il_vec3_to_vec4(const il_vec3 a, float w, il_vec4 vec);
+il_vec3 il_vec3_normal(const il_vec3 a);
+il_vec4 il_vec3_to_vec4(const il_vec3 a, float w);
 float il_vec3_len(const il_vec3 a);
 
 ]]
@@ -47,7 +43,7 @@ local function c_wrap(f)
     return function(a,b)
         assert(vector3.check(a), "Bad argument #1: Expected vector3, got "..type(a))
         assert(vector3.check(b), "Bad argument #2: Expected vector3, got "..type(b))
-        return vector3.wrap(f(a.ptr, b.ptr, nil))
+        return vector3.wrap(f(a.ptr, b.ptr))
     end
 end
 
@@ -59,40 +55,41 @@ local div = c_wrap(modules.math.il_vec4_div)
 local function mul(a,b)
     quaternion = quaternion or require "math.quaternion"
     if quaternion.check(b) then
-        return vector3.wrap(modules.math.il_vec3_rotate(a.ptr, b.ptr, nil))
+        return vector3.wrap(modules.math.il_vec3_rotate(a.ptr, b.ptr))
     else
         return oldmul(a,b)
     end
 end
 
+local axis = {"x", "y", "z"}
 local function index(t, k)
     if k == "x" then
-        return t.ptr[0]
+        return t.ptr.x
     elseif k == "y" then
-        return t.ptr[1]
+        return t.ptr.y
     elseif k == "z" then
-        return t.ptr[2]
+        return t.ptr.z
     elseif k == "len" then
         return modules.math.il_vec3_len(t.ptr)
     elseif k == "normal" then
-        return vector3.wrap(modules.math.il_vec3_normal(t.ptr, nil))
+        return vector3.wrap(modules.math.il_vec3_normal(t.ptr))
     elseif k == "vec4" then
         vector4 = vector4 or require "math.vector4"
-        return vector4.wrap(modules.math.il_vec3_to_vec4(t.ptr, nil))
+        return vector4.wrap(modules.math.il_vec3_to_vec4(t.ptr))
     end
-    return vector3[k]
+    return vector3[axis[k]]
 end
 
 local function newindex(t, k, v)
     assert(type(v) == "number")
     if k == "x" then
-        t.ptr[0] = v
+        t.ptr.x = v
         return
     elseif k == "y" then
-        t.ptr[1] = v
+        t.ptr.y = v
         return
     elseif k == "z" then
-        t.ptr[2] = v
+        t.ptr.z = v
         return
     end
     error("Invalid key "..tostring(k).." in vector3")
@@ -146,7 +143,7 @@ end
 -- @treturn vec3
 function vector3.copy(v)
     assert(vector3.check(v))
-    return vector3.wrap(modules.math.il_vec4_copy(v.ptr))
+    return vector3.wrap(v.ptr)
 end
 
 --- Creates a new vec3
@@ -156,17 +153,17 @@ end
 -- @treturn vec3
 function vector3.create(x, y, z)
     if not x then
-        return vector3.wrap(modules.math.il_vec4_new())
+        return vector3.wrap(modules.math.il_vec4_new(0, 0, 0, 1))
     elseif type(x) == "number" and not y then
-        return vector3.wrap(modules.math.il_vec4_set(nil, x, x, x, 1.0))
+        return vector3.wrap(modules.math.il_vec4_new(x, x, x, 1.0))
     elseif vector3.check(x) then
-        return vector3.wrap(modules.math.il_vec4_copy(x.ptr))
+        return vector3.wrap(x.ptr)
     elseif ffi.istype(vector3.type, x) then
         return vector3.wrap(x)
     elseif x and y and z then
         assert(type(y) == "number" and
                type(z) == "number")
-        return vector3.wrap(modules.math.il_vec4_set(nil, x, y, z, 1.0))
+        return vector3.wrap(modules.math.il_vec4_new(x, y, z, 1.0))
     end
 end
 

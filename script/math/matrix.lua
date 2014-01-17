@@ -7,20 +7,15 @@ require "math.scalar_defs"
 
 ffi.cdef [[
 
-typedef float *il_mat;
-
-il_mat il_mat_new();
-void il_mat_free(il_mat m);
-il_mat il_mat_copy(il_mat m);
-
-il_mat il_mat_set(il_mat m, il_vec4 a, il_vec4 b, il_vec4 c, il_vec4 d);
-il_mat il_mat_mul(const il_mat a, const il_mat b, il_mat m);
-il_mat il_mat_translate(const il_vec4 v, il_mat m);
-il_mat il_mat_scale(const il_vec4 v, il_mat m);
-il_mat il_mat_identity(il_mat m);
-il_mat il_mat_perspective(il_mat m, float fovy, float aspect, float znear, float zfar);
-il_mat il_mat_rotate(const il_quat q, il_mat m);
-il_mat il_mat_invert(const il_mat a, il_mat m);
+il_mat il_mat_zero();
+il_mat il_mat_zeromatrix();
+il_mat il_mat_mul(const il_mat a, const il_mat b);
+il_mat il_mat_translate(const il_vec4 v);
+il_mat il_mat_scale(const il_vec4 v);
+il_mat il_mat_identity();
+il_mat il_mat_perspective(float fovy, float aspect, float znear, float zfar);
+il_mat il_mat_rotate(const il_quat q);
+il_mat il_mat_invert(const il_mat a);
 
 ]]
 
@@ -29,12 +24,12 @@ local matrix = {}
 local function mul(a,b)
     assert(type(a) == "table" and ffi.istype(matrix.type, a.ptr), "Expected matrix")
     assert(type(b) == "table" and ffi.istype(matrix.type, a.ptr), "Expected matrix")
-    return wrap(modules.math.il_mat_mul(a.ptr, b.ptr, nil));
+    return wrap(modules.math.il_mat_mul(a.ptr, b.ptr));
 end
 
 local function unm(a)
     assert(type(a) == "table" and ffi.istype(matrix.type, a.ptr), "Expected matrix")
-    return wrap(modules.math.il_mat_invert(a, nil));
+    return wrap(modules.math.il_mat_invert(a));
 end
 
 --- Wraps a cdata with a metatable
@@ -58,12 +53,12 @@ end
 matrix.type = ffi.typeof "il_mat";
 
 --- Identity matrix
-matrix.identity = wrap(modules.math.il_mat_identity(nil));
+matrix.identity = wrap(modules.math.il_mat_identity());
 
 --- Creates a new matrix
 -- @treturn matrix Created matrix
 function matrix.create()
-    return wrap(modules.math.il_mat_new());
+    return wrap(modules.math.il_mat_zero());
 end
 
 --- Produces a translation using the provided vector
@@ -78,7 +73,7 @@ end
 -- @treturn matrix Translation matrix
 function matrix.translate(v)
     assert(vector4.check(v))
-    return wrap(modules.math.il_mat_translate(v.ptr, nil));
+    return wrap(modules.math.il_mat_translate(v.ptr));
 end
 
 --- Produces a scaling matrix using the provided vector
@@ -93,7 +88,7 @@ end
 -- @treturn matrix Scaling matrix
 function matrix.scale(v)
     assert(vector4.check(v))
-    return wrap(modules.math.il_mat_scale(v.ptr, nil))
+    return wrap(modules.math.il_mat_scale(v.ptr))
 end
 
 --- Creates a rotation matrix
@@ -102,7 +97,7 @@ end
 function matrix.rotate(a, v)
     if type(a) == "table" then
         assert(quaternion.check(a))
-        return wrap(modules.math.il_mat_rotate(a.ptr, nil))
+        return wrap(modules.math.il_mat_rotate(a.ptr))
     --[[elseif type(a) == "number" then
         assert(type(v) == "table" and ffi.istype("il_Vector3", v.ptr), "Expected vector3")
         return wrap(modules.math.il_Matrix_rotate_v(a, v.ptr));]]
@@ -118,7 +113,7 @@ end
 -- @tparam number zfar Clipping plane for objects far from the camera (set as close as comfortable, to preserve Z buffer precision)
 -- @treturn matrix Projection matrix
 function matrix.perspective(fovy, aspect, znear, zfar)
-    return wrap(modules.math.il_mat_perspective(nil, fovy, aspect, znear, zfar))
+    return wrap(modules.math.il_mat_perspective(fovy, aspect, znear, zfar))
 end
 
 setmetatable(matrix, {__call=function(self,mat) return matrix.create(mat) end})

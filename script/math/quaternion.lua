@@ -8,18 +8,14 @@ local vector3-- = require "vector3"
 
 ffi.cdef [[
 
-il_quat il_quat_new();
-void il_quat_free(il_quat q);
-il_quat il_quat_copy(il_quat q);
-
-il_quat il_quat_set(il_quat q, float x, float y, float z, float w);
-il_quat il_quat_mul(const il_quat a, const il_quat b, il_quat q);
-il_quat il_quat_lerp(const il_quat a, const il_quat b, float t, il_quat q);
-il_quat il_quat_fromYPR(float yaw, float pitch, float roll, il_quat q);
-il_quat il_quat_fromAxisAngle(float x, float y, float z, float a, il_quat q);
-il_quat il_quat_normalize(const il_quat a, il_quat q);
+il_quat il_quat_new(float x, float y, float z, float w);
+il_quat il_quat_mul(const il_quat a, const il_quat b);
+il_quat il_quat_lerp(const il_quat a, const il_quat b, float t);
+il_quat il_quat_fromYPR(float yaw, float pitch, float roll);
+il_quat il_quat_fromAxisAngle(float x, float y, float z, float a);
+il_quat il_quat_normalize(const il_quat a);
 float il_quat_len(const il_quat a);
-float il_quat_dot(const il_quat a);
+float il_quat_dot(const il_quat a, const il_quat b);
 
 ]]
 
@@ -28,16 +24,17 @@ local quaternion = {}
 --- FFI CType of quaternions
 quaternion.type = ffi.typeof("il_quat");
 
+local axis = {"x", "y", "z", "w"}
 function index(t,k)
     vector3 = vector3 or require "math.vector3"
     if k == "x" then
-        return t.ptr[0]
+        return t.ptr.x
     elseif k == "y" then
-        return t.ptr[1]
+        return t.ptr.y
     elseif k == "z" then
-        return t.ptr[2]
+        return t.ptr.z
     elseif k == "w" or k == "i" then
-        return t.ptr[3]
+        return t.ptr.w
     elseif k == "v" then
         return vector3(t.x, t.y, t.z)
     elseif k == "len" then
@@ -45,21 +42,21 @@ function index(t,k)
     elseif k == "dot" then
         return il_quat_dot(t.ptr)
     elseif k == "normal" then
-        return quaternion.wrap(il_quat_normalize(t.ptr, nil))
+        return quaternion.wrap(il_quat_normalize(t.ptr))
     end
-    return quaternion[k]
+    return quaternion[axis[k]]
 end
 
 function newindex(t, k, v)
     vector3 = vector3 or require "math.vector3"
     if k == "x" or k == "y" or k == "z" or k == "w" then
         assert(type(v) == "number")
-        t.ptr[({x=0, y=1, z=2, w=3})[k]] = v
+        t.ptr[k] = v
     elseif k == "v" then
         assert(vector3.check(v))
-        t.ptr[0] = v.x
-        t.ptr[1] = v.y
-        t.ptr[2] = v.z
+        t.ptr.x = v.x
+        t.ptr.y = v.y
+        t.ptr.z = v.z
     elseif k == "i" then
         assert(type(v) == "number")
         t.ptr.w = v
@@ -70,7 +67,7 @@ end
 function mul(a, b)
     vector3 = vector3 or require "math.vector3"
     if quaternion.check(b) then
-        return quaternion.wrap(modules.math.il_quat_mul(a.ptr, b.ptr, nil))
+        return quaternion.wrap(modules.math.il_quat_mul(a.ptr, b.ptr))
     elseif vector3.check(b) then
         return b * a
     else
@@ -79,7 +76,7 @@ function mul(a, b)
 end
 
 function lerp(a, b, t)
-    return quaternion.wrap(modules.math.il_quat_lerp(a,b,t,nil))
+    return quaternion.wrap(modules.math.il_quat_lerp(a,b,t))
 end
 
 function gc(obj)
@@ -87,7 +84,7 @@ function gc(obj)
 end
 
 function ts(self)
-    return "["..self.ptr[0]..", "..self.ptr[1]..", "..self.ptr[2]..", "..self.ptr[3].."]"
+    return "["..self.ptr.x..", "..self.ptr.y..", "..self.ptr.z..", "..self.ptr.w.."]"
 end
 
 --- Converts a cdata to a quaternion
@@ -113,21 +110,21 @@ function quaternion.create(...)
         if ffi.istype("il_quat", args[1]) then
             return quaternion.wrap(args[1])
         elseif quaternion.check(args[1]) then
-            return quaternion.wrap(modules.math.il_quat_copy(args[1].ptr))
+            return quaternion.wrap(args[1].ptr)
         else
             assert(false)
         end
     elseif #args == 3 then -- YPR
         assert(type(args[1]) == "number" and type(args[2]) == "number" and type(args[3]) == "number")
-        return quaternion.wrap(modules.math.il_quat_fromYPR(args[1], args[2], args[3], nil))
+        return quaternion.wrap(modules.math.il_quat_fromYPR(args[1], args[2], args[3]))
     elseif #args == 2 then -- axis angle with vec3
         assert(vector3.check(args[1]))
         assert(type(args[2]) == "number")
-        return quaternion.wrap(modules.math.il_quat_fromAxisAngle(args[1].x, args[1].y, args[1].z, args[2], nil))
+        return quaternion.wrap(modules.math.il_quat_fromAxisAngle(args[1].x, args[1].y, args[1].z, args[2]))
     elseif #args == 4 then -- raw quaternion
         assert(type(args[1]) == "number" and type(args[2]) == "number" and type(args[3]) == "number" and type(args[4]) == "number")
         --return quaternion.wrap(modules.math.il_quat_fromAxisAngle(args[1], args[2], args[3], args[4], nil))
-        return quaternion.wrap(modules.math.il_quat_set(nil, args[1], args[2], args[3], args[4]))
+        return quaternion.wrap(modules.math.il_quat_new(args[1], args[2], args[3], args[4]))
     end
     error "Don't know how to handle args"
 end
