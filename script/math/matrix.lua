@@ -8,7 +8,6 @@ require "math.scalar_defs"
 ffi.cdef [[
 
 il_mat il_mat_zero();
-il_mat il_mat_zeromatrix();
 il_mat il_mat_mul(const il_mat a, const il_mat b);
 il_mat il_mat_translate(const il_vec4 v);
 il_mat il_mat_scale(const il_vec4 v);
