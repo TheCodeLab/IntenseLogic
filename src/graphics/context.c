@@ -198,6 +198,7 @@ int ilG_context_resize(ilG_context *self, int w, int h, const char *title)
             free(self->title);
         }
         self->title = strdup(title);
+        glfwSetWindowTitle(self->window, self->title);
         if (self->use_default_fb) {
             self->valid = 1;
             return 1;
