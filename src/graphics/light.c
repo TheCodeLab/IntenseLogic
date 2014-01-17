@@ -12,7 +12,7 @@
 void light_init(void *obj)
 {
     ilG_light *light = obj;
-    light->color = il_vec4_new();
+    light->color = il_vec4_new(0, 0, 0, 0);
 }
 
 il_type ilG_light_type = {

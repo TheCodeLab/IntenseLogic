@@ -10,6 +10,9 @@
 
 // SSE code copied from GLM which is under the MIT license: http://glm.g-truc.net/copying.txt
 
+il_mat il_zero_mat() {
+  return il_mat_new(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+}
 il_mat il_mat_new(float d00, float d01, float d02, float d03,
                   float d10, float d11, float d12, float d13,
                   float d20, float d21, float d22, float d23,
@@ -47,7 +50,7 @@ il_mat il_mat_fromarray(float* arr)
 
 il_mat il_mat_mul(const il_mat a, const il_mat b)
 {
-    il_mat res;
+    il_mat res = il_zero_mat();
 #ifdef IL_SSE
     __mm128 r1[4], r2[4];
     int i;
@@ -154,31 +157,31 @@ il_mat il_mat_rotate(const il_quat q)
     );
 }
 
-static void addrow(il_mat m, int src, int dst, float f)
+static void addrow(il_mat *m, int src, int dst, float f)
 {
-    m.data[dst*4 + 0] += m.data[src*4 + 0] * f;
-    m.data[dst*4 + 1] += m.data[src*4 + 1] * f;
-    m.data[dst*4 + 2] += m.data[src*4 + 2] * f;
-    m.data[dst*4 + 3] += m.data[src*4 + 3] * f;
+    m->data[dst*4 + 0] += m->data[src*4 + 0] * f;
+    m->data[dst*4 + 1] += m->data[src*4 + 1] * f;
+    m->data[dst*4 + 2] += m->data[src*4 + 2] * f;
+    m->data[dst*4 + 3] += m->data[src*4 + 3] * f;
 }
 
-static void swaprow(il_mat m, int src, int dst)
+static void swaprow(il_mat *m, int src, int dst)
 {
     float r[4];
-    memcpy(r,                m.data + 4*dst,  sizeof(r));
-    memcpy(m.data + 4*dst,   m.data + 4*src,  sizeof(r));
-    memcpy(m.data + 4*src,   r,               sizeof(r));
+    memcpy(r,                 m->data + 4*dst,  sizeof(r));
+    memcpy(m->data + 4*dst,   m->data + 4*src,  sizeof(r));
+    memcpy(m->data + 4*src,   r,                sizeof(r));
 }
 
-static void mulrow(il_mat m, int col, float f)
+static void mulrow(il_mat *m, int col, float f)
 {
-    m.data[col*4 + 0] *= f;
-    m.data[col*4 + 1] *= f;
-    m.data[col*4 + 2] *= f;
-    m.data[col*4 + 3] *= f;
+    m->data[col*4 + 0] *= f;
+    m->data[col*4 + 1] *= f;
+    m->data[col*4 + 2] *= f;
+    m->data[col*4 + 3] *= f;
 }
 
-il_mat il_mat_invert(const il_mat a)
+il_mat il_mat_invert(il_mat a)
 {
     il_mat res = il_mat_identity();
 
@@ -192,8 +195,8 @@ il_mat il_mat_invert(const il_mat a)
             // Okay, let's go hunting for a row with a better diagonal to use
             // keep in mind, row swapping is also a linear operation!
             for (int row = 0; row < 4; ++row) if (row != col) if (fabs(a.data[row*4+col]) >= eps) {
-                swaprow(a, row, col);
-                swaprow(res,row, col);
+                swaprow(&a, row, col);
+                swaprow(&res,row, col);
             }
             diagonalfield = a.data[col*4+col]; // recompute
             // if it still fails, we probably have a denatured matrix and are proper fucked.
@@ -205,14 +208,14 @@ il_mat il_mat_invert(const il_mat a)
             if (row != col) {
                 float field = a.data[row*4+col];
                 // bring this field to 0 by subtracting the row that's on the diagonal for this column
-                addrow(a, /* src */ col, /* dst */ row, /* factor */ -field/diagonalfield);
+                addrow(&a,  /* src */ col, /* dst */ row, /* factor */ -field/diagonalfield);
                 // do the same to identity
-                addrow(res,/* src */ col, /* dst */ row, /* factor */ -field/diagonalfield);
+                addrow(&res,/* src */ col, /* dst */ row, /* factor */ -field/diagonalfield);
             }
         }
         // and finally, bring the diagonal to 1
-        mulrow(a,  col, 1/diagonalfield);
-        mulrow(res,col, 1/diagonalfield);
+        mulrow(&a,  col, 1/diagonalfield);
+        mulrow(&res,col, 1/diagonalfield);
     }
     // Success! Because a is now id, res is now a^-1. Math is fun!
     return res;

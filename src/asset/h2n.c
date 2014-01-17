@@ -27,13 +27,15 @@ ilA_img *ilA_img_height_to_normal(const ilA_img *self)
             }
             float w = -1.0/img->width, h = -1.0/img->height;
             //float w = -1, h = -1;
-            il_vec3 vx = il_vec3_set(NULL, w, height[1] - height[0], 0),
-                    vy = il_vec3_set(NULL, 0, height[2] - height[0], h),
-                    res = il_vec3_cross(vy, vx, NULL);
-            il_vec3_free(vx);
-            il_vec3_free(vy);
-            res = il_vec3_normal(res, res);
-            memcpy(img->data + y*img->width*img->bpp/8 + x*img->bpp/8, res, sizeof(float) * 3);
+            il_vec3 vx = il_vec3_new(w, height[1] - height[0], 0),
+                    vy = il_vec3_new(0, height[2] - height[0], h),
+                    res = il_vec3_cross(vy, vx);
+            res = il_vec3_normal(res);
+
+            float* data = (float*) (img->data + y*img->width*img->bpp/8 + x*img->bpp/8);
+            data[0] = res.x;
+            data[1] = res.y;
+            data[2] = res.z;
         }
     }
 

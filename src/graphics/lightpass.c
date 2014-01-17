@@ -98,9 +98,9 @@ static void draw_lights(ilG_stage *ptr)
     ilG_bindable_bind(context->drawableb, context->drawable);
     ilG_bindable_bind(context->materialb, context->material);
     glUniform3f(glGetUniformLocation(context->material->program, "camera"), 
-            context->camera->positionable.position[0], 
-            context->camera->positionable.position[1],
-            context->camera->positionable.position[2]);
+            context->camera->positionable.position.x, 
+            context->camera->positionable.position.y,
+            context->camera->positionable.position.z);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_RECTANGLE, context->fbtextures[0]);
     glActiveTexture(GL_TEXTURE0 + 1);
@@ -127,9 +127,9 @@ static void draw_lights(ilG_stage *ptr)
         ilG_bindable_action(context->materialb, context->material);
         il_vec3 pos = context->positionable->position;
         //pos = il_mat_mulv(vp, pos, pos);
-        glUniform3f(position_loc, pos[0], pos[1], pos[2]);
+        glUniform3f(position_loc, pos.x, pos.y, pos.z);
         il_vec3 col = context->lights.data[i]->color;
-        glUniform3f(color_loc, col[0], col[1], col[2]);
+        glUniform3f(color_loc, col.x, col.y, col.z);
         glUniform1f(radius_loc, context->lights.data[i]->radius);
         ilG_bindable_action(context->drawableb, context->drawable);
         //glDrawElements(GL_TRIANGLES, sizeof(indices)/sizeof(GLuint), GL_UNSIGNED_INT, NULL);

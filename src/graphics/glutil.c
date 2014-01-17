@@ -155,56 +155,43 @@ il_mat ilG_computeMVP(enum ilG_transform filter, const ilG_camera* camera, const
 {
     il_mat mvp;
     if (filter & ILG_PROJECTION) {
-        mvp = il_mat_copy(camera->projection_matrix);
+        mvp = camera->projection_matrix;
     } else {
-        mvp = il_mat_identity(NULL);
+        mvp = il_mat_identity();
     }
     if (filter & ILG_VIEW_R) {
-        il_quat q = il_quat_copy(camera->positionable.rotation);
-        /*q[0] = -q[0];
-        q[1] = -q[1];
-        q[2] = -q[2];
-        q[3] = -q[3];*/
-
-        il_mat rotate = il_mat_rotate(q, NULL);
-        il_quat_free(q);
-        mvp = il_mat_mul(mvp, rotate, mvp);
-        il_mat_free(rotate);
+        il_quat q = camera->positionable.rotation;
+        il_mat rotate = il_mat_rotate(q);
+        mvp = il_mat_mul(mvp, rotate);
     }
     if (filter & ILG_VIEW_T) {
-        il_vec4 v = il_vec3_to_vec4(camera->positionable.position, 1.0, NULL);
-        v[0] = -v[0];
-        v[1] = -v[1];
-        v[2] = -v[2];
+        il_vec4 v = il_vec3_to_vec4(camera->positionable.position, 1.0);
+        v.x = -v.x;
+        v.y = -v.y;
+        v.z = -v.z;
 
-        il_mat translate = il_mat_translate(v, NULL);
-        il_vec4_free(v);
-        mvp = il_mat_mul(mvp, translate, mvp);
-        il_mat_free(translate);
+        il_mat translate = il_mat_translate(v);
+        mvp = il_mat_mul(mvp, translate);
     }
     if (filter & ILG_MODEL_T) {
-        il_vec3 v = il_vec4_to_vec3(object->position, NULL);
-        il_mat mat = il_mat_translate(v, NULL);
-        il_vec3_free(v);
-        mvp = il_mat_mul(mvp, mat, mvp);
-        il_mat_free(mat);
+        il_vec3 v = il_vec4_to_vec3(object->position);
+        il_mat mat = il_mat_translate(v);
+        mvp = il_mat_mul(mvp, mat);
     }
     if (filter & ILG_MODEL_R) {
-        il_mat mat = il_mat_rotate(object->rotation, NULL);
-        mvp = il_mat_mul(mvp, mat, mvp);
-        il_mat_free(mat);
+        il_mat mat = il_mat_rotate(object->rotation);
+        mvp = il_mat_mul(mvp, mat);
     }
     if (filter & ILG_MODEL_S) {
-        il_mat mat = il_mat_scale(object->size, NULL);
-        mvp = il_mat_mul(mvp, mat, mvp);
-        il_mat_free(mat);
+        il_mat mat = il_mat_scale(object->size);
+        mvp = il_mat_mul(mvp, mat);
     }
     if (filter & ILG_INVERSE) {
         //printf("filter %i camera<%p> object<%p>\n", filter, camera, object);
-        mvp = il_mat_invert(mvp, mvp);
+        mvp = il_mat_invert(mvp);
     }
     if (filter & ILG_TRANSPOSE) {
-        mvp = il_mat_transpose(mvp, mvp);
+        mvp = il_mat_transpose(mvp);
     }
     
     return mvp;
@@ -214,9 +201,9 @@ void ilG_bindMVP(GLint location, enum ilG_transform filter, const ilG_camera * c
 {
     ilG_testError("Unknown");
     il_mat mat = ilG_computeMVP(filter, camera, object);
-    if (!mat) {
+    /*if (!mat) {
         return;
-    }
+    }*/
     // I really resorted to this to try tracking down a bug with rendering
     /*char *camera_pos = il_vec4_print(camera->positionable->position, NULL, 0),
          *camera_rot = il_quat_print(camera->positionable->rotation, NULL, 0),
@@ -236,8 +223,7 @@ void ilG_bindMVP(GLint location, enum ilG_transform filter, const ilG_camera * c
     }
     printf("\n");*/
     
-    glUniformMatrix4fv(location, 1, GL_TRUE, mat);
+    glUniformMatrix4fv(location, 1, GL_TRUE, mat.data);
     ilG_testError("glUniformMatrix4fv failed");
-    il_mat_free(mat);
 }
 

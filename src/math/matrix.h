@@ -13,6 +13,7 @@ typedef struct il_mat {
   float data[16];
 }  __attribute__((aligned(16), packed)) il_mat;
 
+il_mat il_zero_mat();
 il_mat il_mat_new(float d00, float d01, float d02, float d03,
                   float d10, float d11, float d12, float d13,
                   float d20, float d21, float d22, float d23,

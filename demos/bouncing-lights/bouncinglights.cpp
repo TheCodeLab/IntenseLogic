@@ -93,13 +93,13 @@ ex void set_camera(ilG_camera *cam)
     playerWalk = btVector3(0,0,0);
     il_vec3 vec = cam->positionable.position;
     il_quat rot = cam->positionable.rotation;
-    ghostObject->setWorldTransform(btTransform(btQuaternion(rot[0], rot[1], rot[2], rot[3]), btVector3(vec[0], vec[1], vec[2])));
-    player->warp(btVector3(vec[0], vec[1], vec[2]));
+    ghostObject->setWorldTransform(btTransform(btQuaternion(rot.x, rot.y, rot.z, rot.w), btVector3(vec.x, vec.y, vec.z)));
+    player->warp(btVector3(vec.x, vec.y, vec.z));
 }
 
 ex void set_walk_direction(il_vec3 vec)
 {
-    playerWalk = btVector3(vec[0], vec[1], vec[2]);
+    playerWalk = btVector3(vec.x, vec.y, vec.z);
 }
 
 ex void add_heightmap(ilA_img *hm, float w, float h, float height)
@@ -123,8 +123,8 @@ ex void add_heightmap(ilA_img *hm, float w, float h, float height)
 
 ex void add_ball(il_positionable *pos)
 {
-    btQuaternion rot = btQuaternion(pos->rotation[0], pos->rotation[1], pos->rotation[2], pos->rotation[3]);
-    btVector3 vec = btVector3(pos->position[0], pos->position[1], pos->position[2]);
+    btQuaternion rot = btQuaternion(pos->rotation.x, pos->rotation.y, pos->rotation.z, pos->rotation.w);
+    btVector3 vec = btVector3(pos->position.x, pos->position.y, pos->position.z);
     btDefaultMotionState *state = new btDefaultMotionState(btTransform(rot, vec));
     float mass = 1.f;
     btVector3 inertia(0,0,0);
@@ -150,20 +150,20 @@ ex void update(int debug)
         btTransform trans;
         body->getMotionState()->getWorldTransform(trans);
         btVector3 vec = trans.getOrigin();
-        pos->position[0] = vec.getX();
-        pos->position[1] = vec.getY();
-        pos->position[2] = vec.getZ();
+        pos->position.x = vec.getX();
+        pos->position.y = vec.getY();
+        pos->position.z = vec.getZ();
         btQuaternion rot = trans.getRotation();
-        pos->rotation[0] = rot.getX();
-        pos->rotation[1] = rot.getY();
-        pos->rotation[2] = rot.getZ();
-        pos->rotation[3] = rot.getW();
+        pos->rotation.x = rot.getX();
+        pos->rotation.y = rot.getY();
+        pos->rotation.z = rot.getZ();
+        pos->rotation.w = rot.getW();
     }
     btTransform trans = ghostObject->getWorldTransform();
     btVector3 vec = trans.getOrigin();
-    camera->positionable.position[0] = vec.x();
-    camera->positionable.position[1] = vec.y();
-    camera->positionable.position[2] = vec.z();
+    camera->positionable.position.x = vec.x();
+    camera->positionable.position.y = vec.y();
+    camera->positionable.position.z = vec.z();
     if (debug) {
         dynamicsWorld->debugDrawWorld();
         debugdraw->upload();

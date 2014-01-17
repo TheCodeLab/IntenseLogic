@@ -14,7 +14,7 @@ void print_matrix(il_mat m)
     for (y = 0; y < 4; y++) {
         printf("{");
         for (x = 0; x < 4; x++) {
-            printf("% .6f", m[y*4 + x]);
+            printf("% .6f", m.data[y*4 + x]);
             if (x != 3) {
                 printf(", ");
             }
@@ -29,33 +29,33 @@ void print_matrix(il_mat m)
 
 void print_vector(il_vec4 v)
 {
-    printf("(% .2f, % .2f, % .2f, % .2f)", v[0], v[1], v[2], v[3]);
+    printf("(% .2f, % .2f, % .2f, % .2f)", v.x, v.y, v.z, v.w);
 }
 
 int inversionTest()
 {
-    il_mat mat = il_mat_new();
+    il_mat mat;
     int i;
     for (i = 0; i < 16; i++) {
-        mat[i] = ((float)rand() / RAND_MAX) * 10;
+        mat.data[i] = ((float)rand() / RAND_MAX) * 10;
     }
     printf("Input matrix:\n");
     print_matrix(mat);
-    il_mat inverted = il_mat_invert(mat, NULL);
-    if (!inverted) {
+    il_mat inverted = il_mat_invert(mat);
+    /* if (!inverted) {
         printf("Inversion failed.\n");
         return 0;
-    }
+    } */
     printf("Inverted matrix:\n");
     print_matrix(inverted);
-    il_mat final = il_mat_mul(mat, inverted, inverted);
+    il_mat final = il_mat_mul(mat, inverted);
     printf("Input * Inverted:\n");
     print_matrix(final);
     int success = 1;
-    il_mat ident = il_mat_identity(NULL);
+    il_mat ident = il_mat_identity();
     for (i = 0; i < 16; i++) {
-        float diff = final[i] - ident[i];
-        ident[i] = diff;
+        float diff = final.data[i] - ident.data[i];
+        ident.data[i] = diff;
         if (diff > 0.001 || diff < -0.001) {
             success = 0;
         }
@@ -67,23 +67,21 @@ int inversionTest()
 
 int dotTest()
 {
-    il_vec4 vec1 = il_vec4_set(NULL, 1, 2, 3, 4);
-    il_vec4 vec2 = il_vec4_set(NULL, 4, 3, 2, 1);
+    il_vec4 vec1 = il_vec4_new(1, 2, 3, 4);
+    il_vec4 vec2 = il_vec4_new(4, 3, 2, 1);
     printf("Input vectors: ");
     print_vector(vec1);
     printf(" ");
     print_vector(vec2);
     printf("\n");
     float res = il_vec4_dot(vec1, vec2);
-    il_vec4_free(vec1);
-    il_vec4_free(vec2);
     printf("Result: %.6f\n", res);
     return res == 20.f;
 }
 
 int quatLenTest()
 {
-    il_quat a = il_quat_set(NULL, 0, 0, 0, 1);
+    il_quat a = il_quat_new(0, 0, 0, 1);
     float len = il_quat_len(a);
     printf("Length of (0, 0, 0, 1): %f\n", len);
     return len == 1.f;
