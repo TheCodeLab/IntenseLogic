@@ -37,9 +37,8 @@ typedef struct ilE_handler ilE_handler;
  * @see ilE_register */
 enum ilE_behaviour {
     ILE_DONTCARE,       /**< No preference for when the event is called */
-    ILE_BEFORE,         /**< Must be called before previously registered handlers */
-    ILE_AFTER,          /**< Must be called after previously registered handlers */
-    ILE_OVERRIDE,       /**< Only call this handler, ignoring the others */
+    ILE_BEFORE = -100,  /**< Must be called before previously registered handlers */
+    ILE_AFTER = 100,    /**< Must be called after previously registered handlers */
 };
 
 /*! How the handler should schedule the callback 
@@ -87,7 +86,7 @@ void ilE_handler_fireasync(ilE_handler *self, size_t size, const void *data);
  * @param name A string name used for introspection, such as debugging
  * @return A unique handle into the handler which can be used to unregister the callback. 
  * @see ilE_unregister */
-int ilE_register_real(ilE_handler* self, const char *name, enum ilE_behaviour behaviour, enum ilE_threading threads, ilE_callback callback, void * ctx);
+int ilE_register_real(ilE_handler* self, const char *name, int priority, enum ilE_threading threads, ilE_callback callback, void * ctx);
 /*! Convienience wrapper which sets the name to __func__ */
 #define ilE_register(self, b, t, cb, ctx) ilE_register_real(self, #cb, b, t, cb, ctx)
 /*! Deletes a callback - use this on all your registered callbacks before destroying a handler. */
