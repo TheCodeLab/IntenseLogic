@@ -15,7 +15,7 @@ common = env.Clone()
 common.Append(CPPPATH = src_dir, LIBS=['ilutil', 'ilmath'])
 
 if platform=="mingw":
-    common.Append(LIBS=["libevent"])
+    common.Append(LIBS=['libevent', 'ws2_32'])
 else:
     common.ParseConfig("pkg-config libevent --libs --cflags")
 

@@ -93,7 +93,7 @@ int il_logger_getMessageEnd(const il_logger *self)
 const il_logmsg *il_logger_getMessage(const il_logger *self, int id)
 {
     if (id < 0) {
-        assert(self->len + id >= 0);
+        assert((int)self->len + id >= 0);
         return self->buffer[self->len + id];
     }
     id -= self->offset;

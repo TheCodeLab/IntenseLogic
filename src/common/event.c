@@ -15,6 +15,10 @@
 #include "util/uthash.h"
 #include "util/ilassert.h"
 
+#ifdef WIN32
+#include <winsock2.h>
+#endif
+
 char *strdup(const char*);
 
 static void ilE_handler_fire_forced(ilE_handler *self, size_t size, const void *data);
@@ -79,11 +83,18 @@ static void file_dispatch(evutil_socket_t fd, short events, void *ctx)
     (void)fd, (void)events;
     ilE_handler *hnd = (ilE_handler*)ctx;
     int socktype;
+#ifdef WIN32
+# define cast (char*)
+    int len;
+#else
+# define cast
     socklen_t len;
+#endif
     void *data;
     size_t size;
 
-    getsockopt(fd, SOL_SOCKET, SO_TYPE, &socktype, &len);
+    getsockopt(fd, SOL_SOCKET, SO_TYPE, cast &socktype, &len);
+#undef cast
     if (hnd->data.file.fdevent == ILE_READASARG && socktype == SOCK_STREAM) {
         struct evbuffer *evbuf = evbuffer_new();
         int res;
@@ -311,7 +322,7 @@ void ilE_loop()
 void ilE_dump(ilE_handler *self)
 {
     size_t i;
-    fprintf(stderr, "Registry dump of handler %s <%p>:\n", self->name, self);
+    fprintf(stderr, "Registry dump of handler %s <%p>:\n", self->name, (void*)self);
     for (i = 0; i < self->callbacks.length; i++) {
         struct callback *cb = &self->callbacks.data[i];
         char threading_str[64];
@@ -324,7 +335,7 @@ void ilE_dump(ilE_handler *self)
             default:
             strcpy(threading_str, "???");
         }
-        fprintf(stderr, "\t%s <%p> priority:%i threading:%s ctx<%p>\n", cb->name, cb->callback, cb->priority, threading_str, cb->ctx);
+        fprintf(stderr, "\t%s <%p> priority:%i threading:%s ctx<%p>\n", cb->name, (void*)cb->callback, cb->priority, threading_str, cb->ctx);
     }
 }
 

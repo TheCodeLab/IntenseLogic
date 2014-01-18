@@ -66,7 +66,19 @@ void il_close_module(const char *module);
  * @return The address of the symbol.
  */
 #ifdef IL_DLSYM_LOADER
-#include <dlfcn.h>
+# ifdef WIN32
+static il_func il_get_symbol(const char *module, const char *name)
+{
+    static il_func (*sym)(const char*, const char*);
+    static HMODULE handle;
+    if (!sym) {
+        handle = GetModuleHandle(NULL); // get current process's exe file
+        sym = (il_func(*)(const char*, const char*))GetProcAddress(handle, "il_get_symbol");
+    }
+    return sym(module, name);
+}
+# else
+#  include <dlfcn.h>
 static il_func il_get_symbol(const char *module, const char *name)
 {
     static il_func (*sym)(const char*,const char*);
@@ -75,6 +87,7 @@ static il_func il_get_symbol(const char *module, const char *name)
     }
     return sym(module, name);
 }
+# endif
 #else
 il_func il_get_symbol(const char *module, const char *name);
 #endif
@@ -85,7 +98,7 @@ il_func il_get_symbol(const char *module, const char *name);
 #define il_gen_noret_symbol(mod, name, args) \
     static void name(args(il_gen_arglist)) \
     { \
-        static void *sym;                       \
+        static il_func sym;                     \
         static int have_sym;                    \
         if (!have_sym) {                        \
             sym = il_get_symbol(mod, #name);    \
@@ -99,7 +112,7 @@ il_func il_get_symbol(const char *module, const char *name);
 #define il_gen_symbol(mod, def, ret, name, args) \
     static ret name(args(il_gen_arglist)) \
     {                                           \
-        static void *sym;                       \
+        static il_func sym;                     \
         static int have_sym;                    \
         if (!have_sym) {                        \
             sym = il_get_symbol(mod, #name);    \
