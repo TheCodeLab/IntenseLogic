@@ -24,7 +24,7 @@ struct outpass {
 
 il_type ilG_outpass_type = {
     .typeclasses = NULL,
-    .storage = NULL,
+    .storage = {NULL},
     .constructor = NULL,
     .destructor = NULL,
     .copy = NULL,

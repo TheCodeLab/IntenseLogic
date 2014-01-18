@@ -63,128 +63,14 @@ void il_weakunref(void *obj, void **ptr)
     *ptr = NULL;
 }
 
-void *il_storage_get(il_storage **md, const char *key, size_t *size, enum il_storagetype *tag)
+il_table *il_base_getStorage(void *obj)
 {
-    il_return_null_on_fail(md && key);
-    il_storage *entry;
-    HASH_FIND_STR(*md, key, entry);
-    if (entry) {
-        if (size) {
-            *size = entry->size;
-        }
-        if (tag) {
-            *tag = entry->tag;
-        }
-        if (entry->tag == IL_OBJECT) {
-            return il_ref(entry->value);
-        }
-        return entry->value;
-    }
-    return NULL;
+    return &((il_base*)obj)->storage;
 }
 
-void il_storage_set(il_storage **md, const char *key, void *data, size_t size, enum il_storagetype tag)
+il_table *il_type_getStorage(il_type *T)
 {
-    il_return_on_fail(md && key && data);
-    int is_array = (tag & IL_ARRAY_BIT) == IL_ARRAY_BIT, exists = 0;
-    size_t nmemb = is_array? size:1, i;
-    void *buf = NULL, *old;
-    il_storage *entry;
-
-    tag &= ~(IL_ARRAY_BIT|IL_LOCAL_BIT);
-    switch(tag) {
-        case IL_INT:
-        size = sizeof(int) * nmemb;
-        break;
-        case IL_FLOAT:
-        size = sizeof(float) * nmemb;
-        break;
-        case IL_STORAGE:
-        size = sizeof(il_storage);
-        break;
-        case IL_OBJECT:
-        size = il_sizeof(data) * nmemb;
-        if (is_array) {
-            buf = calloc(sizeof(il_base*), nmemb);
-            for (i = 0; i < nmemb; i++) {
-                ((il_base**)buf)[i] = il_ref(((il_base**)data)[i]);
-            }
-        } else {
-            buf = il_ref(data);
-        }
-        break;
-        case IL_STRING:
-        if (is_array) {
-            size = nmemb * sizeof(char*);
-            buf = calloc(sizeof(char*), nmemb);
-            for (i = 0; i < nmemb; i++) {
-                ((char**)buf)[i] = strdup(((char**)data)[i]);
-            }
-        } else {
-            size = strnlen(data, size);
-        }
-        break;
-        case IL_VOID:
-        buf = data;
-        tag |= IL_LOCAL_BIT;
-        default:
-        break;
-    }
-    if (!buf) {
-        buf = malloc(size);
-        memcpy(buf, data, size);
-    }
-    HASH_FIND_STR(*md, key, entry);
-    if (entry) {
-        exists = 1;
-        old = entry->value;
-        switch((unsigned)entry->tag) { // enum warnings are no fun when ORing flags :(
-            case IL_OBJECT | IL_ARRAY_BIT:
-            for (i = 0; i < entry->size/sizeof(il_base*); i++) {
-                il_unref(((il_base**)old)[i]);
-            }
-            break;
-            case IL_OBJECT:
-            il_unref(entry->value);
-            break;
-            case IL_STRING | IL_ARRAY_BIT:
-            for (i = 0; i < entry->size/sizeof(char*); i++) {
-                free(((char**)old)[i]);
-            }
-            break;
-            default:
-            free(old);
-        }
-    } else {
-        entry = calloc(1, sizeof(il_storage));
-    }
-    entry->key = strdup(key);
-    entry->value = buf;
-    entry->tag = tag;
-    entry->size = size;
-    if (!exists) {
-        HASH_ADD_KEYPTR(hh, *md, key, strlen(key), entry);
-    }
-}
-
-void *il_type_get(il_type* self, const char *key, size_t *size, enum il_storagetype *tag)
-{
-    return il_storage_get(&self->storage, key, size, tag);
-}
-
-void il_type_set(il_type* self, const char *key, void *data, size_t size, enum il_storagetype tag)
-{
-    il_storage_set(&self->storage, key, data, size, tag);
-}
-
-void *il_base_get(void* self, const char *key, size_t *size, enum il_storagetype *tag)
-{
-    return il_storage_get(&((il_base*)self)->storage, key, size, tag);
-}
-
-void il_base_set(void* self, const char *key, void *data, size_t size, enum il_storagetype tag)
-{
-    il_storage_set(&((il_base*)self)->storage, key, data, size, tag);
+    return &T->storage;
 }
 
 size_t il_sizeof(const il_type* self)

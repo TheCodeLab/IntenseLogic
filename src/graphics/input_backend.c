@@ -59,14 +59,13 @@ static void mousebutton(GLFWwindow *window, int button, int action, int mods)
 static void cursorpos(GLFWwindow *window, double x, double y)
 {
     ilG_context *ctx = glfwGetWindowUserPointer(window);
-    int *old = il_base_get((il_base*)ctx, "input.last_mouse", NULL, NULL);
+    il_vector *old = il_value_tovec(il_table_gets(&ctx->base.storage, "input.last_mouse"));
     if (!old) {
-        old = calloc(2, sizeof(int));
-        il_base_set((il_base*)ctx, "input.last_mouse", old, 2, IL_INT|IL_ARRAY_BIT);
+        old = il_value_tovec(il_table_sets(&ctx->base.storage, "input.last_mouse", il_value_vectorl(2, il_value_int(0), il_value_int(0))));
     }
-    int arr[4] = {x,y, x-old[0], y-old[1]};
-    old[0] = x;
-    old[1] = y;
+    int arr[4] = {x,y, x-il_vector_geti(old, 0), y-il_vector_geti(old, 1)};
+    il_vector_seti(old, 0, x);
+    il_vector_seti(old, 1, y);
     ilG_context *context = glfwGetWindowUserPointer(window);
     ilE_handler_fire(context->input_handler.mousemove, sizeof(int) * 4, &arr);
 }

@@ -28,7 +28,7 @@ static il_base *prefix_lookup(void *ptr, const ilA_path *path)
 
 il_type ilA_prefix_type = {
     .typeclasses = NULL,
-    .storage = NULL,
+    .storage = {NULL},
     .constructor = NULL,
     .destructor = prefix_des,
     .copy = NULL,

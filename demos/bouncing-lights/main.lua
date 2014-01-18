@@ -16,6 +16,7 @@ local camera        = require "demos.bouncing-lights.camera"
 local drawnmesh     = require "graphics.mesh"
 local base          = require "common.base"
 local input         = require "input.input"
+local array         = require 'common.vector'
 
 ffi.cdef [[
 
@@ -102,11 +103,11 @@ event.register(input.button, function(hnd, key, scancode, device, isDown, mods)
             l.positionable.position = pos.ptr
             l.positionable.size = vector3(.25, .25, .25).ptr
             l.radius = math.random(1, 15)
-            local col = vector3(math.random(0,1), math.random(0,1), math.random(0,1)).normal
+            local col = vector3(math.random(0.1,1), math.random(0,1), math.random(0,1)).normal
             l.color = col.ptr
             l:add(c)
             local m = 1
-            base.set(l.positionable, "color", ffi.new("float[4]", col.x*m, col.y*m, col.z*m, 1.0), bit.bor(modules.bouncinglights.IL_ARRAY_BIT, modules.bouncinglights.IL_FLOAT), 4)
+            base.set(l.positionable, 'color', array(col.x*m, col.y*m, col.z*m, 1.0))
             modules.bouncinglights.add_ball(l.positionable)
             l.positionable.drawable = sphere
             l.positionable.material = glow

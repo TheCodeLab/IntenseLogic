@@ -225,7 +225,7 @@ static void draw(void *obj)
 
 il_type ilG_shape_type = {
     .typeclasses = NULL,
-    .storage = NULL,
+    .storage = {NULL},
     .constructor = NULL,
     .destructor = NULL,
     .copy = NULL,
@@ -247,7 +247,7 @@ void ilG_shape_init()
 
 ilG_drawable3d *ilG_box(ilG_context *context)
 {
-    struct ilG_shape *self = il_base_get(context, "il.graphics.shape.box", NULL, NULL);
+    struct ilG_shape *self = il_value_tovoid(il_table_gets(&context->base.storage, "shape.box"));
     if (self) {
         return &self->drawable;
     }
@@ -258,13 +258,13 @@ ilG_drawable3d *ilG_box(ilG_context *context)
     self->mode = GL_TRIANGLES;
     self->count = 36;
     self->type = 1;
-    il_base_set(context, "il.graphics.shape.box", self, sizeof(struct ilG_shape), IL_OBJECT);
+    il_table_sets(&context->base.storage, "shape.box", il_value_opaque(self, il_unref));
     return &self->drawable;
 }
 
 ilG_drawable3d *ilG_icosahedron(ilG_context *context)
 {
-    struct ilG_shape *self = il_base_get(context, "il.graphics.shape.icosahedron", NULL, NULL);
+    struct ilG_shape *self = il_value_tovoid(il_table_gets(&context->base.storage, "shape.icosahedron"));
     if (self) {
         return &self->drawable;
     }
@@ -274,7 +274,7 @@ ilG_drawable3d *ilG_icosahedron(ilG_context *context)
     self->mode = GL_TRIANGLES;
     self->count = 20 * 3;
     self->type = 2;
-    il_base_set(context, "il.graphics.shape.icosahedron", self, sizeof(struct ilG_shape), IL_OBJECT);
+    il_table_sets(&context->base.storage, "shape.icosahedron", il_value_opaque(self, il_unref));
     return &self->drawable;
 }
 

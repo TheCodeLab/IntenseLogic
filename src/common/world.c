@@ -11,7 +11,7 @@ struct il_worldIterator {
 
 il_type il_world_type = {
     .typeclasses = NULL,
-    .storage = NULL,
+    .storage = {NULL},
     .constructor = NULL,
     .destructor = NULL,
     .copy = NULL,

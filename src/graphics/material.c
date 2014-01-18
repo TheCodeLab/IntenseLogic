@@ -296,7 +296,7 @@ int /*failure*/ ilG_material_link(ilG_material* self, ilG_context *ctx)
 
 il_type ilG_material_type = {
     .typeclasses = NULL,
-    .storage = NULL,
+    .storage = {NULL},
     .constructor = material_init,
     .destructor = NULL,
     .copy = NULL,

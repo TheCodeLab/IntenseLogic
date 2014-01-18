@@ -12,51 +12,55 @@
 #include "util/ilassert.h"
 #include "graphics/glutil.h"
 
-struct image_ctx {
-    ilG_texture *tex;
-    int premultiplied;
-};
-
 struct shader_ctx {
     GLint pos_loc[2];
 };
 
+static ilG_material *get_shader(ilG_gui_frame *self)
+{
+    ilG_material *shader = il_value_tovoid(il_table_gets(&self->context->base.storage, "gui.image.shader"));
+    if (shader) {
+        return shader;
+    }
+    shader = ilG_material_new();
+    ilG_material_vertex_file(shader, "gui_image.vert");
+    ilG_material_fragment_file(shader, "gui_image.frag");
+    ilG_material_name(shader, "GUI Image");
+    ilG_material_arrayAttrib(shader, ILG_ARRATTR_POSITION, "in_Position");
+    ilG_material_fragData(shader, ILG_FRAGDATA_ACCUMULATION, "out_Color");
+    ilG_material_textureUnit(shader, ILG_TUNIT_COLOR0, "tex");
+    // TODO: Uniform for screen space position
+    if (ilG_material_link(shader, self->context)) {
+        return NULL;
+    }
+    il_table_sets(&self->context->base.storage, "gui.image.shader", il_value_opaque(shader, il_unref));
+    return shader;
+}
+
 static void image_draw(ilG_gui_frame *self, ilG_gui_rect where)
 {
-    struct image_ctx *ctx = il_base_get(self, "il.graphics.gui.image.ctx", NULL, NULL);
-    ilG_material *shader = il_base_get(self->context, "il.graphics.gui.image.shader", NULL, NULL);
+    ilG_texture *tex = il_value_tovoid(il_table_gets(&self->base.storage, "gui.image.tex"));
+    int premultiplied = il_value_tobool(il_table_gets(&self->base.storage, "gui.image.premultiply"));
+    ilG_material *shader = get_shader(self);
+    struct shader_ctx *shader_ctx = il_value_tovoid(il_table_gets(&shader->base.storage, "gui.image.shaderctx"));
+
     ilG_testError("Unknown");
-    if (!shader) {
-        shader = ilG_material_new();
-        ilG_material_vertex_file(shader, "gui_image.vert");
-        ilG_material_fragment_file(shader, "gui_image.frag");
-        ilG_material_name(shader, "GUI Image");
-        ilG_material_arrayAttrib(shader, ILG_ARRATTR_POSITION, "in_Position");
-        ilG_material_fragData(shader, ILG_FRAGDATA_ACCUMULATION, "out_Color");
-        ilG_material_textureUnit(shader, ILG_TUNIT_COLOR0, "tex");
-        // TODO: Uniform for screen space position
-        if (ilG_material_link(shader, self->context)) {
-            return;
-        }
-        il_base_set(self->context, "il.graphics.gui.image.shader", shader, sizeof(ilG_material), IL_OBJECT);
-    }
-    struct shader_ctx *shader_ctx = il_base_get(shader, "il.graphics.gui.image.shaderctx", NULL, NULL);
     if (!shader_ctx) {
         shader_ctx = calloc(1, sizeof(struct shader_ctx));
         shader_ctx->pos_loc[0] = glGetUniformLocation(shader->program, "pos1");
         shader_ctx->pos_loc[1] = glGetUniformLocation(shader->program, "pos2");
-        il_base_set(shader, "il.graphics.gui.image.shaderctx", shader_ctx, sizeof(struct shader_ctx), IL_VOID);
+        il_table_sets(&shader->base.storage, "gui.image.shaderctx", il_value_opaque(shader_ctx, free));
     }
 
     glEnable(GL_BLEND);
-    if (ctx->premultiplied) {
+    if (premultiplied) {
         glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
     } else {
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     }
     ilG_bindable_swap(&self->context->materialb, (void**)&self->context->material, shader);
     ilG_bindable_swap(&self->context->drawableb, (void**)&self->context->drawable, ilG_quad(self->context));
-    ilG_bindable_swap(&self->context->textureb, (void**)&self->context->texture, ctx->tex);
+    ilG_bindable_swap(&self->context->textureb, (void**)&self->context->texture, tex);
     glUniform2f(shader_ctx->pos_loc[0], where.a.x / (float)self->context->width, where.a.y / (float)self->context->height);
     glUniform2f(shader_ctx->pos_loc[1], where.b.x / (float)self->context->width, where.b.y / (float)self->context->height);
 
@@ -70,16 +74,8 @@ static void image_draw(ilG_gui_frame *self, ilG_gui_rect where)
 void ilG_gui_frame_image(ilG_gui_frame *self, ilG_texture *tex, int premultiplied)
 {
     il_return_on_fail(self && tex);
-    struct image_ctx *ctx = il_base_get(self, "il.graphics.gui.image.ctx", NULL, NULL);
-    if (!ctx) {
-        ctx = calloc(1, sizeof(struct image_ctx));
-        il_base_set(self, "il.graphics.gui.image.ctx", ctx, sizeof(struct image_ctx), IL_VOID);
-    }
-    if (ctx->tex) {
-        il_unref(ctx->tex);
-    }
-    ctx->premultiplied = premultiplied;
-    ctx->tex = il_ref(tex);
+    il_table_sets(&self->base.storage, "gui.image.tex", il_value_opaque(il_ref(tex), il_unref));
+    il_table_sets(&self->base.storage, "gui.image.premultiplied", il_value_bool(premultiplied));
     self->draw = image_draw;
 }
 

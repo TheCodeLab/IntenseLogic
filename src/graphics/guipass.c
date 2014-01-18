@@ -48,7 +48,7 @@ void ilG_guipass_setRoot(ilG_stage *stage, ilG_gui_frame *root)
 
 il_type ilG_guipass_type = {
     .typeclasses = NULL,
-    .storage = NULL,
+    .storage = {NULL},
     .constructor = NULL,
     .destructor = NULL,
     .copy = NULL,

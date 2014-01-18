@@ -248,7 +248,7 @@ GLuint ilG_texture_getRaw(ilG_texture *self, unsigned unit)
 
 il_type ilG_texture_type = {
     .typeclasses = NULL,
-    .storage = NULL,
+    .storage = {NULL},
     .constructor = texture_init,
     .destructor = NULL,
     .copy = NULL,

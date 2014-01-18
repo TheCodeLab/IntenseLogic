@@ -14,8 +14,8 @@
 
 static ilG_material *get_shader(ilG_context *context)
 {
-    ilG_material *mtl;
-    if ((mtl = il_base_get(&context->base, "il.graphics.gui.frame.shader", NULL, NULL))) {
+    ilG_material *mtl = il_value_tovoid(il_table_gets(&context->base.storage, "gui.frame.shader"));
+    if (mtl) {
         return mtl;
     }
     mtl = ilG_material_new();
@@ -27,13 +27,13 @@ static ilG_material *get_shader(ilG_context *context)
     if (ilG_material_link(mtl, context)) {
         return NULL;
     }
-    il_base_set(&context->base, "il.graphics.gui.frame.shader", mtl, 0, IL_OBJECT|IL_LOCAL_BIT);
+    il_table_sets(&context->base.storage, "gui.frame.shader", il_value_opaque(mtl, il_unref));
     GLuint *col = malloc(sizeof(GLuint)),
            *pos = malloc(sizeof(GLuint)); 
     *col = glGetUniformLocation(mtl->program, "color");
     *pos = glGetUniformLocation(mtl->program, "position");
-    il_base_set(&context->base, "il.graphics.gui.frame.color_loc", col, sizeof(GLuint), IL_VOID|IL_LOCAL_BIT);
-    il_base_set(&context->base, "il.graphics.gui.frame.pos_loc", pos, sizeof(GLuint), IL_VOID|IL_LOCAL_BIT);
+    il_table_sets(&context->base.storage, "gui.frame.color_loc", il_value_opaque(col, free));
+    il_table_sets(&context->base.storage, "gui.frame.pos_loc", il_value_opaque(pos, free));
     return mtl;
 }
 
@@ -42,9 +42,9 @@ static void filler_draw(ilG_gui_frame *self, ilG_gui_rect where)
     ilG_testError("Unknown");
     ilG_drawable3d *quad = ilG_quad(self->context);
     ilG_material *shader = get_shader(self->context);
-    float *col = il_base_get(&self->base, "il.graphics.gui.frame.fillcolor", NULL, NULL);
-    GLuint *col_loc = il_base_get(&self->context->base, "il.graphics.gui.frame.color_loc", NULL, NULL),
-           *pos_loc = il_base_get(&self->context->base, "il.graphics.gui.frame.pos_loc", NULL, NULL);
+    il_vector *col = il_value_tovec(il_table_gets(&self->base.storage, "gui.frame.fillcolor"));
+    GLuint *col_loc = il_value_tovoid(il_table_gets(&self->context->base.storage, "gui.frame.color_loc")),
+           *pos_loc = il_value_tovoid(il_table_gets(&self->context->base.storage, "gui.frame.pos_loc"));
     if (!col_loc || !pos_loc) {
         il_error("Could not retrieve shader information");
         return;
@@ -52,7 +52,10 @@ static void filler_draw(ilG_gui_frame *self, ilG_gui_rect where)
     ilG_bindable_swap(&self->context->drawableb, (void**)&self->context->drawable, quad);
     ilG_bindable_swap(&self->context->materialb, (void**)&self->context->material, shader);
     ilG_bindable_action(self->context->materialb, self->context->material);
-    glUniform4fv(*col_loc, 1, col);
+    glUniform4f(*col_loc, il_vector_getf(col, 0), 
+                          il_vector_getf(col, 1),
+                          il_vector_getf(col, 2),
+                          il_vector_getf(col, 3));
     float w = self->context->width, h = self->context->height;
     glUniform4f(*pos_loc, where.a.x/w, where.a.y/h, where.b.x/w, where.b.y/h);
     ilG_bindable_action(self->context->drawableb, self->context->drawable);
@@ -65,7 +68,7 @@ void ilG_gui_frame_filler(ilG_gui_frame *self, float col[4])
         il_error("No context set in filler");
         return;
     }
-    il_base_set(&self->base, "il.graphics.gui.frame.fillcolor", col, 4, IL_FLOAT|IL_ARRAY_BIT);
+    il_table_sets(&self->base.storage, "gui.frame.fillcolor", il_value_vectorl(4, col[0], col[1], col[2], col[3]));
     self->draw = filler_draw;
 }
 

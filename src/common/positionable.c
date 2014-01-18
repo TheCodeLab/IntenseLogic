@@ -13,7 +13,7 @@ static void positionable_init(void *self)
 
 il_type il_positionable_type = {
     .typeclasses = NULL,
-    .storage = NULL,
+    .storage = {NULL},
     .constructor = positionable_init,
     .destructor = NULL,
     .copy = NULL,

@@ -10,30 +10,7 @@
 #include "util/array.h"
 #include "util/uthash.h"
 #include "common/event.h"
-
-#define IL_BASE_TICK_LENGTH (50000) // 50 000 microseconds (1/20 of a second)
-
-/** Enumeration of types supported by object storage */
-enum il_storagetype {
-    IL_VOID,                /**< C void* */
-    IL_STRING,              /**< Null terminated C string */
-    IL_INT,                 /**< C int type */
-    IL_FLOAT,               /**< C float type */
-    IL_STORAGE,             /**< Nested key-value storage */
-    IL_OBJECT,              /**< The value has an il_base in it */
-    IL_LUA,                 /**< The value is the result of luaL_ref() */
-    IL_LOCAL_BIT = 0x70,    /**< second high bit determines whether or not to do network sync */
-    IL_ARRAY_BIT = 0x80     /**< high bit is array signifier */
-};
-
-/** Arbitrary, nested, key-value data store associated with objects and types */
-typedef struct il_storage {
-    char *key;
-    enum il_storagetype tag;
-    size_t size;
-    void *value;
-    UT_hash_handle hh;
-} il_storage;
+#include "common/storage.h"
 
 /** Header that should be at the top of every typeclass */
 #define il_typeclass_header const char *name; UT_hash_handle hh
@@ -53,7 +30,7 @@ typedef void (*il_base_free_fn)(void *base);
 /** Kind of like a class */
 struct il_type {
     il_typeclass *typeclasses;      /** Hash table of trait implementations */
-    il_storage *storage;            /** Storage for per-type data */
+    il_table storage;               /** Storage for per-type data */
     il_base_init_fn constructor;    /** Called when il_new() and il_init() are called */
     il_base_free_fn destructor;     /** Called when il_unref() sees a zero-count object */
     il_base_copy_fn copy;           /** Called when il_copy() is invoked */
@@ -66,7 +43,7 @@ struct il_type {
 struct il_base {
     int refs;                       /** Reference counter */
     il_base_free_fn free;           /** Function to free memory after object is no longer needed */
-    il_storage *storage;            /** Key-value storage */
+    il_table storage;               /** Key-value storage */
     il_base *gc_next;               /** Unused */
     IL_ARRAY(il_base**,) weak_refs; /** Weak references, see il_weakref() */
     il_type *type;                  /** Type object for this instance */
@@ -77,27 +54,8 @@ void il_unref(void* obj);
 /** Creates a weak reference. This will be set to NULL when the object is freed */
 void il_weakref(void *obj, void **ptr);
 void il_weakunref(void *obj, void **ptr);
-/** Returns the data associated with a key, with optional parameters for data size/tag */
-void *il_storage_get(il_storage **md, const char *key, size_t *size, enum il_storagetype *tag);
-/** Sets the data associated with the given key. 
- *
- * The data will be copied unless tag is IL_VOID. 
- *
- * Size is used differently depending on the tag:
- * - For IL_VOID, it is the length of the data
- * - For IL_STRING, it is a parameter to strnlen()
- * - For anything with IL_ARRAY_BIT set, it is the number of elements
- * - For everything else, it is ignored
- */
-void il_storage_set(il_storage **md, const char *key, void *data, size_t size, enum il_storagetype tag);
-/** Wrapper for il_storage_get() */
-void *il_type_get(il_type* self, const char *key, size_t *size, enum il_storagetype *tag);
-/** Wrapper for il_storage_set() */
-void il_type_set(il_type* self, const char *key, void *data, size_t size, enum il_storagetype tag);
-/** Wrapper for il_storage_get() */
-void *il_base_get(void* self, const char *key, size_t *size, enum il_storagetype *tag);
-/** Wrapper for il_storage_set() */
-void il_base_set(void* self, const char *key, void *data, size_t size, enum il_storagetype tag);
+il_table *il_base_getStorage(void *obj);
+il_table *il_type_getStorage(il_type *T);
 size_t il_sizeof(const il_type *self);
 /** Returns the type object for any il_base */
 il_type *il_typeof(void *obj);

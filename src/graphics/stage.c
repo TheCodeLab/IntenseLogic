@@ -4,7 +4,7 @@
 
 il_type ilG_stage_type = {
     .typeclasses = NULL,
-    .storage = NULL,
+    .storage = {NULL},
     .constructor = NULL,
     .destructor = NULL,
     .copy = NULL,

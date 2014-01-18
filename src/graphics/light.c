@@ -17,7 +17,7 @@ void light_init(void *obj)
 
 il_type ilG_light_type = {
     .typeclasses = NULL,
-    .storage = NULL,
+    .storage = {NULL},
     .constructor = light_init,
     .destructor = NULL,
     .copy = NULL,

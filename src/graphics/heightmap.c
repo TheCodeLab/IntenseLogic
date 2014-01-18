@@ -49,25 +49,24 @@ ilG_drawable3d *ilG_heightmap_new(ilG_context *context, unsigned w, unsigned h)
     }
     ilG_drawable3d *dr = ilG_mesh(mesh);
     ilA_mesh_free(mesh);
-    int arr[2] = {w, h};
-    il_base_set(dr, "il.graphics.heightmap.size", arr, 2, IL_INT|IL_ARRAY_BIT);
+    il_table_sets(&dr->base.storage, "heightmap.size", il_value_vectorl(2, il_value_int(w), il_value_int(h)));
     return dr;
 }
 
 static void width_uniform(ilG_material *self, GLint location, void *user)
 {
     (void)user;
-    int *arr = il_base_get(self->context->drawable, "il.graphics.heightmap.size", NULL, NULL);
-    if (!arr) {
+    il_vector *size = il_value_tovec(il_table_gets(&self->context->drawable->base.storage, "heightmap.size"));
+    if (!size) {
         il_error("Heightmap shader combined with non-heightmap drawable");
         return;
     }
-    glUniform2f(location, arr[0], arr[1]);
+    glUniform2f(location, il_vector_getf(size, 0), il_vector_getf(size, 1));
 }
 
 ilG_material *ilG_heightmap_shader(ilG_context *context)
 {
-    ilG_material *mat = il_base_get(context, "il.graphics.heightmap.shader", NULL, NULL);
+    ilG_material *mat = il_value_tovoid(il_table_gets(&context->base.storage, "heightmap.shader"));
     if (mat) {
         return mat;
     }
@@ -91,7 +90,7 @@ ilG_material *ilG_heightmap_shader(ilG_context *context)
         il_unref(mat);
         return NULL;
     }
-    il_base_set(context, "il.graphics.heightmap.shader", mat, 0, IL_OBJECT);
+    il_table_sets(&context->base.storage, "heightmap.shader", il_value_opaque(mat, il_unref));
 
     return mat;
 }

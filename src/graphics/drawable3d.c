@@ -10,7 +10,7 @@ static void drawable3d_init(void* self)
 
 il_type ilG_drawable3d_type = {
     .typeclasses = NULL,
-    .storage = NULL,
+    .storage = {NULL},
     .constructor = &drawable3d_init,
     .destructor = NULL,
     .copy = NULL,

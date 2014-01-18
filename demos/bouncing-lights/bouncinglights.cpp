@@ -65,13 +65,14 @@ ex ilG_stage *init_stage(ilG_context *context)
 ex void custom_data_func(struct ilG_material *self, il_positionable *pos, GLuint loc, void *user)
 {
     (void)self; (void)user;
-    float *col = (float*)il_base_get(pos, "color", NULL, NULL);
+    il_vector *col = il_value_tovec(il_table_gets(&pos->base.storage, "color"));
     if (!col) {
-        //printf("NULL colour\n");
         return;
     }
-    //printf("%p: %f %f %f %f\n", pos, col[0], col[1], col[2], col[3]);
-    glUniform4f(loc, col[0], col[1], col[2], col[3]);
+    glUniform4f(loc, il_vector_getf(col, 0),
+                     il_vector_getf(col, 1),
+                     il_vector_getf(col, 2),
+                     il_vector_getf(col, 3));
 }
 
 ex void set_world(il_world *w)
@@ -133,7 +134,7 @@ ex void add_ball(il_positionable *pos)
     btRigidBody* ballRigidBody = new btRigidBody(ballRigidBodyCI);
     ballRigidBody->setRestitution(1.0);
     dynamicsWorld->addRigidBody(ballRigidBody);
-    il_base_set(pos, "rigidbody", ballRigidBody, sizeof(btRigidBody), IL_VOID);
+    il_table_sets(&pos->base.storage, "rigidbody", il_value_opaque(ballRigidBody, [](void *p) {delete (btRigidBody*)p;}));
 }
 
 ex void update(int debug)
@@ -143,7 +144,7 @@ ex void update(int debug)
     il_worldIterator *it = NULL;
     il_positionable *pos;
     for (pos = il_world_iterate(world, &it); pos; pos = il_world_iterate(world, &it)) {
-        btRigidBody *body = (btRigidBody*)il_base_get(pos, "rigidbody", NULL, NULL);
+        btRigidBody *body = (btRigidBody*)il_value_tovoid(il_table_gets(&pos->base.storage, "rigidbody"));
         if (!body) {
             continue;
         }

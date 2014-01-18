@@ -21,7 +21,7 @@ struct lightpass {
 
 il_type ilG_lightpass_type = {
     .typeclasses = NULL,
-    .storage = NULL,
+    .storage = {NULL},
     .constructor = NULL,
     .destructor = NULL,
     .copy = NULL,

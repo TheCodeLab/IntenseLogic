@@ -2,7 +2,7 @@
 
 il_type ilG_gui_frame_type = {
     .typeclasses = NULL,
-    .storage = NULL,
+    .storage = {NULL},
     .constructor = NULL,
     .destructor = NULL,
     .copy = NULL,

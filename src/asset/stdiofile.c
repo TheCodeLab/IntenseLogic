@@ -147,7 +147,7 @@ static void *stdiofile_contents(void *ptr, size_t *size)
 
 il_type il_stdiofile_type = {
     .typeclasses = NULL,
-    .storage = NULL,
+    .storage = {NULL},
     .constructor = NULL,
     .destructor = stdiofile_des,
     .copy = NULL,

@@ -43,7 +43,7 @@ static void union_derp()
 
 il_type ilA_union_type = {
     .typeclasses = NULL,
-    .storage = NULL,
+    .storage = {NULL},
     .constructor = NULL,
     .destructor = union_des,
     .copy = NULL,

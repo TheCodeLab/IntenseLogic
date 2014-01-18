@@ -7,6 +7,7 @@
 local ffi = require "ffi"
 
 local event
+local storage = require 'common.storage'
 
 ffi.cdef [[
 
@@ -23,21 +24,6 @@ typedef struct UT_hash_handle {
    unsigned hashv;                   /* result of hash-fcn(key)        */
 } UT_hash_handle;
 
-/** Enumeration of types supported by object storage */
-enum il_storagetype {
-    IL_VOID,                /**< C void* */
-    IL_STRING,              /**< Null terminated C string */
-    IL_INT,                 /**< C int type */
-    IL_FLOAT,               /**< C float type */
-    IL_STORAGE,             /**< Nested key-value storage */
-    IL_OBJECT,              /**< The value has an il_base in it */
-    IL_LUA,                 /**< The value is the result of luaL_ref() */
-    IL_LOCAL_BIT = 0x70,    /**< second high bit determines whether or not to do network sync */
-    IL_ARRAY_BIT = 0x80     /**< high bit is array signifier */
-};
-
-struct il_storage;
-
 typedef struct il_typeclass {
     const char *name; 
     UT_hash_handle hh;
@@ -52,7 +38,7 @@ typedef void (*il_base_free_fn)(il_base*);
 
 struct il_type {
     il_typeclass *typeclasses;
-    struct il_storage *storage;
+    il_table storage;
     il_base_init_fn constructor;
     il_base_free_fn destructor;
     il_base_copy_fn copy;
@@ -64,7 +50,7 @@ struct il_type {
 struct il_base {
     int refs;
     il_base_free_fn free;
-    struct il_storage *storage;
+    il_table storage;
     il_base *gc_next;
     struct {
         il_base** data;
@@ -78,12 +64,8 @@ void *il_ref(void *obj);
 void il_unref(void* obj);
 void il_weakref(void *obj, void **ptr);
 void il_weakunref(void *obj, void **ptr);
-void *il_storage_get(struct il_storage **md, const char *key, size_t *size, enum il_storagetype *tag);
-void il_storage_set(struct il_storage **md, const char *key, void *data, size_t size, enum il_storagetype tag);
-void *il_type_get(il_type* self, const char *key, size_t *size, enum il_storagetype *tag);
-void il_type_set(il_type* self, const char *key, void *data, size_t size, enum il_storagetype tag);
-void *il_base_get(il_base* self, const char *key, size_t *size, enum il_storagetype *tag);
-void il_base_set(il_base* self, const char *key, void *data, size_t size, enum il_storagetype tag);
+il_table *il_base_getStorage(void *obj);
+il_table *il_type_getStorage(il_type *T);
 size_t il_sizeof(const il_type* self);
 il_type *il_typeof(void *obj);
 il_base *il_new(il_type *type);
@@ -148,11 +130,6 @@ ffi.metatype("il_type", {
     __newindex = function(t,k,v)
         base.set(t,k,v)
     end
-})
-
-ffi.metatype("struct il_storage", {
-    __index = function(t,k) return base.get(t,k) or base[k] end,
-    __newindex = base.set
 })
 
 --- Wraps an existing type
@@ -239,99 +216,31 @@ function base.copy(v)
     return modules.common.il_copy(v)
 end
 
+local function getStorage(p)
+    local s
+    if ffi.istype("il_type", p) then
+        s = modules.common.il_type_getStorage(p)
+    else
+        s = modules.common.il_base_getStorage(p)
+    end
+    assert(s ~= nil)
+    return s
+end
+
 --- Returns a value from a storage type
 -- @tparam storage v The storage object
 -- @tparam string name The key to retrieve
 -- @return Associated value, converted to a lua-compatible type
 function base.get(v, name)
-    --assert(ffi.istype("struct il_storage**", v), "Expected storage")
-    --if v == nil then error "null storage" end
-    assert(type(name) == "string", "Expected string, got "..type(name))
-    local tag = ffi.new("enum il_storagetype[1]");
-    local size = ffi.new("size_t[1]")
-    local data
-    if ffi.istype("il_type", v) then
-        data = modules.common.il_type_get(v, name, size, tag)
-    else
-        data = modules.common.il_base_get(ffi.cast("il_base*",v), name, size, tag)--data = ffi.C.il_storage_get(v, name, size, tag)
-    end
-    --local data = modules.common.il_storage_get(v, name, ffi.cast("size_t*", size), ffi.cast("enum il_storagetype*", tag))
-    --print("got "..tostring(data).."@"..tostring(size[0]).." "..tostring(tag[0]))
-    tag = tag[0]
-    size = size[0]
-    if tag == "IL_STRING" then
-        return ffi.string(data, size)
-    elseif tag == "IL_INT" then
-        assert(size == ffi.sizeof("int"))
-        return tonumber(ffi.cast("int*", data)[0])
-    elseif tag == "IL_FLOAT" then
-        assert(size == ffi.sizeof("float"))
-        return ffi.cast("float*", data)[0]
-    elseif tag == "IL_STORAGE" then
-        assert(size == ffi.sizeof("il_storage"))
-        return ffi.cast("il_storage*", data)
-    elseif tag == "IL_OBJECT" then
-        assert(size >= ffi.sizeof("il_base"))
-        return ffi.cast("il_base*", data)
-    elseif tag == "IL_LUA" then
-        assert(size == ffi.sizeof("int"))
-        local int = ffi.cast("int*", data)
-        return debug.getregistry()[tonumber(int[0])]
-    elseif tag == "IL_VOID" then
-        if size == 0 then
-            return nil
-        end
-        return data, size
-    else
-        error "Unknown tag in storage"
-    end
+    return getStorage(v)[name]
 end
 
 --- Sets a value in a key storage
 -- @tparam storage v The storage
 -- @tparam string name The key
 -- @param val The value to convert to a storage-compatible type
-function base.set(v, name, val, t, s)
-    --assert(ffi.istype("struct il_storage**", v), "Expected storage")
-    --if v == nil then error "null storage" end
-    assert(type(name) == "string", "Expected string")
-    --local t
-    if ffi.istype("struct il_storage", val) then
-        t = "IL_STORAGE"
-    elseif ffi.istype("il_base", val) then
-        t = "IL_OBJECT"
-    elseif type(val) == 'cdata' then
-        assert(t)
-    else
-        t = ({string="IL_STRING", number="IL_FLOAT"})[type(val)]
-        if not t then t = "IL_LUA" end
-    end
-    if not t then error("Unknown type") end
-    local size = 0
-    if t == "IL_STRING" then
-        size = #val
-    end
-    local ptr
-    if t == "IL_STRING" then
-        ptr = ffi.cast("char*", val)
-    elseif t == "IL_FLOAT" then
-        ptr = ffi.new("float[1]", val)
-        size = ffi.sizeof("float")
-    elseif t == "IL_STORAGE" or t == "IL_OBJECT" then
-        ptr = val
-    elseif t == "IL_LUA" then
-        table.insert(debug.getregistry(), val)
-        ptr = ffi.new("int[1]", #debug.getregistry())
-        size = ffi.sizeof("int")
-    else
-        ptr = val
-        size = s
-    end
-    if ffi.istype("il_type", v) then
-        modules.common.il_type_set(v, name, ptr, size, t)
-    else
-        modules.common.il_base_set(ffi.cast("il_base*",v), name, ptr, size, t)
-    end
+function base.set(v, name, val)
+    getStorage(v)[name] = val
 end
 
 setmetatable(base, {__call=function(self,...) return base.create(...) end})

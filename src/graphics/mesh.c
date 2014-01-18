@@ -37,7 +37,7 @@ static void mesh_init(void *self)
 
 il_type ilG_mesh_type = {
     .typeclasses = NULL,
-    .storage = NULL,
+    .storage = {NULL},
     .constructor = mesh_init,
     .destructor = NULL,
     .copy = NULL,

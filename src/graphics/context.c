@@ -66,7 +66,7 @@ static void context_des(void *obj)
 
 il_type ilG_context_type = {
     .typeclasses = NULL,
-    .storage = NULL,
+    .storage = {NULL},
     .constructor = context_cons,
     .destructor = context_des,
     .copy = NULL,

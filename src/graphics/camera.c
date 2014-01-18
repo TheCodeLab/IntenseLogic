@@ -11,7 +11,7 @@ void camera_init(void *self)
 
 il_type ilG_camera_type = {
     .typeclasses = NULL,
-    .storage = NULL,
+    .storage = {NULL},
     .constructor = camera_init,
     .destructor = NULL,
     .copy = NULL,

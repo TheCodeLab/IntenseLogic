@@ -45,7 +45,7 @@ static il_base* stdiodir_lookup(void* ptr, const ilA_path *path)
 
 il_type il_stdiodir_type = {
     .typeclasses = NULL,
-    .storage = NULL,
+    .storage = {NULL},
     .constructor = NULL,
     .destructor = stdiodir_des,
     .copy = NULL,

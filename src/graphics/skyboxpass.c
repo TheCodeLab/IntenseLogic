@@ -11,7 +11,7 @@
 
 static ilG_material *skybox_shader(ilG_context *context)
 {
-    ilG_material *self = il_base_get(context, "il.graphics.skybox.shader", NULL, NULL);
+    ilG_material *self = il_value_tovoid(il_table_gets(&context->base.storage, "skybox.shader"));
     if (self) {
         return self;
     }
@@ -31,7 +31,7 @@ static ilG_material *skybox_shader(ilG_context *context)
         il_unref(self);
         return NULL;
     }
-    il_base_set(context, "il.graphics.skybox.shader", self, 0, IL_OBJECT);
+    il_table_sets(&context->base.storage, "skybox.shader", il_value_opaque(self, il_unref));
     return self;
 }
 
@@ -43,7 +43,7 @@ static void draw_sky(ilG_stage *self)
     glDisable(GL_CULL_FACE);
     ilG_bindable_swap(&context->drawableb, (void**)&context->drawable, ilG_box(context));
     ilG_bindable_swap(&context->materialb, (void**)&context->material, skybox_shader(context));
-    ilG_bindable_swap(&context->textureb,  (void**)&context->texture,  il_base_get(self, "il.graphics.shader.texture", NULL, NULL));
+    ilG_bindable_swap(&context->textureb,  (void**)&context->texture,  il_value_tovoid(il_table_gets(&self->base.storage, "shader.texture")));
 
     ilG_bindable_action(context->materialb, context->material);
     ilG_bindable_action(context->textureb,  context->texture);
@@ -57,7 +57,7 @@ void ilG_skyboxpass(ilG_stage *self, ilG_texture *skytex)
 {
     self->run = draw_sky;
     self->name = "Skybox";
-    il_base_set(self, "il.graphics.shader.texture", skytex, 0, IL_OBJECT);
+    il_table_sets(&self->base.storage, "shader.texture", il_value_opaque(skytex, il_unref));
     skybox_shader(self->context);
 }
 

@@ -15,7 +15,7 @@ struct quad {
 
 il_type ilG_quad_type = {
     .typeclasses = NULL,
-    .storage = NULL,
+    .storage = {NULL},
     .constructor = NULL,
     .destructor = NULL,
     .copy = NULL,
@@ -56,8 +56,8 @@ ilG_drawable3d *ilG_quad(ilG_context* context)
         1.f, 1.f,
         0.f, 1.f,
     };
-    struct quad *q;
-    if ((q = il_base_get(&context->base, "il.graphics.gui.quad", NULL, NULL))) {
+    struct quad *q = il_value_tovoid(il_table_gets(&context->base.storage, "gui.quad"));
+    if (q) {
         return &q->drawable;
     }
     q = il_new(&ilG_quad_type);
@@ -74,7 +74,7 @@ ilG_drawable3d *ilG_quad(ilG_context* context)
     glEnableVertexAttribArray(ILG_ARRATTR_POSITION);
     glEnableVertexAttribArray(ILG_ARRATTR_TEXCOORD);
     q->valid = 1;
-    il_base_set(&context->base, "il.graphics.gui.quad", q, 0, IL_OBJECT|IL_LOCAL_BIT);
+    il_table_sets(&context->base.storage, "gui.quad", il_value_opaque(q, il_unref));
     return &q->drawable;
 }
 
