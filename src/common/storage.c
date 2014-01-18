@@ -53,6 +53,68 @@ void il_table_free(il_table self)
     }
 }
 
+il_value *il_table_getv(il_table *self, il_value key)
+{
+    size_t size;
+    void *data = s_hash_data(&key, &size);
+    if (!data) {
+        il_error("Invalid key type: %s not supported", il_value_strwhich(&key));
+        return &invalid;
+    }
+    struct s_key *item;
+    HASH_FIND(hh, self->head, data, size, item);
+    if (item) {
+        return &item->val;
+    }
+    return &invalid;
+}
+
+il_value *il_table_gets(il_table *self, const char *key)
+{
+    char *end = strchr(key, '.');
+    il_value keyv;
+    if (end) { // we have not descended far enough yet
+        keyv = il_value_slice(key, end-key);
+        il_value *t = il_table_getv(self, keyv);
+        if (il_value_which(t) == IL_INVALID) {
+            return &invalid; // suppress error
+        }
+        if (il_value_which(t) != IL_TABLE) {
+            il_error("Expected table, got %s", il_value_strwhich(t));
+            return &invalid;
+        }
+        il_table *tab = il_value_totable(t);
+        return il_table_gets(tab, end+1);
+    } else { // finally set the value
+        keyv = il_value_string(key);
+        return il_table_getv(self, keyv);
+    }
+}
+
+il_value *il_table_geti(il_table *self, int key)
+{
+    return il_table_getv(self, il_value_int(key));
+}
+
+#define getfunc(ret, k, v, kt, vop) \
+    ret il_table_get##k##v(il_table *self, kt key) \
+    { \
+        return vop(il_table_get##k(self, key)); \
+    }
+#define getfunc3(ret, v_, vop) \
+    getfunc(ret, v, v_, il_value, vop) \
+    getfunc(ret, s, v_, const char*, vop) \
+    getfunc(ret, i, v_, int, vop)
+getfunc3(bool,          b, il_value_tobool)
+getfunc3(void*,         p, il_value_tovoid)
+getfunc3(char*,         s, il_value_tostr)
+getfunc3(int,           i, il_value_toint)
+getfunc3(float,         f, il_value_tofloat)
+getfunc3(il_table*,     t, il_value_totable)
+getfunc3(il_vector*,    a, il_value_tovec)
+#undef getfunc3
+#undef getfunc
+
 il_value *il_table_setv(il_table *self, il_value key, il_value val)
 {
     size_t size;
@@ -106,48 +168,24 @@ il_value *il_table_seti(il_table *self, int key, il_value val)
     return il_table_setv(self, il_value_int(key), val);
 }
 
-il_value *il_table_getv(il_table *self, il_value key)
-{
-    size_t size;
-    void *data = s_hash_data(&key, &size);
-    if (!data) {
-        il_error("Invalid key type: %s not supported", il_value_strwhich(&key));
-        return &invalid;
+#define setfunc(k, v, kt, vt, vop) \
+    il_value *il_table_set##k##v(il_table *self, kt key, vt val) \
+    { \
+        return il_table_set##k(self, key, vop(val)); \
     }
-    struct s_key *item;
-    HASH_FIND(hh, self->head, data, size, item);
-    if (item) {
-        return &item->val;
-    }
-    return &invalid;
-}
-
-il_value *il_table_gets(il_table *self, const char *key)
-{
-    char *end = strchr(key, '.');
-    il_value keyv;
-    if (end) { // we have not descended far enough yet
-        keyv = il_value_slice(key, end-key);
-        il_value *t = il_table_getv(self, keyv);
-        if (il_value_which(t) == IL_INVALID) {
-            return &invalid; // suppress error
-        }
-        if (il_value_which(t) != IL_TABLE) {
-            il_error("Expected table, got %s", il_value_strwhich(t));
-            return &invalid;
-        }
-        il_table *tab = il_value_totable(t);
-        return il_table_gets(tab, end+1);
-    } else { // finally set the value
-        keyv = il_value_string(key);
-        return il_table_getv(self, keyv);
-    }
-}
-
-il_value *il_table_geti(il_table *self, int key)
-{
-    return il_table_getv(self, il_value_int(key));
-}
+#define setfunc3(ret, v_, vop) \
+    setfunc(v, v_, il_value, ret, vop) \
+    setfunc(s, v_, const char*, ret, vop) \
+    setfunc(i, v_, int, ret, vop)
+setfunc3(bool,              b, il_value_bool)
+setfunc3(il_storage_void,   p, il_value_opaque)
+setfunc3(const char*,       s, il_value_string)
+setfunc3(int,               i, il_value_int)
+setfunc3(float,             f, il_value_float)
+setfunc3(il_table,          t, il_value_table)
+setfunc3(il_vector,         a, il_value_vector)
+#undef setfunc3
+#undef setfunc
 
 il_vector il_vector_new(size_t num, ...)
 {
@@ -189,13 +227,14 @@ il_value *il_vector_get(il_vector *self, unsigned idx)
     { \
         return op(il_vector_get(self, idx));\
     }
-
+getfunc(bool,       b, il_value_tobool)
 getfunc(void*,      p, il_value_tovoid)
 getfunc(char*,      s, il_value_tostr)
 getfunc(int,        i, il_value_toint)
 getfunc(float,      f, il_value_tofloat)
 getfunc(il_table*,  t, il_value_totable)
 getfunc(il_vector*, v, il_value_tovec)
+#undef getfunc
 
 il_value *il_vector_set(il_vector *self, unsigned idx, il_value v)
 {
@@ -208,17 +247,14 @@ il_value *il_vector_set(il_vector *self, unsigned idx, il_value v)
     { \
         return il_vector_set(self, idx, op(val)); \
     }
-
-//setfunc(void*, p, il_value_opaque)
-il_value *il_vector_setp(il_vector *self, unsigned idx, void *data, void (*dtor)(void*))
-{
-    return il_vector_set(self, idx, il_value_opaque(data, dtor));
-}
-setfunc(const char*, s, il_value_string)
-setfunc(int, i, il_value_int)
-setfunc(float, f, il_value_float)
-setfunc(il_table, t, il_value_table)
-setfunc(il_vector, v, il_value_vector)
+setfunc(bool,               b, il_value_bool)
+setfunc(il_storage_void,    p, il_value_opaque)
+setfunc(const char*,        s, il_value_string)
+setfunc(int,                i, il_value_int)
+setfunc(float,              f, il_value_float)
+setfunc(il_table,           t, il_value_table)
+setfunc(il_vector,          v, il_value_vector)
+#undef setfunc
 
 void il_vector_free(il_vector *v)
 {
@@ -250,12 +286,11 @@ il_value il_value_false()
     return v;
 }
 
-il_value il_value_opaque(void *data, void(*dtor)(void*))
+il_value il_value_opaque(il_storage_void v)
 {
     il_value val;
     val.tag = IL_VOID;
-    val.val.svoid.data = data;
-    val.val.svoid.dtor = dtor;
+    val.val.svoid = v;
     return val;
 }
 

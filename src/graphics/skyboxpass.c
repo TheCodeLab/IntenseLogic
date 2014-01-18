@@ -11,7 +11,7 @@
 
 static ilG_material *skybox_shader(ilG_context *context)
 {
-    ilG_material *self = il_value_tovoid(il_table_gets(&context->base.storage, "skybox.shader"));
+    ilG_material *self = il_table_getsp(&context->base.storage, "skybox.shader");
     if (self) {
         return self;
     }
@@ -31,7 +31,7 @@ static ilG_material *skybox_shader(ilG_context *context)
         il_unref(self);
         return NULL;
     }
-    il_table_sets(&context->base.storage, "skybox.shader", il_value_opaque(self, il_unref));
+    il_table_setsp(&context->base.storage, "skybox.shader", il_opaque(self, il_unref));
     return self;
 }
 
@@ -57,7 +57,7 @@ void ilG_skyboxpass(ilG_stage *self, ilG_texture *skytex)
 {
     self->run = draw_sky;
     self->name = "Skybox";
-    il_table_sets(&self->base.storage, "shader.texture", il_value_opaque(skytex, il_unref));
+    il_table_setsp(&self->base.storage, "shader.texture", il_opaque(skytex, il_unref));
     skybox_shader(self->context);
 }
 

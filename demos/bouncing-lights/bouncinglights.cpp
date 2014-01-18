@@ -134,7 +134,7 @@ ex void add_ball(il_positionable *pos)
     btRigidBody* ballRigidBody = new btRigidBody(ballRigidBodyCI);
     ballRigidBody->setRestitution(1.0);
     dynamicsWorld->addRigidBody(ballRigidBody);
-    il_table_sets(&pos->base.storage, "rigidbody", il_value_opaque(ballRigidBody, [](void *p) {delete (btRigidBody*)p;}));
+    il_table_setsp(&pos->base.storage, "rigidbody", il_opaque(ballRigidBody, [](void *p) {delete (btRigidBody*)p;}));
 }
 
 ex void update(int debug)
@@ -144,7 +144,7 @@ ex void update(int debug)
     il_worldIterator *it = NULL;
     il_positionable *pos;
     for (pos = il_world_iterate(world, &it); pos; pos = il_world_iterate(world, &it)) {
-        btRigidBody *body = (btRigidBody*)il_value_tovoid(il_table_gets(&pos->base.storage, "rigidbody"));
+        btRigidBody *body = (btRigidBody*)il_table_getsp(&pos->base.storage, "rigidbody");
         if (!body) {
             continue;
         }

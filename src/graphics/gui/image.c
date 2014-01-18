@@ -18,7 +18,7 @@ struct shader_ctx {
 
 static ilG_material *get_shader(ilG_gui_frame *self)
 {
-    ilG_material *shader = il_value_tovoid(il_table_gets(&self->context->base.storage, "gui.image.shader"));
+    ilG_material *shader = il_table_getsp(&self->context->base.storage, "gui.image.shader");
     if (shader) {
         return shader;
     }
@@ -33,23 +33,23 @@ static ilG_material *get_shader(ilG_gui_frame *self)
     if (ilG_material_link(shader, self->context)) {
         return NULL;
     }
-    il_table_sets(&self->context->base.storage, "gui.image.shader", il_value_opaque(shader, il_unref));
+    il_table_setsp(&self->context->base.storage, "gui.image.shader", il_opaque(shader, il_unref));
     return shader;
 }
 
 static void image_draw(ilG_gui_frame *self, ilG_gui_rect where)
 {
-    ilG_texture *tex = il_value_tovoid(il_table_gets(&self->base.storage, "gui.image.tex"));
-    int premultiplied = il_value_tobool(il_table_gets(&self->base.storage, "gui.image.premultiply"));
+    ilG_texture *tex = il_table_getsp(&self->base.storage, "gui.image.tex");
+    int premultiplied = il_table_getsb(&self->base.storage, "gui.image.premultiply");
     ilG_material *shader = get_shader(self);
-    struct shader_ctx *shader_ctx = il_value_tovoid(il_table_gets(&shader->base.storage, "gui.image.shaderctx"));
+    struct shader_ctx *shader_ctx = il_table_getsp(&shader->base.storage, "gui.image.shaderctx");
 
     ilG_testError("Unknown");
     if (!shader_ctx) {
         shader_ctx = calloc(1, sizeof(struct shader_ctx));
         shader_ctx->pos_loc[0] = glGetUniformLocation(shader->program, "pos1");
         shader_ctx->pos_loc[1] = glGetUniformLocation(shader->program, "pos2");
-        il_table_sets(&shader->base.storage, "gui.image.shaderctx", il_value_opaque(shader_ctx, free));
+        il_table_setsp(&shader->base.storage, "gui.image.shaderctx", il_opaque(shader_ctx, free));
     }
 
     glEnable(GL_BLEND);
@@ -74,8 +74,8 @@ static void image_draw(ilG_gui_frame *self, ilG_gui_rect where)
 void ilG_gui_frame_image(ilG_gui_frame *self, ilG_texture *tex, int premultiplied)
 {
     il_return_on_fail(self && tex);
-    il_table_sets(&self->base.storage, "gui.image.tex", il_value_opaque(il_ref(tex), il_unref));
-    il_table_sets(&self->base.storage, "gui.image.premultiplied", il_value_bool(premultiplied));
+    il_table_setsp(&self->base.storage, "gui.image.tex", il_opaque(il_ref(tex), il_unref));
+    il_table_setsb(&self->base.storage, "gui.image.premultiplied", premultiplied);
     self->draw = image_draw;
 }
 
