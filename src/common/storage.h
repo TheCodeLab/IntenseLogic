@@ -26,6 +26,7 @@ typedef struct il_storage_void {
 } il_storage_void;
 
 #define il_opaque(data, dtor) ((struct il_storage_void){data, dtor})
+#define il_vopaque(data, dtor) il_value_opaque(il_opaque(data, dtor))
 
 typedef struct il_table {
     struct s_key *head;
@@ -52,32 +53,50 @@ typedef struct il_value {
 il_table il_table_new();
 void il_table_free(il_table self);
 
-il_value    *il_table_getv (il_table *self, il_value key);
-bool         il_table_getvb(il_table *self, il_value key);
-void        *il_table_getvp(il_table *self, il_value key);
-char        *il_table_getvs(il_table *self, il_value key);
-int          il_table_getvi(il_table *self, il_value key);
-float        il_table_getvf(il_table *self, il_value key);
-il_table    *il_table_getvt(il_table *self, il_value key);
-il_vector   *il_table_getva(il_table *self, il_value key);
+const il_value  *il_table_getv (const il_table *self, il_value key);
+bool             il_table_getvb(const il_table *self, il_value key);
+int              il_table_getvi(const il_table *self, il_value key);
+float            il_table_getvf(const il_table *self, il_value key);
+const void      *il_table_getvp(const il_table *self, il_value key);
+const char      *il_table_getvs(const il_table *self, il_value key);
+const il_table  *il_table_getvt(const il_table *self, il_value key);
+const il_vector *il_table_getva(const il_table *self, il_value key);
 
-il_value    *il_table_gets (il_table *self, const char *key);
-bool         il_table_getsb(il_table *self, const char *key);
-void        *il_table_getsp(il_table *self, const char *key);
-char        *il_table_getss(il_table *self, const char *key);
-int          il_table_getsi(il_table *self, const char *key);
-float        il_table_getsf(il_table *self, const char *key);
-il_table    *il_table_getst(il_table *self, const char *key);
-il_vector   *il_table_getsa(il_table *self, const char *key);
+const il_value  *il_table_gets (const il_table *self, const char *key);
+bool             il_table_getsb(const il_table *self, const char *key);
+int              il_table_getsi(const il_table *self, const char *key);
+float            il_table_getsf(const il_table *self, const char *key);
+const void      *il_table_getsp(const il_table *self, const char *key);
+const char      *il_table_getss(const il_table *self, const char *key);
+const il_table  *il_table_getst(const il_table *self, const char *key);
+const il_vector *il_table_getsa(const il_table *self, const char *key);
 
-il_value    *il_table_geti (il_table *self, int key);
-bool         il_table_getib(il_table *self, int key);
-void        *il_table_getip(il_table *self, int key);
-char        *il_table_getis(il_table *self, int key);
-int          il_table_getii(il_table *self, int key);
-float        il_table_getif(il_table *self, int key);
-il_table    *il_table_getit(il_table *self, int key);
-il_vector   *il_table_getia(il_table *self, int key);
+const il_value  *il_table_geti (const il_table *self, int key);
+bool             il_table_getib(const il_table *self, int key);
+int              il_table_getii(const il_table *self, int key);
+float            il_table_getif(const il_table *self, int key);
+const void      *il_table_getip(const il_table *self, int key);
+const char      *il_table_getis(const il_table *self, int key);
+const il_table  *il_table_getit(const il_table *self, int key);
+const il_vector *il_table_getia(const il_table *self, int key);
+
+il_value    *il_table_mgetv (il_table *self, il_value key);
+void        *il_table_mgetvp(il_table *self, il_value key);
+char        *il_table_mgetvs(il_table *self, il_value key);
+il_table    *il_table_mgetvt(il_table *self, il_value key);
+il_vector   *il_table_mgetva(il_table *self, il_value key);
+
+il_value    *il_table_mgets (il_table *self, const char *key);
+void        *il_table_mgetsp(il_table *self, const char *key);
+char        *il_table_mgetss(il_table *self, const char *key);
+il_table    *il_table_mgetst(il_table *self, const char *key);
+il_vector   *il_table_mgetsa(il_table *self, const char *key);
+
+il_value    *il_table_mgeti (il_table *self, int key);
+void        *il_table_mgetip(il_table *self, int key);
+char        *il_table_mgetis(il_table *self, int key);
+il_table    *il_table_mgetit(il_table *self, int key);
+il_vector   *il_table_mgetia(il_table *self, int key);
 
 il_value *il_table_setv (il_table *self, il_value key, il_value val);
 il_value *il_table_setvb(il_table *self, il_value key, bool val);
@@ -109,14 +128,24 @@ il_value *il_table_setia(il_table *self, int key, il_vector val);
 il_vector il_vector_new(size_t num, ...);
 il_vector il_vector_newv(size_t num, il_value *v);
 void il_vector_free(il_vector *self);
-il_value    *il_vector_get (il_vector *self, unsigned idx);
-bool         il_vector_getb(il_vector *self, unsigned idx);
-void        *il_vector_getp(il_vector *self, unsigned idx);
-char        *il_vector_gets(il_vector *self, unsigned idx);
-int          il_vector_geti(il_vector *self, unsigned idx);
-float        il_vector_getf(il_vector *self, unsigned idx);
-il_table    *il_vector_gett(il_vector *self, unsigned idx);
-il_vector   *il_vector_geta(il_vector *self, unsigned idx);
+
+unsigned il_vector_len(const il_vector *self);
+
+const il_value  *il_vector_get (const il_vector *self, unsigned idx);
+bool             il_vector_getb(const il_vector *self, unsigned idx);
+int              il_vector_geti(const il_vector *self, unsigned idx);
+float            il_vector_getf(const il_vector *self, unsigned idx);
+const void      *il_vector_getp(const il_vector *self, unsigned idx);
+const char      *il_vector_gets(const il_vector *self, unsigned idx);
+const il_table  *il_vector_gett(const il_vector *self, unsigned idx);
+const il_vector *il_vector_geta(const il_vector *self, unsigned idx);
+
+il_value    *il_vector_mget (il_vector *self, unsigned idx);
+void        *il_vector_mgetp(il_vector *self, unsigned idx);
+char        *il_vector_mgets(il_vector *self, unsigned idx);
+il_table    *il_vector_mgett(il_vector *self, unsigned idx);
+il_vector   *il_vector_mgeta(il_vector *self, unsigned idx);
+
 il_value *il_vector_set (il_vector *self, unsigned idx, il_value v);
 il_value *il_vector_setb(il_vector *self, unsigned idx, bool val);
 il_value *il_vector_setp(il_vector *self, unsigned idx, il_storage_void val);
@@ -140,15 +169,22 @@ il_value il_value_vector(il_vector);
 il_value il_value_vectorl(size_t num, ...);
 il_value il_value_copy(il_value *v);
 void il_value_free(il_value v);
+
 #define il_value_which(v) (v->tag)
-const char  *il_value_strwhich(const il_value *v);
-int          il_value_tobool(const il_value *v);
-void        *il_value_tovoid(il_value *v);
-char        *il_value_tostr(il_value *v);
-int          il_value_toint(const il_value *v);
-float        il_value_tofloat(const il_value *v);
-il_table    *il_value_totable(il_value *v);
-il_vector   *il_value_tovec(il_value *v);
+const char      *il_value_strwhich  (const il_value *v);
+bool             il_value_tobool    (const il_value *v);
+int              il_value_toint     (const il_value *v);
+float            il_value_tofloat   (const il_value *v);
+const void      *il_value_tovoid    (const il_value *v);
+const char      *il_value_tostr     (const il_value *v);
+const il_table  *il_value_totable   (const il_value *v);
+const il_vector *il_value_tovec     (const il_value *v);
+
+void            *il_value_tomvoid   (il_value *v);
+char            *il_value_tomstr    (il_value *v);
+il_table        *il_value_tomtable  (il_value *v);
+il_vector       *il_value_tomvec    (il_value *v);
+
 void il_value_show(il_value *v);
 void il_table_show(il_table *t);
 

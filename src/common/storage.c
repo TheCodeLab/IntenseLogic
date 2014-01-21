@@ -53,7 +53,7 @@ void il_table_free(il_table self)
     }
 }
 
-il_value *il_table_getv(il_table *self, il_value key)
+il_value *il_table_mgetv(il_table *self, il_value key)
 {
     size_t size;
     void *data = s_hash_data(&key, &size);
@@ -69,13 +69,18 @@ il_value *il_table_getv(il_table *self, il_value key)
     return &invalid;
 }
 
-il_value *il_table_gets(il_table *self, const char *key)
+const il_value *il_table_getv(const il_table *self, il_value key)
+{
+    return il_table_mgetv((il_table*)self, key);
+}
+
+il_value *il_table_mgets(il_table *self, const char *key)
 {
     char *end = strchr(key, '.');
     il_value keyv;
     if (end) { // we have not descended far enough yet
         keyv = il_value_slice(key, end-key);
-        il_value *t = il_table_getv(self, keyv);
+        il_value *t = il_table_mgetv(self, keyv);
         if (il_value_which(t) == IL_INVALID) {
             return &invalid; // suppress error
         }
@@ -83,21 +88,31 @@ il_value *il_table_gets(il_table *self, const char *key)
             il_error("Expected table, got %s", il_value_strwhich(t));
             return &invalid;
         }
-        il_table *tab = il_value_totable(t);
-        return il_table_gets(tab, end+1);
+        il_table *tab = il_value_tomtable(t);
+        return il_table_mgets(tab, end+1);
     } else { // finally set the value
         keyv = il_value_string(key);
-        return il_table_getv(self, keyv);
+        return il_table_mgetv(self, keyv);
     }
 }
 
-il_value *il_table_geti(il_table *self, int key)
+const il_value *il_table_gets(const il_table *self, const char *key)
+{
+    return il_table_mgets((il_table*)self, key);
+}
+
+il_value *il_table_mgeti(il_table *self, int key)
+{
+    return il_table_mgetv(self, il_value_int(key));
+}
+
+const il_value *il_table_geti(const il_table *self, int key)
 {
     return il_table_getv(self, il_value_int(key));
 }
 
 #define getfunc(ret, k, v, kt, vop) \
-    ret il_table_get##k##v(il_table *self, kt key) \
+    ret il_table_get##k##v(const il_table *self, kt key) \
     { \
         return vop(il_table_get##k(self, key)); \
     }
@@ -105,13 +120,23 @@ il_value *il_table_geti(il_table *self, int key)
     getfunc(ret, v, v_, il_value, vop) \
     getfunc(ret, s, v_, const char*, vop) \
     getfunc(ret, i, v_, int, vop)
-getfunc3(bool,          b, il_value_tobool)
-getfunc3(void*,         p, il_value_tovoid)
-getfunc3(char*,         s, il_value_tostr)
-getfunc3(int,           i, il_value_toint)
-getfunc3(float,         f, il_value_tofloat)
-getfunc3(il_table*,     t, il_value_totable)
-getfunc3(il_vector*,    a, il_value_tovec)
+getfunc3(bool,              b, il_value_tobool)
+getfunc3(int,               i, il_value_toint)
+getfunc3(float,             f, il_value_tofloat)
+getfunc3(const void*,       p, il_value_tovoid)
+getfunc3(const char*,       s, il_value_tostr)
+getfunc3(const il_table*,   t, il_value_totable)
+getfunc3(const il_vector*,  a, il_value_tovec)
+#undef getfunc
+#define getfunc(ret, k, v, kt, vop) \
+    ret il_table_mget##k##v(il_table *self, kt key) \
+    { \
+        return vop(il_table_mget##k(self, key)); \
+    }
+getfunc3(void*,       p, il_value_tomvoid)
+getfunc3(char*,       s, il_value_tomstr)
+getfunc3(il_table*,   t, il_value_tomtable)
+getfunc3(il_vector*,  a, il_value_tomvec)
 #undef getfunc3
 #undef getfunc
 
@@ -145,7 +170,7 @@ il_value *il_table_sets(il_table *self, const char *key, il_value val)
     il_value keyv;
     if (end) { // we have not descended far enough yet
         keyv = il_value_slice(key, end-key);
-        il_value *t = il_table_getv(self, keyv);
+        il_value *t = il_table_mgetv(self, keyv);
         if (il_value_which(t) == IL_INVALID) { // create non-existent nodes, like mkdir -p
             il_table tab = il_table_new();
             il_value v = il_value_table(tab);
@@ -155,7 +180,7 @@ il_value *il_table_sets(il_table *self, const char *key, il_value val)
             il_error("Expected table, got %s", il_value_strwhich(t));
             return &invalid;
         }
-        il_table *tab = il_value_totable(t);
+        il_table *tab = il_value_tomtable(t);
         return il_table_sets(tab, end+1, val);
     } else { // finally set the value
         keyv = il_value_string(key);
@@ -213,7 +238,16 @@ il_vector il_vector_newv(size_t num, il_value *v)
     return a;
 }
 
-il_value *il_vector_get(il_vector *self, unsigned idx)
+const il_value *il_vector_get(const il_vector *self, unsigned idx)
+{
+    if (idx >= self->length) {
+        il_error("Index %u out of bounds (size %zu)", idx, self->length);
+        return &invalid;
+    }
+    return &self->data[idx];
+}
+
+il_value *il_vector_mget(il_vector *self, unsigned idx)
 {
     if (idx >= self->length) {
         il_error("Index %u out of bounds (size %zu)", idx, self->length);
@@ -223,17 +257,27 @@ il_value *il_vector_get(il_vector *self, unsigned idx)
 }
 
 #define getfunc(T, l, op) \
-    T il_vector_get##l(il_vector *self, unsigned idx) \
+    T il_vector_get##l(const il_vector *self, unsigned idx) \
     { \
         return op(il_vector_get(self, idx));\
     }
-getfunc(bool,       b, il_value_tobool)
-getfunc(void*,      p, il_value_tovoid)
-getfunc(char*,      s, il_value_tostr)
-getfunc(int,        i, il_value_toint)
-getfunc(float,      f, il_value_tofloat)
-getfunc(il_table*,  t, il_value_totable)
-getfunc(il_vector*, v, il_value_tovec)
+getfunc(bool,               b, il_value_tobool)
+getfunc(int,                i, il_value_toint)
+getfunc(float,              f, il_value_tofloat)
+getfunc(const void*,        p, il_value_tovoid)
+getfunc(const char*,        s, il_value_tostr)
+getfunc(const il_table*,    t, il_value_totable)
+getfunc(const il_vector*,   v, il_value_tovec)
+#undef getfunc
+#define getfunc(T, l, op) \
+    T il_vector_mget##l(il_vector *self, unsigned idx) \
+    { \
+        return op(il_vector_mget(self, idx)); \
+    }
+getfunc(void*,      p, il_value_tomvoid)
+getfunc(char*,      s, il_value_tomstr)
+getfunc(il_table*,  t, il_value_tomtable)
+getfunc(il_vector*, v, il_value_tomvec)
 #undef getfunc
 
 il_value *il_vector_set(il_vector *self, unsigned idx, il_value v)
@@ -255,6 +299,11 @@ setfunc(float,              f, il_value_float)
 setfunc(il_table,           t, il_value_table)
 setfunc(il_vector,          v, il_value_vector)
 #undef setfunc
+
+unsigned il_vector_len(const il_vector *self)
+{
+    return self->length;
+}
 
 void il_vector_free(il_vector *v)
 {
@@ -412,26 +461,15 @@ const char *il_value_strwhich(const il_value *v)
         case IL_TABLE:      return "table";
         case IL_VECTOR:     return "vector";
         case IL_LUA:        return "lua";
+        default:            return "garbage";
     }
 }
 
-int il_value_tobool(const il_value *v)
+bool il_value_tobool(const il_value *v)
 {
-    if (v->tag == IL_TRUE) return 1;
-    if (v->tag == IL_FALSE) return 0;
+    if (v->tag == IL_TRUE) return true;
+    if (v->tag == IL_FALSE) return false;
     return -1;
-}
-
-void *il_value_tovoid(il_value *v)
-{
-    if (v->tag != IL_VOID) return NULL;
-    return v->val.svoid.data;
-}
-
-char *il_value_tostr(il_value *v)
-{
-    if (v->tag != IL_STRING) return NULL;
-    return v->val.string;
 }
 
 int il_value_toint(const il_value *v)
@@ -446,13 +484,49 @@ float il_value_tofloat(const il_value *v)
     return v->val.sfloat;
 }
 
-il_table *il_value_totable(il_value *v)
+const void *il_value_tovoid(const il_value *v)
+{
+    if (v->tag != IL_VOID) return NULL;
+    return v->val.svoid.data;
+}
+
+const char *il_value_tostr(const il_value *v)
+{
+    if (v->tag != IL_STRING) return NULL;
+    return v->val.string;
+}
+
+const il_table *il_value_totable(const il_value *v)
 {
     if (v->tag != IL_TABLE) return NULL;
     return &v->val.table;
 }
 
-il_vector *il_value_tovec(il_value *v)
+const il_vector *il_value_tovec(const il_value *v)
+{
+    if (v->tag != IL_VECTOR) return NULL;
+    return &v->val.vector;
+}
+
+void *il_value_tomvoid(il_value *v)
+{
+    if (v->tag != IL_VOID) return NULL;
+    return v->val.svoid.data;
+}
+
+char *il_value_tomstr(il_value *v)
+{
+    if (v->tag != IL_STRING) return NULL;
+    return v->val.string;
+}
+
+il_table *il_value_tomtable(il_value *v)
+{
+    if (v->tag != IL_TABLE) return NULL;
+    return &v->val.table;
+}
+
+il_vector *il_value_tomvec(il_value *v)
 {
     if (v->tag != IL_VECTOR) return NULL;
     return &v->val.vector;
