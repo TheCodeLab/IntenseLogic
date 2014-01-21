@@ -86,7 +86,10 @@ _G.num_lights = 0
 local sphere = drawnmesh("demos/bouncing-lights/sphere.obj")
 --drawable.setattr(sphere, "istransparent", true)
 local debugRender = false --true
-event.register(input.button, function(hnd, key, scancode, device, isDown, mods)
+event.register(input.button, function(key, scancode, device, isDown, mods)
+    if key < 512 then 
+        key = string.char(key)
+    end
     if key == '1' and isDown then
         glow:vertex(io.open("demos/bouncing-lights/glow.vert","r"):read "*a")
         glow:fragment(io.open("demos/bouncing-lights/glow.frag", "r"):read "*a")
