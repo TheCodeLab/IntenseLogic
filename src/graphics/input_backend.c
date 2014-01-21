@@ -46,65 +46,98 @@ void ilG_registerJoystickBackend()
 
 static void mousebutton(GLFWwindow *window, int button, int action, int mods)
 {
-    ilI_buttonevent ev;
+    // TODO: Use struct again once native struct storage is in
+    /*ilI_buttonevent ev;
     ev.button = button + 512;
     ev.scancode = 0;
     ev.device = 0;
     ev.action = action;
-    ev.mods = mods;
+    ev.mods = mods;*/
+    il_value val = il_value_vectorl(5, 
+        il_value_int(button+512), 
+        il_value_int(0), 
+        il_value_int(0), 
+        il_value_int(action), 
+        il_value_int(mods)
+    );
     ilG_context *ctx = glfwGetWindowUserPointer(window);
-    ilE_handler_fire(ctx->input_handler.button, sizeof(ilI_buttonevent), &ev);
+    ilE_handler_fire(ctx->input_handler.button, &val);
+    il_value_free(val);
 }
 
 static void cursorpos(GLFWwindow *window, double x, double y)
 {
     ilG_context *ctx = glfwGetWindowUserPointer(window);
-    il_vector *old = il_value_tovec(il_table_gets(&ctx->base.storage, "input.last_mouse"));
+    il_vector *old = il_table_mgetsa(&ctx->base.storage, "input.last_mouse");
     if (!old) {
-        old = il_value_tovec(il_table_sets(&ctx->base.storage, "input.last_mouse", il_value_vectorl(2, il_value_int(0), il_value_int(0))));
+        old = il_value_tomvec(il_table_setsa(&ctx->base.storage, "input.last_mouse", il_vector_new(2, il_value_int(0), il_value_int(0))));
     }
-    int arr[4] = {x,y, x-il_vector_geti(old, 0), y-il_vector_geti(old, 1)};
+    int oldx = il_vector_geti(old, 0),
+        oldy = il_vector_geti(old, 1);
+#define i il_value_int
+    il_value val = il_value_vectorl(4, 
+        i(x),       i(y),
+        i(x-oldx),  i(y-oldy)
+    );
+#undef i
     il_vector_seti(old, 0, x);
     il_vector_seti(old, 1, y);
     ilG_context *context = glfwGetWindowUserPointer(window);
-    ilE_handler_fire(context->input_handler.mousemove, sizeof(int) * 4, &arr);
+    ilE_handler_fire(context->input_handler.mousemove, &val);
+    il_value_free(val);
 }
 
 static void cursorenter(GLFWwindow *window, int entered)
 {
     ilG_context *ctx = glfwGetWindowUserPointer(window);
-    ilE_handler_fire(ctx->input_handler.mouseenter, sizeof(int), &entered);
+    il_value val = il_value_bool(entered);
+    ilE_handler_fire(ctx->input_handler.mouseenter, &val);
+    il_value_free(val);
 }
  
 static void scroll(GLFWwindow *window, double x, double y)
 {
-    float arr[2] = {x,y};
+    il_value arr = il_value_vectorl(2, x, y);
     ilG_context *ctx = glfwGetWindowUserPointer(window);
-    ilE_handler_fire(ctx->input_handler.mousescroll, sizeof(int) * 2, &arr);
+    ilE_handler_fire(ctx->input_handler.mousescroll, &arr);
+    il_value_free(arr);
 }
  
 static void keyfun(GLFWwindow *window, int key, int scancode, int action, int mods)
 {
+    /* TODO: Native structs
     ilI_buttonevent ev;
     ev.button = key;
     ev.scancode = scancode;
     ev.device = 0;
     ev.action = action;
-    ev.mods = mods;
+    ev.mods = mods;*/
+    il_value ev = il_value_vectorl(5, 
+        il_value_int(key), 
+        il_value_int(scancode), 
+        il_value_int(0), 
+        il_value_int(action), 
+        il_value_int(mods)
+    );
     ilG_context *ctx = glfwGetWindowUserPointer(window);
-    ilE_handler_fire(ctx->input_handler.button, sizeof(ilI_buttonevent), &ev);
+    ilE_handler_fire(ctx->input_handler.button, &ev);
+    il_value_free(ev);
 }
  
 static void charfun(GLFWwindow *window, unsigned int character)
 {
+    // TODO: unsigned ints
     ilG_context *ctx = glfwGetWindowUserPointer(window);
-    ilE_handler_fire(ctx->input_handler.character, sizeof(unsigned int), &character);
+    il_value val = il_value_int(character);
+    ilE_handler_fire(ctx->input_handler.character, &val);
+    il_value_free(val);
 }
 
 static void closewindow(GLFWwindow *window)
 {
     ilG_context *ctx = glfwGetWindowUserPointer(window);
-    ilE_handler_fireasync(ctx->close, sizeof(ilG_context), ctx); // prevents closing the window while we're still rendering
+    il_value val = il_vopaque(ctx, NULL);
+    ilE_handler_fireasync(ctx->close, val); // prevents closing the window while we're still rendering
 }
 
 void ilG_registerInputBackend(ilG_context *ctx)

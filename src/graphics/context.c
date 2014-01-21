@@ -16,8 +16,8 @@ static GLvoid error_cb(GLenum source, GLenum type, GLuint id, GLenum severity,
                        GLsizei length, const GLchar* message, GLvoid* user);
 void ilG_registerInputBackend(ilG_context *ctx);
 
-static void on_close(const ilE_handler *handler, size_t size, const void *data, void *ctx);
-static void on_close2(const ilE_handler *handler, size_t size, const void *data, void *ctx);
+static void on_close(const il_value *data, il_value *ctx);
+static void on_close2(const il_value *data, il_value *ctx);
 
 static void context_cons(void *obj)
 {
@@ -36,8 +36,8 @@ static void context_cons(void *obj)
     self->initialTitle = "IntenseLogic";
     self->resize    = ilE_handler_new_with_name("il.graphics.context.resize");
     self->close     = ilE_handler_new_with_name("il.graphics.context.close");
-    self->close_id  = ilE_register(self->close, ILE_BEFORE, ILE_ANY, &on_close, self);
-    self->close2_id = ilE_register(self->close, ILE_AFTER, ILE_ANY, &on_close2, self);
+    self->close_id  = ilE_register(self->close, ILE_BEFORE, ILE_ANY, on_close, il_vopaque(self, NULL));
+    self->close2_id = ilE_register(self->close, ILE_AFTER, ILE_ANY, on_close2, il_vopaque(self, NULL));
     ilI_handler_init(&self->input_handler);
 }
 
@@ -243,7 +243,8 @@ int ilG_context_resize(ilG_context *self, int w, int h, const char *title)
         il_error("Unable to create framebuffer for context: %s", status_str);
         return 0;
     }
-    ilE_handler_fire(self->resize, sizeof(ilG_context), self);
+    il_value val = il_vopaque(self, NULL);
+    ilE_handler_fire(self->resize, &val);
     self->valid = 1;
     return 1;
 }
@@ -291,10 +292,10 @@ void ilG_context_bind_for_outpass(ilG_context *self)
     glReadBuffer(GL_COLOR_ATTACHMENT0);
 }
 
-static void render_stages(const ilE_handler* registry, size_t size, const void *data, void * ctx)
+static void render_stages(const il_value *data, il_value *ctx)
 {
-    (void)registry, (void)size, (void)data;
-    ilG_context *context = ctx;
+    (void)data;
+    ilG_context *context = il_value_tomvoid(ctx);
     size_t i;
     int width, height;
     struct timeval time, tv;
@@ -369,17 +370,17 @@ static void render_stages(const ilE_handler* registry, size_t size, const void *
     context->frames_average.tv_usec += (context->frames_sum.tv_sec % context->num_frames) * 1000000 / context->num_frames;
 }
 
-static void on_close(const ilE_handler *handler, size_t size, const void *data, void *ctx)
+static void on_close(const il_value *data, il_value *ctx)
 {
-    (void)handler; (void)size; (void)data;
-    ilG_context *self = ctx;
+    (void)data;
+    ilG_context *self = il_value_tomvoid(ctx);
     ilE_unregister(self->tick, self->tick_id);
 }
 
-static void on_close2(const ilE_handler *handler, size_t size, const void *data, void *ctx)
+static void on_close2(const il_value *data, il_value *ctx)
 {
-    (void)handler, (void)size, (void)data;
-    ilG_context *self = ctx;
+    (void)data;
+    ilG_context *self = il_value_tomvoid(ctx);
     ilE_handler_destroy(self->tick);
     ilE_handler_destroy(self->resize);
     //il_unref(self);
@@ -403,7 +404,7 @@ int ilG_context_setActive(ilG_context *self)
         il_error("No world");
         return 0;
     }
-    self->tick_id = ilE_register(self->tick, ILE_BEFORE, ILE_MAIN, render_stages, self);
+    self->tick_id = ilE_register(self->tick, ILE_BEFORE, ILE_MAIN, render_stages, il_value_opaque(il_opaque(self, NULL)));
     return 1;
 }
 

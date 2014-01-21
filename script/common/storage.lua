@@ -53,7 +53,8 @@ il_value *il_table_getv(il_table *self, il_value key);
 il_vector il_vector_new(size_t num, ...);
 il_vector il_vector_newv(size_t num, il_value *v);
 void il_vector_free(il_vector *self);
-il_value    *il_vector_get(il_vector *self, unsigned idx);
+unsigned il_vector_len(const il_vector *self);
+const il_value *il_vector_get(const il_vector *self, unsigned idx);
 il_value *il_vector_set(il_vector *self, unsigned idx, il_value v);
 
 il_value il_value_nil();
@@ -69,28 +70,30 @@ il_value il_value_vector(il_vector);
 il_value il_value_vectorl(size_t num, ...);
 il_value il_value_copy(il_value *v);
 void il_value_free(il_value v);
-const char  *il_value_strwhich(const il_value *v);
-int          il_value_tobool(const il_value *v);
-void        *il_value_tovoid(il_value *v);
-char        *il_value_tostr(il_value *v);
-int          il_value_toint(const il_value *v);
-float        il_value_tofloat(const il_value *v);
-il_table    *il_value_totable(il_value *v);
-il_vector   *il_value_tovec(il_value *v);
+const char      *il_value_strwhich  (const il_value *v);
+bool             il_value_tobool    (const il_value *v);
+int              il_value_toint     (const il_value *v);
+float            il_value_tofloat   (const il_value *v);
+const void      *il_value_tovoid    (const il_value *v);
+const char      *il_value_tostr     (const il_value *v);
+const il_table  *il_value_totable   (const il_value *v);
+const il_vector *il_value_tovec     (const il_value *v);
 void il_value_show(il_value *v);
 void il_table_show(il_table *t);
 
 ]]
+
+require 'common.vector'
 
 local value = {}
 
 function value.unpack(v)
     if v == nil then return nil end
     local w = ffi.string(modules.common.il_value_strwhich(v))
-    if w == 'nil' then
+    if w == 'nil' or w == 'invalid' then
         return nil
     elseif w == 'bool' then
-        return modules.common.il_value_tobool(v)
+        return modules.common.il_value_tobool(v) ~= 0
     elseif w == 'void' then
         return modules.common.il_value_tovoid(v)
     elseif w == 'string' then
@@ -104,7 +107,25 @@ function value.unpack(v)
     elseif w == 'vector' then
         return modules.common.il_value_tovec(v)
     end
+    error("Not implemented: "..w)
 end
+
+function value.flatten(v)
+    if v == nil then return nil end
+    local w = ffi.string(modules.common.il_value_strwhich(v))
+    if w == 'table' then
+        -- TODO: table iteration
+    elseif w == 'vector' then
+        local t = {}
+        local a = modules.common.il_value_tovec(v)
+        for i = 0, modules.common.il_vector_len(a)-1 do
+            t[i+1] = a:get(i)
+        end
+        return unpack(t)
+    end
+    return value.unpack(v)
+end
+
 
 function value.pack(v)
     local packed

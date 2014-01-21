@@ -165,16 +165,6 @@ function input.buttonUnpacker(size, data)
     return button, tonumber(ev.scancode), tonumber(ev.device), ev.action ~= 0, mods
 end
 
-function input.inputUnpackers(hnd)
-    event.setUnpacker(hnd.button, input.buttonUnpacker)
-    event.setUnpacker(hnd.mousemove, event.arrayUnpacker("int", 4))
-    event.setUnpacker(hnd.mouseenter, event.typeUnpacker("int"))
-    event.setUnpacker(hnd.mousescroll, event.arrayUnpacker("float", 2))
-    event.setUnpacker(hnd.character, event.typeUnpacker("unsigned int"))
-end
-
-input.inputUnpackers(input)
-
 function input.get(key)
     local ret = ffi.new("int[1]")
     local str = string.upper(key:gsub(" ", "_"))

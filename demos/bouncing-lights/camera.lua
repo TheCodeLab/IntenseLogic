@@ -23,7 +23,7 @@ return function(ctx, root, tick)
     local pitch = 0
 
     local first_mouse = true
-    local mousemove = function(hnd, xabs, yabs, x, y)
+    local mousemove = function(xabs, yabs, x, y)
         if first_mouse then first_mouse = false return end
         if not input.get "mouse left" then return end
         yaw = yaw + x * cam.sensitivity
@@ -108,7 +108,7 @@ return function(ctx, root, tick)
         end
     end
 
-    local ontick = function(hnd)
+    local ontick = function()
         local get = function(k)
             local b, _ = input.get(k)
             return b and 1 or 0
@@ -139,7 +139,6 @@ return function(ctx, root, tick)
 
     event.register(tick, ontick)
     event.register(input.mousemove, mousemove)
-    event.setUnpacker(ctx.close, event.nilUnpacker) -- TODO: Move this somewhere else
     event.register(ctx.close, close)
 end
 

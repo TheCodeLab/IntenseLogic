@@ -21,7 +21,7 @@
 
 char *strdup(const char*);
 
-static void ilE_handler_fire_forced(ilE_handler *self, size_t size, const void *data);
+static void ilE_handler_fire_forced(ilE_handler *self, const il_value *data);
 
 struct event_base *ilE_base;
 
@@ -30,7 +30,7 @@ static IL_ARRAY(ilE_handler*,) persistent_handlers;
 struct ilE_event {
     ilE_handler *handler;
     uint8_t size;
-    char data[];
+    il_value data;
 };
 
 struct callback {
@@ -39,7 +39,7 @@ struct callback {
     enum ilE_threading threading;
     char name[128];
     int handle;
-    void * ctx;
+    il_value ctx;
 };
 
 enum handler_type {
@@ -67,7 +67,8 @@ static void normal_dispatch(evutil_socket_t fd, short events, void *ctx)
 {
     (void)fd, (void)events;
     struct ilE_event *ev = (struct ilE_event*)ctx;
-    ilE_handler_fire_forced(ev->handler, ev->size, ev->data);
+    ilE_handler_fire_forced(ev->handler, &ev->data);
+    il_value_free(ev->data);
     free(ev);
 }
 
@@ -75,7 +76,8 @@ static void timer_dispatch(evutil_socket_t fd, short events, void *ctx)
 {
     (void)fd, (void)events;
     ilE_handler *hnd = (ilE_handler*)ctx;
-    ilE_handler_fire_forced(hnd, 0, NULL);
+    il_value nil = il_value_nil();
+    ilE_handler_fire_forced(hnd, &nil);
 }
 
 static void file_dispatch(evutil_socket_t fd, short events, void *ctx)
@@ -119,8 +121,8 @@ static void file_dispatch(evutil_socket_t fd, short events, void *ctx)
         il_error("Socket is not SOCK_DGRAM or SOCK_STREAM");
         return;
     }
-    ilE_handler_fire_forced(hnd, size, data);
-    free(data);
+    il_value val = il_value_opaque(il_opaque(data,free));
+    ilE_handler_fire_forced(hnd, &val);
 }
 
 ilE_handler* ilE_handler_new()
@@ -210,36 +212,35 @@ void ilE_handler_name(ilE_handler *self, const char *name)
     strcpy(self->name, name);
 }
 
-static void ilE_handler_fire_forced(ilE_handler *self, size_t size, const void *data)
+static void ilE_handler_fire_forced(ilE_handler *self, const il_value *data)
 {
     unsigned i;
-    il_debug("Dispatch: %s <%p> (data: %p, size: %zu)", self->name, self, data, size);
+    il_debug("Dispatch: %s <%p> (data: %p)", self->name, self, data); // TODO: Print contents of data
     for (i = 0; i < self->callbacks.length; i++) {
         if (self->callbacks.data[i].callback) {
-            self->callbacks.data[i].callback(self, size, data, self->callbacks.data[i].ctx);
+            self->callbacks.data[i].callback(data, &self->callbacks.data[i].ctx);
         }
     }
 }
 
-void ilE_handler_fire(ilE_handler *self, size_t size, const void *data)
+void ilE_handler_fire(ilE_handler *self, const il_value *data)
 {
     il_return_on_fail(self->type == NORMAL_HND);
-    ilE_handler_fire_forced(self, size, data);
+    ilE_handler_fire_forced(self, data);
 }
 
-void ilE_handler_fireasync(ilE_handler *self, size_t size, const void *data)
+void ilE_handler_fireasync(ilE_handler *self, il_value data)
 {
     il_return_on_fail(self->type == NORMAL_HND);
-    struct ilE_event *ev = calloc(1, sizeof(struct ilE_event) + size);
+    struct ilE_event *ev = calloc(1, sizeof(struct ilE_event));
     ev->handler = self;
-    ev->size = size;
-    memcpy(ev->data, data, size);
+    ev->data = data;
     struct event *e = event_new(ilE_base, -1, 0, normal_dispatch, ev);
     event_add(e, NULL);
     event_active(e, 0, 0);
 }
 
-int ilE_register_real(ilE_handler* self, const char *name, int priority, enum ilE_threading threads, ilE_callback callback, void * ctx)
+int ilE_register_real(ilE_handler* self, const char *name, int priority, enum ilE_threading threads, ilE_callback callback, il_value ctx)
 {
     struct callback cb; 
     unsigned i;
@@ -273,21 +274,23 @@ void ilE_unregister(ilE_handler *self, int handle)
     il_error("No callback %i in handler %s <%p>", handle, self->name, self);
 }
 
-static void shutdownCallbacks(const ilE_handler *hnd, size_t size, const void *data, void *ctx)
+static void shutdownCallbacks(const il_value *data, il_value *ctx)
 {
-    (void)hnd, (void)size, (void)data, (void)ctx;
-    ilE_handler_fire(ilE_shutdownCallbacks, 0, NULL);
+    (void)data, (void)ctx;
+    il_value nil = il_value_nil();
+    ilE_handler_fire(ilE_shutdownCallbacks, &nil);
 }
 
-static void shutdownHandlers(const ilE_handler *hnd, size_t size, const void *data, void *ctx)
+static void shutdownHandlers(const il_value *data, il_value *ctx)
 {
-    (void)hnd, (void)size, (void)data, (void)ctx;
-    ilE_handler_fire(ilE_shutdownHandlers, 0, NULL);
+    (void)data, (void)ctx;
+    il_value nil = il_value_nil();
+    ilE_handler_fire(ilE_shutdownHandlers, &nil);
 }
 
-static void showRemaining(const ilE_handler *hnd, size_t size, const void *data, void *ctx)
+static void showRemaining(const il_value *data, il_value *ctx)
 {
-    (void)hnd, (void)size, (void)data, (void)ctx;
+    (void)data, (void)ctx;
     ilE_dumpAll();
 }
 
@@ -297,11 +300,11 @@ void ilE_init()
 {
     ilE_base = event_base_new();
     ilE_shutdown = ilE_handler_new_with_name("il.event.shutdown");
-    shutdownCallbacks_id = ilE_register(ilE_shutdown, ILE_AFTER, ILE_ANY, shutdownCallbacks, NULL);
+    shutdownCallbacks_id = ilE_register(ilE_shutdown, ILE_AFTER, ILE_ANY, shutdownCallbacks, il_value_nil());
     ilE_shutdownCallbacks = ilE_handler_new_with_name("il.event.shutdownCallbacks");
-    shutdownCallbacks_id = ilE_register(ilE_shutdownCallbacks, ILE_AFTER, ILE_ANY, shutdownHandlers, NULL);
+    shutdownCallbacks_id = ilE_register(ilE_shutdownCallbacks, ILE_AFTER, ILE_ANY, shutdownHandlers, il_value_nil());
     ilE_shutdownHandlers = ilE_handler_new_with_name("il.event.shutdownHandlers");
-    showRemaining_id = ilE_register(ilE_shutdownHandlers, ILE_AFTER, ILE_ANY, showRemaining, NULL);
+    showRemaining_id = ilE_register(ilE_shutdownHandlers, ILE_AFTER, ILE_ANY, showRemaining, il_value_nil());
 }
 
 void ilE_quit()
@@ -335,7 +338,7 @@ void ilE_dump(ilE_handler *self)
             default:
             strcpy(threading_str, "???");
         }
-        fprintf(stderr, "\t%s <%p> priority:%i threading:%s ctx<%p>\n", cb->name, (void*)cb->callback, cb->priority, threading_str, cb->ctx);
+        fprintf(stderr, "\t%s <%p> priority:%i threading:%s ctx<%p>\n", cb->name, (void*)cb->callback, cb->priority, threading_str, &cb->ctx);// TODO: Print contents of ctx
     }
 }
 

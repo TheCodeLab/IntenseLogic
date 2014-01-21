@@ -1,15 +1,13 @@
-local storage = require 'common.storage'
+local storage
 local ffi = require 'ffi'
 
 local vector = {}
 
 ffi.metatype('il_vector', {
-    __index = function(t, k)
-        assert(type(k) == "number")
-        return storage.unpack(modules.common.il_vector_get(t, k))
-    end,
+    __index = vector,
     __newindex = function(t, k, v)
         assert(type(k) == "number")
+        if not storage then storage = require 'common.storage' end
         if not ffi.istype('il_value', v) then
             v = storage.pack(v)
         end
@@ -17,7 +15,14 @@ ffi.metatype('il_vector', {
     end
 })
 
+function vector.get(self, k)
+    assert(type(k) == "number")
+    if not storage then storage = require 'common.storage' end
+    return storage.unpack(modules.common.il_vector_get(self, k))
+end
+
 function vector.create(...)
+    if not storage then storage = require 'common.storage' end
     local n = select('#', ...)
     local t = {...}
     for i, v in pairs(t) do

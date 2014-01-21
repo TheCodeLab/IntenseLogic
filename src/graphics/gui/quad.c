@@ -56,7 +56,7 @@ ilG_drawable3d *ilG_quad(ilG_context* context)
         1.f, 1.f,
         0.f, 1.f,
     };
-    struct quad *q = il_table_getsp(&context->base.storage, "gui.quad");
+    struct quad *q = il_table_mgetsp(&context->base.storage, "gui.quad");
     if (q) {
         return &q->drawable;
     }

@@ -5,6 +5,7 @@
 local ffi = require "ffi"
 
 require "common.base"
+local storage = require 'common.storage'
 
 ffi.cdef [[
 
@@ -26,7 +27,7 @@ enum ilE_threading {
     ILE_TLS,
 };
 
-typedef void(*ilE_callback)(const ilE_handler* registry, size_t size, const void *data, void * ctx);
+typedef void(*ilE_callback)(const il_value *data, il_value *ctx);
 
 ilE_handler *ilE_handler_new();
 ilE_handler *ilE_handler_new_with_name(const char *name);
@@ -38,10 +39,10 @@ const char *ilE_handler_getName(const ilE_handler *self);
 
 void ilE_handler_name(ilE_handler *self, const char *name);
 
-void ilE_handler_fire(ilE_handler *self, size_t size, const void *data);
-void ilE_handler_fireasync(ilE_handler *self, size_t size, const void *data);
+void ilE_handler_fire(ilE_handler *self, const il_value *data);
+void ilE_handler_fireasync(ilE_handler *self, il_value data);
 
-int ilE_register_real(ilE_handler* self, const char *name, enum ilE_behaviour behaviour, enum ilE_threading threads, ilE_callback callback, void * ctx);
+int ilE_register_real(ilE_handler* self, const char *name, enum ilE_behaviour behaviour, enum ilE_threading threads, ilE_callback callback, il_value ctx);
 void ilE_unregister(ilE_handler *self, int handle);
 void ilE_dump(ilE_handler *self);
 
@@ -66,120 +67,49 @@ event.shutdown = modules.common.ilE_shutdown
 event.shutdownCallbacks = modules.common.ilE_shutdownCallbacks
 event.shutdownHandlers = modules.common.ilE_shutdownHandlers
 
-local packers = {}
-
---- Sets a function to convert its arguments into a void* and a size_t to pass to the engine
--- @tparam registry registry The registry to hook this packer for
--- @tparam string name The name of the event to pack
--- @tparam func fn A function which takes arbitrary args and returns a cdata<void*> and a size_t
-function event.setPacker(handler, fn)
-    local key = tostring(ffi.cast("void*", handler)) --string.format("%p", handler)
-    packers[key] = fn
-end
-
-function event.nilPacker()
-    return nil, 0
-end
-
-function event.defaultPackers(reg)
-    event.setPacker(event.shutdown, event.nilPacker)
-end
-
-event.defaultPackers(event.registry)
-
 --- Fires off an event
 -- @tparam registry registry The registry (and all that registry's parents) to send the event to
 -- @tparam string name The event to fire
 -- @param ... Data to pass with the event
 function event.fire(handler, ...)
-    local key = tostring(ffi.cast("void*", handler)) --string.format("%p", handler)
-    if not packers[key] then error("No packer for handler "..handler.name) end
-    local data, size = packers[key](...)
-    modules.common.ilE_handler_fire(handler, size, data)
+    local t = {...}
+    for i, v in pairs(t) do
+        if not ffi.istype("il_value", v) then
+            t[i] = storage.pack(v)
+        end
+    end
+    if #t > 1 then
+        t = storage.pack(t)
+    else
+        t = t[1]
+    end
+    modules.common.ilE_handler_fire(handler, t)
 end
 
 function event.fireAsync(handler, ...)
-    local key = tostring(ffi.cast("void*", handler)) --string.format("%p", handler)
-    if not packers[key] then error("No packer for handler "..handler.name) end
-    local data, size = packers[key](...)
-    modules.common.ilE_handler_fireasync(handler, size, data)
-end
-
---[[function event.timer(registry, name, interval, ...)
-        error "Unknown time format for timer"
-    end
-    local packer = packers[tostring(ffi.cast("void*", registry))..name]
-    if not packer then error("No packer for event "..name) end
-    local data, size = packer(...)
-    modules.common.ilE_globaltimer(registry, name, size, data, tv)
-end]]
-
-local unpackers = {}
-
---- Registers an unpacker
--- Converts from the engine's representation to the Lua representation
--- @tparam registry registry The registry to register this unpacker for
--- @tparam string name The name of the event to unpack
--- @tparam func fn The function to call
-function event.setUnpacker(handler, fn)
-    local key = tostring(ffi.cast("void*", handler)) --string.format("%p", handler)
-    unpackers[key] = fn
-end
-
-function event.nilUnpacker()
-    return
-end
-
-function event.arrayUnpacker(T, n)
-    return function(size, data)
-        local t = {}
-        local arr = ffi.cast(T.."*", data)
-        for i = 0, n do
-            t[#t + 1] = arr[i]
+    local t = {...}
+    for i, v in pairs(t) do
+        if not ffi.istype("il_value", v) then
+            t[i] = storage.pack(v)
         end
-        return unpack(t)
     end
-end
-
-function event.typeUnpacker(T)
-    return event.arrayUnpacker(T, 1)
-end
-
-function event.defaultUnpackers(reg)
-    event.setUnpacker(event.shutdown, event.nilUnpacker)
-    event.setUnpacker(event.shutdownCallbacks, event.nilUnpacker)
-    event.setUnpacker(event.shutdownHandlers, event.nilUnpacker)
-end
-
-event.defaultUnpackers(event.registry)
-
---- Unpacks an event from native format
--- @tparam registry registry The registry the event came from
--- @tparam string name The name of the event
--- @tparam size_t size The size of the data
--- @tparam cdata<void*> data The value associated with the event
--- @return Returns the size and data if it was unsuccessful, otherwise returns a value based on the type of the event.
-function event.unpack(handler, size, data)
-    local key = tostring(ffi.cast("void*", handler)) --string.format("%p", handler)
-    assert(unpackers[key], "No unpacker for "..handler.name)
-    return unpackers[key](size, data)
+    if #t > 1 then
+        t = storage.pack(t)
+    else
+        t = t[1]
+    end
+    modules.common.ilE_handler_fireasync(handler, t)
 end
 
 local callbacks = {}
 
-function lua_dispatch(handler, size, data, ctx)
-    local key = tostring(ffi.cast("void*", handler)) --string.format("%p", handler);
-    local args = {xpcall(function() return event.unpack(handler, size, data) end, function(s) print(debug.traceback(s,2)) end)}
-    if not args[1] then
-        return
-    else
-        table.remove(args, 1)
-    end
-    --print(handler.name, #args, unpack(args))
+function lua_dispatch(data, ctx)
+    ctx = storage.unpack(ctx)
+    local key = tostring(ffi.cast("void*", ctx)) --string.format("%p", handler);
     if not callbacks[key] then return end
     for i = 1, #callbacks[key] do
         local f = function()
-            callbacks[key][i](handler, unpack(args))
+            callbacks[key][i](storage.flatten(data))
         end
         local res, err = xpcall(f, function(s) print(debug.traceback(s, 2)) end);
         -- TODO: get proper error propogation when we 'escape' protected calling by being a callback from C
@@ -204,7 +134,7 @@ function event.register(handler, fn)
 
     if not callbacks[key] then
         callbacks[key] = {}
-        modules.common.ilE_register_real(handler, name, modules.common.ILE_DONTCARE, modules.common.ILE_ANY, lua_dispatch, nil);
+        modules.common.ilE_register_real(handler, name, modules.common.ILE_DONTCARE, modules.common.ILE_ANY, lua_dispatch, storage.pack(handler));
     end
 
     callbacks[key][#callbacks[key] + 1] = fn;
@@ -263,8 +193,6 @@ function event.create(arg, name)
     if name then
         modules.common.ilE_handler_name(h, name)
     end
-    h:setPacker(event.nilPacker)
-    h:setUnpacker(event.nilUnpacker)
     lua_handlers[#lua_handlers+1] = h
     return h
 end

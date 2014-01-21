@@ -75,7 +75,7 @@ static void glfw_setup()
 
 static void event_setup()
 {
-    ilE_register(ilE_shutdown, ILE_DONTCARE, ILE_MAIN, &quit, NULL);
+    ilE_register(ilE_shutdown, ILE_DONTCARE, ILE_MAIN, &quit, il_value_nil());
 }
 
 const char **il_dependencies(int argc, char **argv)
@@ -138,9 +138,9 @@ int il_bootstrap(int argc, char **argv)
     return 0;
 }
 
-static void quit(const ilE_handler *handler, size_t size, const void *data, void * ctx)
+static void quit(const il_value *data, il_value *ctx)
 {
-    (void)handler, (void)size, (void)data, (void)ctx;
+    (void)data, (void)ctx;
     glfwTerminate();
 }
 

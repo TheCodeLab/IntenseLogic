@@ -18,7 +18,7 @@ struct shader_ctx {
 
 static ilG_material *get_shader(ilG_gui_frame *self)
 {
-    ilG_material *shader = il_table_getsp(&self->context->base.storage, "gui.image.shader");
+    ilG_material *shader = il_table_mgetsp(&self->context->base.storage, "gui.image.shader");
     if (shader) {
         return shader;
     }
@@ -39,10 +39,10 @@ static ilG_material *get_shader(ilG_gui_frame *self)
 
 static void image_draw(ilG_gui_frame *self, ilG_gui_rect where)
 {
-    ilG_texture *tex = il_table_getsp(&self->base.storage, "gui.image.tex");
+    ilG_texture *tex = il_table_mgetsp(&self->base.storage, "gui.image.tex");
     int premultiplied = il_table_getsb(&self->base.storage, "gui.image.premultiply");
     ilG_material *shader = get_shader(self);
-    struct shader_ctx *shader_ctx = il_table_getsp(&shader->base.storage, "gui.image.shaderctx");
+    struct shader_ctx *shader_ctx = il_table_mgetsp(&shader->base.storage, "gui.image.shaderctx");
 
     ilG_testError("Unknown");
     if (!shader_ctx) {

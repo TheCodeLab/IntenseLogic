@@ -28,6 +28,8 @@
 #include <stddef.h>
 #include <sys/time.h>
 
+#include "common/storage.h"
+
 struct il_type;
 struct il_base;
 
@@ -58,7 +60,7 @@ enum ilE_fdevent {
 };
 
 /*! Callback type for events */
-typedef void(*ilE_callback)(const ilE_handler* registry, size_t size, const void *data, void * ctx);
+typedef void(*ilE_callback)(const il_value *data, il_value *ctx);
 
 /*! Creates a normal handler which is only fired by the user. */
 ilE_handler *ilE_handler_new();
@@ -78,15 +80,15 @@ const char *ilE_handler_getName(const ilE_handler *self);
 void ilE_handler_name(ilE_handler *self, const char *name);
 
 /*! Fires an event for a handler immediately, using no copies. */
-void ilE_handler_fire(ilE_handler *self, size_t size, const void *data);
-/*! Copies the data for the handler and pushes it onto the event loop to be run later. */
-void ilE_handler_fireasync(ilE_handler *self, size_t size, const void *data);
+void ilE_handler_fire(ilE_handler *self, const il_value *data);
+/*! Moves the data for the handler and pushes it onto the event loop to be run later. */
+void ilE_handler_fireasync(ilE_handler *self, il_value data);
 
 /*! Registers a handler for a given event. 
  * @param name A string name used for introspection, such as debugging
  * @return A unique handle into the handler which can be used to unregister the callback. 
  * @see ilE_unregister */
-int ilE_register_real(ilE_handler* self, const char *name, int priority, enum ilE_threading threads, ilE_callback callback, void * ctx);
+int ilE_register_real(ilE_handler* self, const char *name, int priority, enum ilE_threading threads, ilE_callback callback, il_value ctx);
 /*! Convienience wrapper which sets the name to __func__ */
 #define ilE_register(self, b, t, cb, ctx) ilE_register_real(self, #cb, b, t, cb, ctx)
 /*! Deletes a callback - use this on all your registered callbacks before destroying a handler. */

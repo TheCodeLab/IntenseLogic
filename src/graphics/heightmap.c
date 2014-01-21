@@ -56,7 +56,7 @@ ilG_drawable3d *ilG_heightmap_new(ilG_context *context, unsigned w, unsigned h)
 static void width_uniform(ilG_material *self, GLint location, void *user)
 {
     (void)user;
-    il_vector *size = il_table_getsa(&self->context->drawable->base.storage, "heightmap.size");
+    const il_vector *size = il_table_getsa(&self->context->drawable->base.storage, "heightmap.size");
     if (!size) {
         il_error("Heightmap shader combined with non-heightmap drawable");
         return;
@@ -66,7 +66,7 @@ static void width_uniform(ilG_material *self, GLint location, void *user)
 
 ilG_material *ilG_heightmap_shader(ilG_context *context)
 {
-    ilG_material *mat = il_table_getsp(&context->base.storage, "heightmap.shader");
+    ilG_material *mat = il_table_mgetsp(&context->base.storage, "heightmap.shader");
     if (mat) {
         return mat;
     }

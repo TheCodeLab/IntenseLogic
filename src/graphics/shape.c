@@ -247,7 +247,7 @@ void ilG_shape_init()
 
 ilG_drawable3d *ilG_box(ilG_context *context)
 {
-    struct ilG_shape *self = il_table_getsp(&context->base.storage, "shape.box");
+    struct ilG_shape *self = il_table_mgetsp(&context->base.storage, "shape.box");
     if (self) {
         return &self->drawable;
     }
@@ -264,7 +264,7 @@ ilG_drawable3d *ilG_box(ilG_context *context)
 
 ilG_drawable3d *ilG_icosahedron(ilG_context *context)
 {
-    struct ilG_shape *self = il_table_getsp(&context->base.storage, "shape.icosahedron");
+    struct ilG_shape *self = il_table_mgetsp(&context->base.storage, "shape.icosahedron");
     if (self) {
         return &self->drawable;
     }

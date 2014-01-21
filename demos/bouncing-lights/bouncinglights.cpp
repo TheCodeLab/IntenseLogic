@@ -65,7 +65,7 @@ ex ilG_stage *init_stage(ilG_context *context)
 ex void custom_data_func(struct ilG_material *self, il_positionable *pos, GLuint loc, void *user)
 {
     (void)self; (void)user;
-    il_vector *col = il_value_tovec(il_table_gets(&pos->base.storage, "color"));
+    const il_vector *col = il_table_getsa(&pos->base.storage, "color");
     if (!col) {
         return;
     }
@@ -144,7 +144,7 @@ ex void update(int debug)
     il_worldIterator *it = NULL;
     il_positionable *pos;
     for (pos = il_world_iterate(world, &it); pos; pos = il_world_iterate(world, &it)) {
-        btRigidBody *body = (btRigidBody*)il_table_getsp(&pos->base.storage, "rigidbody");
+        btRigidBody *body = (btRigidBody*)il_table_mgetsp(&pos->base.storage, "rigidbody");
         if (!body) {
             continue;
         }

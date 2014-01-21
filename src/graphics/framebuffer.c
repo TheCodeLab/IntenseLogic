@@ -183,11 +183,10 @@ static int build_textures(ilG_fbo *self, ilG_context *ctx)
     return 0;
 }
 
-static void resize_cb(const ilE_handler *hnd, size_t size, const void *data, void *ctx)
+static void resize_cb(const il_value *data, il_value *ctx)
 {
-    (void)hnd; (void)size;
-    ilG_context *context = (ilG_context*)data;
-    ilG_fbo *self = ctx;
+    ilG_context *context = (ilG_context*)il_value_tovoid(data);
+    ilG_fbo *self = il_value_tomvoid(ctx);
     int res = build_textures(self, context);
     self->complete = !res;
 }
@@ -195,7 +194,7 @@ static void resize_cb(const ilE_handler *hnd, size_t size, const void *data, voi
 int /*failure*/ ilG_fbo_build(ilG_fbo *self, ilG_context *ctx)
 {
     il_return_val_on_fail(ctx, 1);
-    ilE_register(ctx->resize, ILE_DONTCARE, ILE_ANY, resize_cb, self);
+    ilE_register(ctx->resize, ILE_DONTCARE, ILE_ANY, resize_cb, il_vopaque(self, NULL));
     int res = build_textures(self, ctx);
     self->complete = !res;
     return res;

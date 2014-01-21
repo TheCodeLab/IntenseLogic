@@ -80,7 +80,7 @@ struct text_globalctx {
 ilG_gui_textlayout *ilG_gui_textlayout_new(ilG_context *ctx, const char *lang, enum ilG_gui_textdir direction, const char *script, il_base *font, const ilA_file *tc, double pt, il_string *source)
 {
     il_return_null_on_fail(ctx && lang && script && font && source);
-    struct text_globalctx *gctx = il_table_getsp(&ctx->base.storage, "gui.text.ctx");
+    struct text_globalctx *gctx = il_table_mgetsp(&ctx->base.storage, "gui.text.ctx");
 
     if (!gctx) {
         gctx = calloc(1, sizeof(struct text_globalctx));
