@@ -95,8 +95,10 @@ function event.fireAsync(handler, ...)
     end
     if #t > 1 then
         t = storage.pack(t)
-    else
+    elseif #t == 1 then
         t = t[1]
+    else
+        t = storage.pack(nil)
     end
     modules.common.ilE_handler_fireasync(handler, t)
 end
@@ -172,7 +174,7 @@ end
 function event.create(arg, name)
     local h
     if not arg then -- normal
-        h = modules.common.ilE_handler_new(arg)
+        h = modules.common.ilE_handler_new()
     elseif type(arg) == "string" then -- normal with name
         h = modules.common.ilE_handler_new_with_name(arg, name)
     elseif type(arg) == "number" then -- timer in seconds
