@@ -64,5 +64,5 @@ end
 
 helper.camera(c, root)
 
-c:setActive()
+c:start()
 

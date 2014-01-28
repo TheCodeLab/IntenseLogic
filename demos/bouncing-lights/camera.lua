@@ -135,23 +135,17 @@ return function(ctx, root, tick)
 
     local on_after_close = event()
     local after_close = function(hnd)
-        print("?!")
+        event.destroy(tick)
         ctx:destroy()
         event.fireAsync(event.shutdown)
     end
     local close = function(hnd)
-        print("!?")
         event.fireAsync(on_after_close)
-    end
-
-    local destroy = function(hnd)
-        event.destroy(tick)
     end
 
     event.register(tick, ontick)
     event.register(input.mousemove, mousemove)
     event.register(ctx.close, close)
-    event.register(ctx.on_destroy, destroy)
     event.register(on_after_close, after_close)
 end
 

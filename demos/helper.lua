@@ -153,14 +153,21 @@ function helper.camera(ctx, root)
         cam.projection_matrix = matrix.perspective(75, ctx.width/ctx.height, 2, 2000).ptr
     end
 
-    local close = function()
-        event.fire(event.shutdown)
+    local tick = event(1/20, "helper.tick")   
+    local on_after_close = event()
+    local after_close = function(hnd)
+        event.destroy(tick)
+        ctx:destroy()
+        event.fireAsync(event.shutdown)
+    end
+    local close = function(hnd)
+        event.fireAsync(on_after_close)
     end
 
-    local tick = event(1/20, "helper.tick")
     event.register(tick, ontick)
     event.register(input.mousemove, mousemove)
     event.register(ctx.close, close)
+    event.register(on_after_close, after_close)
 end
 
 return helper
