@@ -57,20 +57,20 @@ static void mousebutton(GLFWwindow *window, int button, int action, int mods)
         il_value_int(button+512), 
         il_value_int(0), 
         il_value_int(0), 
-        il_value_int(action), 
+        il_value_bool(action), 
         il_value_int(mods)
     );
     ilG_context *ctx = glfwGetWindowUserPointer(window);
-    ilE_handler_fire(ctx->input_handler.button, &val);
+    ilE_handler_fire(ctx->handler.button, &val);
     il_value_free(val);
 }
 
 static void cursorpos(GLFWwindow *window, double x, double y)
 {
     ilG_context *ctx = glfwGetWindowUserPointer(window);
-    il_vector *old = il_table_mgetsa(&ctx->base.storage, "input.last_mouse");
+    il_vector *old = il_table_mgetsa(&ctx->storage, "input.last_mouse");
     if (!old) {
-        old = il_value_tomvec(il_table_setsa(&ctx->base.storage, "input.last_mouse", il_vector_new(2, il_value_int(0), il_value_int(0))));
+        old = il_value_tomvec(il_table_setsa(&ctx->storage, "input.last_mouse", il_vector_new(2, il_value_int(0), il_value_int(0))));
     }
     int oldx = il_vector_geti(old, 0),
         oldy = il_vector_geti(old, 1);
@@ -83,7 +83,7 @@ static void cursorpos(GLFWwindow *window, double x, double y)
     il_vector_seti(old, 0, x);
     il_vector_seti(old, 1, y);
     ilG_context *context = glfwGetWindowUserPointer(window);
-    ilE_handler_fire(context->input_handler.mousemove, &val);
+    ilE_handler_fire(context->handler.mousemove, &val);
     il_value_free(val);
 }
 
@@ -91,7 +91,7 @@ static void cursorenter(GLFWwindow *window, int entered)
 {
     ilG_context *ctx = glfwGetWindowUserPointer(window);
     il_value val = il_value_bool(entered);
-    ilE_handler_fire(ctx->input_handler.mouseenter, &val);
+    ilE_handler_fire(ctx->handler.mouseenter, &val);
     il_value_free(val);
 }
  
@@ -99,7 +99,7 @@ static void scroll(GLFWwindow *window, double x, double y)
 {
     il_value arr = il_value_vectorl(2, x, y);
     ilG_context *ctx = glfwGetWindowUserPointer(window);
-    ilE_handler_fire(ctx->input_handler.mousescroll, &arr);
+    ilE_handler_fire(ctx->handler.mousescroll, &arr);
     il_value_free(arr);
 }
  
@@ -116,11 +116,11 @@ static void keyfun(GLFWwindow *window, int key, int scancode, int action, int mo
         il_value_int(key), 
         il_value_int(scancode), 
         il_value_int(0), 
-        il_value_int(action), 
+        il_value_bool(action), 
         il_value_int(mods)
     );
     ilG_context *ctx = glfwGetWindowUserPointer(window);
-    ilE_handler_fire(ctx->input_handler.button, &ev);
+    ilE_handler_fire(ctx->handler.button, &ev);
     il_value_free(ev);
 }
  
@@ -129,7 +129,7 @@ static void charfun(GLFWwindow *window, unsigned int character)
     // TODO: unsigned ints
     ilG_context *ctx = glfwGetWindowUserPointer(window);
     il_value val = il_value_int(character);
-    ilE_handler_fire(ctx->input_handler.character, &val);
+    ilE_handler_fire(ctx->handler.character, &val);
     il_value_free(val);
 }
 

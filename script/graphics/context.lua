@@ -48,117 +48,122 @@ struct ilG_frame {
 };
 
 typedef struct ilG_context {
-    il_base base;
-    /* Creation parameters */
-    int complete;
-    int contextMajor;
-    int contextMinor;
-    int forwardCompat;
-    enum ilG_context_profile profile;
-    int debugContext;
-    int experimental;
-    int startWidth;
-    int startHeight;
-    int hdr;
-    int use_default_fb;
-    int debug_render;
-    char *initialTitle;
-    /* Context management */
-    int valid;
-    struct GLFWwindow *window;
-    unsigned int fbtextures[ILG_CONTEXT_NUMATTACHMENTS], framebuffer;
+    il_table storage;
     int width, height;
-    struct {
-        struct ilG_state **data;
-        size_t length;
-        size_t capacity;
-    } stages; 
-    struct {
-        struct il_positionable **data;
-        size_t length;
-        size_t capacity;
-    } positionables;
-    struct {
-        struct ilG_light **data;
-        size_t length;
-        size_t capacity;
-    } lights;
     struct ilG_frame frames_head;
-    struct timeval frames_sum, frames_average;
+    struct timeval frames_sum,
+                   frames_average;
     size_t num_frames;
     char *title;
-    ilE_handler *tick,          // NULL
-                *resizeWin,     // ilG_context
-                *close;         // ilG_context
-    ilI_handler input_handler;
-    int tick_id, close_id, close2_id;
-    /* Drawing */
-    struct ilG_drawable3d* drawable;
-    struct ilG_material* material;
-    struct ilG_texture* texture;
-    const struct ilG_bindable *drawableb, *materialb, *textureb;
     struct ilG_camera* camera;
     struct il_world* world;
-    struct il_positionable *positionable;
-    unsigned *texunits;
-    size_t num_texunits;
-    size_t num_active;
+    ilE_handler *tick,
+                *on_resize,
+                *close,
+                *on_destroy;
+    ilI_handler handler;
 } ilG_context;
 
-extern il_type ilG_context_type;
+ilG_context *ilG_context_new();
+void ilG_context_free(ilG_context *self);
 
 void ilG_context_hint(ilG_context *self, enum ilG_context_hint hint, int param);
 int ilG_context_build(ilG_context *self);
 int ilG_context_resize(ilG_context *self, int w, int h, const char *title);
 void ilG_context_makeCurrent(ilG_context *self);
-int ilG_context_setActive(ilG_context*);
+int ilG_context_start(ilG_context*);
 void ilG_context_addStage(ilG_context* self, struct ilG_stage* stage, int num);
 void ilG_context_clearStages(ilG_context *self);
 
 ]]
 
-base.wrap "il.graphics.context" {
-    struct = "ilG_context";
-    build = function(...)
-        local res = modules.graphics.ilG_context_build(...)
-        if res == 0 then
-            error "ilG_context_build"
-        end
-    end;
-    resize = function(...)
-        local res = modules.graphics.ilG_context_resize(...)
-        if res == 0 then
-            error "ilG_context_resize"
-        end
-    end;
-    setActive = function(...)
-        local res = modules.graphics.ilG_context_setActive(...)
-        if res == 0 then
-            error "ilG_context_setActive"
-        end
-    end;
-    addStage    = modules.graphics.ilG_context_addStage;
-    clearStages = modules.graphics.ilG_context_clearStages;
-    averageFrametime = function(self)
-        return tonumber(self.frames_average.tv_sec) + tonumber(self.frames_average.tv_usec) / 1000000
-    end;
-    hint = function(self, name, val)
-        if type(val) == 'string' then
-            val = modules.graphics["ILG_CONTEXT_"..val:upper()]
-        end
-        modules.graphics.ilG_context_hint(self, modules.graphics["ILG_CONTEXT_"..string.upper(name)], val)
-    end;
-    __newindex = function(self, k, v)
-        hint('major')
-        hint('minor')
-        hint('forward_compat')
-        hint('profile')
-        hint('debug')
-        hint('experimental')
-        hint('width')
-        hint('height')
-    end;
-}
+local context = {}
 
-return modules.graphics.ilG_context_type;
+-- TODO: Error propagation
+
+function context:destroy()
+    assert(self ~= nil)
+    modules.graphics.ilG_context_free(self)
+end
+
+function context:build()
+    assert(self ~= nil)
+    local res = modules.graphics.ilG_context_build(self)
+    assert(res ~= 0, "ilG_context_build")
+end
+
+function context:resize(w, h, title)
+    assert(self ~= nil)
+    local res = modules.graphics.ilG_context_resize(self, w, h, title)
+    assert(res ~= 0, "ilG_context_resize")
+end
+
+function context:start()
+    assert(self ~= nil)
+    local res = modules.graphics.ilG_context_start(self)
+    assert(res ~= 0, "ilG_context_start")
+end
+
+function context:addStage(stage, idx)
+    if not idx then idx = -1 end
+    assert(self ~= nil)
+    assert(stage ~= nil)
+    modules.graphics.ilG_context_addStage(self, stage, idx)
+end
+
+function context:clearStages()
+    assert(self ~= nil)
+    modules.graphics.ilG_context_clearStages(self)
+end
+
+function context:averageFrametime()
+    assert(self ~= nil)
+    return tonumber(self.frames_average.tv_sec) + tonumber(self.frames_average.tv_usec) / 1000000
+end
+
+function context:hint(name, val)
+    assert(self ~= nil)
+    assert(type(name) == 'string')
+    if type(val) == 'string' then
+        val = modules.graphics["ILG_CONTEXT_"..val:upper()]
+    end
+    modules.graphics.ilG_context_hint(self, modules.graphics["ILG_CONTEXT_"..string.upper(name)], val)
+end
+
+__newindex = function(self, k, v)
+end
+
+function context.create()
+    return modules.graphics.ilG_context_new()
+end
+
+setmetatable(context, {
+    __call = function(self, ...) return context.create(...) end
+})
+
+ffi.metatype("ilG_context", {
+    __index = function(self, k)
+        return context[k] or self.storage[k]
+    end,
+    __newindex = function(self, k, v)
+        local h = function(n)
+            if k == n then
+                self:hint(k, v)
+                return true
+            end
+            return false
+        end
+        local _ = h('major')
+        or h('minor')
+        or h('forward_compat')
+        or h('profile')
+        or h('debug')
+        or h('experimental')
+        or h('width')
+        or h('height')
+        or (function() self.storage[k] = v; return true end)
+    end
+})
+
+return context
 

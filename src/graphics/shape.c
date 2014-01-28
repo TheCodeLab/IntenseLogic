@@ -247,7 +247,7 @@ void ilG_shape_init()
 
 ilG_drawable3d *ilG_box(ilG_context *context)
 {
-    struct ilG_shape *self = il_table_mgetsp(&context->base.storage, "shape.box");
+    struct ilG_shape *self = il_table_mgetsp(&context->storage, "shape.box");
     if (self) {
         return &self->drawable;
     }
@@ -258,13 +258,13 @@ ilG_drawable3d *ilG_box(ilG_context *context)
     self->mode = GL_TRIANGLES;
     self->count = 36;
     self->type = 1;
-    il_table_setsp(&context->base.storage, "shape.box", il_opaque(self, il_unref));
+    il_table_setsp(&context->storage, "shape.box", il_opaque(self, il_unref));
     return &self->drawable;
 }
 
 ilG_drawable3d *ilG_icosahedron(ilG_context *context)
 {
-    struct ilG_shape *self = il_table_mgetsp(&context->base.storage, "shape.icosahedron");
+    struct ilG_shape *self = il_table_mgetsp(&context->storage, "shape.icosahedron");
     if (self) {
         return &self->drawable;
     }
@@ -274,7 +274,7 @@ ilG_drawable3d *ilG_icosahedron(ilG_context *context)
     self->mode = GL_TRIANGLES;
     self->count = 20 * 3;
     self->type = 2;
-    il_table_setsp(&context->base.storage, "shape.icosahedron", il_opaque(self, il_unref));
+    il_table_setsp(&context->storage, "shape.icosahedron", il_opaque(self, il_unref));
     return &self->drawable;
 }
 

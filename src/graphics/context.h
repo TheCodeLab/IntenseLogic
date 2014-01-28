@@ -8,7 +8,7 @@
 
 #include "util/array.h"
 #include "util/list.h"
-#include "common/base.h"
+#include "common/storage.h"
 #include "graphics/bindable.h"
 #include "input/input.h"
 
@@ -79,7 +79,38 @@ struct ilG_context;
 /** Contains state related to OpenGL contexts and window management
  * A large structure which is the top-level when it comes to rendering. It controls the framerate, context management, window management, and is where you go to configure the rendering pipeline, resize the window, etc. */
 typedef struct ilG_context { // **remember to update context.lua**
-    il_base base;
+    /* Public members */
+    il_table storage;
+    int width, height;
+    struct ilG_frame frames_head;
+    struct timeval frames_sum,
+                   frames_average;
+    size_t num_frames;
+    char *title;
+    struct ilG_camera* camera;
+    struct il_world* world;
+    ilE_handler *tick,
+                *resize,
+                *close,
+                *destroy;
+    ilI_handler handler;
+    /* For rendering */
+    struct il_positionable *positionable;
+    struct ilG_drawable3d* drawable;
+    struct ilG_material* material;
+    struct ilG_texture* texture;
+    const struct ilG_bindable *drawableb, *materialb, *textureb;
+    /* Private */
+    int valid;
+    GLFWwindow *window;
+    GLuint fbtextures[ILG_CONTEXT_NUMATTACHMENTS], framebuffer;
+    IL_ARRAY(struct ilG_stage*,) stages;
+    int tick_id;
+    size_t num_active;
+    IL_ARRAY(struct il_positionable*,) positionables; // tracker.c // TODO: move to geometry stage
+    IL_ARRAY(struct ilG_light*,) lights; // TODO: move to lighting stagd when the relavent events occur in the window. All events are forwarded to ilI_globalHandler.
+    unsigned *texunits;
+    size_t num_texunits;
     /* Creation parameters */
     int complete;
     int contextMajor;
@@ -94,41 +125,11 @@ typedef struct ilG_context { // **remember to update context.lua**
     int use_default_fb;
     int debug_render;
     char *initialTitle;
-    /* Context management */
-    int valid;
-    GLFWwindow *window;
-    GLuint fbtextures[ILG_CONTEXT_NUMATTACHMENTS], framebuffer;
-    int width, height;
-    IL_ARRAY(struct ilG_stage*,) stages;
-    IL_ARRAY(struct il_positionable*,) positionables; // tracker.c // TODO: move to geometry stage
-    IL_ARRAY(struct ilG_light*,) lights; // TODO: move to lighting stage
-    struct ilG_frame frames_head;   ///< A 1-second sliding window list of the times required to render each frame.
-    struct timeval frames_sum,      ///< A 1-second sliding window of the sum of the time taken to render each frame.
-                   frames_average;  ///< A 1-second sliding window of the average time needed to render a frame.
-    size_t num_frames;
-    /** A copy of the current name of the window displayed by the OS. */
-    char *title;
-    ilE_handler *tick,          ///< Event which controls when new frames begin rendering. No parameters.
-                *resize,        ///< Event which is called when the window is resized. Takes ilG_context as parameter.
-                *close;         ///< Event which is called when the alt+F4 is pressed or the close button is clicked. Takes ilG_context as a parameter.
-    ilI_handler input_handler;  ///< Collection of events which are called when the relavent events occur in the window. All events are forwarded to ilI_globalHandler.
-    int tick_id, close_id, close2_id;
-    /* Drawing */
-    struct ilG_drawable3d* drawable;
-    struct ilG_material* material;
-    struct ilG_texture* texture;
-    const struct ilG_bindable *drawableb, *materialb, *textureb;
-    struct ilG_camera* camera;
-    struct il_world* world;
-    struct il_positionable *positionable;
-    unsigned *texunits;
-    size_t num_texunits;
-    size_t num_active;
 } ilG_context;
 
-extern il_type ilG_context_type;
-
-#define ilG_context_new() (ilG_context*)il_new(&ilG_context_type)
+ilG_context *ilG_context_new();
+/** Destroys the window, associated GL context, and all owned memory */
+void ilG_context_free(ilG_context *self);
 
 /** Sets a hint on a context for how it should be constructed. */
 void ilG_context_hint(ilG_context *self, enum ilG_context_hint hint, int param);
@@ -138,9 +139,9 @@ int ilG_context_build(ilG_context *self);
 /** Resizes (and creates if first call) the context's framebuffers and calls the #ilG_context.resize event. 
  * @return Success. */
 int ilG_context_resize(ilG_context *self, int w, int h, const char *title);
-/** Sets a context to start rendering. 
+/** Start rendering.
  * @return Success. */
-int ilG_context_setActive(ilG_context*);
+int ilG_context_start(ilG_context* self);
 /** Inserts a rendering stage into the rendering pipeline. */
 void ilG_context_addStage(ilG_context* self, struct ilG_stage* stage, int num);
 /** Clears the rendering pipeline */

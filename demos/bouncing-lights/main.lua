@@ -140,7 +140,7 @@ event.register(tick, function() modules.bouncinglights.update(debugRender and 1 
 
 camera(c, root, tick)
 
-c:setActive()
+c:start()
 
 --modules.bouncinglights.debug_draw()
 

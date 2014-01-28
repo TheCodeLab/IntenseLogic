@@ -18,7 +18,7 @@ struct shader_ctx {
 
 static ilG_material *get_shader(ilG_gui_frame *self)
 {
-    ilG_material *shader = il_table_mgetsp(&self->context->base.storage, "gui.image.shader");
+    ilG_material *shader = il_table_mgetsp(&self->context->storage, "gui.image.shader");
     if (shader) {
         return shader;
     }
@@ -33,7 +33,7 @@ static ilG_material *get_shader(ilG_gui_frame *self)
     if (ilG_material_link(shader, self->context)) {
         return NULL;
     }
-    il_table_setsp(&self->context->base.storage, "gui.image.shader", il_opaque(shader, il_unref));
+    il_table_setsp(&self->context->storage, "gui.image.shader", il_opaque(shader, il_unref));
     return shader;
 }
 

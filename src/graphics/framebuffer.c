@@ -150,7 +150,7 @@ void ilG_fbo_swap(ilG_fbo *self, unsigned target1, unsigned target2)
     self->textures[target2] = tex;
 }
 
-static int build_textures(ilG_fbo *self, ilG_context *ctx)
+static int build_textures(ilG_fbo *self, unsigned w, unsigned h)
 {
     unsigned i;
 
@@ -159,7 +159,7 @@ static int build_textures(ilG_fbo *self, ilG_context *ctx)
     for (i = 0; i < self->num; i++) {
         struct target *t = self->targets + i;
         glBindTexture(t->target, self->textures[i]);
-        glTexImage2D(t->target, 0, t->fmt, t->awidth + t->rwidth*ctx->width, t->aheight + t->rheight*ctx->height, 0, t->fmt, GL_UNSIGNED_BYTE, NULL);
+        glTexImage2D(t->target, 0, t->fmt, t->awidth + t->rwidth*w, t->aheight + t->rheight*h, 0, t->fmt, GL_UNSIGNED_BYTE, NULL);
         glFramebufferTexture2D(GL_FRAMEBUFFER, t->attach, t->target, self->textures[i], 0);
     }
 
@@ -185,9 +185,9 @@ static int build_textures(ilG_fbo *self, ilG_context *ctx)
 
 static void resize_cb(const il_value *data, il_value *ctx)
 {
-    ilG_context *context = (ilG_context*)il_value_tovoid(data);
     ilG_fbo *self = il_value_tomvoid(ctx);
-    int res = build_textures(self, context);
+    const il_vector *size = il_value_tovec(data);
+    int res = build_textures(self, il_vector_geti(size, 0), il_vector_geti(size, 1));
     self->complete = !res;
 }
 
@@ -195,7 +195,7 @@ int /*failure*/ ilG_fbo_build(ilG_fbo *self, ilG_context *ctx)
 {
     il_return_val_on_fail(ctx, 1);
     ilE_register(ctx->resize, ILE_DONTCARE, ILE_ANY, resize_cb, il_vopaque(self, NULL));
-    int res = build_textures(self, ctx);
+    int res = build_textures(self, ctx->width, ctx->height);
     self->complete = !res;
     return res;
 }

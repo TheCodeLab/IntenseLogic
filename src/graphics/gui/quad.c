@@ -56,7 +56,7 @@ ilG_drawable3d *ilG_quad(ilG_context* context)
         1.f, 1.f,
         0.f, 1.f,
     };
-    struct quad *q = il_table_mgetsp(&context->base.storage, "gui.quad");
+    struct quad *q = il_table_mgetsp(&context->storage, "gui.quad");
     if (q) {
         return &q->drawable;
     }
@@ -74,7 +74,7 @@ ilG_drawable3d *ilG_quad(ilG_context* context)
     glEnableVertexAttribArray(ILG_ARRATTR_POSITION);
     glEnableVertexAttribArray(ILG_ARRATTR_TEXCOORD);
     q->valid = 1;
-    il_table_setsp(&context->base.storage, "gui.quad", il_opaque(q, il_unref));
+    il_table_setsp(&context->storage, "gui.quad", il_opaque(q, il_unref));
     return &q->drawable;
 }
 

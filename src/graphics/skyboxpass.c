@@ -11,7 +11,7 @@
 
 static ilG_material *skybox_shader(ilG_context *context)
 {
-    ilG_material *self = il_table_mgetsp(&context->base.storage, "skybox.shader");
+    ilG_material *self = il_table_mgetsp(&context->storage, "skybox.shader");
     if (self) {
         return self;
     }
@@ -31,7 +31,7 @@ static ilG_material *skybox_shader(ilG_context *context)
         il_unref(self);
         return NULL;
     }
-    il_table_setsp(&context->base.storage, "skybox.shader", il_opaque(self, il_unref));
+    il_table_setsp(&context->storage, "skybox.shader", il_opaque(self, il_unref));
     return self;
 }
 

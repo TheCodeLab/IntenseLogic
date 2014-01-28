@@ -133,12 +133,25 @@ return function(ctx, root, tick)
         cam.projection_matrix = matrix.perspective(75, ctx.width/ctx.height, 2, 2000).ptr
     end
 
+    local on_after_close = event()
+    local after_close = function(hnd)
+        print("?!")
+        ctx:destroy()
+        event.fireAsync(event.shutdown)
+    end
     local close = function(hnd)
-        event.fire(event.shutdown)
+        print("!?")
+        event.fireAsync(on_after_close)
+    end
+
+    local destroy = function(hnd)
+        event.destroy(tick)
     end
 
     event.register(tick, ontick)
     event.register(input.mousemove, mousemove)
     event.register(ctx.close, close)
+    event.register(ctx.on_destroy, destroy)
+    event.register(on_after_close, after_close)
 end
 

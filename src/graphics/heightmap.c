@@ -66,7 +66,7 @@ static void width_uniform(ilG_material *self, GLint location, void *user)
 
 ilG_material *ilG_heightmap_shader(ilG_context *context)
 {
-    ilG_material *mat = il_table_mgetsp(&context->base.storage, "heightmap.shader");
+    ilG_material *mat = il_table_mgetsp(&context->storage, "heightmap.shader");
     if (mat) {
         return mat;
     }
@@ -90,7 +90,7 @@ ilG_material *ilG_heightmap_shader(ilG_context *context)
         il_unref(mat);
         return NULL;
     }
-    il_table_setsp(&context->base.storage, "heightmap.shader", il_opaque(mat, il_unref));
+    il_table_setsp(&context->storage, "heightmap.shader", il_opaque(mat, il_unref));
 
     return mat;
 }

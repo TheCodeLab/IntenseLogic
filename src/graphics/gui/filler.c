@@ -14,7 +14,7 @@
 
 static ilG_material *get_shader(ilG_context *context)
 {
-    ilG_material *mtl = il_table_mgetsp(&context->base.storage, "gui.frame.shader");
+    ilG_material *mtl = il_table_mgetsp(&context->storage, "gui.frame.shader");
     if (mtl) {
         return mtl;
     }
@@ -27,13 +27,13 @@ static ilG_material *get_shader(ilG_context *context)
     if (ilG_material_link(mtl, context)) {
         return NULL;
     }
-    il_table_setsp(&context->base.storage, "gui.frame.shader", il_opaque(mtl, il_unref));
+    il_table_setsp(&context->storage, "gui.frame.shader", il_opaque(mtl, il_unref));
     GLuint *col = malloc(sizeof(GLuint)),
            *pos = malloc(sizeof(GLuint)); 
     *col = glGetUniformLocation(mtl->program, "color");
     *pos = glGetUniformLocation(mtl->program, "position");
-    il_table_setsp(&context->base.storage, "gui.frame.color_loc", il_opaque(col, free));
-    il_table_setsp(&context->base.storage, "gui.frame.pos_loc", il_opaque(pos, free));
+    il_table_setsp(&context->storage, "gui.frame.color_loc", il_opaque(col, free));
+    il_table_setsp(&context->storage, "gui.frame.pos_loc", il_opaque(pos, free));
     return mtl;
 }
 
@@ -43,8 +43,8 @@ static void filler_draw(ilG_gui_frame *self, ilG_gui_rect where)
     ilG_drawable3d *quad = ilG_quad(self->context);
     ilG_material *shader = get_shader(self->context);
     const il_vector *col = il_table_getsp(&self->base.storage, "gui.frame.fillcolor");
-    const GLuint *col_loc = il_table_getsp(&self->context->base.storage, "gui.frame.color_loc"),
-                 *pos_loc = il_table_getsp(&self->context->base.storage, "gui.frame.pos_loc");
+    const GLuint *col_loc = il_table_getsp(&self->context->storage, "gui.frame.color_loc"),
+                 *pos_loc = il_table_getsp(&self->context->storage, "gui.frame.pos_loc");
     if (!col_loc || !pos_loc) {
         il_error("Could not retrieve shader information");
         return;

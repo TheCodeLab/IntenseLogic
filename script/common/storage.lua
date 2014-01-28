@@ -93,7 +93,7 @@ function value.unpack(v)
     if w == 'nil' or w == 'invalid' then
         return nil
     elseif w == 'bool' then
-        return modules.common.il_value_tobool(v) ~= 0
+        return modules.common.il_value_tobool(v)
     elseif w == 'void' then
         return modules.common.il_value_tovoid(v)
     elseif w == 'string' then

@@ -16,12 +16,9 @@ static GLvoid error_cb(GLenum source, GLenum type, GLuint id, GLenum severity,
                        GLsizei length, const GLchar* message, GLvoid* user);
 void ilG_registerInputBackend(ilG_context *ctx);
 
-static void on_close(const il_value *data, il_value *ctx);
-static void on_close2(const il_value *data, il_value *ctx);
-
-static void context_cons(void *obj)
+ilG_context *ilG_context_new()
 {
-    ilG_context *self = obj;
+    ilG_context *self = calloc(1, sizeof(ilG_context));
     self->contextMajor = 3;
 #ifdef __APPLE__
     self->contextMinor = 2;
@@ -36,17 +33,21 @@ static void context_cons(void *obj)
     self->initialTitle = "IntenseLogic";
     self->resize    = ilE_handler_new_with_name("il.graphics.context.resize");
     self->close     = ilE_handler_new_with_name("il.graphics.context.close");
-    self->close_id  = ilE_register(self->close, ILE_BEFORE, ILE_ANY, on_close, il_vopaque(self, NULL));
-    self->close2_id = ilE_register(self->close, ILE_AFTER, ILE_ANY, on_close2, il_vopaque(self, NULL));
-    ilI_handler_init(&self->input_handler);
+    self->destroy   = ilE_handler_new_with_name("il.graphics.context.destroy");
+    ilI_handler_init(&self->handler);
+    return self;
 }
 
-static void context_des(void *obj)
+void ilG_context_free(ilG_context *self)
 {
-    ilG_context *self = obj;
     size_t i;
 
-    self->complete = 0; // hopefully prevents use after free
+    self->complete = 0;
+
+    il_value nil = il_value_nil();
+    ilE_handler_fire(self->destroy, &nil);
+    il_value_free(nil);
+
     free(self->texunits);
     IL_FREE(self->positionables);
     for (i = 0; i < self->lights.length; i++) {
@@ -59,21 +60,11 @@ static void context_des(void *obj)
     IL_FREE(self->stages);
     glDeleteFramebuffers(1, &self->framebuffer);
     glDeleteTextures(5, &self->fbtextures[0]);
-    ilE_unregister(self->close, self->close_id);
-    ilE_unregister(self->close, self->close2_id);
+    ilE_unregister(self->tick, self->tick_id);
+    ilE_handler_destroy(self->tick);
+    ilE_handler_destroy(self->resize);
     ilE_handler_destroy(self->close);
 }
-
-il_type ilG_context_type = {
-    .typeclasses = NULL,
-    .storage = {NULL},
-    .constructor = context_cons,
-    .destructor = context_des,
-    .copy = NULL,
-    .name = "il.graphics.context",
-    .size = sizeof(ilG_context),
-    .parent = NULL
-};
 
 void ilG_context_hint(ilG_context *self, enum ilG_context_hint hint, int param)
 {
@@ -243,8 +234,9 @@ int ilG_context_resize(ilG_context *self, int w, int h, const char *title)
         il_error("Unable to create framebuffer for context: %s", status_str);
         return 0;
     }
-    il_value val = il_vopaque(self, NULL);
+    il_value val = il_value_vectorl(2, il_value_int(self->width), il_value_int(self->height));
     ilE_handler_fire(self->resize, &val);
+    il_value_free(val);
     self->valid = 1;
     return 1;
 }
@@ -370,23 +362,7 @@ static void render_stages(const il_value *data, il_value *ctx)
     context->frames_average.tv_usec += (context->frames_sum.tv_sec % context->num_frames) * 1000000 / context->num_frames;
 }
 
-static void on_close(const il_value *data, il_value *ctx)
-{
-    (void)data;
-    ilG_context *self = il_value_tomvoid(ctx);
-    ilE_unregister(self->tick, self->tick_id);
-}
-
-static void on_close2(const il_value *data, il_value *ctx)
-{
-    (void)data;
-    ilG_context *self = il_value_tomvoid(ctx);
-    ilE_handler_destroy(self->tick);
-    ilE_handler_destroy(self->resize);
-    //il_unref(self);
-}
-
-int ilG_context_setActive(ilG_context *self)
+int ilG_context_start(ilG_context *self)
 {
     if (!self->complete) {
         il_error("Incomplete context");
