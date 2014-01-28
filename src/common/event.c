@@ -26,10 +26,10 @@ static void ilE_handler_fire_forced(ilE_handler *self, const il_value *data);
 struct event_base *ilE_base;
 
 static IL_ARRAY(ilE_handler*,) persistent_handlers;
+static IL_ARRAY(struct ilE_event*,) pending_events;
 
 struct ilE_event {
     ilE_handler *handler;
-    uint8_t size;
     il_value data;
 };
 
@@ -67,6 +67,12 @@ static void normal_dispatch(evutil_socket_t fd, short events, void *ctx)
 {
     (void)fd, (void)events;
     struct ilE_event *ev = (struct ilE_event*)ctx;
+    unsigned i;
+    for (i = 0; i < pending_events.length; i++) {
+        if (pending_events.data[i] == ev) {
+            pending_events.data[i] = NULL;
+        }
+    }
     ilE_handler_fire_forced(ev->handler, &ev->data);
     il_value_free(ev->data);
     free(ev);
@@ -238,6 +244,16 @@ void ilE_handler_fireasync(ilE_handler *self, il_value data)
     struct event *e = event_new(ilE_base, -1, 0, normal_dispatch, ev);
     event_add(e, NULL);
     event_active(e, 0, 0);
+    size_t i;
+    for (i = 0; i < pending_events.length; i++) {
+        if (!pending_events.data[i]) {
+            pending_events.data[i] = ev;
+            break;
+        }
+    }
+    if (i >= pending_events.length) {
+        IL_APPEND(pending_events, ev);
+    }
 }
 
 int ilE_register_real(ilE_handler* self, const char *name, int priority, enum ilE_threading threads, ilE_callback callback, il_value ctx)
@@ -351,6 +367,17 @@ void ilE_dumpAll()
     for (i = 0; i < persistent_handlers.length; i++) {
         if (persistent_handlers.data[i]) {
             ilE_dump(persistent_handlers.data[i]);
+        }
+    }
+}
+
+void ilE_dumpPending()
+{
+    size_t i;
+    for (i = 0; i < pending_events.length; i++) {
+        if (pending_events.data[i]) {
+            ilE_dump(pending_events.data[i]->handler);
+            il_value_show(&pending_events.data[i]->data);
         }
     }
 }

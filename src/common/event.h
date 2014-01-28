@@ -100,6 +100,8 @@ void ilE_dump(ilE_handler *self);
 /*! Dumps all currently running handlers (timers, file watches).
  * Useful for finding why the engine won't shutdown. */
 void ilE_dumpAll();
+/*! Dumps all pending events */
+void ilE_dumpPending();
 
 /*! Called to shutdown the engine. */
 extern ilE_handler *ilE_shutdown;
