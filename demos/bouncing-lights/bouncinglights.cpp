@@ -1,8 +1,8 @@
-#include <btBulletDynamicsCommon.h>
-#include <BulletCollision/CollisionShapes/btHeightfieldTerrainShape.h>
-#include <BulletDynamics/Character/btKinematicCharacterController.h>
-#include <BulletCollision/CollisionDispatch/btGhostObject.h>
-#include <BulletCollision/CollisionDispatch/btCollisionObject.h>
+#include <bullet/btBulletDynamicsCommon.h>
+#include <bullet/BulletCollision/CollisionShapes/btHeightfieldTerrainShape.h>
+#include <bullet/BulletDynamics/Character/btKinematicCharacterController.h>
+#include <bullet/BulletCollision/CollisionDispatch/btGhostObject.h>
+#include <bullet/BulletCollision/CollisionDispatch/btCollisionObject.h>
 #include <GL/glew.h>
 
 #include <iostream>
@@ -134,7 +134,10 @@ ex void add_ball(il_positionable *pos)
     btRigidBody* ballRigidBody = new btRigidBody(ballRigidBodyCI);
     ballRigidBody->setRestitution(1.0);
     dynamicsWorld->addRigidBody(ballRigidBody);
-    il_table_setsp(&pos->base.storage, "rigidbody", il_opaque(ballRigidBody, [](void *p) {delete (btRigidBody*)p;}));
+    il_storage_void sv;
+    sv.data = ballRigidBody;
+    sv.dtor = [](void *p) {delete (btRigidBody*)p;};
+    il_table_setsp(&pos->base.storage, "rigidbody", sv);
 }
 
 ex void update(int debug)
