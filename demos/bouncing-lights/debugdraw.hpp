@@ -1,5 +1,5 @@
-#include <btBulletDynamicsCommon.h>
-#include <LinearMath/btIDebugDraw.h>
+#include <bullet/btBulletDynamicsCommon.h>
+#include <bullet/LinearMath/btIDebugDraw.h>
 #include <vector>
 #include <GL/glew.h>
 

@@ -1,7 +1,7 @@
 #include "debugdraw.hpp"
 
-#include <btBulletDynamicsCommon.h>
-#include <LinearMath/btIDebugDraw.h>
+#include <bullet/btBulletDynamicsCommon.h>
+#include <bullet/LinearMath/btIDebugDraw.h>
 #include <cstddef>
 
 using namespace std;
