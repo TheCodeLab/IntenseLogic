@@ -14,7 +14,7 @@ platform  = ARGUMENTS.get("platform", "linux")
 # flags
 ccflags   = "-Wall -Wextra -pedantic"
 cflags    = "-std=c99 -D_POSIX_C_SOURCE=200809"
-cxxflags  = "-std=c++11"
+cxxflags  = "-std=c++11 -isystem-prefixbullet"
 linkflags = "-L. -Lbuild"
 if platform == "mingw":
     cflags += " -DWIN32 -I/usr/x86_64-w64-mingw32/include/luajit-2.1 " # TODO: Fix this
