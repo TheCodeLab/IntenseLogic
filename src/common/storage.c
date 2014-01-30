@@ -415,14 +415,16 @@ il_value il_value_vectorl(size_t num, ...)
 il_value il_value_copy(il_value *v)
 {
     switch (v->tag) {
+        case IL_VOID:
+        if (v->val.svoid.dtor) {
+            il_error("Cannot copy opaque values with destructors");
+            return il_value_nil();
+        }
         case IL_INVALID:
         case IL_NIL:
         case IL_TRUE:
         case IL_FALSE:
         return *v;
-        case IL_VOID:
-        il_error("Cannot copy void");
-        return il_value_nil();
         case IL_STRING:
         return il_value_string(v->val.string);
         case IL_INT:
