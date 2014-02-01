@@ -173,7 +173,7 @@ il_mat ilG_computeMVP(enum ilG_transform filter, const ilG_camera* camera, const
         mvp = il_mat_mul(mvp, translate);
     }
     if (filter & ILG_MODEL_T) {
-        il_vec3 v = il_vec3_to_vec4(il_positionable_getPosition(object), 1.0);
+        il_vec4 v = il_vec3_to_vec4(il_positionable_getPosition(object), 1.0);
         il_mat mat = il_mat_translate(v);
         mvp = il_mat_mul(mvp, mat);
     }
@@ -182,7 +182,7 @@ il_mat ilG_computeMVP(enum ilG_transform filter, const ilG_camera* camera, const
         mvp = il_mat_mul(mvp, mat);
     }
     if (filter & ILG_MODEL_S) {
-        il_mat mat = il_mat_scale(il_positionable_getSize(object));
+        il_mat mat = il_mat_scale(il_vec3_to_vec4(il_positionable_getSize(object), 1.0));
         mvp = il_mat_mul(mvp, mat);
     }
     if (filter & ILG_INVERSE) {

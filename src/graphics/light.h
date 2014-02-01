@@ -16,7 +16,7 @@ enum ilG_light_type {
 
 typedef struct ilG_light {
     il_positionable positionable;
-    il_vec4 color;
+    il_vec3 color;
     enum ilG_light_type type;
     GLuint texture; // shadow map
     float radius;

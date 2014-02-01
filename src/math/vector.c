@@ -21,7 +21,8 @@ il_vec4 il_vec4_new(float x, float y, float z, float w)
     vec.w = w;
     return vec;
 }
-il_vec4 il_vec4_fromarr(float* arr)
+
+il_vec4 il_vec4_fromarr(const float* arr)
 {
     il_vec4 vec;
     vec.x = arr[0];
@@ -31,7 +32,7 @@ il_vec4 il_vec4_fromarr(float* arr)
     return vec;    
 }
 
-char *il_vec4_print(const il_vec4 v, char *buf, unsigned length)
+char *il_vec4_print(il_vec4 v, char *buf, unsigned length)
 {
     unsigned flen = snprintf(NULL, 0, "(% .2f % .2f % .2f % .2f)", v.x, v.y, v.z, v.w);
     ++flen;
@@ -42,7 +43,7 @@ char *il_vec4_print(const il_vec4 v, char *buf, unsigned length)
     return buf;
 }
 
-il_vec4 il_vec4_add(const il_vec4 a, const il_vec4 b)
+il_vec4 il_vec4_add(il_vec4 a, il_vec4 b)
 {
     il_vec4 vec;
 #ifdef IL_SSE
@@ -56,7 +57,7 @@ il_vec4 il_vec4_add(const il_vec4 a, const il_vec4 b)
     return vec;
 }
 
-il_vec4 il_vec4_sub(const il_vec4 a, const il_vec4 b)
+il_vec4 il_vec4_sub(il_vec4 a, il_vec4 b)
 {
     il_vec4 vec;
 #ifdef IL_SSE
@@ -70,7 +71,7 @@ il_vec4 il_vec4_sub(const il_vec4 a, const il_vec4 b)
     return vec;
 }
 
-il_vec4 il_vec4_mul(const il_vec4 a, const il_vec4 b)
+il_vec4 il_vec4_mul(il_vec4 a, il_vec4 b)
 {
     il_vec4 vec;
 #ifdef IL_SSE
@@ -84,7 +85,7 @@ il_vec4 il_vec4_mul(const il_vec4 a, const il_vec4 b)
     return vec;
 }
 
-il_vec4 il_vec4_div(const il_vec4 a, const il_vec4 b)
+il_vec4 il_vec4_div(il_vec4 a, il_vec4 b)
 {
     il_vec4 vec;
 #ifdef IL_SSE
@@ -98,18 +99,18 @@ il_vec4 il_vec4_div(const il_vec4 a, const il_vec4 b)
     return vec;
 }
 
-float il_vec4_dot(const il_vec4 a, const il_vec4 b)
+float il_vec4_dot(il_vec4 a, il_vec4 b)
 {
     return a.x * b.x + a.y * b.y + a.z * b.z + a.w * b.w;
 }
 
-il_vec3 il_vec4_to_vec3(const il_vec4 a)
+il_vec3 il_vec4_to_vec3(il_vec4 a)
 {
     il_vec3 vec;
     vec.x = a.x / a.w;
     vec.y = a.y / a.w;
     vec.z = a.z / a.w;
-    vec.w = 1.0;
+    vec.w = 1/0.f;
     return vec;
 }
 
@@ -120,8 +121,59 @@ float il_vec4_len(const il_vec4 a)
 
 ///////////////////////////////////////////////////////////////////////////////
 // vec3 operations
+//
 
-il_vec3 il_vec3_rotate(const il_vec3 a, const il_quat q)
+il_vec3 il_vec3_new(float x, float y, float z)
+{
+    return (il_vec3) {
+        .x = x,
+        .y = y,
+        .z = z,
+        .w = 1/0.f
+    };
+}
+
+il_vec3 il_vec3_add(il_vec3 a, il_vec3 b)
+{
+    il_vec3 vec;
+    vec.x = a.x + b.x;
+    vec.y = a.y + b.y;
+    vec.z = a.z + b.z;
+    vec.w = 1/0.f;
+    return vec;
+}
+
+il_vec3 il_vec3_sub(il_vec3 a, il_vec3 b)
+{
+    il_vec3 vec;
+    vec.x = a.x - b.x;
+    vec.y = a.y - b.y;
+    vec.z = a.z - b.z;
+    vec.w = 1/0.f;
+    return vec;
+}
+
+il_vec3 il_vec3_mul(il_vec3 a, il_vec3 b)
+{
+    il_vec3 vec;
+    vec.x = a.x * b.x;
+    vec.y = a.y * b.y;
+    vec.z = a.z * b.z;
+    vec.w = 1/0.f;
+    return vec;
+}
+
+il_vec3 il_vec3_div(il_vec3 a, il_vec3 b)
+{
+    il_vec3 vec;
+    vec.x = a.x / b.x;
+    vec.y = a.y / b.y;
+    vec.z = a.z / b.z;
+    vec.w = 1/0.f;
+    return vec;
+}
+
+il_vec3 il_vec3_rotate(il_vec3 a, il_quat q)
 {
     /* From glm/gtc/quaternion.inl
                 typename detail::tquat<T>::value_type Two(2);
@@ -152,21 +204,22 @@ il_vec3 il_vec3_rotate(const il_vec3 a, const il_quat q)
     return vec;
 }
 
-il_vec3 il_vec3_cross(const il_vec3 a, const il_vec3 b)
+il_vec3 il_vec3_cross(il_vec3 a, il_vec3 b)
 {
     il_vec3 vec;
     vec.x = a.y * b.z - b.y * a.z;
     vec.y = a.z * b.x - b.z * a.x;
     vec.z = a.x * b.y - b.x * a.y;
+    vec.w = 1/0.f;
     return vec;
 }
 
-float il_vec3_dot(const il_vec3 a, const il_vec3 b)
+float il_vec3_dot(il_vec3 a, il_vec3 b)
 {
     return a.x * b.x + a.y * b.y + a.z * b.z;
 }
 
-il_vec3 il_vec3_normal(const il_vec3 a)
+il_vec3 il_vec3_normal(il_vec3 a)
 {
     il_vec3 vec;
     float len = il_vec3_len(a);
@@ -176,7 +229,7 @@ il_vec3 il_vec3_normal(const il_vec3 a)
     return vec;
 }
 
-il_vec4 il_vec3_to_vec4(const il_vec3 a, float w)
+il_vec4 il_vec3_to_vec4(il_vec3 a, float w)
 {
     il_vec4 vec;
     vec.x = a.x;
@@ -186,7 +239,7 @@ il_vec4 il_vec3_to_vec4(const il_vec3 a, float w)
     return vec;
 }
 
-float il_vec3_len(const il_vec3 a)
+float il_vec3_len(il_vec3 a)
 {
     return sqrt(il_vec3_dot(a,a));
 }
