@@ -7,24 +7,22 @@
 
 #include "util/array.h"
 #include "graphics/context.h"
-#include "common/positionable.h"
 
-void light_init(void *obj)
+ilG_light *ilG_light_new()
 {
-    ilG_light *light = obj;
-    light->color = il_vec4_new(0, 0, 0, 0);
+    ilG_light *light = calloc(1, sizeof(ilG_light));
+    return light;
 }
 
-il_type ilG_light_type = {
-    .typeclasses = NULL,
-    .storage = {NULL},
-    .constructor = light_init,
-    .destructor = NULL,
-    .copy = NULL,
-    .name = "il.graphics.light",
-    .size = sizeof(ilG_light),
-    .parent = &il_positionable_type
-};
+void ilG_light_free(ilG_light *self)
+{
+    free(self);
+}
+
+void ilG_light_setPositionable(ilG_light *self, il_positionable pos)
+{
+    self->positionable = pos;
+}
 
 void ilG_light_add(ilG_light* self, ilG_context* context)
 {

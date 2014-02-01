@@ -9,47 +9,71 @@ local world         = require "common.world"
 local context       = require "graphics.context"
 local vector3       = require "math.vector3"
 local quaternion    = require "math.quaternion"
-local base          = require "common.base"
-
-require "math.scalar_defs"
-require "util.timeval"
 
 ffi.cdef [[
 
-typedef struct il_positionable {
-    il_base base;
-    il_vec3 position;
-    il_quat rotation;
-    il_vec3 size;
-    il_vec3 velocity;
-    struct timeval last_update;
-    struct ilG_drawable3d* drawable;
-    struct ilG_material* material;
-    struct ilG_texture* texture;
-} il_positionable;
+typedef struct ilG_tracker {
+    il_positionable pos;
+    struct ilG_drawable3d *drawable;
+    struct ilG_material *material;
+    struct ilG_texture *texture;
+} ilG_tracker;
 
-extern il_type il_positionable_type;
-
-void ilG_trackPositionable(struct ilG_context*, struct il_positionable*);
-void ilG_untrackPositionable(struct ilG_context*, struct il_positionable*);
+int ilG_track(struct ilG_context*, ilG_tracker);
+void ilG_untrack(struct ilG_context*, int id);
 
 ]]
 
-base.wrap "il.common.positionable" {
-    --- Sets a positionable to be rendered in a context
-    -- @tparam positionable self The positionable
-    -- @tparam context ctx The context
-    track = function(self, ctx)
-        modules.graphics.ilG_trackPositionable(ctx, self)
-    end,
-    --- Unsets a positionable to be rendered in a context
-    -- @tparam positionable self The positionable
-    -- @tparam context ctx The context
-    untrack = function(self, ctx)
-        modules.graphics.ilG_untrackPositionable(ctx, self)
-    end,
-    struct = "il_positionable"
-}
+local positionable = {}
 
-return modules.common.il_positionable_type
+function positionable:track(c, d, m, t)
+    local tr = ffi.new("ilG_tracker")
+    tr.pos = self
+    tr.drawable = d
+    tr.material = m
+    tr.texture = t
+    return modules.graphics.ilG_track(c, tr)
+end
+
+function positionable.create(world)
+    assert(world)
+    return modules.common.il_positionable_new(world)
+end
+
+setmetatable(positionable, {__call = function(self, ...) return positionable.create(...) end})
+
+ffi.metatype("il_positionable", {
+    __index = function(self, k)
+        local p = function(n)
+            if k == n:lower() then
+                return modules.common["il_positionable_get"..n](self)
+            end
+            return nil
+        end
+        return p "Position"
+        or p "Rotation"
+        or p "Size"
+        or p "Velocity"
+        or p "LastUpdate"
+        or modules.common.il_positionable_mgetStorage(self)[k]
+        or positionable[k]
+    end,
+    __newindex = function(self, k, v)
+        local p = function(n)
+            if k == n:lower() then
+                modules.common["il_positionable_set"..n](self, v)
+                return true
+            end
+            return false
+        end
+        local _ = p "Position"
+        or p "Rotation"
+        or p "Size"
+        or p "Velocity"
+        or p "LastUpdate"
+        or (function() modules.common.il_positionable_mgetStorage(self)[k] = v end)()
+    end
+})
+
+return positionable
 

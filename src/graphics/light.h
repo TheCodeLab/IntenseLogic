@@ -5,7 +5,7 @@
 
 #include "math/vector.h"
 #include "common/base.h"
-#include "common/positionable.h"
+#include "common/world.h"
 
 struct ilG_context;
 
@@ -15,7 +15,7 @@ enum ilG_light_type {
 };
 
 typedef struct ilG_light {
-    struct il_positionable positionable;
+    il_positionable positionable;
     il_vec4 color;
     enum ilG_light_type type;
     GLuint texture; // shadow map
@@ -24,8 +24,11 @@ typedef struct ilG_light {
 
 extern il_type ilG_light_type;
 
-#define ilG_light_new() il_new(&ilG_light_type)
-void ilG_light_add(ilG_light*, struct ilG_context* context);
+ilG_light *ilG_light_new();
+void ilG_light_free(ilG_light *self);
+
+void ilG_light_setPositionable(ilG_light *self, il_positionable pos);
+void ilG_light_add(ilG_light *self, struct ilG_context* context);
 
 #endif
 

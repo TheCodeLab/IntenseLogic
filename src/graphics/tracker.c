@@ -10,50 +10,39 @@
 #include "graphics/texture.h"
 #include "util/array.h"
 #include "util/log.h"
-#include "common/positionable.h"
 
-int ilG_trackPositionable(ilG_context* ctx, il_positionable* self)
+int ilG_track(ilG_context* ctx, ilG_tracker self)
 {
-#define check_null(n) if(!n) {il_error("Null " #n); return 0; }
+#define check_null(n) if(!n) {il_error("Null " #n); return -1; }
     // make sure we have valid parameters, several bugs have been caught here
     check_null(ctx);
-    check_null(self);
-    //check_null(ctx->world);
-    //check_null(ctx->world->id);
-    check_null(self->drawable);
-    check_null(self->material);
-    check_null(self->texture);
-    check_null(self->drawable->id);
-    check_null(self->material->id);
-    check_null(self->texture->id);
+    check_null(self.drawable);
+    check_null(self.material);
+    check_null(self.texture);
+    check_null(self.drawable->id);
+    check_null(self.material->id);
+    check_null(self.texture->id);
 #undef check_null
 
     unsigned int i;
-    for (i = 0; i < ctx->positionables.length; i++) {
-        il_positionable* pos = ctx->positionables.data[i];
-        if (pos->drawable->id > self->drawable->id) goto insert;
-        if (pos->material->id > self->material->id) goto insert;
-        if (pos->texture->id  > self->texture->id)  goto insert;
+    for (i = 0; i < ctx->trackers.length; i++) {
+        ilG_tracker* tr = &ctx->trackers.data[i];
+        if (tr->drawable->id > tr->drawable->id) goto insert;
+        if (tr->material->id > tr->material->id) goto insert;
+        if (tr->texture->id  > tr->texture->id)  goto insert;
         continue;
 insert:
-        IL_INSERT(ctx->positionables, i, self);
-        return 1;
+        IL_INSERT(ctx->trackers, i, self);
+        return i;
     }
     // if we even reach here it means that there are no other drawable-material-texture pairs in the list
-    IL_APPEND(ctx->positionables, self);
-    return 1;
+    IL_APPEND(ctx->trackers, self);
+    return ctx->trackers.length - 1;
 }
 
-int ilG_untrackPositionable(ilG_context* ctx, il_positionable* positionable)
+void ilG_untrack(ilG_context* ctx, int id)
 {
-    unsigned int i;
-    for (i = 0; i < ctx->positionables.length; i++) {
-        if (ctx->positionables.data[i] == positionable) {
-            IL_REMOVE(ctx->positionables, i);
-            return 0;
-        }
-    }
-    return 1;
+    IL_REMOVE(ctx->trackers, id);
 }
 
 struct ilG_trackiterator {
@@ -72,7 +61,7 @@ ilG_trackiterator* ilG_trackiterator_new(ilG_context* ctx)
 
 int ilG_trackIterate(ilG_trackiterator* iter)
 {
-    if (iter->context->positionables.length == 0) {
+    if (iter->context->trackers.length == 0) {
         free(iter);
         return 0;
     }
@@ -81,7 +70,7 @@ int ilG_trackIterate(ilG_trackiterator* iter)
         return 1;
     }
     iter->i++;
-    if (iter->i >= iter->context->positionables.length) {
+    if (iter->i >= iter->context->trackers.length) {
         free(iter);
         return 0;
     }
@@ -91,22 +80,22 @@ int ilG_trackIterate(ilG_trackiterator* iter)
 
 il_positionable* ilG_trackGetPositionable(ilG_trackiterator* iter)
 {
-    return iter->context->positionables.data[iter->i];
+    return &iter->context->trackers.data[iter->i].pos;
 }
 
 ilG_drawable3d* ilG_trackGetDrawable(ilG_trackiterator* iter)
 {
-    return iter->context->positionables.data[iter->i]->drawable;
+    return iter->context->trackers.data[iter->i].drawable;
 }
 
 ilG_material* ilG_trackGetMaterial(ilG_trackiterator* iter)
 {
-    return iter->context->positionables.data[iter->i]->material;
+    return iter->context->trackers.data[iter->i].material;
 }
 
 ilG_texture* ilG_trackGetTexture(ilG_trackiterator* iter)
 {
-    return iter->context->positionables.data[iter->i]->texture;
+    return iter->context->trackers.data[iter->i].texture;
 }
 
 IL_ARRAY(ilG_drawable3d*, drawable_index) drawable_indices;

@@ -63,14 +63,10 @@ ht:setContext(c)
 ht:fromimage("height0", hmt)
 ht:fromimage("normal0", hmt:height_to_normal())
 ht:fromfile("color0", "demos/bouncing-lights/terrain.png")
-local hm = positionable()
-w:add(hm)
-hm.drawable = heightmap(c, 100, 100)
-hm.material = heightmap.defaultShader(c)
-hm.texture = ht
+local hm = positionable(w)
 hm.position = vector3(0, 0, 0).ptr
 hm.size = vector3(128, 50, 128).ptr
-hm:track(c)
+hm:track(c, heightmap(c, 100, 100), heightmap.defaultShader(c), ht)
 
 glow:vertex(io.open("demos/bouncing-lights/glow.vert","r"):read "*a")
 glow:fragment(io.open("demos/bouncing-lights/glow.frag", "r"):read "*a")
@@ -79,6 +75,9 @@ glow:arrayAttrib("position", "in_Position")
 glow:matrix("MVP", "mvp")
 glow:posFunc(modules.bouncinglights.custom_data_func, "col")
 glow:link(c)
+ 
+local tex = texture()
+tex:setContext(c)
 
 _G.num_lights = 0
 --event.setPacker(event.registry, "physics.tick", event.nilPacker)
@@ -87,7 +86,7 @@ local sphere = drawnmesh("demos/bouncing-lights/sphere.obj")
 --drawable.setattr(sphere, "istransparent", true)
 local debugRender = false --true
 event.register(input.button, function(key, scancode, device, isDown, mods)
-    if key < 512 then 
+    if key < 128 then 
         key = string.char(key)
     end
     if key == '1' and isDown then
@@ -102,7 +101,7 @@ event.register(input.button, function(key, scancode, device, isDown, mods)
         for i = 1, 100 do
             local l = light()
             local pos = vector3(math.random(0,hw-1), math.random(16,48), math.random(0,hh-1))
-            --local height = hmt:getPixel(pos.x, pos.z) 
+            l.positionable = positionable(w)
             l.positionable.position = pos.ptr
             l.positionable.size = vector3(.25, .25, .25).ptr
             l.radius = math.random(1, 15)
@@ -110,15 +109,9 @@ event.register(input.button, function(key, scancode, device, isDown, mods)
             l.color = col.ptr
             l:add(c)
             local m = 1
-            base.set(l.positionable, 'color', array(col.x*m, col.y*m, col.z*m, 1.0))
+            l.positionable.color = array(col.x*m, col.y*m, col.z*m, 1.0)
             modules.bouncinglights.add_ball(l.positionable)
-            l.positionable.drawable = sphere
-            l.positionable.material = glow
-            local tex = texture()
-            tex:setContext(c)
-            l.positionable.texture = tex
-            positionable.track(l.positionable, c) --ugh
-            w:add(l.positionable)
+            l.positionable:track(c, sphere, glow, tex)
         end
     end
     if key == 'B' and isDown then
@@ -138,7 +131,7 @@ end)
 local tick = event(1/20, "bouncinglights.tick")
 event.register(tick, function() modules.bouncinglights.update(debugRender and 1 or 0) end)
 
-camera(c, root, tick)
+camera(c, w, root, tick)
 
 c:start()
 

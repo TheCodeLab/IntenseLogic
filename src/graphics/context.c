@@ -49,7 +49,7 @@ void ilG_context_free(ilG_context *self)
     il_value_free(nil);
 
     free(self->texunits);
-    IL_FREE(self->positionables);
+    IL_FREE(self->trackers);
     for (i = 0; i < self->lights.length; i++) {
         il_unref(self->lights.data[i]);
     }

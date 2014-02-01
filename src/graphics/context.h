@@ -107,7 +107,7 @@ typedef struct ilG_context { // **remember to update context.lua**
     IL_ARRAY(struct ilG_stage*,) stages;
     int tick_id;
     size_t num_active;
-    IL_ARRAY(struct il_positionable*,) positionables; // tracker.c // TODO: move to geometry stage
+    IL_ARRAY(struct ilG_tracker,) trackers; // tracker.c // TODO: move to geometry stage
     IL_ARRAY(struct ilG_light*,) lights; // TODO: move to lighting stagd when the relavent events occur in the window. All events are forwarded to ilI_globalHandler.
     unsigned *texunits;
     size_t num_texunits;

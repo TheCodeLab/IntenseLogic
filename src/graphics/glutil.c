@@ -7,7 +7,6 @@
 
 #include "math/matrix.h"
 #include "graphics/camera.h"
-#include "common/positionable.h"
 #include "util/log.h"
 #include "util/logger.h"
 
@@ -160,12 +159,12 @@ il_mat ilG_computeMVP(enum ilG_transform filter, const ilG_camera* camera, const
         mvp = il_mat_identity();
     }
     if (filter & ILG_VIEW_R) {
-        il_quat q = camera->positionable.rotation;
+        il_quat q = il_positionable_getRotation(&camera->positionable);
         il_mat rotate = il_mat_rotate(q);
         mvp = il_mat_mul(mvp, rotate);
     }
     if (filter & ILG_VIEW_T) {
-        il_vec4 v = il_vec3_to_vec4(camera->positionable.position, 1.0);
+        il_vec4 v = il_vec3_to_vec4(il_positionable_getPosition(&camera->positionable), 1.0);
         v.x = -v.x;
         v.y = -v.y;
         v.z = -v.z;
@@ -174,16 +173,16 @@ il_mat ilG_computeMVP(enum ilG_transform filter, const ilG_camera* camera, const
         mvp = il_mat_mul(mvp, translate);
     }
     if (filter & ILG_MODEL_T) {
-        il_vec3 v = il_vec4_to_vec3(object->position);
+        il_vec3 v = il_vec3_to_vec4(il_positionable_getPosition(object), 1.0);
         il_mat mat = il_mat_translate(v);
         mvp = il_mat_mul(mvp, mat);
     }
     if (filter & ILG_MODEL_R) {
-        il_mat mat = il_mat_rotate(object->rotation);
+        il_mat mat = il_mat_rotate(il_positionable_getRotation(object));
         mvp = il_mat_mul(mvp, mat);
     }
     if (filter & ILG_MODEL_S) {
-        il_mat mat = il_mat_scale(object->size);
+        il_mat mat = il_mat_scale(il_positionable_getSize(object));
         mvp = il_mat_mul(mvp, mat);
     }
     if (filter & ILG_INVERSE) {

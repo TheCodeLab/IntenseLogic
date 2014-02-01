@@ -4,7 +4,7 @@
 #include <GL/glew.h>
 
 #include "util/ilstring.h"
-#include "common/positionable.h"
+#include "common/world.h"
 #include "graphics/camera.h"
 #include "math/matrix.h"
 
@@ -40,3 +40,4 @@ void ilG_bindMVP(GLint location, enum ilG_transform filter,
     const ilG_camera *camera, const il_positionable * object);
 
 #endif
+

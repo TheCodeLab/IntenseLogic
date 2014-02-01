@@ -23,16 +23,29 @@ typedef struct ilG_light {
     float radius;
 } ilG_light;
 
-extern il_type ilG_light_type;
+ilG_light *ilG_light_new();
+void ilG_light_free(ilG_light *self);
 
-void ilG_light_add(ilG_light*, struct ilG_context* context);
+void ilG_light_setPositionable(ilG_light *self, il_positionable pos);
+void ilG_light_add(ilG_light *self, struct ilG_context* context);
 
 ]]
 
-base.wrap "il.graphics.light" {
-    struct = "ilG_light";
-    add = modules.graphics.ilG_light_add;
-}
+local light = {}
 
-return modules.graphics.ilG_light_type
+function light:add(ctx)
+    modules.graphics.ilG_light_add(self, ctx)
+end
+
+function light.create()
+    return modules.graphics.ilG_light_new()
+end
+
+setmetatable(light, {__call = function(self, ...) return light.create(...) end})
+
+ffi.metatype("ilG_light", {
+    __index = light
+})
+
+return light
 

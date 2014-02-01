@@ -8,7 +8,7 @@ using namespace std;
 using namespace il::bouncinglights;
 
 extern "C" {
-#include "common/positionable.h"
+#include "common/world.h"
 #include "common/world.h"
 #include "graphics/camera.h"
 #include "graphics/glutil.h"

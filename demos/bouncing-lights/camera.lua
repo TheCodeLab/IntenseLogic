@@ -8,11 +8,13 @@ local text          = require "graphics.gui.text"
 local event         = require "common.event"
 local input         = require "input.input"
 local ffi           = require "ffi"
+local positionable  = require "common.positionable"
 
-return function(ctx, root, tick)
+return function(ctx, w, root, tick)
     local cam = camera()
     ctx.camera = cam
     cam.projection_matrix = matrix.perspective(75, 4/3, .5, 512).ptr
+    cam.positionable = positionable(w)
     cam.positionable.position = vector3(64, 32, 64).ptr
     cam.positionable.rotation = quaternion(vector3(0, 0, 1), math.pi).ptr
     cam.sensitivity = .01
@@ -94,8 +96,8 @@ return function(ctx, root, tick)
                     f:label(label, {1,1,1,1}, "left middle")
                 end
                 local isShown = false
-                event.register(input.button, function(hnd, key, scancode, device, isDown, mods)
-                    if isDown and key == '/' then
+                event.register(input.button, function(key, scancode, device, isDown, mods)
+                    if isDown and key == string.byte '/' then
                         isShown = not isShown
                         if isShown then
                             controls_box:addChild(hint_box)

@@ -1,24 +1,27 @@
 #include "camera.h"
 
-#include "common/positionable.h"
-
-void camera_init(void *self)
+ilG_camera *ilG_camera_new()
 {
-    ilG_camera* camera = self;
+    ilG_camera* camera = calloc(1, sizeof(ilG_camera));
     camera->projection_matrix = il_mat_identity(NULL);
     camera->sensitivity = 0.002;
+    return camera;
 }
 
-il_type ilG_camera_type = {
-    .typeclasses = NULL,
-    .storage = {NULL},
-    .constructor = camera_init,
-    .destructor = NULL,
-    .copy = NULL,
-    .name = "il.graphics.camera",
-    .size = sizeof(ilG_camera),
-    .parent = &il_positionable_type
-};
+void ilG_camera_free(ilG_camera *self)
+{
+    free(self);
+}
+
+void ilG_camera_setPositionable(ilG_camera *self, il_positionable pos)
+{
+    self->positionable = pos;
+}
+
+void ilG_camera_setMatrix(ilG_camera *self, il_mat mat)
+{
+    self->projection_matrix = mat;
+}
 
 void ilG_camera_setMovespeed(ilG_camera* camera, il_vec3 movespeed, float pixels_per_radian)
 {

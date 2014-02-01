@@ -16,7 +16,7 @@ using namespace il::bouncinglights;
 extern "C" {
 #include <GL/glew.h>
 #include "asset/image.h"
-#include "common/positionable.h"
+#include "common/world.h"
 #include "common/world.h"
 #include "graphics/camera.h"
 #include "graphics/glutil.h"
@@ -65,7 +65,7 @@ ex ilG_stage *init_stage(ilG_context *context)
 ex void custom_data_func(struct ilG_material *self, il_positionable *pos, GLuint loc, void *user)
 {
     (void)self; (void)user;
-    const il_vector *col = il_table_getsa(&pos->base.storage, "color");
+    const il_vector *col = il_table_getsa(il_positionable_getStorage(pos), "color");
     if (!col) {
         return;
     }
@@ -92,8 +92,8 @@ ex void set_camera(ilG_camera *cam)
     dynamicsWorld->addCollisionObject(ghostObject,btBroadphaseProxy::CharacterFilter, btBroadphaseProxy::StaticFilter|btBroadphaseProxy::AllFilter);
     dynamicsWorld->addAction(player);
     playerWalk = btVector3(0,0,0);
-    il_vec3 vec = cam->positionable.position;
-    il_quat rot = cam->positionable.rotation;
+    il_vec3 vec = il_positionable_getPosition(&cam->positionable);
+    il_quat rot = il_positionable_getRotation(&cam->positionable);
     ghostObject->setWorldTransform(btTransform(btQuaternion(rot.x, rot.y, rot.z, rot.w), btVector3(vec.x, vec.y, vec.z)));
     player->warp(btVector3(vec.x, vec.y, vec.z));
 }
@@ -124,8 +124,10 @@ ex void add_heightmap(ilA_img *hm, float w, float h, float height)
 
 ex void add_ball(il_positionable *pos)
 {
-    btQuaternion rot = btQuaternion(pos->rotation.x, pos->rotation.y, pos->rotation.z, pos->rotation.w);
-    btVector3 vec = btVector3(pos->position.x, pos->position.y, pos->position.z);
+    il_quat r = il_positionable_getRotation(pos);
+    btQuaternion rot = btQuaternion(r.x, r.y, r.z, r.w);
+    il_vec3 p = il_positionable_getPosition(pos);
+    btVector3 vec = btVector3(p.x, p.y, p.z);
     btDefaultMotionState *state = new btDefaultMotionState(btTransform(rot, vec));
     float mass = 1.f;
     btVector3 inertia(0,0,0);
@@ -137,37 +139,44 @@ ex void add_ball(il_positionable *pos)
     il_storage_void sv;
     sv.data = ballRigidBody;
     sv.dtor = [](void *p) {delete (btRigidBody*)p;};
-    il_table_setsp(&pos->base.storage, "rigidbody", sv);
+    il_table_setsp(il_positionable_mgetStorage(pos), "rigidbody", sv);
 }
 
 ex void update(int debug)
 {
     player->setWalkDirection(playerWalk);
     dynamicsWorld->stepSimulation(1/20.f, 10, 1/60.f);
-    il_worldIterator *it = NULL;
-    il_positionable *pos;
-    for (pos = il_world_iterate(world, &it); pos; pos = il_world_iterate(world, &it)) {
-        btRigidBody *body = (btRigidBody*)il_table_mgetsp(&pos->base.storage, "rigidbody");
+    il_positionable pos;
+    unsigned i;
+    for (pos = il_world_iter(world), i = 0; i < il_world_numPositionables(world); pos = il_world_next(&pos), i++) {
+        btRigidBody *body = (btRigidBody*)il_table_mgetsp(il_positionable_mgetStorage(&pos), "rigidbody");
         if (!body) {
             continue;
         }
         btTransform trans;
         body->getMotionState()->getWorldTransform(trans);
         btVector3 vec = trans.getOrigin();
-        pos->position.x = vec.getX();
-        pos->position.y = vec.getY();
-        pos->position.z = vec.getZ();
+        il_vec3 position;
+        position.x = vec.getX();
+        position.y = vec.getY();
+        position.z = vec.getZ();
+        //position.w = 1.0;
+        il_positionable_setPosition(&pos, position);
         btQuaternion rot = trans.getRotation();
-        pos->rotation.x = rot.getX();
-        pos->rotation.y = rot.getY();
-        pos->rotation.z = rot.getZ();
-        pos->rotation.w = rot.getW();
+        il_quat rotation;
+        rotation.x = rot.getX();
+        rotation.y = rot.getY();
+        rotation.z = rot.getZ();
+        rotation.w = rot.getW();
+        il_positionable_setRotation(&pos, rotation);
     }
     btTransform trans = ghostObject->getWorldTransform();
     btVector3 vec = trans.getOrigin();
-    camera->positionable.position.x = vec.x();
-    camera->positionable.position.y = vec.y();
-    camera->positionable.position.z = vec.z();
+    il_vec3 position;
+    position.x = vec.x();
+    position.y = vec.y();
+    position.z = vec.z();
+    il_positionable_setPosition(&camera->positionable, position);
     if (debug) {
         dynamicsWorld->debugDrawWorld();
         debugdraw->upload();

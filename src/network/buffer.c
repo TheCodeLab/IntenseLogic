@@ -60,7 +60,7 @@ void ilN_buf_align(ilN_buf* self)
 void ilN_buf_makeRoom(ilN_buf* self, size_t bytes)
 {
     while (self->byte + bytes + (self->bit>0) >= self->buf.capacity) {
-        IL_RESIZE(self->buf);
+        IL_AUTORESIZE(self->buf);
     }
     self->buf.length += bytes;
 }

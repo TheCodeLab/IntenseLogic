@@ -8,7 +8,7 @@
 #include "graphics/arrayattrib.h"
 #include "graphics/material.h"
 #include "graphics/texture.h"
-#include "common/positionable.h"
+#include "common/world.h"
 
 struct rinfo {
     il_positionable *positionable;

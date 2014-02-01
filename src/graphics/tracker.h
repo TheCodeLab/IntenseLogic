@@ -1,15 +1,23 @@
 #ifndef ILG_TRACKER_H
 #define ILG_TRACKER_H
 
+#include "common/world.h"
+
 struct ilG_drawable3d;
 struct ilG_material;
 struct ilG_texture;
-struct il_positionable;
 struct ilG_context;
 
-// int success
-int ilG_trackPositionable(struct ilG_context*, struct il_positionable*);
-int ilG_untrackPositionable(struct ilG_context*, struct il_positionable*);
+typedef struct ilG_tracker {
+    il_positionable pos;
+    struct ilG_drawable3d *drawable;
+    struct ilG_material *material;
+    struct ilG_texture *texture;
+} ilG_tracker;
+
+// -1 on failure
+int ilG_track(struct ilG_context*, ilG_tracker);
+void ilG_untrack(struct ilG_context*, int id);
 
 typedef struct ilG_trackiterator ilG_trackiterator;
 ilG_trackiterator* ilG_trackiterator_new(struct ilG_context*);
