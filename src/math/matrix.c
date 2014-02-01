@@ -41,14 +41,15 @@ il_mat il_mat_new(float d00, float d01, float d02, float d03,
 
     return m;
 }
-il_mat il_mat_fromarray(float* arr)
+
+il_mat il_mat_fromarray(const float* arr)
 {
   il_mat m;
   memcpy(m.data, arr, sizeof(float)*16);
   return m;
 }
 
-il_mat il_mat_mul(const il_mat a, const il_mat b)
+il_mat il_mat_mul(il_mat a, il_mat b)
 {
     il_mat res = il_mat_zero();
 #ifdef IL_SSE
@@ -89,7 +90,7 @@ il_mat il_mat_mul(const il_mat a, const il_mat b)
 }
 
 // TODO Figure out a better way to do this function.
-il_vec4 il_mat_mulv(const il_mat a, const il_vec4 b)
+il_vec4 il_mat_mulv(il_mat a, il_vec4 b)
 {
     float vec[4];
     memset(vec, 0, sizeof(vec));
@@ -103,7 +104,7 @@ il_vec4 il_mat_mulv(const il_mat a, const il_vec4 b)
     return il_vec4_fromarr(vec);
 }
 
-il_mat il_mat_translate(const il_vec4 v)
+il_mat il_mat_translate(il_vec4 v)
 {
     return il_mat_new (
         1, 0, 0, v.x,
@@ -113,7 +114,7 @@ il_mat il_mat_translate(const il_vec4 v)
     );
 }
 
-il_mat il_mat_scale(const il_vec4 v)
+il_mat il_mat_scale(il_vec4 v)
 {
     return il_mat_new (
         v.x, 0,   0,   0,
@@ -147,7 +148,7 @@ il_mat il_mat_perspective(float fovy, float aspect, float znear, float zfar)
     );
 }
 
-il_mat il_mat_rotate(const il_quat q)
+il_mat il_mat_rotate(il_quat q)
 {
     return il_mat_new (
         1 - 2 * q.y * q.y - 2 * q.z * q.z, 2 * q.x * q.y + 2 * q.w * q.z    , 2 * q.x * q.z - 2 * q.w * q.y    , 0,
@@ -221,7 +222,7 @@ il_mat il_mat_invert(il_mat a)
     return res;
 }
 
-il_mat il_mat_transpose(const il_mat a)
+il_mat il_mat_transpose(il_mat a)
 {
     il_mat res = il_mat_identity();
     int x, y;
