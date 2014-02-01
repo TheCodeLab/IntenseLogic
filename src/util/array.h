@@ -16,20 +16,29 @@
         size_t capacity;    \
     }
 
-/** Doubles the size of an array */
-#define IL_RESIZE(list)                         \
+#define IL_RESIZE(list, nmemb)                  \
     do {                                        \
-        size_t newcap = (list).capacity * 2;    \
-        if (newcap < 64) newcap = 64;           \
         size_t size = sizeof((list).data[0]);   \
-        void *tmp = calloc(size, newcap);       \
+        void *tmp = calloc(size, nmemb);        \
         if ((list).data) {                      \
+            size_t min = (list).length > (nmemb)? \
+                (nmemb) : (list).length;        \
             memcpy(tmp, (list).data,            \
-                size * (list).length);          \
+                    size * min);                \
             free((list).data);                  \
         }                                       \
         (list).data = tmp;                      \
-        (list).capacity = newcap;               \
+        (list).capacity = nmemb;                \
+    } while(0)
+
+/** Doubles the size of an array */
+#define IL_AUTORESIZE(list)                     \
+    do {                                        \
+        size_t newcap = (list).capacity * 2;    \
+        if (newcap < 64) {                      \
+            newcap = 64;                        \
+        }                                       \
+        IL_RESIZE(list, newcap);                \
     } while(0)
 
 /** Clears all data used by the array */
@@ -55,7 +64,7 @@
             (list).data[id] = (in);             \
         } else {                                \
             while ((id) >= (list).capacity) {   \
-                IL_RESIZE(list);                \
+                IL_AUTORESIZE(list);            \
             }                                   \
             (list).length = (id) + 1;           \
             (list).data[id] = (in);             \
@@ -65,7 +74,7 @@
 /** Retrieves the specified index, and if it doesn't exist, then set it */
 #define IL_INDEXORSET(list, id, out, in) \
     do {                            \
-       IL_INDEX(list, id, out);    \
+       IL_INDEX(list, id, out);     \
         if (!(out)) {               \
             IL_SET(list, id, in);   \
             (out) = &(in);          \
@@ -73,28 +82,30 @@
     } while(0)
 
 /** Retrieves the specified index, and if it doesn't exist, zero it */
-#define IL_INDEXORZERO(list, id, out)       \
-    do {                                    \
-        IL_INDEX(list, id, out);            \
-        if (!(out)) {                       \
-            while ((list).capacity <= (id)) \
-                IL_RESIZE(list);            \
-            memset((list).data + id, 0,     \
-                    sizeof((list).data[0]));\
-            (out) = (list).data + id;       \
-            if ((list).length <= (id))      \
-                (list).length = (id)+1;     \
-        }                                   \
+#define IL_INDEXORZERO(list, id, out)           \
+    do {                                        \
+        IL_INDEX(list, id, out);                \
+        if (!(out)) {                           \
+            while ((list).capacity <= (id)) {   \
+                size_t max = (id) > (list).capacity * 2? \
+                    (id) : (list).capacity;     \
+                IL_RESIZE(list, max);           \
+            }                                   \
+            memset((list).data + id, 0,         \
+                    sizeof((list).data[0]));    \
+            (out) = (list).data + id;           \
+            if ((list).length <= (id))          \
+                (list).length = (id)+1;         \
+        }                                       \
     } while(0)
 
 /** Appends an element to the end of the array, resizing if necessary */
 #define IL_APPEND(list, in)                     \
     do {                                        \
         if ((list).length >= (list).capacity) { \
-            IL_RESIZE(list);                    \
+            IL_AUTORESIZE(list);                \
         }                                       \
-        (list).data[(list).length] = (in);      \
-        (list).length++;                        \
+        (list).data[(list).length++] = (in);    \
     } while(0)
 
 /** Inserts an element at the specified index, resizing if necessary */
@@ -104,7 +115,7 @@
             IL_APPEND(list, in);                \
         }                                       \
         if ((list).length >= (list).capacity) { \
-            IL_RESIZE(list);                    \
+            IL_AUTORESIZE(list);                \
         }                                       \
         memmove( (list).data + (id) + 1,        \
                  (list).data + (id),            \
