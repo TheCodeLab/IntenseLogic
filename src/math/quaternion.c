@@ -15,7 +15,7 @@ il_quat il_quat_new(float x, float y, float z, float w)
     return q;
 }
 
-il_quat il_quat_mul(const il_quat a, const il_quat b)
+il_quat il_quat_mul(il_quat a, il_quat b)
 {
     il_quat n;
     n.w = a.w * b.w - a.x * b.x - a.y * b.y - a.z * b.z;
@@ -25,7 +25,7 @@ il_quat il_quat_mul(const il_quat a, const il_quat b)
     return n;
 }
 
-il_quat il_quat_lerp(const il_quat a, const il_quat b, float t)
+il_quat il_quat_lerp(il_quat a, il_quat b, float t)
 {
     il_quat q;
     q.x = a.x * (1-t) + b.x * t;
@@ -63,7 +63,7 @@ il_quat il_quat_fromAxisAngle(float x, float y, float z, float a)
     return il_quat_normalize(q);
 }
 
-il_quat il_quat_normalize(const il_quat a)
+il_quat il_quat_normalize(il_quat a)
 {
     il_quat q;
     float len = il_quat_len(a);
@@ -82,17 +82,17 @@ il_quat il_quat_normalize(const il_quat a)
     return q;
 }
 
-float il_quat_len(const il_quat a)
+float il_quat_len(il_quat a)
 {
     return sqrt(il_quat_dot(a, a));
 }
 
-float il_quat_dot(const il_quat a, const il_quat b)
+float il_quat_dot(il_quat a, il_quat b)
 {
     return a.x * b.x + a.y * b.y + a.z * b.z + a.w * b.w;
 }
 
-char *il_quat_print(const il_quat q, char *buf, unsigned len)
+char *il_quat_print(il_quat q, char *buf, unsigned len)
 {
     unsigned flen = snprintf(NULL, 0, "[% .2f % .2f % .2f % .2f]", q.x, q.y, q.z, q.w);
     ++flen;
