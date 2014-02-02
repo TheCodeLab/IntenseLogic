@@ -220,6 +220,7 @@ bin/
 .tup/
 include/
 build*/
+distlib/
 #intenselogic_*/
 gmon.out
 *.pyc
