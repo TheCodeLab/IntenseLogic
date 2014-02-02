@@ -12,7 +12,7 @@ local c, w, root = helper.context{name="Teapot Demo",geom=true,lights=true,gui=t
 
 local marble = texture()
 marble:setContext(c)
-marble:fromfile("color0", "white-marble-texture.png")
+marble:fromfile("color0", "demos/teapots/white-marble-texture.png")
 
 local vf, ff = io.open("shaders/test.vert", "r"), io.open("shaders/test.frag", "r");
 local mtl = material()

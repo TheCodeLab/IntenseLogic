@@ -37,7 +37,7 @@ return function(ctx, w, root, tick)
 
     local render_pos, render_numlights, render_fps
     if root then
-        local georgia = file.load "georgia.ttf"
+        local georgia = file.load "demos/georgia.ttf"
         local camera_pos_label = frame()
         camera_pos_label.context = ctx
         camera_pos_label:setPosition(5,-19, 0, 1)
