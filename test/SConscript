@@ -3,9 +3,11 @@
 
 Import("platform")
 Import("env")
+Import("build_dir")
 
 Export("platform")
 Export("env")
+Export("build_dir")
 
 Import("libilmath")
 Export("libilmath")

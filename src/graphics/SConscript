@@ -2,9 +2,9 @@ import os
 
 output    = "libilgraphics"
 src_dir   = "#src/graphics"
-build_dir = "#build"
 inputs    = "*.c api/*.c gui/*.c"
 
+Import("build_dir")
 Import("platform")
 Import("env")
 Import("libilutil")

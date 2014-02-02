@@ -2,9 +2,9 @@ import os
 
 output    = "libilutil"
 src_dir   = "#src/util"
-build_dir = "#build"
 inputs    = "*.c #src/windows.c"
 
+Import("build_dir")
 Import("platform")
 Import("env")
 

@@ -2,9 +2,9 @@ import os
 
 output    = "libilasset"
 src_dir   = "#src/asset"
-build_dir = "#build"
 inputs    = "*.c"
 
+Import("build_dir")
 Import("platform")
 Import("env")
 Import("libilutil")

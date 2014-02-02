@@ -1,8 +1,8 @@
 output    = "libbouncinglights"
 src_dir   = "#demos/bouncing-lights"
-build_dir = "#build"
 inputs    = "*.cpp"
 
+Import("build_dir")
 Import("platform")
 Import("env")
 Import("libilutil")

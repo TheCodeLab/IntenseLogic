@@ -6,7 +6,6 @@ import subprocess
 # defs
 output    = "il"
 src_dir   = "#src"
-build_dir = "build"
 cli_file  = "src/il.docopt"
 inputs    = "*.c script/*.c"
 platform  = ARGUMENTS.get("platform", "linux")
@@ -28,10 +27,13 @@ if "CC" in os.environ and "clang" in os.environ["CC"]:
     linkflags += " -fsanitize=address"
 
 # debug mode
-build_mode = mymode = ARGUMENTS.get("mode", "debug")
+build_mode = ARGUMENTS.get("mode", "debug")
 if build_mode != "release":
     ccflags   += " -g -O0"
     linkflags += " -g"
+
+# build path
+build_dir = "#"+ARGUMENTS.get("build_dir", "build")
 
 # libs
 lib_dirs = ["/usr/lib", "/usr/local/lib"]
@@ -60,6 +62,7 @@ env.Append(CCFLAGS=ccflags, CFLAGS = cflags, CXXFLAGS=cxxflags, LINKFLAGS = link
 
 Export("platform")
 Export("env")
+Export("build_dir")
 libilutil = SConscript("src/util/SConscript", platform=platform, env=env)
 Export("libilutil")
 libilmath = SConscript("src/math/SConscript", platform=platform, env=env)

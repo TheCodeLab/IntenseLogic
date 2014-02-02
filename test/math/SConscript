@@ -2,9 +2,9 @@ import os
 
 output    = "mathtest"
 src_dir   = "#test/math"
-build_dir = "#build"
 inputs    = "*.c"
 
+Import("build_dir")
 Import("platform")
 Import("env")
 Import("libilmath")

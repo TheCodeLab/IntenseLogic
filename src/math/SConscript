@@ -2,9 +2,9 @@ import os
 
 output    = "libilmath"
 src_dir   = "#src/math"
-build_dir = "#build"
 inputs    = "*.c"
 
+Import("build_dir")
 Import("platform", "env", "libilutil")
 
 ilmath = env.Clone()
