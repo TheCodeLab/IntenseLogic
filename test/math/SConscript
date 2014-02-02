@@ -11,7 +11,7 @@ Import("libilmath")
 
 sources = []
 for module in Split(inputs) :
-    sources.extend(Glob(src_dir + "/" + module))
+    sources.extend(Glob(module))
 
 testenv = env.Clone()
 testenv.Append(LIBS=["-lilmath","-lilutil","-lm"])

@@ -78,7 +78,7 @@ libilgraphics = SConscript("src/graphics/SConscript", env=env, duplicate = 0, va
 Export("libilgraphics")
 libilnetwork = SConscript("src/network/SConscript", env=env, duplicate = 0, variant_dir=build_dir+"/obj/network")
 Export("libilnetwork")
-#SConscript("test/SConscript", env=env, duplicate = 0, variant_dir=build_dir+"/obj/test")
+SConscript("test/math/SConscript", env=env, duplicate = 0, variant_dir=build_dir+"/obj/test/math")
 SConscript("demos/SConscript", env=env, duplicate = 0, variant_dir=build_dir+"/obj/demos")
 prog = SConscript("src/SConscript", env=env, duplicate = 0, variant_dir=build_dir+"/obj/prog")
 
