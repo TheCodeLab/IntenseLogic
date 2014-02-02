@@ -6,6 +6,7 @@ error() {
 }
 
 version=$(git describe --dirty --always --tags)
+platform_name=$1
 _32bit() {
   export CFLAGS="-m32"
   export LINKFLAGS="-m32"
@@ -32,19 +33,23 @@ windows() {
   export CC="$mingw_pre-mingw32msvc-gcc"
   export CXX="$mingw_pre-mingw32msvc-g++"
 }
-case "$1" in
+case "$platform_name" in
   "linux-32") _32bit; linux   ;;
   "linux-64") _64bit; linux   ;;
   "win-32"  ) _32bit; windows ;;
   "win-64"  ) _64bit; windows ;;
+  ""        )
+    platform_name="linux" 
+    linux
+    ;;
   *)
-    echo "!!! Unknown platform $1"
+    echo "!!! Unknown platform $platform_name"
     exit 1
     ;;
 esac
 
-build_dir=build_$1
-dist_dir=dist/intenselogic_$1_$version
+build_dir=build_$platform_name
+dist_dir=dist/intenselogic_$platform_name_$version
 
 scons platform=$platform build_dir=$build_dir . || error "Build failed!"
 
