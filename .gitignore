@@ -219,7 +219,8 @@ src/il
 bin/
 .tup/
 include/
-build/
+build*/
+#intenselogic_*/
 gmon.out
 *.pyc
 *.dblite
