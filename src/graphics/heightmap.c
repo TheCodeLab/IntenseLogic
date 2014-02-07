@@ -47,7 +47,7 @@ ilG_drawable3d *ilG_heightmap_new(ilG_context *context, unsigned w, unsigned h)
             i += 6;
         }
     }
-    ilG_drawable3d *dr = ilG_mesh(mesh);
+    ilG_drawable3d *dr = ilG_mesh(mesh, context);
     ilA_mesh_free(mesh);
     il_table_sets(&dr->base.storage, "heightmap.size", il_value_vectorl(2, il_value_int(w), il_value_int(h)));
     return dr;

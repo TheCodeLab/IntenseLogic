@@ -23,7 +23,6 @@ function helper.context(args, hints)
             c:hint(k, v)
         end
     end
-    c:build()
     c:resize(800, 600, args.name or "IntenseLogic Demo")
     c.world = w
     w.context = c
@@ -44,42 +43,37 @@ function helper.context(args, hints)
             error("Expected string or table")
         end
         local s = renderer.skybox(skybox)
-        s:build(c) -- TODO: remove
-        c:addRenderer(s)
+        c:add(s)
         pipe[#pipe+1] = s
     end
     if args.geom then -- geometry pass
         local s = renderer.geometry()
-        c:addRenderer(s)
+        c:add(s)
         pipe[#pipe+1] = s
     end
     if args.lights then -- light pass
         local s = renderer.lights()
-        s:build(c) -- TODO: remove
-        c:addRenderer(s)
+        c:add(s)
         pipe[#pipe+1] = s
     end
     if args.transparency then -- transparency pass
         local s = renderer.transparency()
-        c:addRenderer(s)
+        c:add(s)
         pipe[#pipe+1] = s
     end
     local root
     if args.gui then-- gui pass
         root = frame()
         local s = renderer.gui(root)
-        s:build(c) -- TODO: remove
-        c:addRenderer(s)
+        c:add(s)
         pipe[#pipe+1] = s
     end
     if args.output then -- output pass
         local s = renderer.out()
-        s:build(c)
-        c:addRenderer(s)
+        c:add(s)
         pipe[#pipe+1] = s
     end
 
-    --c:setActive()
     return c, w, root, pipe
 end
 

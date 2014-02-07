@@ -31,18 +31,20 @@ static void legacy_free(void *obj)
     free(self);
 }
 
-static void legacy_build(void *obj, ilG_context *context)
+static int legacy_build(void *obj, ilG_context *context)
 {
     ilG_legacyrenderer *self = obj;
     self->context = context;
     if (ilG_material_link(self->material, context)) {
-        return;
+        return 0;
     }
     self->valid = true;
+    return 1;
 }
 
 void legacy_draw(void *obj)
 {
+    ilG_testError("Unknown");
     ilG_legacyrenderer *self = obj;
     ilG_context *ctx = self->context;
     ilG_bindable_swap(&ctx->drawableb, (void**)&ctx->drawable, self->drawable);
@@ -54,6 +56,7 @@ void legacy_draw(void *obj)
         ilG_bindable_action(ctx->materialb, ctx->material);
         ilG_bindable_action(ctx->textureb, ctx->texture);
         ilG_bindable_action(ctx->drawableb, ctx->drawable);
+        ilG_testError("Legacy Renderer");
     }
 }
 

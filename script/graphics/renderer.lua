@@ -155,14 +155,18 @@ end
 
 ffi.metatype("ilG_renderer", {
     __index = function(self, k)
+        local s = modules.graphics.ilG_renderer_mgetStorage(self)
+        assert(s ~= nil)
         return 
            (k == 'complete' and modules.graphics.ilG_renderer_isComplete(self)) 
         or (k == 'name' and ffi.string(modules.graphics.ilG_renderer_getName(self)))
-        or modules.graphics.ilG_renderer_mgetStorage(self)[k] 
+        or s[k] 
         or renderer[k]
     end,
     __newindex = function(self, k, v)
-        modules.graphics.ilG_renderer_mgetStorage(self)[k] = v
+        local s = modules.graphics.ilG_renderer_mgetStorage(self)
+        assert(s ~= nil)
+        s[k] = v
     end
 })
 

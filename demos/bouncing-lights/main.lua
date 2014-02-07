@@ -54,7 +54,6 @@ c, w, root, pipe = helper.context { skybox=skybox,
 local pipe2 = {pipe[1], pipe[2], pipe[3], pipe[4], renderer.wrap(nil, modules.bouncinglights.debug_renderer), pipe[5], pipe[6]}
 --c:addStage(pipe2[5], 5)
 modules.bouncinglights.set_world(w)
-
 -- heightmap renderer
 local hmt = image.loadfile "demos/bouncing-lights/arena-heightmap.png"
 modules.bouncinglights.add_heightmap(hmt, 128, 128, 50)
@@ -68,7 +67,6 @@ local hmr = renderer(
     heightmap.defaultShader(c),
     ht
 )
-hmr:build(c)
 pipe[2]:add(hmr)
 local hm = positionable(w)
 hm.position = vector3(0, 0, 0).ptr
@@ -76,7 +74,7 @@ hm.size = vector3(128, 50, 128).ptr
 hmr:add(hm)
 
 -- light renderer
-local sphere = drawnmesh("demos/bouncing-lights/sphere.obj")
+local sphere = drawnmesh("demos/bouncing-lights/sphere.obj", c)
 
 local glow = material()
 glow:vertex(io.open("demos/bouncing-lights/glow.vert","r"):read "*a")
@@ -91,7 +89,6 @@ local tex = texture()
 tex:setContext(c)
 
 local ball = renderer(sphere, glow, tex)
-ball:build(c)
 pipe[4]:add(ball)
 
 _G.num_lights = 0
@@ -147,9 +144,6 @@ event.register(tick, function() modules.bouncinglights.update(debugRender and 1 
 
 camera(c, w, root, tick)
 
---c:build()
 c:resize(800, 600, "Bouncing Lights")
 c:start()
-
---modules.bouncinglights.debug_draw()
 

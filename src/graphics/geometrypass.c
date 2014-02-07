@@ -35,7 +35,7 @@ static void geometry_draw(void *ptr)
     glDisable(GL_BLEND);
     glFrontFace(GL_CCW);
     glCullFace(GL_BACK);
-    ilG_testError("glEnable");
+    ilG_testError("Could not setup to draw geometry");
     
     unsigned i;
     for (i = 0; i < self->renderers.length; i++) {
@@ -67,7 +67,6 @@ static bool geometry_get_complete(const void *ptr)
 
 static void geometry_add_renderer(void *self, ilG_renderer renderer)
 {
-    il_return_on_fail(ilG_renderer_isComplete(&renderer));
     IL_APPEND(((ilG_geometry*)self)->renderers, renderer);
 }
 

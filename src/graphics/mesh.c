@@ -20,6 +20,7 @@ struct ilG_mesh {
     GLuint vao;
     GLint count;
     GLenum type;
+    ilA_mesh *mesh;
 };
 
 static ilG_bindable mesh_bindable;
@@ -72,25 +73,10 @@ static ilG_bindable mesh_bindable = {
     .unbind = NULL
 };
 
-ilG_drawable3d* ilG_mesh(ilA_mesh* self)
+static void build_mesh(void* ptr)
 {
-    static GLenum mapping[] = {
-        GL_POINTS,                  //ILA_MESH_POINTS
-        GL_LINES,                   //ILA_MESH_LINES
-        GL_LINE_STRIP,              //ILA_MESH_LINE_STRIP
-        GL_LINE_LOOP,               //ILA_MESH_LINE_LOOP
-        GL_LINE_STRIP_ADJACENCY,    //ILA_MESH_LINE_STRIP_ADJACENCY
-        GL_LINES_ADJACENCY,         //ILA_MESH_LINES_ADJACENCY
-        GL_TRIANGLES,               //ILA_MESH_TRIANGLES
-        GL_TRIANGLE_STRIP,          //ILA_MESH_TRIANGLE_STRIP
-        GL_TRIANGLE_FAN,            //ILA_MESH_TRIANGLE_FAN
-        GL_TRIANGLE_STRIP_ADJACENCY,//ILA_MESH_TRIANGLE_STRIP_ADJACENCY
-        GL_TRIANGLES_ADJACENCY,     //ILA_MESH_TRIANGLES_ADJACENCY
-        GL_PATCHES,                 //ILA_MESH_PATCHES
-    };
-    struct ilG_mesh* m = il_new(&ilG_mesh_type);
-    m->type = mapping[self->mode];
-    m->count = self->num_vertices;
+    struct ilG_mesh *m = ptr;
+    ilA_mesh *self = m->mesh;
     ilG_testError("Unknown");
     glGenVertexArrays(1, &m->vao);
     glBindVertexArray(m->vao);
@@ -154,19 +140,43 @@ ilG_drawable3d* ilG_mesh(ilA_mesh* self)
         glEnableVertexAttribArray(ILG_ARRATTR_SPECULAR);
         offset += size;
     }
+    ilA_mesh_free(self);
     ilG_testError("Error uploading mesh");
+}
+
+ilG_drawable3d* ilG_mesh(const ilA_mesh* self, ilG_context *context)
+{
+    static GLenum mapping[] = {
+        GL_POINTS,                  //ILA_MESH_POINTS
+        GL_LINES,                   //ILA_MESH_LINES
+        GL_LINE_STRIP,              //ILA_MESH_LINE_STRIP
+        GL_LINE_LOOP,               //ILA_MESH_LINE_LOOP
+        GL_LINE_STRIP_ADJACENCY,    //ILA_MESH_LINE_STRIP_ADJACENCY
+        GL_LINES_ADJACENCY,         //ILA_MESH_LINES_ADJACENCY
+        GL_TRIANGLES,               //ILA_MESH_TRIANGLES
+        GL_TRIANGLE_STRIP,          //ILA_MESH_TRIANGLE_STRIP
+        GL_TRIANGLE_FAN,            //ILA_MESH_TRIANGLE_FAN
+        GL_TRIANGLE_STRIP_ADJACENCY,//ILA_MESH_TRIANGLE_STRIP_ADJACENCY
+        GL_TRIANGLES_ADJACENCY,     //ILA_MESH_TRIANGLES_ADJACENCY
+        GL_PATCHES,                 //ILA_MESH_PATCHES
+    };
+    struct ilG_mesh* m = il_new(&ilG_mesh_type);
+    m->type = mapping[self->mode];
+    m->count = self->num_vertices;
+    m->mesh = ilA_mesh_copy(self);
+    ilG_context_upload(context, build_mesh, m);
     return &m->drawable;
 }
 
 ilA_mesh *ilA_mesh_parseObj(const char *filename, const char *data, size_t length);
-ilG_drawable3d* ilG_mesh_fromfile(const char *name)
+ilG_drawable3d* ilG_mesh_fromfile(const char *name, ilG_context *context)
 {
     size_t length;
     void *data;
     il_base *file = ilA_contents_chars(name, &length, &data, NULL);
     ilA_mesh *mesh = ilA_mesh_parseObj(name, data, length);
     il_unref(file);
-    ilG_drawable3d *drawable = ilG_mesh(mesh);
+    ilG_drawable3d *drawable = ilG_mesh(mesh, context);
     ilA_mesh_free(mesh);
     return drawable;
 }

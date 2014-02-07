@@ -22,7 +22,6 @@ struct ilG_fbo {
 ilG_fbo *ilG_fbo_new()
 {
     ilG_fbo *fbo = calloc(1, sizeof(ilG_fbo));
-    glGenFramebuffers(1, &fbo->fbo);
     return fbo;
 }
 
@@ -50,14 +49,10 @@ void ilG_fbo_name(ilG_fbo *self, unsigned target, const char *name)
 
 void ilG_fbo_numTargets(ilG_fbo *self, unsigned num)
 {
-    if (self->textures) {
-        glDeleteTextures(self->num, self->textures);
-    }
-    self->textures = realloc(self->textures, num * sizeof(GLuint));
-    glGenTextures(num, self->textures);
+    self->num = num;
+    self->textures = realloc(self->textures, num * sizeof(GLuint)); // TODO: Fix GL texture leak
     self->targets = realloc(self->targets, num * sizeof(struct target));
     memset(self->targets, 0, num * sizeof(struct target));
-    self->num = num;
 }
 
 void ilG_fbo_size_abs(ilG_fbo *self, unsigned target, unsigned w, unsigned h)
@@ -161,11 +156,19 @@ void ilG_fbo_swap(ilG_fbo *self, unsigned target1, unsigned target2)
     self->textures[target2] = tex;
 }
 
-static int build_textures(ilG_fbo *self, unsigned w, unsigned h)
+static void fbo_build(ilG_fbo *self, unsigned w, unsigned h)
 {
     unsigned i;
 
     il_log("Building framebuffer \"%s\"", self->name);
+
+    glGenFramebuffers(1, &self->fbo);
+
+    if (self->textures) {
+        glDeleteTextures(self->num, self->textures);
+    }
+    glGenTextures(self->num, self->textures);
+
     glBindFramebuffer(GL_FRAMEBUFFER, self->fbo);
     for (i = 0; i < self->num; i++) {
         struct target *t = self->targets + i;
@@ -189,25 +192,22 @@ static int build_textures(ilG_fbo *self, unsigned w, unsigned h)
             default:                                            status_str = "???";                                             break;
         }
         il_error("Unable to create framebuffer for context: %s", status_str);
-        return 1;
+        self->complete = 0;
     }
-    return 0;
+    self->complete = 1;
 }
 
 static void resize_cb(const il_value *data, il_value *ctx)
 {
-    ilG_fbo *self = il_value_tomvoid(ctx);
     const il_vector *size = il_value_tovec(data);
-    int res = build_textures(self, il_vector_geti(size, 0), il_vector_geti(size, 1));
-    self->complete = !res;
+    fbo_build(il_value_tomvoid(ctx), il_vector_geti(size, 0), il_vector_geti(size, 1));
 }
 
-int /*failure*/ ilG_fbo_build(ilG_fbo *self, ilG_context *ctx)
+int /*failure*/ ilG_fbo_build(ilG_fbo *self, ilG_context *context)
 {
-    il_return_val_on_fail(ctx, 1);
-    ilE_register(ctx->resize, ILE_DONTCARE, ILE_ANY, resize_cb, il_vopaque(self, NULL));
-    int res = build_textures(self, ctx->width, ctx->height);
-    self->complete = !res;
-    return res;
+    il_return_val_on_fail(context, 1);
+    ilE_register(context->resize, ILE_DONTCARE, ILE_ANY, resize_cb, il_vopaque(self, NULL));
+    fbo_build(self, context->width, context->height);
+    return 0;
 }
 

@@ -76,6 +76,7 @@ void ilG_gui_frame_image(ilG_gui_frame *self, ilG_texture *tex, int premultiplie
     il_return_on_fail(self && tex);
     il_table_setsp(&self->base.storage, "gui.image.tex", il_opaque(il_ref(tex), il_unref));
     il_table_setsb(&self->base.storage, "gui.image.premultiplied", premultiplied);
+    get_shader(self);
     self->draw = image_draw;
 }
 

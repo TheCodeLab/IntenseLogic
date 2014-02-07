@@ -71,9 +71,11 @@ ilG_context *ilG_context_new();
 void ilG_context_free(ilG_context *self);
 
 void ilG_context_hint(ilG_context *self, enum ilG_context_hint hint, int param);
-int ilG_context_build(ilG_context *self);
-int ilG_context_resize(ilG_context *self, int w, int h, const char *title);
-void ilG_context_makeCurrent(ilG_context *self);
+int ilG_context_resize(ilG_context *self, int w, int h);
+int ilG_context_rename(ilG_context *self, const char *title);
+void ilG_context_addStage(ilG_context* self, struct ilG_stage* stage, int num);
+void ilG_context_clearStages(ilG_context *self);
+
 int ilG_context_start(ilG_context*);
 
 ]]
@@ -87,21 +89,21 @@ function context:destroy()
     modules.graphics.ilG_context_free(self)
 end
 
-function context:build()
+function context:resize(w, h)
     assert(self ~= nil)
-    local res = modules.graphics.ilG_context_build(self)
-    assert(res ~= 0, "ilG_context_build")
+    local res = modules.graphics.ilG_context_resize(self, w, h)
+    assert(res ~= 0, "ilG_context_resize")
 end
 
-function context:addRenderer(r)
+function context:add(r)
     assert(self ~= nil and r ~= nil)
     modules.graphics.ilG_context_renderer.add_renderer(self, r)
 end
 
-function context:resize(w, h, title)
+function context:rename(t)
     assert(self ~= nil)
-    local res = modules.graphics.ilG_context_resize(self, w, h, title)
-    assert(res ~= 0, "ilG_context_resize")
+    local res = modules.graphics.ilG_context_rename(self, t)
+    assert(res ~= 0, "ilG_context_rename")
 end
 
 function context:start()

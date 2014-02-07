@@ -9,6 +9,7 @@
 #include "graphics/context.h"
 #include "util/log.h"
 #include "graphics/bindable.h"
+#include "graphics/glutil.h"
 
 char *strdup(const char*);
 
@@ -17,6 +18,7 @@ static void texture_update(void *obj)
     unsigned int i;
     ilG_texture *tex = obj;
 
+    ilG_testError("Unknown");
     if (tex->last_mtl == tex->context->material) {
         return;
     }
@@ -27,6 +29,7 @@ static void texture_update(void *obj)
             glBindTexture(tex->units[tex->context->texunits[i]].mode, tex->units[tex->context->texunits[i]].tex);
         }
     }
+    ilG_testError("texture_update");
 }
 
 static void texture_unbind(void *obj)

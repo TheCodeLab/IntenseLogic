@@ -37,6 +37,41 @@ ilA_mesh *ilA_mesh_new(enum ilA_mesh_attrib attribs, size_t vertices)
     return self;
 }
 
+ilA_mesh *ilA_mesh_copy(const ilA_mesh *mesh)
+{
+    ilA_mesh *self = calloc(1, sizeof(ilA_mesh));
+    self->mode = mesh->mode;
+    self->num_vertices = mesh->num_vertices;
+    self->texcoord_size = mesh->texcoord_size;
+
+    if (mesh->position) {
+        self->position = il_alloc(aligned_16, sizeof(float[4]) * self->num_vertices);
+        memcpy(self->position, mesh->position, sizeof(float[4]) * self->num_vertices);
+    }
+    if (mesh->texcoord) {
+        self->texcoord = il_alloc(aligned_16, sizeof(float[4]) * self->num_vertices);
+        memcpy(self->texcoord, mesh->texcoord, sizeof(float[4]) * self->num_vertices);
+    }
+    if (mesh->normal) {
+        self->normal = il_alloc(aligned_16, sizeof(float[4]) * self->num_vertices);
+        memcpy(self->normal, mesh->normal, sizeof(float[4]) * self->num_vertices);
+    }
+    if (mesh->ambient) {
+        self->ambient = il_alloc(aligned_16, sizeof(unsigned char[4]) * self->num_vertices);
+        memcpy(self->ambient, mesh->ambient, sizeof(unsigned char[4]) * self->num_vertices);
+    }
+    if (mesh->diffuse) {
+        self->diffuse = il_alloc(aligned_16, sizeof(unsigned char[4]) * self->num_vertices);
+        memcpy(self->diffuse, mesh->diffuse, sizeof(unsigned char[4]) * self->num_vertices);
+    }
+    if (mesh->specular) {
+        self->specular = il_alloc(aligned_16, sizeof(unsigned char[4]) * self->num_vertices);
+        memcpy(self->specular, mesh->specular, sizeof(unsigned char[4]) * self->num_vertices);
+    }
+
+    return self;
+}
+
 ilA_mesh *ilA_mesh_load(il_base *file, const ilA_file *iface)
 {
     size_t size;

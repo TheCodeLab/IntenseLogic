@@ -218,8 +218,9 @@ static void draw(void *obj)
 {
     struct ilG_shape * shape = obj;
 
+    ilG_testError("Unknown");
     glDrawElements(shape->mode, shape->count, GL_UNSIGNED_SHORT, (GLvoid*)0);
-    IL_GRAPHICS_TESTERROR("Could not draw drawable");
+    ilG_testError("Could not draw drawable");
 }
 
 il_type ilG_shape_type = {

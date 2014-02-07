@@ -57,10 +57,10 @@ static void out_draw(void *ptr)
     ilG_out *self = ptr;
     ilG_context *context = self->context;
 
-    if (glfwWindowShouldClose(context->window)) {
-        //ilE_globalevent(il_registry, "shutdown", 0, NULL);
+    if (!self->complete) {
         return;
     }
+
     ilG_testError("Unknown");
     ilG_bindable_unbind(context->materialb, context->material);
     // prepare the GL state for outputting to the default framebuffer
@@ -251,7 +251,9 @@ ilG_out *ilG_out_new()
     ilG_material_bindFunc(m, size_uniform, self, "size");
     ilG_material_textureUnit(m, ILG_TUNIT_NONE, "tex");
 
-    self->which = 1;
+    ilG_testError("Failed to build vbo");
+
+    self->complete = 1;
 
     return self;
 }

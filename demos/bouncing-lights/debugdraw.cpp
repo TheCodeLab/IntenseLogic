@@ -20,6 +20,20 @@ extern "C" {
 #include "util/log.h"
 }
 
+void DebugDraw::constructor_cb(void *ptr)
+{
+    DebugDraw *self = (DebugDraw*)ptr;
+    glGenBuffers(1, &self->vbo);
+    glGenVertexArrays(1, &self->vao);
+    glBindBuffer(GL_ARRAY_BUFFER, self->vbo);
+    glBindVertexArray(self->vao);
+    glVertexAttribPointer(ILG_ARRATTR_POSITION, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)offsetof(Vertex, pos));
+    glVertexAttribPointer(ILG_ARRATTR_AMBIENT, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)offsetof(Vertex, col));
+    glEnableVertexAttribArray(ILG_ARRATTR_POSITION);
+    glEnableVertexAttribArray(ILG_ARRATTR_AMBIENT);
+    glBufferData(GL_ARRAY_BUFFER, 0, NULL, GL_DYNAMIC_DRAW);
+}
+
 DebugDraw::DebugDraw(ilG_context *ctx) : context(ctx)
 {
     debugMode = DBG_DrawAabb;
@@ -29,16 +43,8 @@ DebugDraw::DebugDraw(ilG_context *ctx) : context(ctx)
     ilG_material_arrayAttrib(mat, ILG_ARRATTR_AMBIENT, "in_Ambient");
     ilG_material_fragData(mat, ILG_FRAGDATA_ACCUMULATION, "out_Color");
     ilG_material_matrix(mat, ILG_VP, "vp");
+    ilG_context_upload(context, constructor_cb, this);
     compile();
-    glGenBuffers(1, &vbo);
-    glGenVertexArrays(1, &vao);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBindVertexArray(vao);
-    glVertexAttribPointer(ILG_ARRATTR_POSITION, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)offsetof(Vertex, pos));
-    glVertexAttribPointer(ILG_ARRATTR_AMBIENT, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)offsetof(Vertex, col));
-    glEnableVertexAttribArray(ILG_ARRATTR_POSITION);
-    glEnableVertexAttribArray(ILG_ARRATTR_AMBIENT);
-    glBufferData(GL_ARRAY_BUFFER, 0, NULL, GL_DYNAMIC_DRAW);
     count = 0;
 }
 
@@ -57,13 +63,18 @@ void DebugDraw::render()
     glDrawArrays(GL_LINES, 0, count);
 }
 
+void DebugDraw::upload_cb(void *ptr)
+{
+    DebugDraw *self = (DebugDraw*)ptr;
+    glBindBuffer(GL_ARRAY_BUFFER, self->vbo);
+    glBufferData(GL_ARRAY_BUFFER, self->lines.size() * sizeof(Vertex), self->lines.data(), GL_DYNAMIC_DRAW);
+    self->count = self->lines.size();
+    self->lines.clear();
+}
+
 void DebugDraw::upload()
 {
-    //printf("upload %zu lines\n", lines.size()/2);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, lines.size() * sizeof(Vertex), lines.data(), GL_DYNAMIC_DRAW);
-    count = lines.size();
-    lines.clear();
+    ilG_context_upload(context, upload_cb, this);
 }
 
 void DebugDraw::compile()

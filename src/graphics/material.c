@@ -231,17 +231,12 @@ void ilG_material_posFunc(ilG_material* self, ilG_material_onPosFunc func, void 
     IL_APPEND(self->config->posfuncs, f);
 }
 
-int /*failure*/ ilG_material_link(ilG_material* self, ilG_context *ctx)
+static void link(void* ptr)
 {
-    if (!ctx) {
-        il_error("Null context");
-    }
-    if (!self) {
-        il_error("Null material");
-    }
+    ilG_material *self = ptr;
+
     ilG_testError("Unknown");
     il_log("Building shader \"%s\"", self->name);
-    self->context = ctx;
     self->vertshader = ilG_makeShader(GL_VERTEX_SHADER, self->config->vertsource);
     self->fragshader = ilG_makeShader(GL_FRAGMENT_SHADER, self->config->fragsource);
     self->program = glCreateProgram();
@@ -253,7 +248,7 @@ int /*failure*/ ilG_material_link(ilG_material* self, ilG_context *ctx)
     }*/
     if (!glIsShader(self->vertshader) || !glIsShader(self->fragshader) || !glIsProgram(self->program)) {
         self->valid = 0;
-        return 1;
+        return;
     }
     glAttachShader(self->program, self->vertshader);
     glAttachShader(self->program, self->fragshader);
@@ -289,6 +284,18 @@ int /*failure*/ ilG_material_link(ilG_material* self, ilG_context *ctx)
     }
 
     self->valid = 1;
+}
+
+int /*failure*/ ilG_material_link(ilG_material* self, ilG_context *ctx)
+{
+    if (!ctx) {
+        il_error("Null context");
+    }
+    if (!self) {
+        il_error("Null material");
+    }
+    self->context = ctx;
+    ilG_context_upload(ctx, link, self);
     return 0;
 }
 
@@ -305,7 +312,6 @@ il_type ilG_material_type = {
 
 struct ilG_bindable ilG_material_bindable = {
     .name = "il.graphics.bindable",
-    //.hh = {0},
     .bind = mtl_bind,
     .action = mtl_update,
     .unbind = mtl_unbind
@@ -316,18 +322,5 @@ ilG_material ilG_material_default;
 void ilG_material_init()
 {
     il_impl(&ilG_material_type, &ilG_material_bindable);
-
-    // TODO: decide what to do with default material; as materials require a context value when being linked, and there may be multiple contexts
-    /*memset(&ilG_material_default, 0, sizeof(ilG_material));
-    il_init(&ilG_material_type, &ilG_material_default);
-    ilG_material_name(&ilG_material_default, "Default");
-    il_string *vertex = IL_ASSET_READFILE("default.vert"), *fragment = IL_ASSET_READFILE("default.frag");
-    ilG_material_vertex(&ilG_material_default, vertex);
-    ilG_material_fragment(&ilG_material_default, fragment);
-    il_string_unref(vertex);
-    il_string_unref(fragment);
-    ilG_material_arrayAttrib(&ilG_material_default, ILG_ARRATTR_POSITION, "in_Position");
-    ilG_material_arrayAttrib(&ilG_material_default, ILG_ARRATTR_TEXCOORD, "in_Texcoord");
-    ilG_material_link(&ilG_material_default);*/
 }
 

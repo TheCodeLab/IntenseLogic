@@ -8,12 +8,12 @@
 
 static int win_getkey(ilI_backend *self, enum ilI_key key)
 {
-    ilG_context *ctx = self->user;
+    GLFWwindow *window = self->user;
     if (key < 512) { // the current keys map directly to glfw, so we don't need a huge table
-        return glfwGetKey(ctx->window, key);
+        return glfwGetKey(window, key);
     }
     if (key < 768) {
-        return glfwGetMouseButton(ctx->window, key - 512);
+        return glfwGetMouseButton(window, key - 512);
     }
     return 0;
 }
@@ -140,19 +140,19 @@ static void closewindow(GLFWwindow *window)
     ilE_handler_fireasync(ctx->close, val); // prevents closing the window while we're still rendering
 }
 
-void ilG_registerInputBackend(ilG_context *ctx)
+void ilG_registerInputBackend(GLFWwindow *window)
 {
     ilI_backend *backend = calloc(1, sizeof(ilI_backend));
     backend->name = "GLFW Window";
     backend->get = win_getkey;
-    backend->user = ctx;
+    backend->user = window;
     ilI_register(backend);
-    glfwSetKeyCallback          (ctx->window, keyfun);
-    glfwSetCharCallback         (ctx->window, charfun);
-    glfwSetMouseButtonCallback  (ctx->window, mousebutton);
-    glfwSetCursorPosCallback    (ctx->window, cursorpos);
-    glfwSetCursorEnterCallback  (ctx->window, cursorenter);
-    glfwSetScrollCallback       (ctx->window, scroll);
-    glfwSetWindowCloseCallback  (ctx->window, closewindow);
+    glfwSetKeyCallback          (window, keyfun);
+    glfwSetCharCallback         (window, charfun);
+    glfwSetMouseButtonCallback  (window, mousebutton);
+    glfwSetCursorPosCallback    (window, cursorpos);
+    glfwSetCursorEnterCallback  (window, cursorenter);
+    glfwSetScrollCallback       (window, scroll);
+    glfwSetWindowCloseCallback  (window, closewindow);
 }
 

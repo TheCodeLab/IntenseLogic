@@ -23,9 +23,23 @@ void ilG_renderer_free(ilG_renderer self)
     self.vtable->free(self.obj);
 }
 
-int ilG_renderer_build(ilG_renderer *self, ilG_context *context)
+struct build_ctx {
+    ilG_renderer *self;
+    ilG_context *context;
+};
+static void build(void *ptr)
 {
-    return self->vtable->build(self->obj, context);
+    struct build_ctx *self = ptr;
+    self->self->vtable->build(self->self->obj, self->context);
+    free(self);
+}
+
+void ilG_renderer_build(ilG_renderer *self, ilG_context *context)
+{
+    struct build_ctx *ctx = calloc(1, sizeof(struct build_ctx));
+    ctx->self = self;
+    ctx->context = context;
+    ilG_context_upload(context, build, ctx);
 }
 
 void ilG_renderer_draw(ilG_renderer *self)
