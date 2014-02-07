@@ -6,7 +6,6 @@
 
 #include "asset/node.h"
 #include "asset/image.h"
-#include "graphics/tracker.h"
 #include "graphics/context.h"
 #include "util/log.h"
 #include "graphics/bindable.h"
@@ -41,7 +40,6 @@ static void texture_init(void *obj)
 {
     ilG_texture *tex = obj;
     tex->name = "Unnamed";
-    ilG_texture_assignId(tex);
 }
 
 void ilG_texture_setContext(ilG_texture* self, struct ilG_context *context)

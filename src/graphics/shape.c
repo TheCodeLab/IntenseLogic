@@ -7,7 +7,6 @@
 #include "graphics/glutil.h"
 #include "graphics/drawable3d.h"
 #include "graphics/bindable.h"
-#include "graphics/tracker.h"
 #include "graphics/context.h"
 #include "graphics/arrayattrib.h"
 

@@ -10,30 +10,7 @@ local context       = require "graphics.context"
 local vector3       = require "math.vector3"
 local quaternion    = require "math.quaternion"
 
-ffi.cdef [[
-
-typedef struct ilG_tracker {
-    il_positionable pos;
-    struct ilG_drawable3d *drawable;
-    struct ilG_material *material;
-    struct ilG_texture *texture;
-} ilG_tracker;
-
-int ilG_track(struct ilG_context*, ilG_tracker);
-void ilG_untrack(struct ilG_context*, int id);
-
-]]
-
 local positionable = {}
-
-function positionable:track(c, d, m, t)
-    local tr = ffi.new("ilG_tracker")
-    tr.pos = self
-    tr.drawable = d
-    tr.material = m
-    tr.texture = t
-    return modules.graphics.ilG_track(c, tr)
-end
 
 function positionable.create(world)
     assert(world)

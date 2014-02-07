@@ -17,6 +17,7 @@ local drawnmesh     = require "graphics.mesh"
 local base          = require "common.base"
 local input         = require "input.input"
 local array         = require 'common.vector'
+local renderer      = require 'graphics.renderer'
 
 ffi.cdef [[
 
@@ -55,19 +56,27 @@ local pipe2 = {pipe[1], pipe[2], pipe[3], pipe[4], modules.bouncinglights.init_s
 --c:addStage(pipe2[5], 5)
 modules.bouncinglights.set_world(w)
 
+-- heightmap renderer
 local hmt = image.loadfile "demos/bouncing-lights/arena-heightmap.png"
 modules.bouncinglights.add_heightmap(hmt, 128, 128, 50)
-local glow = material()
 local ht = texture()
 ht:setContext(c)
 ht:fromimage("height0", hmt)
 ht:fromimage("normal0", hmt:height_to_normal())
 ht:fromfile("color0", "demos/bouncing-lights/terrain.png")
+local hmr = renderer()
+hmr.drawable = heightmap(c, 100, 100)
+hmr.material = heightmap.defaultShader(c)
+hmr.texture = ht
 local hm = positionable(w)
 hm.position = vector3(0, 0, 0).ptr
 hm.size = vector3(128, 50, 128).ptr
-hm:track(c, heightmap(c, 100, 100), heightmap.defaultShader(c), ht)
+hmr:add(hm)
 
+-- light renderer
+local sphere = drawnmesh("demos/bouncing-lights/sphere.obj")
+
+local glow = material()
 glow:vertex(io.open("demos/bouncing-lights/glow.vert","r"):read "*a")
 glow:fragment(io.open("demos/bouncing-lights/glow.frag", "r"):read "*a")
 glow:mtlname "Glow material"
@@ -75,14 +84,18 @@ glow:arrayAttrib("position", "in_Position")
 glow:matrix("MVP", "mvp")
 glow:posFunc(modules.bouncinglights.custom_data_func, "col")
 glow:link(c)
- 
+
 local tex = texture()
 tex:setContext(c)
+
+local ball = renderer()
+ball.drawable = sphere
+ball.material = glow
+ball.texture = tex 
 
 _G.num_lights = 0
 --event.setPacker(event.registry, "physics.tick", event.nilPacker)
 --event.timer(event.registry, "physics.tick", 1/60)
-local sphere = drawnmesh("demos/bouncing-lights/sphere.obj")
 --drawable.setattr(sphere, "istransparent", true)
 local debugRender = false --true
 event.register(input.button, function(key, scancode, device, isDown, mods)
@@ -111,7 +124,7 @@ event.register(input.button, function(key, scancode, device, isDown, mods)
             local m = 1
             l.positionable.color = array(col.x*m, col.y*m, col.z*m, 1.0)
             modules.bouncinglights.add_ball(l.positionable)
-            l.positionable:track(c, sphere, glow, tex)
+            ball:add(l.positionable)
         end
     end
     if key == 'B' and isDown then

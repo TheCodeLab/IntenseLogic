@@ -9,7 +9,6 @@
 #include "graphics/arrayattrib.h"
 #include "util/log.h"
 #include "graphics/drawable3d.h"
-#include "graphics/tracker.h"
 #include "graphics/fragdata.h"
 #include "util/array.h"
 #include "asset/node.h"
@@ -115,7 +114,6 @@ char *strdup(const char*);
 static void material_init(void *obj)
 {
     ilG_material* mtl = obj;
-    ilG_material_assignId(mtl);
     mtl->config = calloc(1, sizeof(struct ilG_material_config));
 }
 

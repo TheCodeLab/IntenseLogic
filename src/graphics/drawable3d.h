@@ -10,7 +10,6 @@ typedef struct ilG_drawable3d ilG_drawable3d;
 struct ilG_drawable3d {
     il_base base;
     unsigned long long attrs;
-    unsigned int id;
     struct ilG_context *context;
     const char *name;
 };

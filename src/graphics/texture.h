@@ -18,7 +18,6 @@ typedef struct ilG_textureunit {
 
 typedef struct ilG_texture {
     il_base base;
-    unsigned int id;
     char *name;
     ilG_textureunit units[ILG_TUNIT_NUMUNITS];
     struct ilG_context *context;

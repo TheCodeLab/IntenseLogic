@@ -6,9 +6,23 @@ ffi.cdef [[
 
 struct ilG_stage;
 
-void ilG_geometrypass(struct ilG_stage* self);
+struct ilG_stage *ilG_geometrypass_new(struct ilG_context *context);
+void ilG_geometrypass_track(struct ilG_stage *self, struct ilG_renderer *renderer);
 
 ]]
 
-return modules.graphics.ilG_geometrypass -- TODO: something to make this less awkward
+local gp = {}
+
+function gp:track(r)
+    assert(self ~= nil and r ~= nil)
+    modules.graphics.ilG_geometrypass_track(self, r)
+end
+
+function gp.create(c)
+    assert(c ~= nil)
+    return modules.graphics.ilG_geometrypass_new(c)
+end
+
+setmetatable(gp, {__call = function(self, ...) return gp.create(...) end})
+return gp
 

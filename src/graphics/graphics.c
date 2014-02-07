@@ -21,7 +21,6 @@
 #include "graphics/drawable3d.h"
 #include "graphics/material.h"
 #include "graphics/texture.h"
-#include "graphics/tracker.h"
 #include "graphics/glutil.h"
 #include "util/ilstring.h"
 #include "graphics/arrayattrib.h"

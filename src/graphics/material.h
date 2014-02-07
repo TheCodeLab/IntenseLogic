@@ -15,7 +15,6 @@ struct ilA_asset;
 
 typedef struct ilG_material {
     il_base base;
-    unsigned int id;
     GLuint program, vertshader, fragshader;
     unsigned long long attrs;
     struct ilG_material_config *config;
@@ -44,10 +43,6 @@ void ilG_material_matrix(ilG_material*, enum ilG_transform, const char *location
 void ilG_material_bindFunc(ilG_material*, ilG_material_onBindFunc func, void *user, const char *location);
 void ilG_material_posFunc(ilG_material*, ilG_material_onPosFunc func, void *user, const char *location);
 int /*failure*/ ilG_material_link(ilG_material*, struct ilG_context *ctx);
-
-ilG_material* ilG_material_fromId(unsigned int id); // tracker.c
-void ilG_material_assignId(ilG_material*);
-void ilG_material_setId(ilG_material*, unsigned int id);
 
 #endif
 

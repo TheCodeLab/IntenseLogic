@@ -56,9 +56,7 @@ function helper.context(args, hints)
         pipe[#pipe+1] = s
     end
     if args.geom then -- geometry pass
-        local s = stage()
-        s.context = c
-        geometrypass(s)
+        local s = geometrypass(c)
         c:addStage(s, -1)
         pipe[#pipe+1] = s
     end
@@ -68,9 +66,7 @@ function helper.context(args, hints)
         pipe[#pipe+1] = s
     end
     if args.transparency then -- transparency pass
-        local s = stage()
-        s.context = c
-        transpass(s)
+        local s = transpass(c)
         c:addStage(s, -1)
         pipe[#pipe+1] = s
     end
