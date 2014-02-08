@@ -9,13 +9,15 @@
 #include "graphics/texture.h"
 #include "graphics/fragdata.h"
 
+struct ilG_skybox {
+    ilG_context *context;
+    ilG_material *material;
+    ilG_texture *texture;
+};
+
 static ilG_material *skybox_shader(ilG_context *context)
 {
-    ilG_material *self = il_table_mgetsp(&context->storage, "skybox.shader");
-    if (self) {
-        return self;
-    }
-    self = ilG_material_new();
+    ilG_material *self = ilG_material_new();
     ilG_material_vertex_file(self, "skybox.vert");
     ilG_material_fragment_file(self, "skybox.frag");
     ilG_material_name(self, "Skybox Shader");
@@ -31,19 +33,19 @@ static ilG_material *skybox_shader(ilG_context *context)
         il_unref(self);
         return NULL;
     }
-    il_table_setsp(&context->storage, "skybox.shader", il_opaque(self, il_unref));
     return self;
 }
 
-static void draw_sky(ilG_stage *self)
+static void sky_run(void *ptr)
 {
+    ilG_skybox *self = ptr;
     ilG_context *context = self->context;
 
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
     ilG_bindable_swap(&context->drawableb, (void**)&context->drawable, ilG_box(context));
-    ilG_bindable_swap(&context->materialb, (void**)&context->material, skybox_shader(context));
-    ilG_bindable_swap(&context->textureb,  (void**)&context->texture,  il_table_mgetsp(&self->base.storage, "shader.texture"));
+    ilG_bindable_swap(&context->materialb, (void**)&context->material, self->material);
+    ilG_bindable_swap(&context->textureb,  (void**)&context->texture,  self->texture);
 
     ilG_bindable_action(context->materialb, context->material);
     ilG_bindable_action(context->textureb,  context->texture);
@@ -53,11 +55,24 @@ static void draw_sky(ilG_stage *self)
     glClear(GL_DEPTH_BUFFER_BIT);
 }
 
-void ilG_skyboxpass(ilG_stage *self, ilG_texture *skytex)
+static int sky_track(void *ptr, struct ilG_renderer *renderer)
 {
-    self->run = draw_sky;
-    self->name = "Skybox";
-    il_table_setsp(&self->base.storage, "shader.texture", il_opaque(skytex, il_unref));
-    skybox_shader(self->context);
+    (void)renderer, (void)ptr;
+    return 0;
+}
+
+const ilG_stagable ilG_skybox_stage = {
+    .run = sky_run,
+    .track = sky_track,
+    .name = "Skybox"
+};
+
+ilG_skybox *ilG_skybox_new(ilG_context *context, ilG_texture *skytex)
+{
+    ilG_skybox *self = calloc(1, sizeof(ilG_skybox));
+    self->context = context;
+    self->material = skybox_shader(context);
+    self->texture = skytex;
+    return self;
 }
 

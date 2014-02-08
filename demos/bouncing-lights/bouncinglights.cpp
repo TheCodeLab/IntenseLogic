@@ -36,7 +36,6 @@ static btKinematicCharacterController *player;
 static btPairCachingGhostObject *ghostObject;
 static btSphereShape *playerShape;
 static btVector3 playerWalk;
-static ilG_stage debugstage;
 static DebugDraw *debugdraw;
 
 #ifdef WIN32
@@ -45,21 +44,22 @@ static DebugDraw *debugdraw;
 #define ex extern "C"
 #endif
 
-ex void debug_draw(ilG_stage *self)
+static void debug_run(void *ptr)
 {
-    (void)self;
+    (void)ptr;
     debugdraw->render();
 }
 
-ex ilG_stage *init_stage(ilG_context *context)
+ex const ilG_stagable debug_stage = {
+    /*.run =*/ debug_run,
+    /*.track =*/ NULL,
+    /*.name =*/ "Debug Draw"
+};
+
+ex void init_stage(ilG_context *context)
 {
     debugdraw = new DebugDraw(context);
     dynamicsWorld->setDebugDrawer(debugdraw);
-
-    debugstage.context = context;
-    debugstage.run = debug_draw;
-    debugstage.name = "Bullet Debug Draw";
-    return &debugstage;
 }
 
 ex void custom_data_func(struct ilG_material *self, il_positionable *pos, GLuint loc, void *user)

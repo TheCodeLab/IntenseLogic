@@ -1,12 +1,16 @@
 #ifndef ILG_GEOMETRYPASS_H
 #define ILG_GEOMETRYPASS_H
 
-struct ilG_stage;
+#include "graphics/stage.h"
+
+typedef struct ilG_geometry ilG_geometry;
+
 struct ilG_context;
 struct ilG_renderer;
 
-struct ilG_stage *ilG_geometrypass_new(struct ilG_context *context);
-void ilG_geometrypass_track(struct ilG_stage *self, struct ilG_renderer *renderer);
+extern const ilG_stagable ilG_geometry_stage;
+
+struct ilG_geometry *ilG_geometry_new(struct ilG_context *context);
 
 #endif
 

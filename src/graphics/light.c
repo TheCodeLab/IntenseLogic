@@ -24,9 +24,3 @@ void ilG_light_setPositionable(ilG_light *self, il_positionable pos)
     self->positionable = pos;
 }
 
-void ilG_light_add(ilG_light* self, ilG_context* context)
-{
-    IL_APPEND(context->lights, self);
-    //context->lightdata.invalidated = 1; // TODO: when uniform caching is setup for lighting stage, fix this
-}
-

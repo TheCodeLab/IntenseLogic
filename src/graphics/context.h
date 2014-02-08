@@ -104,10 +104,9 @@ typedef struct ilG_context { // **remember to update context.lua**
     int valid;
     GLFWwindow *window;
     GLuint fbtextures[ILG_CONTEXT_NUMATTACHMENTS], framebuffer;
-    IL_ARRAY(struct ilG_stage*,) stages;
+    IL_ARRAY(struct ilG_stage,) stages;
     int tick_id;
     size_t num_active;
-    IL_ARRAY(struct ilG_light*,) lights; // TODO: move to lighting stagd when the relavent events occur in the window. All events are forwarded to ilI_globalHandler.
     unsigned *texunits;
     size_t num_texunits;
     /* Creation parameters */
@@ -142,7 +141,7 @@ int ilG_context_resize(ilG_context *self, int w, int h, const char *title);
  * @return Success. */
 int ilG_context_start(ilG_context* self);
 /** Inserts a rendering stage into the rendering pipeline. */
-void ilG_context_addStage(ilG_context* self, struct ilG_stage* stage, int num);
+void ilG_context_addStage(ilG_context* self, struct ilG_stage stage, int num);
 /** Clears the rendering pipeline */
 void ilG_context_clearStages(ilG_context *self);
 /** Internal: Binds the GL context to the current thread. */

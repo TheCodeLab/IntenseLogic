@@ -11,23 +11,13 @@
 #include "math/vector.h"
 #include "math/matrix.h"
 
-struct lightpass {
-    ilG_stage stage;
+struct ilG_lights {
+    ilG_context *context;
     GLuint vao, vbo, ibo, lights_ubo, lights_index, mvp_ubo, mvp_index;
     GLint lights_size, mvp_size, lights_offset[3], mvp_offset[1];
     struct ilG_material* material;
     int invalidated;
-};
-
-il_type ilG_lightpass_type = {
-    .typeclasses = NULL,
-    .storage = {NULL},
-    .constructor = NULL,
-    .destructor = NULL,
-    .copy = NULL,
-    .name = "il.graphics.lightpass",
-    .size = sizeof(struct lightpass),
-    .parent = &ilG_stage_type
+    IL_ARRAY(ilG_light*,) lights;
 };
 
 static void size_uniform(ilG_material *self, GLint location, void *user)
@@ -37,12 +27,11 @@ static void size_uniform(ilG_material *self, GLint location, void *user)
     glUniform2f(location, context->width, context->height);
 }
 
-static void draw_lights(ilG_stage *ptr)
+static void lights_run(void *ptr)
 { 
-    struct lightpass *self = (struct lightpass*)ptr;
-    ilG_context *context = ptr->context;
+    ilG_lights *self = ptr;
+    ilG_context *context = self->context;
     ilG_testError("Unknown");
-    context->material = self->material;
     /*if (context->lightdata.invalidated) {
         if (!context->lightdata.created) {
             context->lightdata.lights_index = glGetUniformBlockIndex(context->material->program, "LightBlock");
@@ -93,7 +82,8 @@ static void draw_lights(ilG_stage *ptr)
     //glBindBufferBase(GL_UNIFORM_BUFFER, context->lightdata.lights_index, context->lightdata.lights_ubo);
     //glBindBufferBase(GL_UNIFORM_BUFFER, context->lightdata.mvp_index, context->lightdata.mvp_ubo);
     context->drawable = ilG_icosahedron(context);
-    context->drawableb = il_cast(il_typeof(context->drawable), "il.graphics.bindable"),
+    context->drawableb = il_cast(il_typeof(context->drawable), "il.graphics.bindable");
+    context->material = self->material;
     context->materialb = il_cast(il_typeof(context->material), "il.graphics.bindable");
     ilG_bindable_bind(context->drawableb, context->drawable);
     ilG_bindable_bind(context->materialb, context->material);
@@ -123,15 +113,15 @@ static void draw_lights(ilG_stage *ptr)
     //il_mat vp = ilG_computeMVP(ILG_VP, context->camera, NULL);
     //il_vec4 vec = il_vec4_new();
     unsigned int i;
-    for (i = 0; i < context->lights.length; i++) {
-        context->positionable = &context->lights.data[i]->positionable;
+    for (i = 0; i < self->lights.length; i++) {
+        context->positionable = &self->lights.data[i]->positionable;
         ilG_bindable_action(context->materialb, context->material);
         il_vec3 pos = il_positionable_getPosition(context->positionable);
         //pos = il_mat_mulv(vp, pos, pos);
         glUniform3f(position_loc, pos.x, pos.y, pos.z);
-        il_vec3 col = context->lights.data[i]->color;
+        il_vec3 col = self->lights.data[i]->color;
         glUniform3f(color_loc, col.x, col.y, col.z);
-        glUniform1f(radius_loc, context->lights.data[i]->radius);
+        glUniform1f(radius_loc, self->lights.data[i]->radius);
         ilG_bindable_action(context->drawableb, context->drawable);
         //glDrawElements(GL_TRIANGLES, sizeof(indices)/sizeof(GLuint), GL_UNSIGNED_INT, NULL);
     }
@@ -147,13 +137,23 @@ static void draw_lights(ilG_stage *ptr)
     ilG_testError("Error drawing lights");
 }
 
-struct ilG_stage *ilG_lightpass(struct ilG_context* context)
+static int lights_track(void *obj, struct ilG_renderer *r)
 {
-    struct lightpass *self = il_new(&ilG_lightpass_type);
+    (void)obj, (void)r;
+    return 0;
+}
 
-    self->stage.context = context;
-    self->stage.run = draw_lights;
-    self->stage.name = "Deferred Shading Pass";
+const ilG_stagable ilG_lights_stagable = {
+    .run = lights_run,
+    .track = lights_track,
+    .name = "Deferred Shading"
+};
+
+ilG_lights *ilG_lights_new(struct ilG_context* context)
+{
+    ilG_lights *self = calloc(1, sizeof(ilG_lights));
+
+    self->context = context;
 
     // shader creation
     struct ilG_material* mtl = ilG_material_new();
@@ -175,6 +175,6 @@ struct ilG_stage *ilG_lightpass(struct ilG_context* context)
     self->material = mtl;
     self->invalidated = 1;
 
-    return &self->stage;
+    return self;
 }
 

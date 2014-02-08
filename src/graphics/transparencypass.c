@@ -11,21 +11,13 @@
 #include "common/world.h"
 #include "util/array.h"
 
-struct ilG_transparencypass {
-    ilG_stage stage;
+struct ilG_transparency {
     IL_ARRAY(ilG_renderer*,) renderers;
 };
 
-struct rinfo {
-    il_positionable *positionable;
-    ilG_drawable3d *drawable;
-    ilG_material *material;
-    ilG_texture *texture;
-};
-
-static void draw_transparency(ilG_stage *ptr)
+static void transparency_run(void *ptr)
 {
-    struct ilG_transparencypass *self = (struct ilG_transparencypass*)ptr;
+    ilG_transparency *self = ptr;
     ilG_testError("Unknown");
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -42,17 +34,23 @@ static void draw_transparency(ilG_stage *ptr)
     }
 }
 
-ilG_stage *ilG_transparencypass_new(ilG_context *context)
+static int transparency_track(void *ptr, ilG_renderer *renderer)
 {
-    struct ilG_transparencypass *self = calloc(1, sizeof(struct ilG_transparencypass));
-    self->stage.context = context;
-    self->stage.run = draw_transparency;
-    self->stage.name = "Transparency Pass";
-    return &self->stage;
+    IL_APPEND(((ilG_transparency*)ptr)->renderers, renderer);
+    return 1;
 }
 
-void ilG_transparencypass_track(ilG_stage *self, ilG_renderer *renderer)
+const ilG_stagable ilG_transparency_stage = {
+    .run = transparency_run,
+    .track = transparency_track,
+    .name = "Transparency Pass"
+};
+
+ilG_transparency *ilG_transparency_new(ilG_context *context)
 {
-    IL_APPEND(((struct ilG_transparencypass*)self)->renderers, renderer);
+    (void)context;
+    struct ilG_transparency *self = calloc(1, sizeof(struct ilG_transparency));
+    return self;
 }
+
 

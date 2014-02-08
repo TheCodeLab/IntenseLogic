@@ -1,14 +1,15 @@
 #ifndef ILG_POSTPASS_H
 #define ILG_POSTPASS_H
 
-#include "common/base.h"
+#include "graphics/stage.h"
 
 struct ilG_context;
-struct ilG_stage;
 
-struct ilG_stage *ilG_outpass(struct ilG_context *context);
+typedef struct ilG_out ilG_out;
 
-extern il_type ilG_outpass_type;
+extern const ilG_stagable ilG_out_stage;
+
+ilG_out *ilG_out_new(struct ilG_context *context);
 
 #endif
 

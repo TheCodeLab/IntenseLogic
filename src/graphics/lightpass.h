@@ -1,14 +1,15 @@
 #ifndef ILG_LIGHTPASS_H
 #define ILG_LIGHTPASS_H
 
-#include "common/base.h"
+#include "graphics/stage.h"
 
-struct ilG_stage;
 struct ilG_context;
 
-struct ilG_stage *ilG_lightpass(struct ilG_context* context);
+typedef struct ilG_lights ilG_lights;
 
-extern il_type ilG_lightpass_type;
+extern const ilG_stagable ilG_lights_stage;
+
+ilG_lights *ilG_lights_new(struct ilG_context *context);
 
 #endif
 

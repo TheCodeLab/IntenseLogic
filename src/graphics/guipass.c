@@ -5,14 +5,14 @@
 #include "graphics/context.h"
 #include "graphics/glutil.h"
 
-struct guipass {
-    ilG_stage stage;
+struct ilG_gui {
+    ilG_context *context;
     ilG_gui_frame *root;
 };
 
-void gui_run(ilG_stage *ptr)
+static void gui_run(void *ptr)
 {
-    struct guipass *self = (struct guipass*)ptr;
+    ilG_gui *self = ptr;
     ilG_testError("Unknown");
     if (self->root) {
         glDisable(GL_CULL_FACE);
@@ -21,39 +21,30 @@ void gui_run(ilG_stage *ptr)
         //glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
         self->root->rect = (ilG_gui_rect){
             .a = {0, 0, 0.f, 0.f},
-            .b = {self->stage.context->width, self->stage.context->height, 0.f, 0.f}
+            .b = {self->context->width, self->context->height, 0.f, 0.f}
         };
         ilG_gui_draw(self->root);
     }
     ilG_testError("gui_run");
 }
 
-struct ilG_stage *ilG_guipass(struct ilG_context *context)
+static int gui_track(void *ptr, struct ilG_renderer *r)
 {
-    struct guipass *self = il_new(&ilG_guipass_type);
-    self->stage.name = "GUI Renderer";
-    self->stage.context = context;
-    self->stage.run = gui_run;
-    return &self->stage;
+    (void)ptr, (void)r;
+    return 0;
 }
 
-void ilG_guipass_setRoot(ilG_stage *stage, ilG_gui_frame *root)
-{
-    struct guipass *self = (struct guipass*)stage;
-    if (self->root) {
-        il_unref(self->root);
-    }
-    self->root = il_ref(root);
-}
-
-il_type ilG_guipass_type = {
-    .typeclasses = NULL,
-    .storage = {NULL},
-    .constructor = NULL,
-    .destructor = NULL,
-    .copy = NULL,
-    .name = "il.graphics.guipass",
-    .size = sizeof(struct guipass),
-    .parent = &ilG_stage_type
+const ilG_stagable ilG_gui_stage = {
+    .run = gui_run,
+    .track = gui_track,
+    .name = "GUI"
 };
+
+ilG_gui *ilG_gui_new(struct ilG_context *context, ilG_gui_frame *root)
+{
+    ilG_gui *self = calloc(1, sizeof(ilG_gui));
+    self->context = context;
+    self->root = root;
+    return self;
+}
 

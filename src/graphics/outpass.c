@@ -12,8 +12,8 @@
 #include "graphics/framebuffer.h"
 #include "graphics/fragdata.h"
 
-struct outpass {
-    ilG_stage stage;
+struct ilG_out {
+    ilG_context *context;
     ilG_material *material;
     ilG_material *horizblur, *vertblur;
     ilG_fbo *front, *result;
@@ -22,18 +22,7 @@ struct outpass {
     int which;
 };
 
-il_type ilG_outpass_type = {
-    .typeclasses = NULL,
-    .storage = {NULL},
-    .constructor = NULL,
-    .destructor = NULL,
-    .copy = NULL,
-    .name = "il.graphics.outpass",
-    .size = sizeof(struct outpass),
-    .parent = &ilG_stage_type
-};
-
-static void fullscreenTexture(struct outpass *self)
+static void fullscreenTexture(ilG_out *self)
 {
     ilG_testError("Unknown");
     glBindVertexArray(self->vao);
@@ -45,14 +34,14 @@ static void fullscreenTexture(struct outpass *self)
 static void size_uniform(ilG_material *self, GLint location, void *user)
 {
     (void)self;
-    struct outpass *out = user;
+    ilG_out *out = user;
     glUniform2f(location, out->w, out->h);
 }
 
-static void out_pass(ilG_stage *ptr)
+static void out_run(void *ptr)
 {
-    struct outpass *self = (struct outpass*)ptr;
-    ilG_context *context = ptr->context;
+    ilG_out *self = ptr;
+    ilG_context *context = self->context;
 
     if (glfwWindowShouldClose(context->window)) {
         //ilE_globalevent(il_registry, "shutdown", 0, NULL);
@@ -136,14 +125,17 @@ static void out_pass(ilG_stage *ptr)
     ilG_testError("outpass");
 }
 
-struct ilG_stage *ilG_outpass(struct ilG_context *context)
+const ilG_stagable ilG_out_stage = {
+    .run = out_run,
+    .name = "Screen Output"
+};
+
+ilG_out *ilG_out_new(struct ilG_context *context)
 {
-    struct outpass *self = il_new(&ilG_outpass_type);
+    ilG_out *self = calloc(1, sizeof(ilG_out));
     ilG_material *m;
     
-    self->stage.context = context;
-    self->stage.run = out_pass;
-    self->stage.name = "Screen Output";
+    self->context = context;
 
     if (context->hdr) {
         ilG_fbo *f = self->front = ilG_fbo_new();
@@ -224,6 +216,6 @@ struct ilG_stage *ilG_outpass(struct ilG_context *context)
 
     self->which = 1;
 
-    return &self->stage;
+    return self;
 }
 

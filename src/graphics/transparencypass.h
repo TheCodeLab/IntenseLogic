@@ -1,12 +1,16 @@
 #ifndef ILG_TRANSPARENCYPASS_H
 #define ILG_TRANSPARENCYPASS_H
 
-struct ilG_stage;
+#include "graphics/stage.h"
+
 struct ilG_context;
 struct ilG_renderer;
 
-struct ilG_stage *ilG_transparencypass_new(struct ilG_context *context);
-void ilG_transparencypass_track(struct ilG_stage *self, struct ilG_renderer *renderer);
+typedef struct ilG_transparency ilG_transparency;
+
+extern const ilG_stagable ilG_transparency_stage;
+
+ilG_transparency *ilG_transparency_new(struct ilG_context *context);
 
 #endif
 

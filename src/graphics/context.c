@@ -40,8 +40,6 @@ ilG_context *ilG_context_new()
 
 void ilG_context_free(ilG_context *self)
 {
-    size_t i;
-
     self->complete = 0;
 
     il_value nil = il_value_nil();
@@ -49,13 +47,6 @@ void ilG_context_free(ilG_context *self)
     il_value_free(nil);
 
     free(self->texunits);
-    for (i = 0; i < self->lights.length; i++) {
-        il_unref(self->lights.data[i]);
-    }
-    IL_FREE(self->lights);
-    for (i = 0; i < self->stages.length; i++) {
-        il_unref(self->stages.data[i]);
-    }
     IL_FREE(self->stages);
     glDeleteFramebuffers(1, &self->framebuffer);
     glDeleteTextures(5, &self->fbtextures[0]);
@@ -245,10 +236,8 @@ void ilG_context_makeCurrent(ilG_context *self)
     glfwMakeContextCurrent(self->window);
 }
 
-void ilG_context_addStage(ilG_context* self, ilG_stage* stage, int num)
+void ilG_context_addStage(ilG_context* self, ilG_stage stage, int num)
 {
-    il_return_on_fail(stage);
-    stage = il_ref(stage);
     if (num < 0) {
         IL_APPEND(self->stages, stage);
         return;
@@ -329,8 +318,8 @@ static void render_stages(const il_value *data, il_value *ctx)
     ilG_testError("glClearDepth");
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     for (i = 0; i < context->stages.length; i++) {
-        il_debug("Rendering stage %s", context->stages.data[i]->name);
-        context->stages.data[i]->run(context->stages.data[i]);
+        il_debug("Rendering stage %s", ilG_stage_getName(context->stages.data[i]));
+        context->stages.data[i].stagable->run(context->stages.data[i].obj);
     }
     if (context->use_default_fb) {
         glfwSwapBuffers(context->window);

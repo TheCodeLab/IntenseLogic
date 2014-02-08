@@ -1,26 +1,27 @@
 local ffi = require "ffi"
-local base = require "common.base"
 
 ffi.cdef [[
 
-typedef struct ilG_stage ilG_stage;
+struct ilG_renderer;
 
-typedef void (*ilG_stage_run_fn)(ilG_stage*);
-
-struct ilG_stage {
-    il_base base;
-    struct ilG_context *context;
-    ilG_stage_run_fn run;
+typedef struct ilG_stagable {
+    void (*run)(void *obj);
+    int /*success*/ (*track)(void *obj, struct ilG_renderer *r);
     const char *name;
-};
+} ilG_stagable;
 
-extern il_type ilG_stage_type;
+typedef struct ilG_stage {
+    void *obj;
+    const ilG_stagable *stagable;
+} ilG_stage;
+
+ilG_stage ilG_stage_new(void *obj, const ilG_stagable *stagable);
+void ilG_stage_track(ilG_stage self, struct ilG_renderer *renderer);
+const char *ilG_stage_getName(ilG_stage self);
 
 ]]
 
-base.wrap "il.graphics.stage" {
-    struct = "ilG_stage"
-}
+local stage = {}
 
-return modules.graphics.ilG_stage_type
+return stage
 

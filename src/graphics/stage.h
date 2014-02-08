@@ -1,20 +1,22 @@
 #ifndef ILG_STAGE_H
 #define ILG_STAGE_H
 
-#include "common/base.h"
+struct ilG_renderer;
 
-typedef struct ilG_stage ilG_stage;
-
-typedef void (*ilG_stage_run_fn)(ilG_stage*);
-
-struct ilG_stage {
-    il_base base;
-    struct ilG_context *context;
-    ilG_stage_run_fn run;
+typedef struct ilG_stagable {
+    void (*run)(void *obj);
+    int /*success*/ (*track)(void *obj, struct ilG_renderer *r);
     const char *name;
-};
+} ilG_stagable;
 
-extern il_type ilG_stage_type;
+typedef struct ilG_stage {
+    void *obj;
+    const ilG_stagable *stagable;
+} ilG_stage;
+
+ilG_stage ilG_stage_new(void *obj, const ilG_stagable *stagable);
+void ilG_stage_track(ilG_stage self, struct ilG_renderer *renderer);
+const char *ilG_stage_getName(ilG_stage self);
 
 #endif
 

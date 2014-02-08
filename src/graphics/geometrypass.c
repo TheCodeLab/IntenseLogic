@@ -10,14 +10,13 @@
 #include "graphics/arrayattrib.h"
 #include "graphics/drawable3d.h"
 
-struct ilG_geometrypass {
-    ilG_stage stage;
+struct ilG_geometry {
     IL_ARRAY(ilG_renderer*,) renderers;
 };
 
-static void draw_geometry(ilG_stage *ptr)
+static void geometry_run(void *ptr)
 {
-    struct ilG_geometrypass *self = (struct ilG_geometrypass*)ptr;
+    ilG_geometry *self = ptr;
     ilG_testError("Unknown");
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
@@ -33,17 +32,23 @@ static void draw_geometry(ilG_stage *ptr)
     }
 }
 
-ilG_stage *ilG_geometrypass_new(ilG_context *context)
+static int geometry_track(void *self, ilG_renderer *renderer)
 {
-    struct ilG_geometrypass *self = calloc(1, sizeof(struct ilG_geometrypass));
-    self->stage.context = context;
-    self->stage.run = draw_geometry;
-    self->stage.name = "Geometry Pass";
-    return &self->stage;
+    IL_APPEND(((ilG_geometry*)self)->renderers, renderer);
+    return 1;
 }
 
-void ilG_geometrypass_track(ilG_stage *self, ilG_renderer *renderer)
+const ilG_stagable ilG_geometrypass_stage = {
+    .run = geometry_run,
+    .track = geometry_track,
+    .name = "Geometry Pass"
+};
+
+ilG_geometry *ilG_geometrypass_new(ilG_context *context)
 {
-    IL_APPEND(((struct ilG_geometrypass*)self)->renderers, renderer);
+    (void)context;
+    ilG_geometry *self = calloc(1, sizeof(ilG_geometry));
+    return self;
 }
+
 
