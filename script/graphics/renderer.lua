@@ -2,23 +2,35 @@ local ffi = require 'ffi'
 
 ffi.cdef [[
 
-typedef struct ilG_renderer ilG_renderer;
+typedef struct ilG_renderable {
+    void (*free)(void *obj);
+    void (*draw)(void *obj);
+    void (*build)(void *obj, struct ilG_context *context);
+    il_table *(*get_storage)(void *obj);
+    bool (*get_complete)(const void *obj);
+    void (*add_positionable)(void *obj, il_positionable pos);
+    const char *name;
+} ilG_renderable;
 
-ilG_renderer *ilG_renderer_new();
-void ilG_renderer_free(ilG_renderer *self);
+typedef struct ilG_renderer {
+    void *obj;
+    const ilG_renderable *vtable;
+} ilG_renderer;
+
+extern const ilG_renderable ilG_legacy_renderer;
+
+ilG_renderer ilG_renderer_wrap(void *obj, const ilG_renderable *vtable);
+ilG_renderer ilG_renderer_legacy(struct ilG_drawable3d *dr, struct ilG_material *mtl, struct ilG_texture *tex);
+void ilG_renderer_free(ilG_renderer self);
 
 void ilG_renderer_build(ilG_renderer *self, struct ilG_context *context);
 void ilG_renderer_draw(ilG_renderer *self);
 
+bool ilG_renderer_isComplete(const ilG_renderer *self);
 const il_table *ilG_renderer_getStorage(const ilG_renderer *self);
 il_table *ilG_renderer_mgetStorage(ilG_renderer *self);
 const char *ilG_renderer_getName(const ilG_renderer *self);
-void ilG_renderer_setName(ilG_renderer *self, const char *name);
 
-void ilG_renderer_setDrawable(ilG_renderer *self, struct ilG_drawable3d *dr);
-// unlinked material
-void ilG_renderer_setMaterial(ilG_renderer *self, struct ilG_material *mat);
-void ilG_renderer_setTexture(ilG_renderer *self, struct ilG_texture *tex);
 void ilG_renderer_addPositionable(ilG_renderer *self, il_positionable pos);
 
 ]]
@@ -35,8 +47,9 @@ function renderer:add(p)
     modules.graphics.ilG_renderer_addPositionable(self, p)
 end
 
-function renderer.create()
-    return modules.graphics.ilG_renderer_new()
+function renderer.create(dr, mtl, tex)
+    assert(dr ~= nil and mtl ~= nil and tex ~= nil)
+    return modules.graphics.ilG_renderer_legacy(dr, mtl, tex)
 end
 
 function renderer:destroy()
@@ -48,15 +61,7 @@ ffi.metatype("ilG_renderer", {
         return modules.graphics.ilG_renderer_mgetStorage(self)[k] or renderer[k]
     end,
     __newindex = function(self, k, v)
-        if k == 'drawable' then
-            modules.graphics.ilG_renderer_setDrawable(self, v)
-        elseif k == 'material' then
-            modules.graphics.ilG_renderer_setMaterial(self, v)
-        elseif k == 'texture' then
-            modules.graphics.ilG_renderer_setTexture(self, v)
-        else
-            modules.graphics.ilG_renderer_mgetStorage(self)[k] = v
-        end
+        modules.graphics.ilG_renderer_mgetStorage(self)[k] = v
     end
 })
 

@@ -8,7 +8,7 @@ ilG_stage ilG_stage_new(void *obj, const ilG_stagable *stagable)
     };
 }
 
-int ilG_stage_track(ilG_stage self, struct ilG_renderer *renderer)
+int ilG_stage_track(ilG_stage self, ilG_renderer renderer)
 {
     return self.stagable->track(self.obj, renderer);
 }

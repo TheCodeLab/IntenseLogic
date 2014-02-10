@@ -4,6 +4,7 @@
 #include "graphics/stage.h"
 #include "graphics/context.h"
 #include "graphics/glutil.h"
+#include "graphics/renderer.h"
 
 struct ilG_gui {
     ilG_context *context;
@@ -28,7 +29,7 @@ static void gui_run(void *ptr)
     ilG_testError("gui_run");
 }
 
-static int gui_track(void *ptr, struct ilG_renderer *r)
+static int gui_track(void *ptr, ilG_renderer r)
 {
     (void)ptr, (void)r;
     return 0;

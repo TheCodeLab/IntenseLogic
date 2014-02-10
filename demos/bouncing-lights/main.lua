@@ -64,10 +64,11 @@ ht:setContext(c)
 ht:fromimage("height0", hmt)
 ht:fromimage("normal0", hmt:height_to_normal())
 ht:fromfile("color0", "demos/bouncing-lights/terrain.png")
-local hmr = renderer()
-hmr.drawable = heightmap(c, 100, 100)
-hmr.material = heightmap.defaultShader(c)
-hmr.texture = ht
+local hmr = renderer(
+    heightmap(c, 100, 100),
+    heightmap.defaultShader(c),
+    ht
+)
 hmr:build(c)
 pipe[2]:track(hmr)
 local hm = positionable(w)
@@ -90,10 +91,7 @@ glow:link(c)
 local tex = texture()
 tex:setContext(c)
 
-local ball = renderer()
-ball.drawable = sphere
-ball.material = glow
-ball.texture = tex 
+local ball = renderer(sphere, glow, tex)
 
 _G.num_lights = 0
 --event.setPacker(event.registry, "physics.tick", event.nilPacker)

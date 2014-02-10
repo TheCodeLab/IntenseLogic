@@ -137,7 +137,7 @@ static void lights_run(void *ptr)
     ilG_testError("Error drawing lights");
 }
 
-static int lights_track(void *obj, struct ilG_renderer *r)
+static int lights_track(void *obj, ilG_renderer r)
 {
     (void)obj, (void)r;
     return 0;

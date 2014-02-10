@@ -1,8 +1,8 @@
 local ffi = require "ffi"
 
-ffi.cdef [[
+require 'graphics.renderer'
 
-struct ilG_renderer;
+ffi.cdef [[
 
 typedef struct ilG_stagable {
     void (*run)(void *obj);
@@ -16,7 +16,7 @@ typedef struct ilG_stage {
 } ilG_stage;
 
 ilG_stage ilG_stage_new(void *obj, const ilG_stagable *stagable);
-int ilG_stage_track(ilG_stage self, struct ilG_renderer *renderer);
+int ilG_stage_track(ilG_stage self, ilG_renderer renderer);
 const char *ilG_stage_getName(ilG_stage self);
 
 // skyboxpass.h

@@ -55,7 +55,7 @@ static void sky_run(void *ptr)
     glClear(GL_DEPTH_BUFFER_BIT);
 }
 
-static int sky_track(void *ptr, struct ilG_renderer *renderer)
+static int sky_track(void *ptr, ilG_renderer renderer)
 {
     (void)renderer, (void)ptr;
     return 0;

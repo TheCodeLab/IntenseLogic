@@ -12,7 +12,7 @@
 #include "util/ilassert.h"
 
 struct ilG_geometry {
-    IL_ARRAY(ilG_renderer*,) renderers;
+    IL_ARRAY(ilG_renderer,) renderers;
 };
 
 static void geometry_run(void *ptr)
@@ -28,14 +28,14 @@ static void geometry_run(void *ptr)
     
     unsigned i;
     for (i = 0; i < self->renderers.length; i++) {
-        ilG_renderer_draw(self->renderers.data[i]);
-        ilG_testError("Rendering %s", ilG_renderer_getName(self->renderers.data[i]));
+        ilG_renderer_draw(&self->renderers.data[i]);
+        ilG_testError("Rendering %s", ilG_renderer_getName(&self->renderers.data[i]));
     }
 }
 
-static int geometry_track(void *self, ilG_renderer *renderer)
+static int geometry_track(void *self, ilG_renderer renderer)
 {
-    il_return_val_on_fail(ilG_renderer_isComplete(renderer), 0);
+    il_return_val_on_fail(ilG_renderer_isComplete(&renderer), 0);
     IL_APPEND(((ilG_geometry*)self)->renderers, renderer);
     return 1;
 }
