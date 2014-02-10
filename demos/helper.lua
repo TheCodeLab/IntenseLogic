@@ -9,15 +9,9 @@ local camera        = require 'graphics.camera'
 local matrix        = require 'math.matrix'
 local context       = require 'graphics.context'
 local world         = require 'common.world'
-local geometrypass  = require 'graphics.geometrypass'
-local lightpass     = require 'graphics.lightpass'
-local guipass       = require 'graphics.guipass'
 local stage         = require 'graphics.stage'
-local outpass       = require 'graphics.outpass'
 local texture       = require 'graphics.texture'
 local image         = require 'asset.image'
-local skyboxpass    = require 'graphics.skyboxpass'
-local transpass     = require 'graphics.transparencypass'
 
 local helper = {}
 
@@ -49,37 +43,34 @@ function helper.context(args, hints)
         else
             error("Expected string or table")
         end
-        local s = stage()
-        s.context = c
-        skyboxpass(s, skybox)
+        local s = stage.skybox(c, skybox)
         c:addStage(s, -1)
         pipe[#pipe+1] = s
     end
     if args.geom then -- geometry pass
-        local s = geometrypass(c)
+        local s = stage.geometry(c)
         c:addStage(s, -1)
         pipe[#pipe+1] = s
     end
     if args.lights then -- light pass
-        local s = lightpass(c)
+        local s = stage.lights(c)
         c:addStage(s, -1)
         pipe[#pipe+1] = s
     end
     if args.transparency then -- transparency pass
-        local s = transpass(c)
+        local s = stage.transparency(c)
         c:addStage(s, -1)
         pipe[#pipe+1] = s
     end
     local root
     if args.gui then-- gui pass
-        local s = guipass(c)
         root = frame()
-        s:setRoot(root)
+        local s = stage.gui(c, root)
         c:addStage(s, -1)
         pipe[#pipe+1] = s
     end
     if args.output then -- output pass
-        local s = outpass(c)
+        local s = stage.out(c)
         c:addStage(s, -1)
         pipe[#pipe+1] = s
     end

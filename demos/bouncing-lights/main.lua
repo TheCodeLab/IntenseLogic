@@ -68,6 +68,8 @@ local hmr = renderer()
 hmr.drawable = heightmap(c, 100, 100)
 hmr.material = heightmap.defaultShader(c)
 hmr.texture = ht
+hmr:build(c)
+pipe[2]:track(hmr)
 local hm = positionable(w)
 hm.position = vector3(0, 0, 0).ptr
 hm.size = vector3(128, 50, 128).ptr

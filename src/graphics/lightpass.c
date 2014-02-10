@@ -143,7 +143,7 @@ static int lights_track(void *obj, struct ilG_renderer *r)
     return 0;
 }
 
-const ilG_stagable ilG_lights_stagable = {
+const ilG_stagable ilG_lights_stage = {
     .run = lights_run,
     .track = lights_track,
     .name = "Deferred Shading"

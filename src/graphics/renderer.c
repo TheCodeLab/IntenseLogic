@@ -38,15 +38,15 @@ void ilG_renderer_build(ilG_renderer *self, ilG_context *context)
     if (ilG_material_link(self->material, context)) {
         return;
     }
-    self->valid = 1;
+    self->valid = true;
 }
 
 void ilG_renderer_draw(ilG_renderer *self)
 {
     ilG_context *ctx = self->context;
-    ilG_bindable_swap(&ctx->drawableb, (void**)ctx->drawable, self->drawable);
-    ilG_bindable_swap(&ctx->materialb, (void**)ctx->material, self->material);
-    ilG_bindable_swap(&ctx->textureb,  (void**)ctx->texture,  self->texture);
+    ilG_bindable_swap(&ctx->drawableb, (void**)&ctx->drawable, self->drawable);
+    ilG_bindable_swap(&ctx->materialb, (void**)&ctx->material, self->material);
+    ilG_bindable_swap(&ctx->textureb,  (void**)&ctx->texture,  self->texture);
     unsigned i;
     for (i = 0; i < self->positionables.length; i++) {
         ctx->positionable = &self->positionables.data[i];
@@ -54,6 +54,11 @@ void ilG_renderer_draw(ilG_renderer *self)
         ilG_bindable_action(ctx->textureb, ctx->texture);
         ilG_bindable_action(ctx->drawableb, ctx->drawable);
     }
+}
+
+bool ilG_renderer_isComplete(const ilG_renderer *self)
+{
+    return self->valid;
 }
 
 const il_table *ilG_renderer_getStorage(const ilG_renderer *self)

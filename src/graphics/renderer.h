@@ -16,6 +16,7 @@ void ilG_renderer_free(ilG_renderer *self);
 void ilG_renderer_build(ilG_renderer *self, struct ilG_context *context);
 void ilG_renderer_draw(ilG_renderer *self);
 
+bool ilG_renderer_isComplete(const ilG_renderer *self);
 const il_table *ilG_renderer_getStorage(const ilG_renderer *self);
 il_table *ilG_renderer_mgetStorage(ilG_renderer *self);
 const char *ilG_renderer_getName(const ilG_renderer *self);

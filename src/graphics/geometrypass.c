@@ -9,6 +9,7 @@
 #include "graphics/glutil.h"
 #include "graphics/arrayattrib.h"
 #include "graphics/drawable3d.h"
+#include "util/ilassert.h"
 
 struct ilG_geometry {
     IL_ARRAY(ilG_renderer*,) renderers;
@@ -34,17 +35,18 @@ static void geometry_run(void *ptr)
 
 static int geometry_track(void *self, ilG_renderer *renderer)
 {
+    il_return_val_on_fail(ilG_renderer_isComplete(renderer), 0);
     IL_APPEND(((ilG_geometry*)self)->renderers, renderer);
     return 1;
 }
 
-const ilG_stagable ilG_geometrypass_stage = {
+const ilG_stagable ilG_geometry_stage = {
     .run = geometry_run,
     .track = geometry_track,
     .name = "Geometry Pass"
 };
 
-ilG_geometry *ilG_geometrypass_new(ilG_context *context)
+ilG_geometry *ilG_geometry_new(ilG_context *context)
 {
     (void)context;
     ilG_geometry *self = calloc(1, sizeof(ilG_geometry));

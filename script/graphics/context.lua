@@ -72,7 +72,7 @@ int ilG_context_build(ilG_context *self);
 int ilG_context_resize(ilG_context *self, int w, int h, const char *title);
 void ilG_context_makeCurrent(ilG_context *self);
 int ilG_context_start(ilG_context*);
-void ilG_context_addStage(ilG_context* self, struct ilG_stage* stage, int num);
+void ilG_context_addStage(ilG_context* self, struct ilG_stage stage, int num);
 void ilG_context_clearStages(ilG_context *self);
 
 ]]
@@ -107,7 +107,6 @@ end
 function context:addStage(stage, idx)
     if not idx then idx = -1 end
     assert(self ~= nil)
-    assert(stage ~= nil)
     modules.graphics.ilG_context_addStage(self, stage, idx)
 end
 
@@ -128,9 +127,6 @@ function context:hint(name, val)
         val = modules.graphics["ILG_CONTEXT_"..val:upper()]
     end
     modules.graphics.ilG_context_hint(self, modules.graphics["ILG_CONTEXT_"..string.upper(name)], val)
-end
-
-__newindex = function(self, k, v)
 end
 
 function context.create()
