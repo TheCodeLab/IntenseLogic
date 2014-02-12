@@ -23,22 +23,16 @@ typedef struct ilG_light {
     float radius;
 } ilG_light;
 
-ilG_light *ilG_light_new();
-void ilG_light_free(ilG_light *self);
-
 void ilG_light_setPositionable(ilG_light *self, il_positionable pos);
-void ilG_light_add(ilG_light *self, struct ilG_context* context);
+
+void free(void*);
 
 ]]
 
 local light = {}
 
-function light:add(ctx)
-    modules.graphics.ilG_light_add(self, ctx)
-end
-
 function light.create()
-    return modules.graphics.ilG_light_new()
+    return ffi.new('ilG_light')
 end
 
 setmetatable(light, {__call = function(self, ...) return light.create(...) end})

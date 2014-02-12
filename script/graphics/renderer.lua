@@ -52,6 +52,7 @@ struct ilG_geometry *ilG_geometry_new();
 typedef struct ilG_lights ilG_lights;
 extern const ilG_renderable ilG_lights_renderer;
 ilG_lights *ilG_lights_new();
+void ilG_lights_add(ilG_lights *self, struct ilG_light light);
 
 // transparencypass.h
 
@@ -137,6 +138,12 @@ function renderer:add(o)
         modules.graphics.ilG_renderer_addPositionable(self, o)
     elseif ffi.istype('ilG_renderer', o) then
         modules.graphics.ilG_renderer_addRenderer(self, o)
+    elseif ffi.istype('ilG_light', o) then
+        local p = ffi.new('ilG_renderable*', modules.graphics.ilG_lights_renderer)
+        if self.vtable ~= p then
+            error "Attempt to add light to non-light-renderer"
+        end
+        modules.graphics.ilG_lights_add(self.obj, o)
     else
         error("Can't handle type")
     end

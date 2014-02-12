@@ -91,6 +91,8 @@ local tex = texture()
 tex:setContext(c)
 
 local ball = renderer(sphere, glow, tex)
+ball:build(c)
+pipe[4]:add(ball)
 
 _G.num_lights = 0
 --event.setPacker(event.registry, "physics.tick", event.nilPacker)
@@ -119,7 +121,7 @@ event.register(input.button, function(key, scancode, device, isDown, mods)
             l.radius = math.random(1, 15)
             local col = vector3(math.random(0.1,1), math.random(0,1), math.random(0,1)).normal
             l.color = col.ptr
-            l:add(c)
+            pipe[3]:add(l)
             local m = 1
             l.positionable.color = array(col.x*m, col.y*m, col.z*m, 1.0)
             modules.bouncinglights.add_ball(l.positionable)
