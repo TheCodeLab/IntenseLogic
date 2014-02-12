@@ -13,7 +13,7 @@ extern "C" {
 #include "graphics/camera.h"
 #include "graphics/glutil.h"
 #include "math/matrix.h"
-#include "graphics/stage.h"
+#include "graphics/renderer.h"
 #include "graphics/arrayattrib.h"
 #include "graphics/fragdata.h"
 #include "graphics/bindable.h"

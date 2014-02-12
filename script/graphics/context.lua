@@ -7,6 +7,7 @@ local base      = require "common.base"
 require "util.timeval"
 require "common.event"
 require "input.input"
+require "graphics.renderer"
 
 ffi.cdef[[
 
@@ -64,6 +65,8 @@ typedef struct ilG_context {
     ilI_handler handler;
 } ilG_context;
 
+extern const ilG_renderable ilG_context_renderer;
+
 ilG_context *ilG_context_new();
 void ilG_context_free(ilG_context *self);
 
@@ -72,8 +75,6 @@ int ilG_context_build(ilG_context *self);
 int ilG_context_resize(ilG_context *self, int w, int h, const char *title);
 void ilG_context_makeCurrent(ilG_context *self);
 int ilG_context_start(ilG_context*);
-void ilG_context_addStage(ilG_context* self, struct ilG_stage stage, int num);
-void ilG_context_clearStages(ilG_context *self);
 
 ]]
 
@@ -92,6 +93,11 @@ function context:build()
     assert(res ~= 0, "ilG_context_build")
 end
 
+function context:addRenderer(r)
+    assert(self ~= nil and r ~= nil)
+    modules.graphics.ilG_context_renderer.add_renderer(self, r)
+end
+
 function context:resize(w, h, title)
     assert(self ~= nil)
     local res = modules.graphics.ilG_context_resize(self, w, h, title)
@@ -102,17 +108,6 @@ function context:start()
     assert(self ~= nil)
     local res = modules.graphics.ilG_context_start(self)
     assert(res ~= 0, "ilG_context_start")
-end
-
-function context:addStage(stage, idx)
-    if not idx then idx = -1 end
-    assert(self ~= nil)
-    modules.graphics.ilG_context_addStage(self, stage, idx)
-end
-
-function context:clearStages()
-    assert(self ~= nil)
-    modules.graphics.ilG_context_clearStages(self)
 end
 
 function context:averageFrametime()

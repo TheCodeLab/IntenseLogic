@@ -13,30 +13,19 @@ struct ilG_skybox {
     ilG_context *context;
     ilG_material *material;
     ilG_texture *texture;
+    bool complete;
+    il_table storage;
 };
 
-static ilG_material *skybox_shader(ilG_context *context)
+static void sky_free(void *ptr)
 {
-    ilG_material *self = ilG_material_new();
-    ilG_material_vertex_file(self, "skybox.vert");
-    ilG_material_fragment_file(self, "skybox.frag");
-    ilG_material_name(self, "Skybox Shader");
-    ilG_material_arrayAttrib(self, ILG_ARRATTR_POSITION, "in_Position");
-    ilG_material_arrayAttrib(self, ILG_ARRATTR_TEXCOORD, "in_Texcoord");
-    ilG_material_textureUnit(self, ILG_TUNIT_COLOR0, "skytex");
-    ilG_material_matrix(self, ILG_VIEW_R | ILG_PROJECTION, "mat");
-    ilG_material_fragData(self, ILG_FRAGDATA_ACCUMULATION, "out_Color");
-    ilG_material_fragData(self, ILG_FRAGDATA_NORMAL, "out_Normal");
-    ilG_material_fragData(self, ILG_FRAGDATA_DIFFUSE, "out_Diffuse");
-    ilG_material_fragData(self, ILG_FRAGDATA_SPECULAR, "out_Specular");
-    if (ilG_material_link(self, context)) {
-        il_unref(self);
-        return NULL;
-    }
-    return self;
+    ilG_skybox *self = ptr;
+    il_unref(self->material);
+    il_unref(self->texture);
+    il_table_free(self->storage);
 }
 
-static void sky_run(void *ptr)
+static void sky_draw(void *ptr)
 {
     ilG_skybox *self = ptr;
     ilG_context *context = self->context;
@@ -55,23 +44,57 @@ static void sky_run(void *ptr)
     glClear(GL_DEPTH_BUFFER_BIT);
 }
 
-static int sky_track(void *ptr, ilG_renderer renderer)
+static int sky_build(void *ptr, ilG_context *context)
 {
-    (void)renderer, (void)ptr;
-    return 0;
+    ilG_skybox *self = ptr;
+    self->context = context;
+    if (ilG_material_link(self->material, context)) {
+        return 0;
+    }
+    return self->complete = 1;
 }
 
-const ilG_stagable ilG_skybox_stage = {
-    .run = sky_run,
-    .track = sky_track,
+static il_table *sky_get_storage(void *ptr)
+{
+    ilG_skybox *self = ptr;
+    return &self->storage;
+}
+
+static bool sky_get_complete(const void *ptr)
+{
+    const ilG_skybox *self = ptr;
+    return self->complete;
+}
+
+const ilG_renderable ilG_skybox_renderer = {
+    .free = sky_free,
+    .draw = sky_draw,
+    .build = sky_build,
+    .get_storage = sky_get_storage,
+    .get_complete = sky_get_complete,
+    .add_positionable = NULL,
+    .add_renderer = NULL,
     .name = "Skybox"
 };
 
-ilG_skybox *ilG_skybox_new(ilG_context *context, ilG_texture *skytex)
+ilG_skybox *ilG_skybox_new(ilG_texture *skytex)
 {
     ilG_skybox *self = calloc(1, sizeof(ilG_skybox));
-    self->context = context;
-    self->material = skybox_shader(context);
+
+    ilG_material *shader = ilG_material_new();
+    ilG_material_vertex_file(shader, "skybox.vert");
+    ilG_material_fragment_file(shader, "skybox.frag");
+    ilG_material_name(shader, "Skybox Shader");
+    ilG_material_arrayAttrib(shader, ILG_ARRATTR_POSITION, "in_Position");
+    ilG_material_arrayAttrib(shader, ILG_ARRATTR_TEXCOORD, "in_Texcoord");
+    ilG_material_textureUnit(shader, ILG_TUNIT_COLOR0, "skytex");
+    ilG_material_matrix(shader, ILG_VIEW_R | ILG_PROJECTION, "mat");
+    ilG_material_fragData(shader, ILG_FRAGDATA_ACCUMULATION, "out_Color");
+    ilG_material_fragData(shader, ILG_FRAGDATA_NORMAL, "out_Normal");
+    ilG_material_fragData(shader, ILG_FRAGDATA_DIFFUSE, "out_Diffuse");
+    ilG_material_fragData(shader, ILG_FRAGDATA_SPECULAR, "out_Specular");
+
+    self->material = shader;
     self->texture = skytex;
     return self;
 }

@@ -11,6 +11,7 @@
 #include "common/storage.h"
 #include "graphics/bindable.h"
 #include "input/input.h"
+#include "graphics/renderer.h"
 
 struct ilG_stage;
 
@@ -104,7 +105,7 @@ typedef struct ilG_context { // **remember to update context.lua**
     int valid;
     GLFWwindow *window;
     GLuint fbtextures[ILG_CONTEXT_NUMATTACHMENTS], framebuffer;
-    IL_ARRAY(struct ilG_stage,) stages;
+    IL_ARRAY(ilG_renderer,) renderers;
     int tick_id;
     size_t num_active;
     unsigned *texunits;
@@ -124,6 +125,10 @@ typedef struct ilG_context { // **remember to update context.lua**
     int debug_render;
     char *initialTitle;
 } ilG_context;
+
+extern const ilG_renderable ilG_context_renderer;
+
+#define ilG_context_wrap(c) ilG_renderer_wrap(c, &ilG_context_renderer)
 
 ilG_context *ilG_context_new();
 /** Destroys the window, associated GL context, and all owned memory */

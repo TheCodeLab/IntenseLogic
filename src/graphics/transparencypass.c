@@ -1,8 +1,7 @@
 #include "transparencypass.h"
 
-#include "graphics/stage.h"
-#include "graphics/context.h"
 #include "graphics/renderer.h"
+#include "graphics/context.h"
 #include "graphics/bindable.h"
 #include "graphics/drawable3d.h"
 #include "graphics/arrayattrib.h"
@@ -13,9 +12,18 @@
 
 struct ilG_transparency {
     IL_ARRAY(ilG_renderer,) renderers;
+    il_table storage;
 };
 
-static void transparency_run(void *ptr)
+static void trans_free(void *ptr)
+{
+    ilG_transparency *self = ptr;
+    IL_FREE(self->renderers);
+    il_table_free(self->storage);
+    free(self);
+}
+
+static void trans_draw(void *ptr)
 {
     ilG_transparency *self = ptr;
     ilG_testError("Unknown");
@@ -34,16 +42,41 @@ static void transparency_run(void *ptr)
     }
 }
 
-static int transparency_track(void *ptr, ilG_renderer renderer)
+static int trans_build(void *ptr, ilG_context *context)
 {
-    IL_APPEND(((ilG_transparency*)ptr)->renderers, renderer);
+    ilG_transparency *self = ptr;
+    for (unsigned i = 0; i < self->renderers.length; i++) {
+        ilG_renderer_build(&self->renderers.data[i], context);
+    }
     return 1;
 }
 
-const ilG_stagable ilG_transparency_stage = {
-    .run = transparency_run,
-    .track = transparency_track,
-    .name = "Transparency Pass"
+static il_table *trans_get_storage(void *ptr)
+{
+    ilG_transparency *self = ptr;
+    return &self->storage;
+}
+
+static bool trans_get_complete(const void *ptr)
+{
+    (void)ptr;
+    return true;
+}
+
+static void trans_add_renderer(void *ptr, ilG_renderer renderer)
+{
+    IL_APPEND(((ilG_transparency*)ptr)->renderers, renderer);
+}
+
+const ilG_renderable ilG_transparency_renderer = {
+    .free = trans_free,
+    .draw = trans_draw,
+    .build = trans_build,
+    .get_storage = trans_get_storage,
+    .get_complete = trans_get_complete,
+    .add_positionable = NULL,
+    .add_renderer = trans_add_renderer,
+    .name = "Transparency"
 };
 
 ilG_transparency *ilG_transparency_new(ilG_context *context)

@@ -16,6 +16,7 @@ enum ilG_fbo_type {
 };
 
 ilG_fbo *ilG_fbo_new();
+void ilG_fbo_free(ilG_fbo *self);
 
 void ilG_fbo_numTargets(ilG_fbo *self, unsigned num);
 void ilG_fbo_name(ilG_fbo *self, unsigned target, const char *name);

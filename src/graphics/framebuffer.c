@@ -26,6 +26,17 @@ ilG_fbo *ilG_fbo_new()
     return fbo;
 }
 
+void ilG_fbo_free(ilG_fbo *self)
+{
+    if (self->textures) {
+        free(self->textures);
+    }
+    if (self->targets) {
+        free(self->targets);
+    }
+    free(self);
+}
+
 void ilG_fbo_name(ilG_fbo *self, unsigned target, const char *name)
 {
     il_return_on_fail(strlen(name) < 63);

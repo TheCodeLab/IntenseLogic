@@ -1,7 +1,6 @@
 #include "guipass.h"
 
 #include "graphics/gui.h"
-#include "graphics/stage.h"
 #include "graphics/context.h"
 #include "graphics/glutil.h"
 #include "graphics/renderer.h"
@@ -9,9 +8,10 @@
 struct ilG_gui {
     ilG_context *context;
     ilG_gui_frame *root;
+    il_table storage;
 };
 
-static void gui_run(void *ptr)
+static void gui_draw(void *ptr)
 {
     ilG_gui *self = ptr;
     ilG_testError("Unknown");
@@ -29,22 +29,39 @@ static void gui_run(void *ptr)
     ilG_testError("gui_run");
 }
 
-static int gui_track(void *ptr, ilG_renderer r)
+static int gui_build(void *ptr, ilG_context *context)
 {
-    (void)ptr, (void)r;
-    return 0;
+    ilG_gui *self = ptr;
+    self->context = context;
+    return 1;
 }
 
-const ilG_stagable ilG_gui_stage = {
-    .run = gui_run,
-    .track = gui_track,
+static il_table *gui_get_storage(void *ptr)
+{
+    ilG_gui *self = ptr;
+    return &self->storage;
+}
+
+static bool gui_get_complete(const void *ptr)
+{
+    (void)ptr;
+    return true;
+}
+
+const ilG_renderable ilG_gui_renderer = {
+    .free = free,
+    .draw = gui_draw,
+    .build = gui_build,
+    .get_storage = gui_get_storage,
+    .get_complete = gui_get_complete,
+    .add_positionable = NULL,
+    .add_renderer = NULL,
     .name = "GUI"
 };
 
-ilG_gui *ilG_gui_new(struct ilG_context *context, ilG_gui_frame *root)
+ilG_gui *ilG_gui_new(ilG_gui_frame *root)
 {
     ilG_gui *self = calloc(1, sizeof(ilG_gui));
-    self->context = context;
     self->root = root;
     return self;
 }

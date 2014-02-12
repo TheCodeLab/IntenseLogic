@@ -21,7 +21,7 @@ extern "C" {
 #include "graphics/camera.h"
 #include "graphics/glutil.h"
 #include "math/matrix.h"
-#include "graphics/stage.h"
+#include "graphics/renderer.h"
 }
 
 static btBroadphaseInterface* broadphase;
@@ -44,23 +44,30 @@ static DebugDraw *debugdraw;
 #define ex extern "C"
 #endif
 
-static void debug_run(void *ptr)
+static void debug_draw(void *ptr)
 {
     (void)ptr;
     debugdraw->render();
 }
 
-ex const ilG_stagable debug_stage = {
-    /*.run =*/ debug_run,
-    /*.track =*/ NULL,
-    /*.name =*/ "Debug Draw"
-};
-
-ex void init_stage(ilG_context *context)
+static int debug_build(void *ptr, ilG_context *context)
 {
+    (void)ptr;
     debugdraw = new DebugDraw(context);
     dynamicsWorld->setDebugDrawer(debugdraw);
+    return 1;
 }
+
+ex const ilG_renderable debug_renderer = {
+    /*.free =*/ NULL,
+    /*.draw =*/ debug_draw,
+    /*.build =*/ debug_build,
+    /*.get_storage =*/ NULL,
+    /*.get_complete =*/ NULL,
+    /*.add_positionable =*/ NULL,
+    /*.add_renderer =*/ NULL,
+    /*.name =*/ "Debug Draw"
+};
 
 ex void custom_data_func(struct ilG_material *self, il_positionable *pos, GLuint loc, void *user)
 {

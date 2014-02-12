@@ -23,9 +23,9 @@ void ilG_renderer_free(ilG_renderer self)
     self.vtable->free(self.obj);
 }
 
-void ilG_renderer_build(ilG_renderer *self, ilG_context *context)
+int ilG_renderer_build(ilG_renderer *self, ilG_context *context)
 {
-    self->vtable->build(self->obj, context);
+    return self->vtable->build(self->obj, context);
 }
 
 void ilG_renderer_draw(ilG_renderer *self)
@@ -57,8 +57,23 @@ const char *ilG_renderer_getName(const ilG_renderer *self)
     return "Unnamed";
 }
 
-void ilG_renderer_addPositionable(ilG_renderer *self, il_positionable pos)
+int ilG_renderer_addPositionable(ilG_renderer *self, il_positionable pos)
 {
+    if (!self->vtable->add_positionable) {
+        il_error("Attempt to add a positionable to renderer which does not handle them");
+        return 0;
+    }
     self->vtable->add_positionable(self->obj, pos);
+    return 1;
+}
+
+int ilG_renderer_addRenderer(ilG_renderer *self, ilG_renderer r)
+{
+    if (!self->vtable->add_renderer) {
+        il_error("Attempt to add a renderer to renderer which does not handle them");
+        return 0;
+    }
+    self->vtable->add_renderer(self->obj, r);
+    return 1;
 }
 

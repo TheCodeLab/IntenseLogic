@@ -9,6 +9,7 @@ typedef struct ilG_renderable {
     il_table *(*get_storage)(void *obj);
     bool (*get_complete)(const void *obj);
     void (*add_positionable)(void *obj, il_positionable pos);
+    void (*add_renderer)(void *obj, struct ilG_renderer r);
     const char *name;
 } ilG_renderable;
 
@@ -32,24 +33,113 @@ il_table *ilG_renderer_mgetStorage(ilG_renderer *self);
 const char *ilG_renderer_getName(const ilG_renderer *self);
 
 void ilG_renderer_addPositionable(ilG_renderer *self, il_positionable pos);
+void ilG_renderer_addRenderer(ilG_renderer *self, ilG_renderer r);
+
+// skyboxpass.h
+
+typedef struct ilG_skybox ilG_skybox;
+extern const ilG_renderable ilG_skybox_renderer;
+ilG_skybox *ilG_skybox_new(struct ilG_texture *skytex);
+
+// geometrypass.h
+
+typedef struct ilG_geometry ilG_geometry;
+extern const ilG_renderable ilG_geometry_renderer;
+struct ilG_geometry *ilG_geometry_new();
+
+// lightpass.h
+
+typedef struct ilG_lights ilG_lights;
+extern const ilG_renderable ilG_lights_renderer;
+ilG_lights *ilG_lights_new();
+
+// transparencypass.h
+
+typedef struct ilG_transparency ilG_transparency;
+extern const ilG_renderable ilG_transparency_renderer;
+ilG_transparency *ilG_transparency_new();
+
+// guipass.h
+
+typedef struct ilG_gui ilG_gui;
+extern const ilG_renderable ilG_gui_renderer;
+ilG_gui *ilG_gui_new(struct ilG_gui_frame *root);
+
+// outpass.h
+
+typedef struct ilG_out ilG_out;
+extern const ilG_renderable ilG_out_renderer;
+ilG_out *ilG_out_new();
 
 ]]
 
 local renderer = {}
+
+-----------------------
+-- constructors
+
+function renderer.create(...)
+    if select('#', ...) == 3 then
+        return renderer.legacy(...)
+    elseif select('#', ...) == 2 then
+        return renderer.wrap(...)
+    end
+    error("Don't know how to handle arguments")
+end
+
+function renderer.wrap(ptr, vtable)
+    assert(vtable ~= nil)
+    return modules.graphics.ilG_renderer_wrap(ptr, vtable)
+end
+
+function renderer.legacy(dr, mtl, tex)
+    assert(dr ~= nil and mtl ~= nil and tex ~= nil)
+    return modules.graphics.ilG_renderer_legacy(dr, mtl, tex)
+end
+
+function renderer.skybox(tex)
+    assert(tex ~= nil)
+    return renderer.wrap(modules.graphics.ilG_skybox_new(tex), modules.graphics.ilG_skybox_renderer)
+end
+
+function renderer.geometry()
+    return renderer.wrap(modules.graphics.ilG_geometry_new(), modules.graphics.ilG_geometry_renderer)
+end
+
+function renderer.lights()
+    return renderer.wrap(modules.graphics.ilG_lights_new(), modules.graphics.ilG_lights_renderer)
+end
+
+function renderer.transparency()
+    return renderer.wrap(modules.graphics.ilG_transparency_new(), modules.graphics.ilG_transparency_renderer)
+end
+
+function renderer.gui(root)
+    assert(root ~= nil)
+    return renderer.wrap(modules.graphics.ilG_gui_new(root), modules.graphics.ilG_gui_renderer)
+end
+
+function renderer.out()
+    return renderer.wrap(modules.graphics.ilG_out_new(), modules.graphics.ilG_out_renderer)
+end
+
+--------------------
+-- methods
 
 function renderer:build(c)
     assert(self ~= nil and c ~= nil)
     modules.graphics.ilG_renderer_build(self, c)
 end
 
-function renderer:add(p)
-    assert(self ~= nil and p ~= nil)
-    modules.graphics.ilG_renderer_addPositionable(self, p)
-end
-
-function renderer.create(dr, mtl, tex)
-    assert(dr ~= nil and mtl ~= nil and tex ~= nil)
-    return modules.graphics.ilG_renderer_legacy(dr, mtl, tex)
+function renderer:add(o)
+    assert(self ~= nil and o ~= nil)
+    if ffi.istype('il_positionable', o) then
+        modules.graphics.ilG_renderer_addPositionable(self, o)
+    elseif ffi.istype('ilG_renderer', o) then
+        modules.graphics.ilG_renderer_addRenderer(self, o)
+    else
+        error("Can't handle type")
+    end
 end
 
 function renderer:destroy()
@@ -58,7 +148,11 @@ end
 
 ffi.metatype("ilG_renderer", {
     __index = function(self, k)
-        return modules.graphics.ilG_renderer_mgetStorage(self)[k] or renderer[k]
+        return 
+           (k == 'complete' and modules.graphics.ilG_renderer_isComplete(self)) 
+        or (k == 'name' and ffi.string(modules.graphics.ilG_renderer_getName(self)))
+        or modules.graphics.ilG_renderer_mgetStorage(self)[k] 
+        or renderer[k]
     end,
     __newindex = function(self, k, v)
         modules.graphics.ilG_renderer_mgetStorage(self)[k] = v

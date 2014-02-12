@@ -27,9 +27,9 @@ void set_walk_direction(il_vec3 vec);
 void add_heightmap(ilA_img *hm, float w, float h, float height);
 void add_ball(il_positionable *pos);
 void update(int debug);
-void debug_draw();
 void custom_data_func(struct ilG_material *self, il_positionable *pos, GLuint loc, void *user);
-ilG_stage *init_stage(ilG_context *context);
+
+extern const ilG_renderable debug_renderer;
 
 ]]
 
@@ -44,15 +44,14 @@ local skybox = {
     'demos/bouncing-lights/east.png',
 }
 local c, w, root, pipe
-c, w, root, pipe = helper.context { name="Bouncing Lights Demo",
-                                    skybox=skybox,
+c, w, root, pipe = helper.context { skybox=skybox,
                                     geom=true,
                                     lights=true,
                                     transparency=true,
                                     gui=true,
                                     output=true,
                                     hints = {hdr=1,debug_context=1} }
-local pipe2 = {pipe[1], pipe[2], pipe[3], pipe[4], modules.bouncinglights.init_stage(c), pipe[5], pipe[6]}
+local pipe2 = {pipe[1], pipe[2], pipe[3], pipe[4], renderer.wrap(nil, modules.bouncinglights.debug_renderer), pipe[5], pipe[6]}
 --c:addStage(pipe2[5], 5)
 modules.bouncinglights.set_world(w)
 
@@ -70,7 +69,7 @@ local hmr = renderer(
     ht
 )
 hmr:build(c)
-pipe[2]:track(hmr)
+pipe[2]:add(hmr)
 local hm = positionable(w)
 hm.position = vector3(0, 0, 0).ptr
 hm.size = vector3(128, 50, 128).ptr
@@ -146,6 +145,8 @@ event.register(tick, function() modules.bouncinglights.update(debugRender and 1 
 
 camera(c, w, root, tick)
 
+--c:build()
+c:resize(800, 600, "Bouncing Lights")
 c:start()
 
 --modules.bouncinglights.debug_draw()

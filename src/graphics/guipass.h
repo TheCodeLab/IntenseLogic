@@ -1,7 +1,7 @@
 #ifndef ILG_GUIPASS_H
 #define ILG_GUIPASS_H
 
-#include "graphics/stage.h"
+#include "graphics/renderer.h"
 
 struct ilG_stage;
 struct ilG_context;
@@ -9,9 +9,11 @@ struct ilG_gui_frame;
 
 typedef struct ilG_gui ilG_gui;
 
-extern const ilG_stagable ilG_gui_stage;
+extern const ilG_renderable ilG_gui_renderer;
 
-ilG_gui *ilG_gui_new(struct ilG_context *context, struct ilG_gui_frame *root);
+#define ilG_gui_wrap(p) ilG_renderable_wrap(p, &ilG_gui_renderer)
+
+ilG_gui *ilG_gui_new(struct ilG_gui_frame *root);
 
 #endif
 
