@@ -4,6 +4,7 @@
 #include "common/base.h"
 #include "graphics/gui/types.h"
 #include "util/array.h"
+#include "graphics/renderer.h"
 
 struct ilG_context;
 struct ilG_tex;
@@ -20,6 +21,7 @@ enum ilG_gui_inputaction {
 typedef enum ilG_gui_inputaction (*ilG_gui_onClick)(ilG_gui_frame *self, int x, int y, int button);
 typedef enum ilG_gui_inputaction (*ilG_gui_onHover)(ilG_gui_frame *self, int x, int y);
 typedef void (*ilG_gui_draw_fn)(ilG_gui_frame *self, ilG_gui_rect where);
+typedef int (*ilG_gui_build_fn)(ilG_gui_frame *self, struct ilG_context *context);
 
 struct ilG_gui_frame {
     il_base base;
@@ -28,11 +30,16 @@ struct ilG_gui_frame {
     ilG_gui_onClick click;
     ilG_gui_onHover hover;
     ilG_gui_draw_fn draw;
+    ilG_gui_build_fn build;
     IL_ARRAY(ilG_gui_frame*,) children;
     struct ilG_context *context;
+    _Bool complete;
 };
 
 extern il_type ilG_gui_frame_type;
+extern const ilG_renderable ilG_gui_frame_renderer;
+
+#define ilG_gui_frame_wrap(p) ilG_renderer_wrap(p, &ilG_gui_frame_renderer)
 
 void ilG_gui_frame_filler(ilG_gui_frame *self, float col[4]);
 void ilG_gui_frame_image(ilG_gui_frame *self, struct ilG_tex tex, int premultiplied);

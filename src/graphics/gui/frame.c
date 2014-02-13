@@ -1,5 +1,7 @@
 #include "frame.h"
 
+#include "util/log.h"
+
 il_type ilG_gui_frame_type = {
     .typeclasses = NULL,
     .storage = {NULL},
@@ -9,6 +11,56 @@ il_type ilG_gui_frame_type = {
     .name = "il.graphics.gui.frame",
     .size = sizeof(ilG_gui_frame),
     .parent = NULL
+};
+
+static void frame_draw(void *ptr)
+{
+    ilG_gui_frame *self = ptr;
+    ilG_gui_draw(self);
+}
+
+static int frame_build(void *ptr, struct ilG_context *context)
+{
+    ilG_gui_frame *self = ptr;
+    self->context = context;
+    self->complete = self->build(self, context);
+    for (unsigned i = 0; i < self->children.length; i++) {
+        self->children.data[i]->build(self->children.data[i], context);
+    }
+    return self->complete;
+}
+
+static il_table *frame_get_storage(void *ptr)
+{
+    ilG_gui_frame *self = ptr;
+    return &self->base.storage;
+}
+
+static bool frame_get_complete(const void *ptr)
+{
+    const ilG_gui_frame *self = ptr;
+    return self->complete;
+}
+
+static void frame_add_renderer(void *ptr, ilG_renderer r)
+{
+    ilG_gui_frame *self = ptr;
+    if (r.vtable != &ilG_gui_frame_renderer) {
+        il_error("Cannot add non-frame to frame");
+        return;
+    }
+    IL_APPEND(self->children, r.obj);
+}
+
+const ilG_renderable ilG_gui_frame_renderer = {
+    .free = il_unref,
+    .draw = frame_draw,
+    .build = frame_build,
+    .get_storage = frame_get_storage,
+    .get_complete = frame_get_complete,
+    .add_positionable = NULL,
+    .add_renderer = frame_add_renderer,
+    .name = "GUI Frame"
 };
 
 static ilG_gui_coord computecoordabs(ilG_gui_coord coord, ilG_gui_rect parent)

@@ -70,6 +70,13 @@ static void image_draw(ilG_gui_frame *self, ilG_gui_rect where)
     ilG_testError("image_draw");
 }
 
+static int image_build(ilG_gui_frame *self, ilG_context *context)
+{
+    (void)context;
+    get_shader(self);
+    return 1;
+}
+
 void ilG_gui_frame_image(ilG_gui_frame *self, ilG_tex tex, int premultiplied)
 {
     il_return_on_fail(self);
@@ -78,5 +85,6 @@ void ilG_gui_frame_image(ilG_gui_frame *self, ilG_tex tex, int premultiplied)
     il_table_setsp(&self->base.storage, "gui.image.tex", il_opaque(tex_mem, free));
     il_table_setsb(&self->base.storage, "gui.image.premultiplied", premultiplied);
     self->draw = image_draw;
+    self->build = image_build;
 }
 
