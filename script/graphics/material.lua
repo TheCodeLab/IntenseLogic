@@ -138,13 +138,6 @@ base.wrap "il.graphics.material" {
     posFunc = function(self, fn, loc)
         modules.graphics.ilG_material_posFunc(self, fn, nil, loc)
     end;
-
-    link = function(self, ctx)
-        local res = modules.graphics.ilG_material_link(self, ctx)
-        if res == 1 then
-            error "Failedd to link material"
-        end
-    end
 }
 
 return modules.graphics.ilG_material_type;

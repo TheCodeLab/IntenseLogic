@@ -10,7 +10,7 @@ local matrix        = require 'math.matrix'
 local context       = require 'graphics.context'
 local world         = require 'common.world'
 local renderer      = require 'graphics.renderer'
-local texture       = require 'graphics.texture'
+local tex           = require 'graphics.tex'
 local image         = require 'asset.image'
 
 local helper = {}
@@ -28,17 +28,16 @@ function helper.context(args, hints)
     w.context = c
     local pipe = {}
     if args.skybox then -- skybox pass
-        local skybox = texture()
-        skybox:setContext(c)
+        local skybox
         if type(args.skybox) == "string" then 
             local test_img = image.loadfile(args.skybox)
-            skybox:cubemap("color0", {test_img, test_img, test_img, test_img, test_img, test_img})
+            skybox = tex.cube {test_img, test_img, test_img, test_img, test_img, test_img}
         elseif type(args.skybox) == "table" then
             local imgs = {}
             for i, v in ipairs(args.skybox) do
                 imgs[i] = image.loadfile(v)
             end
-            skybox:cubemap("color0", imgs)
+            skybox = tex.cube(imgs)
         else
             error("Expected string or table")
         end

@@ -1,7 +1,6 @@
 local ffi       = require "ffi"
 local drawable  = require "graphics.drawable"
 local material  = require "graphics.material"
-local texture   = require "graphics.texture"
 local base      = require "common.base"
 
 require "util.timeval"

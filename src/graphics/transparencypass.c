@@ -6,7 +6,6 @@
 #include "graphics/drawable3d.h"
 #include "graphics/arrayattrib.h"
 #include "graphics/material.h"
-#include "graphics/texture.h"
 #include "common/world.h"
 #include "util/array.h"
 

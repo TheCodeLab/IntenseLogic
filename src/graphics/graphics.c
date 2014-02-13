@@ -20,7 +20,6 @@
 #include "common/world.h"
 #include "graphics/drawable3d.h"
 #include "graphics/material.h"
-#include "graphics/texture.h"
 #include "graphics/glutil.h"
 #include "util/ilstring.h"
 #include "graphics/arrayattrib.h"
@@ -91,7 +90,6 @@ const char **il_dependencies(int argc, char **argv)
 void ilG_material_init();
 void ilG_shape_init();
 void ilG_quad_init();
-void ilG_texture_init();
 int il_bootstrap(int argc, char **argv)
 {
     int opt, idx;
@@ -129,8 +127,7 @@ int il_bootstrap(int argc, char **argv)
     ilG_material_init();
     ilG_shape_init();
     ilG_quad_init();
-    ilG_texture_init();
-        
+
     // register events
     event_setup();
 

@@ -6,13 +6,13 @@
 #include "graphics/arrayattrib.h"
 #include "graphics/textureunit.h"
 #include "graphics/shape.h"
-#include "graphics/texture.h"
+#include "graphics/tex.h"
 #include "graphics/fragdata.h"
 
 struct ilG_skybox {
     ilG_context *context;
     ilG_material *material;
-    ilG_texture *texture;
+    ilG_tex texture;
     bool complete;
     il_table storage;
 };
@@ -21,7 +21,6 @@ static void sky_free(void *ptr)
 {
     ilG_skybox *self = ptr;
     il_unref(self->material);
-    il_unref(self->texture);
     il_table_free(self->storage);
 }
 
@@ -34,10 +33,9 @@ static void sky_draw(void *ptr)
     glDisable(GL_CULL_FACE);
     ilG_bindable_swap(&context->drawableb, (void**)&context->drawable, ilG_box(context));
     ilG_bindable_swap(&context->materialb, (void**)&context->material, self->material);
-    ilG_bindable_swap(&context->textureb,  (void**)&context->texture,  self->texture);
 
     ilG_bindable_action(context->materialb, context->material);
-    ilG_bindable_action(context->textureb,  context->texture);
+    ilG_tex_bind(&self->texture);
     ilG_bindable_action(context->drawableb, context->drawable);
     glEnable(GL_DEPTH_TEST);
     glClearDepth(1.0);
@@ -48,6 +46,7 @@ static int sky_build(void *ptr, ilG_context *context)
 {
     ilG_skybox *self = ptr;
     self->context = context;
+    ilG_tex_build(&self->texture, context);
     if (ilG_material_link(self->material, context)) {
         return 0;
     }
@@ -77,7 +76,7 @@ const ilG_renderable ilG_skybox_renderer = {
     .name = "Skybox"
 };
 
-ilG_skybox *ilG_skybox_new(ilG_texture *skytex)
+ilG_skybox *ilG_skybox_new(ilG_tex skytex)
 {
     ilG_skybox *self = calloc(1, sizeof(ilG_skybox));
 

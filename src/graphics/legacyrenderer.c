@@ -6,25 +6,24 @@
 #include "common/storage.h"
 #include "graphics/material.h"
 #include "graphics/drawable3d.h"
-#include "graphics/texture.h"
+#include "graphics/tex.h"
 #include "util/array.h"
 
-typedef struct ilG_legacyrenderer {
+struct ilG_legacy {
     ilG_context *context;
     ilG_drawable3d *drawable;
     ilG_material *material;
-    ilG_texture *texture;
+    IL_ARRAY(ilG_tex,) textures;
     bool valid;
     il_table storage;
     IL_ARRAY(il_positionable,) positionables;
-} ilG_legacyrenderer;
+};
 
 static void legacy_free(void *obj)
 {
-    ilG_legacyrenderer *self = obj;
+    ilG_legacy *self = obj;
     il_unref(self->drawable);
     il_unref(self->material);
-    il_unref(self->texture);
     self->valid = false;
     il_table_free(self->storage);
     IL_FREE(self->positionables);
@@ -33,7 +32,7 @@ static void legacy_free(void *obj)
 
 static int legacy_build(void *obj, ilG_context *context)
 {
-    ilG_legacyrenderer *self = obj;
+    ilG_legacy *self = obj;
     self->context = context;
     if (ilG_material_link(self->material, context)) {
         return 0;
@@ -45,16 +44,17 @@ static int legacy_build(void *obj, ilG_context *context)
 void legacy_draw(void *obj)
 {
     ilG_testError("Unknown");
-    ilG_legacyrenderer *self = obj;
+    ilG_legacy *self = obj;
     ilG_context *ctx = self->context;
     ilG_bindable_swap(&ctx->drawableb, (void**)&ctx->drawable, self->drawable);
     ilG_bindable_swap(&ctx->materialb, (void**)&ctx->material, self->material);
-    ilG_bindable_swap(&ctx->textureb,  (void**)&ctx->texture,  self->texture);
     unsigned i;
     for (i = 0; i < self->positionables.length; i++) {
         ctx->positionable = &self->positionables.data[i];
         ilG_bindable_action(ctx->materialb, ctx->material);
-        ilG_bindable_action(ctx->textureb, ctx->texture);
+        for (unsigned j = 0; j < self->textures.length; j++) {
+            ilG_tex_bind(&self->textures.data[i]);
+        }
         ilG_bindable_action(ctx->drawableb, ctx->drawable);
         ilG_testError("Legacy Renderer");
     }
@@ -62,19 +62,19 @@ void legacy_draw(void *obj)
 
 bool legacy_get_complete(const void *obj)
 {
-    const ilG_legacyrenderer *self = obj;
+    const ilG_legacy *self = obj;
     return self->valid;
 }
 
 il_table *legacy_get_storage(void *obj)
 {
-    ilG_legacyrenderer *self = obj;
+    ilG_legacy *self = obj;
     return &self->storage;
 }
 
 void legacy_add_positionable(void *obj, il_positionable pos)
 {
-    ilG_legacyrenderer *self = obj;
+    ilG_legacy *self = obj;
     IL_APPEND(self->positionables, pos);
 }
 
@@ -88,12 +88,16 @@ const ilG_renderable ilG_legacy_renderer = {
     .name = "Legacy"
 };
 
-ilG_renderer ilG_renderer_legacy(ilG_drawable3d *dr, ilG_material *mtl, ilG_texture *tex)
+ilG_legacy *ilG_renderer_legacy(ilG_drawable3d *dr, ilG_material *mtl)
 {
-    ilG_legacyrenderer *self = calloc(1, sizeof(ilG_legacyrenderer));
+    ilG_legacy *self = calloc(1, sizeof(ilG_legacy));
     self->drawable = dr;
     self->material = mtl;
-    self->texture = tex;
-    return ilG_renderer_wrap(self, &ilG_legacy_renderer);
+    return self;
+}
+
+void ilG_renderer_addTexture(ilG_legacy *self, ilG_tex tex)
+{
+    IL_APPEND(self->textures, tex);
 }
 

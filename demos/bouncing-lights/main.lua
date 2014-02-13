@@ -1,6 +1,6 @@
 require "strict"
 
-local texture       = require "graphics.texture"
+local tex           = require "graphics.tex"
 local material      = require "graphics.material"
 local positionable  = require "common.positionable"
 local vector3       = require "math.vector3"
@@ -57,16 +57,10 @@ modules.bouncinglights.set_world(w)
 -- heightmap renderer
 local hmt = image.loadfile "demos/bouncing-lights/arena-heightmap.png"
 modules.bouncinglights.add_heightmap(hmt, 128, 128, 50)
-local ht = texture()
-ht:setContext(c)
-ht:fromimage("height0", hmt)
-ht:fromimage("normal0", hmt:height_to_normal())
-ht:fromfile("color0", "demos/bouncing-lights/terrain.png")
-local hmr = renderer(
-    heightmap(c, 100, 100),
-    heightmap.defaultShader(c),
-    ht
-)
+local height = tex.image(hmt)
+local normal = tex.image(hmt:height_to_normal())
+local color  = tex.file "demos/bouncing-lights/terrain.png"
+local hmr = heightmap(100, 100, height, normal, color)
 pipe[2]:add(hmr)
 local hm = positionable(w)
 hm.position = vector3(0, 0, 0).ptr
@@ -83,12 +77,8 @@ glow:mtlname "Glow material"
 glow:arrayAttrib("position", "in_Position")
 glow:matrix("MVP", "mvp")
 glow:posFunc(modules.bouncinglights.custom_data_func, "col")
-glow:link(c)
 
-local tex = texture()
-tex:setContext(c)
-
-local ball = renderer(sphere, glow, tex)
+local ball = renderer.legacy(sphere, glow)
 pipe[4]:add(ball)
 
 _G.num_lights = 0

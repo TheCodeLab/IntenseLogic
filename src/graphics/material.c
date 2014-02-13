@@ -231,10 +231,8 @@ void ilG_material_posFunc(ilG_material* self, ilG_material_onPosFunc func, void 
     IL_APPEND(self->config->posfuncs, f);
 }
 
-static void link(void* ptr)
+static void link(ilG_material *self)
 {
-    ilG_material *self = ptr;
-
     ilG_testError("Unknown");
     il_log("Building shader \"%s\"", self->name);
     self->vertshader = ilG_makeShader(GL_VERTEX_SHADER, self->config->vertsource);
@@ -295,7 +293,7 @@ int /*failure*/ ilG_material_link(ilG_material* self, ilG_context *ctx)
         il_error("Null material");
     }
     self->context = ctx;
-    ilG_context_upload(ctx, link, self);
+    link(self);
     return 0;
 }
 

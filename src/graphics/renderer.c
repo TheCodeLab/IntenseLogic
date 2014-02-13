@@ -6,9 +6,8 @@
 #include "common/storage.h"
 #include "graphics/material.h"
 #include "graphics/drawable3d.h"
-#include "graphics/texture.h"
 #include "util/array.h"
-
+#include "util/log.h"
 
 ilG_renderer ilG_renderer_wrap(void *obj, const ilG_renderable *vtable)
 {
@@ -24,20 +23,20 @@ void ilG_renderer_free(ilG_renderer self)
 }
 
 struct build_ctx {
-    ilG_renderer *self;
+    ilG_renderer self;
     ilG_context *context;
 };
 static void build(void *ptr)
 {
     struct build_ctx *self = ptr;
-    self->self->vtable->build(self->self->obj, self->context);
+    self->self.vtable->build(self->self.obj, self->context);
     free(self);
 }
 
 void ilG_renderer_build(ilG_renderer *self, ilG_context *context)
 {
     struct build_ctx *ctx = calloc(1, sizeof(struct build_ctx));
-    ctx->self = self;
+    ctx->self = *self;
     ctx->context = context;
     ilG_context_upload(context, build, ctx);
 }

@@ -18,10 +18,12 @@ typedef struct ilG_renderer {
     const ilG_renderable *vtable;
 } ilG_renderer;
 
+typedef struct ilG_legacy ilG_legacy;
+
 extern const ilG_renderable ilG_legacy_renderer;
 
 ilG_renderer ilG_renderer_wrap(void *obj, const ilG_renderable *vtable);
-ilG_renderer ilG_renderer_legacy(struct ilG_drawable3d *dr, struct ilG_material *mtl, struct ilG_texture *tex);
+ilG_legacy *ilG_renderer_legacy(struct ilG_drawable3d *dr, struct ilG_material *mtl);
 void ilG_renderer_free(ilG_renderer self);
 
 void ilG_renderer_build(ilG_renderer *self, struct ilG_context *context);
@@ -39,7 +41,7 @@ void ilG_renderer_addRenderer(ilG_renderer *self, ilG_renderer r);
 
 typedef struct ilG_skybox ilG_skybox;
 extern const ilG_renderable ilG_skybox_renderer;
-ilG_skybox *ilG_skybox_new(struct ilG_texture *skytex);
+ilG_skybox *ilG_skybox_new(struct ilG_tex skytex);
 
 // geometrypass.h
 
@@ -93,9 +95,9 @@ function renderer.wrap(ptr, vtable)
     return modules.graphics.ilG_renderer_wrap(ptr, vtable)
 end
 
-function renderer.legacy(dr, mtl, tex)
-    assert(dr ~= nil and mtl ~= nil and tex ~= nil)
-    return modules.graphics.ilG_renderer_legacy(dr, mtl, tex)
+function renderer.legacy(dr, mtl)
+    assert(dr ~= nil and mtl ~= nil)
+    return renderer.wrap(modules.graphics.ilG_renderer_legacy(dr, mtl), modules.graphics.ilG_legacy_renderer)
 end
 
 function renderer.skybox(tex)

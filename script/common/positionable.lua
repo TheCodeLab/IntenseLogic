@@ -2,11 +2,7 @@
 -- Uses the IL object system, see `common.base` for more information
 -- @type positionable
 local ffi           = require "ffi"
-local drawable      = require "graphics.drawable"
-local material      = require "graphics.material"
-local texture       = require "graphics.texture"
 local world         = require "common.world"
-local context       = require "graphics.context"
 local vector3       = require "math.vector3"
 local quaternion    = require "math.quaternion"
 

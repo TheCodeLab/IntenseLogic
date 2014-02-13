@@ -3,7 +3,7 @@ local base = require "common.base"
 
 require "graphics.gui.types"
 local text = require "graphics.gui.text"
-local texture = require "graphics.texture"
+local tex = require "graphics.tex"
 
 ffi.cdef [[
 
@@ -37,7 +37,7 @@ struct ilG_gui_frame {
 extern il_type ilG_gui_frame_type;
 
 void ilG_gui_frame_filler(ilG_gui_frame *self, float col[4]);
-void ilG_gui_frame_image(ilG_gui_frame *self, struct ilG_texture *tex, int premultiplied);
+void ilG_gui_frame_image(ilG_gui_frame *self, struct ilG_tex tex, int premultiplied);
 ilG_gui_rect ilG_gui_frame_abs(ilG_gui_frame *self);
 int ilG_gui_frame_contains(ilG_gui_frame *self, ilG_gui_coord coord);
 enum ilG_gui_inputaction ilG_gui_click(ilG_gui_frame *top, int x, int y, int button);
@@ -63,10 +63,7 @@ base.wrap "il.graphics.gui.frame" {
     image = modules.graphics.ilG_gui_frame_image;
     click = modules.graphics.ilG_gui_click;
     label = function(self, layout, col, opts)
-        local tex = texture()
-        tex:setContext(self.context)
-        tex:setName("Text Label")
-        tex:fromimage("color0", layout:render(col, opts))
+        local t = tex.image(layout:render(col, opts))
         self:image(tex, 1)
         local x, y = layout:getExtents()
         self:setSize(x,y)

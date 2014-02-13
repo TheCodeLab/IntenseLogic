@@ -5,9 +5,9 @@
 
 struct ilG_material;
 struct ilG_drawable3d;
-struct ilG_texture;
 struct ilG_context;
 struct ilG_renderer;
+struct ilG_tex;
 
 typedef struct ilG_renderable {
     void (*free)(void *obj);
@@ -25,10 +25,14 @@ typedef struct ilG_renderer {
     const ilG_renderable *vtable;
 } ilG_renderer;
 
+typedef struct ilG_legacy ilG_legacy;
+
 extern const ilG_renderable ilG_legacy_renderer;
 
+ilG_legacy *ilG_renderer_legacy(struct ilG_drawable3d *dr, struct ilG_material *mtl);
+void ilG_renderer_addTexture(ilG_legacy *self, struct ilG_tex tex);
+
 ilG_renderer ilG_renderer_wrap(void *obj, const ilG_renderable *vtable);
-ilG_renderer ilG_renderer_legacy(struct ilG_drawable3d *dr, struct ilG_material *mtl, struct ilG_texture *tex);
 void ilG_renderer_free(ilG_renderer self);
 
 void ilG_renderer_build(ilG_renderer *self, struct ilG_context *context);
