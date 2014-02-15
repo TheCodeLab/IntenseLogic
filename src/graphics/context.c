@@ -424,17 +424,6 @@ static void setup_context(ilG_context *self)
     glfwSetWindowUserPointer(self->window, self);
     glfwSwapInterval(0);
     glewExperimental = self->experimental? GL_TRUE : GL_FALSE; // TODO: find out why IL crashes without this
-    struct timeval tv;
-    tv.tv_sec = 0;
-    GLFWmonitor *mon = glfwGetWindowMonitor(self->window); // NULL if windowed mode
-    if (mon) {
-        const GLFWvidmode* mode = glfwGetVideoMode(mon);
-        tv.tv_usec = 1000000 / mode->refreshRate;
-    } else {
-        tv.tv_usec = 1000000 / 250; // TODO: Unlimited framerates, proper vsync
-    }
-    self->tick = ilE_handler_timer(&tv);
-    ilE_handler_name(self->tick, "il.graphics.context.tick");
     GLenum err = glewInit();
     if (GLEW_OK != err) {
         il_error("glewInit() failed: %s", glewGetErrorString(err));
