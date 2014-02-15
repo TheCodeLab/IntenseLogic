@@ -23,8 +23,6 @@ struct ilG_mesh {
     ilA_mesh *mesh;
 };
 
-static ilG_bindable mesh_bindable;
-
 static void mesh_init(void *self)
 {
     struct ilG_mesh *mesh = self;
@@ -32,7 +30,7 @@ static void mesh_init(void *self)
     static int first_run = 1;
     if (first_run) {
         first_run = 0;
-        il_impl(&ilG_mesh_type, &mesh_bindable);
+        il_impl(&ilG_mesh_type, (void*)&ilG_mesh_bindable);
     }
 }
 
@@ -66,7 +64,7 @@ static void draw(void* obj)
     ilG_testError("Failed to draw mesh");
 }
 
-static ilG_bindable mesh_bindable = {
+const ilG_bindable ilG_mesh_bindable = {
     .name = "il.graphics.bindable",
     .bind = bind,
     .action = draw,

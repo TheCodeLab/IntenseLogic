@@ -17,6 +17,9 @@ typedef struct ilG_heightmap {
     il_table storage;
     bool complete;
     IL_ARRAY(il_positionable,) positionables;
+    ilA_mesh *mesh;
+    ilG_drawable3d *drawable;
+    unsigned w,h;
 } ilG_heightmap;
 
 static void heightmap_free(void *ptr)
@@ -28,11 +31,14 @@ static void heightmap_free(void *ptr)
 
 static void heightmap_draw(void *ptr)
 {
+    ilG_testError("Unknown");
     ilG_heightmap *self = ptr;
     ilG_tex_bind(&self->height);
     ilG_tex_bind(&self->normal);
     ilG_tex_bind(&self->color);
+    ilG_bindable_bind(&ilG_mesh_bindable, self->drawable);
     ilG_bindable_bind(&ilG_material_bindable, self->shader);
+    ilG_testError("heightmap_draw");
 }
 
 static int heightmap_build(void *ptr, ilG_context *context)
@@ -44,6 +50,8 @@ static int heightmap_build(void *ptr, ilG_context *context)
     if (ilG_material_link(self->shader, context)) {
         return 0;
     }
+    self->drawable = ilG_mesh(self->mesh, context);
+    ilA_mesh_free(self->mesh);
     return self->complete = 1;
 }
 
@@ -75,15 +83,11 @@ const ilG_renderable ilG_heightmap_renderer = {
     .name = "Heightmap"
 };
 
-static void width_uniform(ilG_material *self, GLint location, void *user)
+static void width_uniform(ilG_material *mtl, GLint location, void *user)
 {
-    (void)user;
-    const il_vector *size = il_table_getsa(&self->context->drawable->base.storage, "heightmap.size");
-    if (!size) {
-        il_error("Heightmap shader combined with non-heightmap drawable");
-        return;
-    }
-    glUniform2f(location, il_vector_getf(size, 0), il_vector_getf(size, 1));
+    (void)mtl;
+    ilG_heightmap *self = user;
+    glUniform2f(location, self->w, self->h);
 }
 
 ilG_renderer ilG_heightmap_new(unsigned w, unsigned h, ilG_tex height, ilG_tex normal, ilG_tex color)
@@ -125,12 +129,15 @@ ilG_renderer ilG_heightmap_new(unsigned w, unsigned h, ilG_tex height, ilG_tex n
     }
 
     ilG_heightmap *self = calloc(1, sizeof(ilG_heightmap));
+    self->w = w;
+    self->h = h;
     height.unit = 0;
     normal.unit = 1;
     color.unit = 2;
     self->height = height;
     self->normal = normal;
     self->color = color;
+    self->mesh = mesh;
 
     ilG_material *mat = self->shader = ilG_material_new();
     ilG_material_vertex_file(mat, "heightmap.vert");
@@ -147,9 +154,8 @@ ilG_renderer ilG_heightmap_new(unsigned w, unsigned h, ilG_tex height, ilG_tex n
     ilG_material_fragData(mat, ILG_FRAGDATA_SPECULAR, "out_Specular");
     ilG_material_matrix(mat, ILG_MVP, "mvp");
     ilG_material_matrix(mat, ILG_INVERSE | ILG_MODEL | ILG_TRANSPOSE, "imt");
-    ilG_material_bindFunc(mat, width_uniform, NULL, "size");
+    ilG_material_bindFunc(mat, width_uniform, self, "size");
 
-    ilA_mesh_free(mesh);
     return ilG_renderer_wrap(self, &ilG_heightmap_renderer);
 }
 
