@@ -48,7 +48,7 @@ c, w, root, pipe = helper.context { skybox=skybox,
                                     geom=true,
                                     lights=true,
                                     transparency=true,
-                                    gui=true,
+                                    --gui=true,
                                     output=true,
                                     hints = {hdr=1,debug_context=1} }
 local pipe2 = {pipe[1], pipe[2], pipe[3], pipe[4], renderer.wrap(nil, modules.bouncinglights.debug_renderer), pipe[5], pipe[6]}
