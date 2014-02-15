@@ -33,6 +33,8 @@ static int gui_build(void *ptr, ilG_context *context)
 {
     ilG_gui *self = ptr;
     self->context = context;
+    ilG_renderer r = ilG_renderer_wrap(self->root, &ilG_gui_frame_renderer);
+    ilG_renderer_build(&r, context);
     return 1;
 }
 

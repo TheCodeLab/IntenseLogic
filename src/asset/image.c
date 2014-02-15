@@ -149,6 +149,20 @@ ilA_img *ilA_img_fromdata(const void *data, unsigned w, unsigned h, unsigned dep
     return img;
 }
 
+ilA_img *ilA_img_copy(const ilA_img *old)
+{
+    ilA_img *new = calloc(1, sizeof(ilA_img));
+    new->width = old->width;
+    new->height = old->height;
+    new->channels = old->channels;
+    new->depth = old->depth;
+    new->bpp = old->bpp;
+    unsigned size = new->bpp * old->width * old->height / 8;
+    new->data = malloc(size);
+    memcpy(new->data, old->data, size);
+    return new;
+}
+
 void ilA_img_free(ilA_img *self)
 {
     free(self->data);

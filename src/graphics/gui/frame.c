@@ -23,9 +23,9 @@ static int frame_build(void *ptr, struct ilG_context *context)
 {
     ilG_gui_frame *self = ptr;
     self->context = context;
-    self->complete = self->build(self, context);
+    self->complete = self->build? self->build(self, context) : 1;
     for (unsigned i = 0; i < self->children.length; i++) {
-        self->children.data[i]->build(self->children.data[i], context);
+        frame_build(self->children.data[i], context);
     }
     return self->complete;
 }

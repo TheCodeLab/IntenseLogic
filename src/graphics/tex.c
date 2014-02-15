@@ -187,6 +187,10 @@ void ilG_tex_loaddata(ilG_tex *self, GLenum target, GLenum internalformat, unsig
 
 void ilG_tex_bind(ilG_tex *self)
 {
+    if (!self->complete) {
+        il_error("Incomplete texture");
+        return;
+    }
     glActiveTexture(GL_TEXTURE0 + self->unit);
     glBindTexture(self->target, self->object);
 }
@@ -194,5 +198,6 @@ void ilG_tex_bind(ilG_tex *self)
 void ilG_tex_build(ilG_tex *self, struct ilG_context *context)
 {
     self->build(self, context);
+    self->complete = 1;
 }
 

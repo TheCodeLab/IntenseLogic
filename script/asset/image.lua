@@ -28,6 +28,7 @@ enum ilA_img_interpolation {
 ilA_img *ilA_img_load(const void *data, size_t size);
 ilA_img *ilA_img_loadasset(ilA_file *iface, il_base *file);
 ilA_img *ilA_img_loadfile(const char *file);
+ilA_img *ilA_img_copy(const ilA_img *old);
 void ilA_img_free(ilA_img *self);
 ilA_img *ilA_img_resize(const ilA_img *self, enum ilA_img_interpolation up, enum ilA_img_interpolation down, unsigned w, unsigned h, int channels);
 ilA_img *ilA_img_swizzle(const ilA_img *self, uint16_t mask);
@@ -37,17 +38,15 @@ ilA_img *ilA_img_height_to_normal(const ilA_img *self);
 
 local img = {}
 
-function img.load(...)
-    local i = modules.asset.ilA_img_load
-    ffi.gc(i, modules.asset.ilA_img_free)
-    return i
-end
-
 function img.loadasset(b) 
     return modules.asset.ilA_img_loadasset(nil, b) 
 end
 
 img.loadfile = modules.asset.ilA_img_loadfile
+
+function img:copy()
+    return ffi.gc(modules.asset.ilA_img_copy(self), modules.asset.ilA_img_free)
+end
 
 function img:resize(w, h, channels, up, down)
     if not up then          up          = "nearest" end

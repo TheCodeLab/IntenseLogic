@@ -40,7 +40,7 @@ struct ilG_gui_frame {
 extern il_type ilG_gui_frame_type;
 
 void ilG_gui_frame_filler(ilG_gui_frame *self, float col[4]);
-void ilG_gui_frame_image(ilG_gui_frame *self, struct ilG_tex tex, int premultiplied);
+void ilG_gui_frame_image(ilG_gui_frame *self, ilG_tex *tex, int premultiplied);
 ilG_gui_rect ilG_gui_frame_abs(ilG_gui_frame *self);
 int ilG_gui_frame_contains(ilG_gui_frame *self, ilG_gui_coord coord);
 enum ilG_gui_inputaction ilG_gui_click(ilG_gui_frame *top, int x, int y, int button);
@@ -67,7 +67,7 @@ base.wrap "il.graphics.gui.frame" {
     click = modules.graphics.ilG_gui_click;
     label = function(self, layout, col, opts)
         local t = tex.image(layout:render(col, opts))
-        self:image(tex, 1)
+        self:image(t, 1)
         local x, y = layout:getExtents()
         self:setSize(x,y)
     end;

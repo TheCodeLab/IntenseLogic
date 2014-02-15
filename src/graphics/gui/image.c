@@ -74,14 +74,15 @@ static int image_build(ilG_gui_frame *self, ilG_context *context)
 {
     (void)context;
     get_shader(self);
+    ilG_tex_build(il_table_mgetsp(&self->base.storage, "gui.image.tex"), context);
     return 1;
 }
 
-void ilG_gui_frame_image(ilG_gui_frame *self, ilG_tex tex, int premultiplied)
+void ilG_gui_frame_image(ilG_gui_frame *self, ilG_tex *tex, int premultiplied)
 {
-    il_return_on_fail(self);
+    il_return_on_fail(self && tex);
     ilG_tex *tex_mem = calloc(1, sizeof(ilG_tex));
-    memcpy(tex_mem, &tex, sizeof(ilG_tex));
+    memcpy(tex_mem, tex, sizeof(ilG_tex));
     il_table_setsp(&self->base.storage, "gui.image.tex", il_opaque(tex_mem, free));
     il_table_setsb(&self->base.storage, "gui.image.premultiplied", premultiplied);
     self->draw = image_draw;
