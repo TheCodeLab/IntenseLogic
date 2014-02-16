@@ -298,10 +298,6 @@ static void render_frame(ilG_context *context)
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     ilG_context_renderer.draw(context);
-
-    if (context->use_default_fb) {
-        glfwSwapBuffers(context->window);
-    }
 }
 
 static void measure_frametime(ilG_context *context)
