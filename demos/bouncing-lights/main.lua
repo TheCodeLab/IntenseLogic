@@ -45,12 +45,12 @@ local skybox = {
 }
 local c, w, root, pipe
 c, w, root, pipe = helper.context { skybox=skybox,
-                                    geom=true,
-                                    lights=true,
-                                    transparency=true,
+                                    --geom=true,
+                                    --lights=true,
+                                    --transparency=true,
                                     --gui=true,
-                                    output=true,
-                                    hints = {hdr=1,debug_context=1} }
+                                    --output=true,
+                                    hints = {hdr=0,debug_context=1,debug_render=1,use_default_fb=1} }
 local pipe2 = {pipe[1], pipe[2], pipe[3], pipe[4], renderer.wrap(nil, modules.bouncinglights.debug_renderer), pipe[5], pipe[6]}
 --c:addStage(pipe2[5], 5)
 modules.bouncinglights.set_world(w)
@@ -61,7 +61,7 @@ local height = tex.image(hmt)
 local normal = tex.image(hmt:height_to_normal())
 local color  = tex.file "demos/bouncing-lights/terrain.png"
 local hmr = heightmap(100, 100, height, normal, color)
-pipe[2]:add(hmr)
+--pipe[2]:add(hmr)
 local hm = positionable(w)
 hm.position = vector3(0, 0, 0).ptr
 hm.size = vector3(128, 50, 128).ptr
@@ -79,7 +79,7 @@ glow:matrix("MVP", "mvp")
 glow:posFunc(modules.bouncinglights.custom_data_func, "col")
 
 local ball = renderer.legacy(sphere, glow)
-pipe[4]:add(ball)
+--pipe[4]:add(ball)
 
 _G.num_lights = 0
 --event.setPacker(event.registry, "physics.tick", event.nilPacker)

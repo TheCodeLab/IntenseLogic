@@ -29,6 +29,7 @@ static void sky_draw(void *ptr)
     ilG_skybox *self = ptr;
     ilG_context *context = self->context;
 
+    ilG_testError("Unknown");
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
     ilG_bindable_swap(&context->drawableb, (void**)&context->drawable, ilG_box(context));
