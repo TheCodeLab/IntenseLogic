@@ -108,6 +108,7 @@ void ilG_tex_loadcube(ilG_tex *self, struct ilA_img *faces[6])
 {
     ilA_img **ctx = calloc(6, sizeof(ilA_img*));
     memcpy(ctx, faces, sizeof(ilA_img*) * 6);
+    self->target = GL_TEXTURE_CUBE_MAP;
     self->data = ctx;
     self->build = tex_cube_build;
 }
