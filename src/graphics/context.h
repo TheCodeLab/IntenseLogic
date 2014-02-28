@@ -67,6 +67,8 @@ enum ilG_context_hint {
     /** Enable some cautious debug rendering functionality.
      * Defaults to 0. Causes performance warnings on some systems. */
     ILG_CONTEXT_DEBUG_RENDER,
+    /** Enable vsync */
+    ILG_CONTEXT_VSYNC,
 };
 
 /** A linked list node for keeping track of the current framerate */
@@ -127,6 +129,7 @@ typedef struct ilG_context { // **remember to update context.lua**
     int use_default_fb;
     int debug_render;
     char *initialTitle;
+    int vsync;
 } ilG_context;
 
 extern const ilG_renderable ilG_context_renderer;

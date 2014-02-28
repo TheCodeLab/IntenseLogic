@@ -45,8 +45,8 @@ local skybox = {
 }
 local c, w, root, pipe
 c, w, root, pipe = helper.context { skybox=skybox,
-                                    --geom=true,
-                                    --lights=true,
+                                    geom=true,
+                                    lights=true,
                                     --transparency=true,
                                     --gui=true,
                                     --output=true,
@@ -61,7 +61,7 @@ local height = tex.image(hmt)
 local normal = tex.image(hmt:height_to_normal())
 local color  = tex.file "demos/bouncing-lights/terrain.png"
 local hmr = heightmap(100, 100, height, normal, color)
---pipe[2]:add(hmr)
+pipe[2]:add(hmr)
 local hm = positionable(w)
 hm.position = vector3(0, 0, 0).ptr
 hm.size = vector3(128, 50, 128).ptr

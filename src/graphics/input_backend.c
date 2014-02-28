@@ -10,10 +10,10 @@ static int win_getkey(ilI_backend *self, enum ilI_key key)
 {
     GLFWwindow *window = self->user;
     if (key < 512) { // the current keys map directly to glfw, so we don't need a huge table
-        return glfwGetKey(window, key);
+        return glfwGetKey(window, key); // unspecified
     }
     if (key < 768) {
-        return glfwGetMouseButton(window, key - 512);
+        return glfwGetMouseButton(window, key - 512); // unspecified
     }
     return 0;
 }
@@ -53,6 +53,7 @@ static void mousebutton(GLFWwindow *window, int button, int action, int mods)
     ev.device = 0;
     ev.action = action;
     ev.mods = mods;*/
+    il_log("test");
     il_value val = il_value_vectorl(5, 
         il_value_int(button+512), 
         il_value_int(0), 
@@ -140,19 +141,19 @@ static void closewindow(GLFWwindow *window)
     ilE_handler_fireasync(ctx->close, val); // prevents closing the window while we're still rendering
 }
 
-void ilG_registerInputBackend(GLFWwindow *window)
+void ilG_registerInputBackend(GLFWwindow *window) // only call from main thread
 {
     ilI_backend *backend = calloc(1, sizeof(ilI_backend));
     backend->name = "GLFW Window";
     backend->get = win_getkey;
     backend->user = window;
     ilI_register(backend);
-    glfwSetKeyCallback          (window, keyfun);
-    glfwSetCharCallback         (window, charfun);
-    glfwSetMouseButtonCallback  (window, mousebutton);
-    glfwSetCursorPosCallback    (window, cursorpos);
-    glfwSetCursorEnterCallback  (window, cursorenter);
-    glfwSetScrollCallback       (window, scroll);
-    glfwSetWindowCloseCallback  (window, closewindow);
+    glfwSetKeyCallback          (window, keyfun);       // unspecified
+    glfwSetCharCallback         (window, charfun);      // unspecified
+    glfwSetMouseButtonCallback  (window, mousebutton);  // unspecified
+    glfwSetCursorPosCallback    (window, cursorpos);    // unspecified
+    glfwSetCursorEnterCallback  (window, cursorenter);  // unspecified
+    glfwSetScrollCallback       (window, scroll);       // unspecified
+    glfwSetWindowCloseCallback  (window, closewindow);  // unspecified
 }
 

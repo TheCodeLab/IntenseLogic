@@ -135,7 +135,7 @@ static void out_draw(void *ptr)
     context->material = NULL;
     context->materialb = NULL;
 
-    glfwSwapBuffers(context->window);
+    glfwSwapBuffers(context->window); // thread safe
     ilG_testError("outpass");
 }
 

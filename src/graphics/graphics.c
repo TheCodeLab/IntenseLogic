@@ -59,15 +59,13 @@ static void glew_error(int code, const char *err)
 void ilG_registerJoystickBackend();
 static void glfw_setup()
 {
-    glfwSetErrorCallback(glew_error);
-    if (!glfwInit()) {
+    glfwSetErrorCallback(glew_error); // unspecified
+    if (!glfwInit()) { // main thread
         il_error("glfwInit() failed");
         abort();
     }
 
-    int major, minor, rev;
-    glfwGetVersion(&major, &minor, &rev);
-    il_log("Using GLFW version %i.%i.%i", major, minor, rev);
+    il_log("Using GLFW version %s", glfwGetVersionString()); // thread safe
     ilG_registerJoystickBackend();
 }
 
@@ -137,6 +135,6 @@ int il_bootstrap(int argc, char **argv)
 static void quit(const il_value *data, il_value *ctx)
 {
     (void)data, (void)ctx;
-    glfwTerminate();
+    glfwTerminate(); // main thread
 }
 

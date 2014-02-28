@@ -12,12 +12,12 @@
 #include "graphics/graphics.h"
 #include "input/input.h"
 
+// TODO: Generalize this and split into its own file
 struct ilG_context_msg {
     struct ilG_context_msg *next;
     enum ilG_context_msgtype {
         ILG_UPLOAD,
         ILG_RESIZE,
-        ILG_RENAME,
         ILG_STOP
     } type;
     union {
@@ -26,7 +26,6 @@ struct ilG_context_msg {
             void *ptr;
         } upload;
         int resize[2];
-        char *rename;
     } value;
 };
 
@@ -128,6 +127,7 @@ void ilG_context_hint(ilG_context *self, enum ilG_context_hint hint, int param)
         HINT(ILG_CONTEXT_HDR, hdr)
         HINT(ILG_CONTEXT_USE_DEFAULT_FB, use_default_fb)
         HINT(ILG_CONTEXT_DEBUG_RENDER, debug_render)
+        HINT(ILG_CONTEXT_VSYNC, vsync);
         default:
         il_error("Invalid hint");
     }
@@ -204,18 +204,6 @@ static int resize(ilG_context *self, int w, int h)
     return 1;
 }
 
-static int context_rename(ilG_context *self, GLFWwindow *window, char *title)
-{
-    if (title != self->title && title) {
-        if (self->title) {
-            free(self->title);
-        }
-        self->title = title;
-        glfwSetWindowTitle(window, self->title);
-    }
-    return 1;
-}
-
 int ilG_context_upload(ilG_context *self, void (*fn)(void*), void* ptr)
 {
     struct ilG_context_msg *msg = calloc(1, sizeof(struct ilG_context_msg));
@@ -239,10 +227,7 @@ int ilG_context_resize(ilG_context *self, int w, int h)
 char *strdup(const char*);
 int ilG_context_rename(ilG_context *self, const char *title)
 {
-    struct ilG_context_msg *msg = calloc(1, sizeof(struct ilG_context_msg));
-    msg->type = ILG_RENAME;
-    msg->value.rename = strdup(title);
-    produce(self->queue, msg);
+    glfwSetWindowTitle(self->window, title); // main thread
     return 1;
 }
 
@@ -274,8 +259,6 @@ void ilG_context_bind_for_outpass(ilG_context *self)
 
 static void render_frame(ilG_context *context)
 {
-    glfwPollEvents();
-
     glViewport(0, 0, context->width, context->height);
     context->material       = NULL;
     context->materialb      = NULL;
@@ -385,40 +368,43 @@ static APIENTRY GLvoid error_cb(GLenum source, GLenum type, GLuint id, GLenum se
     il_logger_log(logger, lmsg);
 }
 
-static void setup_context(ilG_context *self)
+static void setup_context(ilG_context *self) // main thread
 {
     if (self->complete) {
         il_error("Context already complete");
         return;
     }
-    glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, self->contextMajor);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, self->contextMinor);
-    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, self->forwardCompat? GL_TRUE : GL_FALSE);
+    glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API); // main thread
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, self->contextMajor); // main thread
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, self->contextMinor); // main thread
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, self->forwardCompat? GL_TRUE : GL_FALSE); // main thread
     switch (self->profile) {
         case ILG_CONTEXT_NONE:
         break;
         case ILG_CONTEXT_CORE:
-        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); // main thread
         break;
         case ILG_CONTEXT_COMPAT:
-        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_COMPAT_PROFILE);
+        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_COMPAT_PROFILE); // main thread
         break;
         default:
         il_error("Invalid profile");
         return;
     }
-    glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, self->debug_context? GL_TRUE : GL_FALSE);
-    if (!(self->window = glfwCreateWindow(self->startWidth, self->startHeight, self->initialTitle, NULL, NULL))) { // TODO: allow context sharing + monitor specification
+    glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, self->debug_context? GL_TRUE : GL_FALSE); // main thread
+    if (!(self->window = glfwCreateWindow(self->startWidth, self->startHeight, self->initialTitle, NULL, NULL))) { // main thread
+        // TODO: allow context sharing + monitor specification
         il_error("glfwOpenWindow() failed - are you sure you have OpenGL 3.1?");
         return;
     }
     self->width = self->startWidth;
     self->height = self->startHeight;
-    glfwMakeContextCurrent(self->window);
     ilG_registerInputBackend(self);
-    glfwSetWindowUserPointer(self->window, self);
-    glfwSwapInterval(0);
+    glfwSetWindowUserPointer(self->window, self); // unspecified
+}
+
+static void setup_glew(ilG_context *self)
+{
     glewExperimental = self->experimental? GL_TRUE : GL_FALSE; // TODO: find out why IL crashes without this
     GLenum err = glewInit();
     if (GLEW_OK != err) {
@@ -457,11 +443,22 @@ static void setup_context(ilG_context *self)
     self->complete = 1;
 }
 
+static int poll_refs, poll_id; // TODO: Clean this up when event callbacks are shifted to worker threads
+ilE_handler *poll_timer;
+static void poll_events(const il_value *data, il_value *ctx)
+{
+    (void)data; (void)ctx;
+    glfwPollEvents(); // main thread
+}
+
 static void *render_thread(void *ptr)
 {
     ilG_context *self = ptr;
 
-    setup_context(self);
+    glfwMakeContextCurrent(self->window); // thread safe
+
+    glfwSwapInterval(self->vsync); // thread safe
+    setup_glew(self);
     ilG_context_renderer.build(self, NULL);
     resize(self, self->startWidth, self->startHeight);
 
@@ -472,7 +469,6 @@ static void *render_thread(void *ptr)
             switch (msg->type) {
                 case ILG_UPLOAD: upload(self, msg->value.upload.cb, msg->value.upload.ptr); break;
                 case ILG_RESIZE: resize(self, msg->value.resize[0], msg->value.resize[1]); break;
-                case ILG_RENAME: context_rename(self, self->window, msg->value.rename); break;
                 case ILG_STOP: goto stop;
             }
             done_consume(self->queue);
@@ -482,14 +478,14 @@ static void *render_thread(void *ptr)
         ilE_handler_fire(self->tick, &nil);
         il_value_free(nil);
         int width, height;
-        glfwGetFramebufferSize(self->window, &width, &height);
+        glfwGetFramebufferSize(self->window, &width, &height); // unspecified
         if (width != self->width || height != self->height) {
             resize(self, width, height);
         }
         // Render
         render_frame(self);
         if (self->use_default_fb) {
-            glfwSwapBuffers(self->window);
+            glfwSwapBuffers(self->window); // thread safe
         }
         // Perform fps measuring calculations
         measure_frametime(self);
@@ -502,6 +498,11 @@ static void *render_thread(void *ptr)
 stop:
     glDeleteFramebuffers(1, &self->framebuffer);
     glDeleteTextures(5, &self->fbtextures[0]);
+    poll_refs--;
+    if (poll_refs < 1) {
+        ilE_unregister(poll_timer, poll_id);
+        ilE_handler_destroy(poll_timer);
+    }
     return NULL;
 }
 
@@ -515,6 +516,17 @@ int ilG_context_start(ilG_context *self)
         il_error("No world");
         return 0;
     }
+
+    setup_context(self);
+
+    if (poll_refs < 1) {
+        struct timeval tv;
+        tv.tv_sec = 0;
+        tv.tv_usec = 1000000 / 250; // poll 250 times per second for now
+        poll_timer = ilE_handler_timer(&tv);
+        poll_id = ilE_register(poll_timer, ILE_DONTCARE, ILE_ANY, poll_events, il_value_nil());
+    }
+    poll_refs++;
     
     // Start thread
     int res = pthread_create(&self->thread, NULL, render_thread, self);
