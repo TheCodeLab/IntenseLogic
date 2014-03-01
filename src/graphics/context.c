@@ -12,13 +12,19 @@
 #include "graphics/graphics.h"
 #include "input/input.h"
 
+/////////////////////////////////////////////////////////////////////////////
+// Queue 
+
 // TODO: Generalize this and split into its own file
 struct ilG_context_msg {
     struct ilG_context_msg *next;
     enum ilG_context_msgtype {
         ILG_UPLOAD,
         ILG_RESIZE,
-        ILG_STOP
+        ILG_STOP,
+        ILG_ADD,
+        ILG_REMOVE,
+        ILG_MESSAGE
     } type;
     union {
         struct {
@@ -26,6 +32,14 @@ struct ilG_context_msg {
             void *ptr;
         } upload;
         int resize[2];
+        struct {
+            ilG_renderer parent, node;
+        } add, remove;
+        struct {
+            ilG_renderer node;
+            int type;
+            il_value data;
+        } message;
     } value;
 };
 
@@ -80,6 +94,9 @@ static void done_consume(struct ilG_context_queue *queue)
     }
 }
 
+/////////////////////////////////////////////////////////////////////////////
+// Book keeping
+
 void ilG_registerInputBackend(ilG_context *ctx);
 
 ilG_context *ilG_context_new()
@@ -133,19 +150,98 @@ void ilG_context_hint(ilG_context *self, enum ilG_context_hint hint, int param)
     }
 }
 
-static int upload(ilG_context *self, void (*fn)(void*), void* ptr)
+/////////////////////////////////////////////////////////////////////////////
+// Message wrappers
+
+int ilG_context_upload(ilG_context *self, void (*fn)(void*), void* ptr)
+{
+    struct ilG_context_msg *msg = calloc(1, sizeof(struct ilG_context_msg));
+    msg->type = ILG_UPLOAD;
+    msg->value.upload.cb = fn;
+    msg->value.upload.ptr = ptr;
+    produce(self->queue, msg);
+    return 1;
+}
+
+int ilG_context_resize(ilG_context *self, int w, int h)
+{
+    struct ilG_context_msg *msg = calloc(1, sizeof(struct ilG_context_msg));
+    msg->type = ILG_RESIZE;
+    msg->value.resize[0] = w;
+    msg->value.resize[1] = h;
+    produce(self->queue, msg);
+    return 1;
+}
+
+char *strdup(const char*);
+int ilG_context_rename(ilG_context *self, const char *title)
+{
+    glfwSetWindowTitle(self->window, title); // main thread
+    return 1;
+}
+
+void ilG_context_add(ilG_context *self, ilG_renderer parent, ilG_renderer node)
+{
+    struct ilG_context_msg *msg = calloc(1, sizeof(struct ilG_context_msg));
+    msg->type = ILG_ADD;
+    msg->value.add.parent = parent;
+    msg->value.add.node = node;
+    produce(self->queue, msg);
+}
+
+void ilG_context_remove(ilG_context *self, ilG_renderer parent, ilG_renderer node)
+{
+    struct ilG_context_msg *msg = calloc(1, sizeof(struct ilG_context_msg));
+    msg->type = ILG_REMOVE;
+    msg->value.remove.parent = parent;
+    msg->value.remove.node = node;
+    produce(self->queue, msg);
+}
+
+void ilG_context_message(ilG_context *self, ilG_renderer node, int type, il_value data)
+{
+    struct ilG_context_msg *msg = calloc(1, sizeof(struct ilG_context_msg));
+    msg->type = ILG_MESSAGE;
+    msg->value.message.node = node;
+    msg->value.message.type = type;
+    msg->value.message.data = data;
+    produce(self->queue, msg);
+}
+
+void ilG_context_bindFB(ilG_context *self)
+{
+    if (self->use_default_fb) {
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    } else {
+        static const GLenum drawbufs[] = {
+            GL_COLOR_ATTACHMENT0,   // accumulation
+            GL_COLOR_ATTACHMENT1,   // normal
+            GL_COLOR_ATTACHMENT2,   // diffuse
+            GL_COLOR_ATTACHMENT3    // specular
+        };
+        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, self->framebuffer);
+        glDrawBuffers(4, &drawbufs[0]);
+    }
+}
+
+void ilG_context_bind_for_outpass(ilG_context *self)
+{
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, self->framebuffer);
+    glReadBuffer(GL_COLOR_ATTACHMENT0);
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// Message handlers
+
+static int context_upload(ilG_context *self, void (*fn)(void*), void* ptr)
 {
     (void)self;
     fn(ptr);
     return 1;
 }
 
-static int resize(ilG_context *self, int w, int h)
+static int context_resize(ilG_context *self, int w, int h)
 {
-    /*if (!self->complete) {
-        il_error("Resizing incomplete context");
-        return 0;
-    }*/
     if (self->use_default_fb) {
         self->valid = 1;
         return 1;
@@ -204,58 +300,24 @@ static int resize(ilG_context *self, int w, int h)
     return 1;
 }
 
-int ilG_context_upload(ilG_context *self, void (*fn)(void*), void* ptr)
+static void context_add(ilG_renderer parent, ilG_renderer node)
 {
-    struct ilG_context_msg *msg = calloc(1, sizeof(struct ilG_context_msg));
-    msg->type = ILG_UPLOAD;
-    msg->value.upload.cb = fn;
-    msg->value.upload.ptr = ptr;
-    produce(self->queue, msg);
-    return 1;
+    parent.vtable->add_renderer(parent.obj, node);
 }
 
-int ilG_context_resize(ilG_context *self, int w, int h)
+static void context_remove(ilG_renderer parent, ilG_renderer node)
 {
-    struct ilG_context_msg *msg = calloc(1, sizeof(struct ilG_context_msg));
-    msg->type = ILG_RESIZE;
-    msg->value.resize[0] = w;
-    msg->value.resize[1] = h;
-    produce(self->queue, msg);
-    return 1;
+    parent.vtable->remove_renderer(parent.obj, node);
 }
 
-char *strdup(const char*);
-int ilG_context_rename(ilG_context *self, const char *title)
+static void context_message(ilG_renderer parent, int type, il_value data)
 {
-    glfwSetWindowTitle(self->window, title); // main thread
-    return 1;
+    parent.vtable->message(parent.obj, type, data);
+    il_value_free(data);
 }
 
-void ilG_context_bindFB(ilG_context *self)
-{
-    if (self->use_default_fb) {
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    } else {
-        static const GLenum drawbufs[] = {
-            GL_COLOR_ATTACHMENT0,   // accumulation
-            GL_COLOR_ATTACHMENT1,   // normal
-            GL_COLOR_ATTACHMENT2,   // diffuse
-            GL_COLOR_ATTACHMENT3    // specular
-        };
-        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, self->framebuffer);
-        glDrawBuffers(4, &drawbufs[0]);
-    }
-}
-
-void ilG_context_bind_for_outpass(ilG_context *self)
-{
-    /*static const GLenum drawbufs[] = {
-        GL_COLOR_ATTACHMENT0    // accumulation
-    };*/
-    glBindFramebuffer(GL_READ_FRAMEBUFFER, self->framebuffer);
-    //glDrawBuffers(1, &drawbufs[0]);
-    glReadBuffer(GL_COLOR_ATTACHMENT0);
-}
+/////////////////////////////////////////////////////////////////////////////
+// Rendering logic and context setup
 
 static void render_frame(ilG_context *context)
 {
@@ -460,27 +522,30 @@ static void *render_thread(void *ptr)
     glfwSwapInterval(self->vsync); // thread safe
     setup_glew(self);
     ilG_context_renderer.build(self, NULL);
-    resize(self, self->startWidth, self->startHeight);
+    context_resize(self, self->startWidth, self->startHeight);
 
     while (self->valid && !glfwWindowShouldClose(self->window)) {
-        // Process messages
-        struct ilG_context_msg *msg;
-        while ((msg = consume(self->queue))) {
-            switch (msg->type) {
-                case ILG_UPLOAD: upload(self, msg->value.upload.cb, msg->value.upload.ptr); break;
-                case ILG_RESIZE: resize(self, msg->value.resize[0], msg->value.resize[1]); break;
-                case ILG_STOP: goto stop;
-            }
-            done_consume(self->queue);
-        }
         // Run per-frame stuff
         il_value nil = il_value_nil();
         ilE_handler_fire(self->tick, &nil);
         il_value_free(nil);
+        // Process messages
+        struct ilG_context_msg *msg;
+        while ((msg = consume(self->queue))) {
+            switch (msg->type) {
+                case ILG_UPLOAD: context_upload(self, msg->value.upload.cb, msg->value.upload.ptr); break;
+                case ILG_RESIZE: context_resize(self, msg->value.resize[0], msg->value.resize[1]); break;
+                case ILG_STOP: goto stop;
+                case ILG_ADD: context_add(msg->value.add.parent, msg->value.add.node); break;
+                case ILG_REMOVE: context_remove(msg->value.remove.parent, msg->value.remove.node); break;
+                case ILG_MESSAGE: context_message(msg->value.message.node, msg->value.message.type, msg->value.message.data); break;
+            }
+            done_consume(self->queue);
+        }
         int width, height;
         glfwGetFramebufferSize(self->window, &width, &height); // unspecified
         if (width != self->width || height != self->height) {
-            resize(self, width, height);
+            context_resize(self, width, height);
         }
         // Render
         render_frame(self);
@@ -535,5 +600,4 @@ int ilG_context_start(ilG_context *self)
     }
     return res == 0;
 }
-
 

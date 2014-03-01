@@ -22,6 +22,7 @@ typedef enum ilG_gui_inputaction (*ilG_gui_onClick)(ilG_gui_frame *self, int x, 
 typedef enum ilG_gui_inputaction (*ilG_gui_onHover)(ilG_gui_frame *self, int x, int y);
 typedef void (*ilG_gui_draw_fn)(ilG_gui_frame *self, ilG_gui_rect where);
 typedef int (*ilG_gui_build_fn)(ilG_gui_frame *self, struct ilG_context *context);
+typedef void (*ilG_gui_message_fn)(ilG_gui_frame *self, int type, il_value v);
 
 struct ilG_gui_frame {
     il_base base;
@@ -31,6 +32,7 @@ struct ilG_gui_frame {
     ilG_gui_onHover hover;
     ilG_gui_draw_fn draw;
     ilG_gui_build_fn build;
+    ilG_gui_message_fn message;
     IL_ARRAY(ilG_gui_frame*,) children;
     struct ilG_context *context;
     _Bool complete;
@@ -42,7 +44,8 @@ extern const ilG_renderable ilG_gui_frame_renderer;
 #define ilG_gui_frame_wrap(p) ilG_renderer_wrap(p, &ilG_gui_frame_renderer)
 
 void ilG_gui_frame_filler(ilG_gui_frame *self, float col[4]);
-void ilG_gui_frame_image(ilG_gui_frame *self, struct ilG_tex *tex, int premultiplied);
+void ilG_gui_frame_image(ilG_gui_frame *self);
+void ilG_gui_frame_image_setTex(ilG_gui_frame *self, struct ilG_tex *tex, int premultiplied);
 ilG_gui_rect ilG_gui_frame_abs(ilG_gui_frame *self);
 int ilG_gui_frame_contains(ilG_gui_frame *self, ilG_gui_coord coord);
 enum ilG_gui_inputaction ilG_gui_click(ilG_gui_frame *top, int x, int y, int button);

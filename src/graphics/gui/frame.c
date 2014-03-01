@@ -52,6 +52,23 @@ static void frame_add_renderer(void *ptr, ilG_renderer r)
     IL_APPEND(self->children, r.obj);
 }
 
+static void frame_remove_renderer(void *ptr, ilG_renderer node)
+{
+    ilG_gui_frame *self = ptr;
+    for (unsigned i = 0; i < self->children.length; i++) {
+        if (self->children.data[i] == node.obj) {
+            IL_REMOVE(self->children, i);
+            break;
+        }
+    }
+}
+
+static void frame_message(void *ptr, int type, il_value v)
+{
+    ilG_gui_frame *self = ptr;
+    self->message(ptr, type, v);
+}
+
 const ilG_renderable ilG_gui_frame_renderer = {
     .free = il_unref,
     .draw = frame_draw,
@@ -60,6 +77,8 @@ const ilG_renderable ilG_gui_frame_renderer = {
     .get_complete = frame_get_complete,
     .add_positionable = NULL,
     .add_renderer = frame_add_renderer,
+    .remove_renderer = frame_remove_renderer,
+    .message = frame_message,
     .name = "GUI Frame"
 };
 

@@ -17,6 +17,8 @@ typedef struct ilG_renderable {
     bool (*get_complete)(const void *obj);
     void (*add_positionable)(void *obj, il_positionable pos);
     void (*add_renderer)(void *obj, struct ilG_renderer r);
+    void (*remove_renderer)(void *obj, struct ilG_renderer r);
+    void (*message)(void *obj, int type, il_value v);
     const char *name;
 } ilG_renderable;
 

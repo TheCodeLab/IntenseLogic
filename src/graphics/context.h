@@ -155,10 +155,12 @@ int ilG_context_upload(ilG_context *self, void (*fn)(void*), void*);
 int ilG_context_resize(ilG_context *self, int w, int h);
 /** Renames the window */
 int ilG_context_rename(ilG_context *self, const char *title);
-/** Inserts a rendering stage into the rendering pipeline. */
-void ilG_context_addStage(ilG_context* self, struct ilG_stage stage, int num);
-/** Clears the rendering pipeline */
-void ilG_context_clearStages(ilG_context *self);
+/** Adds a node to the scenegraph */
+void ilG_context_add(ilG_context *self, ilG_renderer parent, ilG_renderer node);
+/** Removes a connection between a node and its parent */
+void ilG_context_remove(ilG_context *self, ilG_renderer parent, ilG_renderer node);
+/** Send a message to a renderer */
+void ilG_context_message(ilG_context *self, ilG_renderer node, int type, il_value data);
 
 /* Rendering thread calls */
 /** Internal: Binds the context's internal framebuffer */

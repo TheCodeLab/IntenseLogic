@@ -66,6 +66,8 @@ ex const ilG_renderable debug_renderer = {
     /*.get_complete =*/ NULL,
     /*.add_positionable =*/ NULL,
     /*.add_renderer =*/ NULL,
+    /*.remove_renderer =*/ NULL,
+    /*.message =*/ NULL,
     /*.name =*/ "Debug Draw"
 };
 

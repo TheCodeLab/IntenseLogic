@@ -55,6 +55,7 @@ return function(ctx, w, root, tick)
         render_fps = function(f)
             local label = text(ctx, "en", "ltr", "latin", georgia, 14, string.format("FPS: %.1f", tonumber(f)))
             fps_label:label(label, {1,1,1,1}, "left middle")
+            --fps_label:build(ctx)
         end
 
         local lights_label = frame()
@@ -64,6 +65,7 @@ return function(ctx, w, root, tick)
         render_numlights = function()
             local label = text(ctx, "en", "ltr", "latin", georgia, 14, string.format("Lights: %d", _G.num_lights))
             lights_label:label(label, {1,1,1,1}, "left middle")
+            --lights_label:build(ctx)
         end
 
         do 
