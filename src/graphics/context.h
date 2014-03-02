@@ -3,7 +3,7 @@
 
 #include <stdlib.h>
 #include <GL/glew.h>
-#include <GLFW/glfw3.h>
+#include <SDL2/SDL_video.h>
 #include <sys/time.h>
 #include <pthread.h>
 
@@ -113,7 +113,8 @@ typedef struct ilG_context { // **remember to update context.lua**
     int tick_id;
     size_t num_active;
     struct ilG_context_queue *queue;
-    GLFWwindow *window;
+    SDL_Window *window;
+    SDL_GLContext context;
     pthread_t thread;
     /* Creation parameters */
     int complete;

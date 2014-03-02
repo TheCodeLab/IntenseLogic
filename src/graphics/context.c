@@ -6,7 +6,9 @@
 #include "util/log.h"
 #include "util/logger.h"
 #include "util/ilassert.h"
-#include "util/timer.h"
+#ifndef timeradd
+# include "util/timer.h"
+#endif
 #include "graphics/glutil.h"
 #include "common/event.h"
 #include "graphics/graphics.h"
@@ -176,7 +178,7 @@ int ilG_context_resize(ilG_context *self, int w, int h)
 char *strdup(const char*);
 int ilG_context_rename(ilG_context *self, const char *title)
 {
-    glfwSetWindowTitle(self->window, title); // main thread
+    SDL_SetWindowTitle(self->window, title);
     return 1;
 }
 
@@ -242,6 +244,7 @@ static int context_upload(ilG_context *self, void (*fn)(void*), void* ptr)
 
 static int context_resize(ilG_context *self, int w, int h)
 {
+    il_log("%i, %i", w, h);
     if (self->use_default_fb) {
         self->valid = 1;
         return 1;
@@ -376,7 +379,8 @@ static void measure_frametime(ilG_context *context)
     context->frames_average.tv_usec += (context->frames_sum.tv_sec % context->num_frames) * 1000000 / context->num_frames;
 }
 
-static APIENTRY GLvoid error_cb(GLenum source, GLenum type, GLuint id, GLenum severity,
+// TODO: Find out why APIENTRY disappeared when switching to SDL
+static /*APIENTRY*/ GLvoid error_cb(GLenum source, GLenum type, GLuint id, GLenum severity,
                        GLsizei length, const GLchar* message, GLvoid* user)
 {
     (void)user;
@@ -436,33 +440,42 @@ static void setup_context(ilG_context *self) // main thread
         il_error("Context already complete");
         return;
     }
-    glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API); // main thread
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, self->contextMajor); // main thread
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, self->contextMinor); // main thread
-    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, self->forwardCompat? GL_TRUE : GL_FALSE); // main thread
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, self->contextMajor);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, self->contextMinor);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, 
+        (self->forwardCompat? SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG : 0) |
+        (self->debug_context? SDL_GL_CONTEXT_DEBUG_FLAG : 0)
+    );
+    SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
+    SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
+    SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
     switch (self->profile) {
         case ILG_CONTEXT_NONE:
         break;
         case ILG_CONTEXT_CORE:
-        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); // main thread
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
         break;
         case ILG_CONTEXT_COMPAT:
-        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_COMPAT_PROFILE); // main thread
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
         break;
         default:
         il_error("Invalid profile");
         return;
     }
-    glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, self->debug_context? GL_TRUE : GL_FALSE); // main thread
-    if (!(self->window = glfwCreateWindow(self->startWidth, self->startHeight, self->initialTitle, NULL, NULL))) { // main thread
-        // TODO: allow context sharing + monitor specification
-        il_error("glfwOpenWindow() failed - are you sure you have OpenGL 3.1?");
+    if (!(self->window = SDL_CreateWindow(
+            self->initialTitle,
+            SDL_WINDOWPOS_UNDEFINED,
+            SDL_WINDOWPOS_UNDEFINED,
+            self->startWidth,
+            self->startHeight,
+            SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE))) {
+        il_error("SDL_CreateWindow: %s", SDL_GetError());
         return;
     }
     self->width = self->startWidth;
     self->height = self->startHeight;
-    ilG_registerInputBackend(self);
-    glfwSetWindowUserPointer(self->window, self); // unspecified
+    //ilG_registerInputBackend(self);
+    SDL_SetWindowData(self->window, "context", self);
 }
 
 static void setup_glew(ilG_context *self)
@@ -505,26 +518,19 @@ static void setup_glew(ilG_context *self)
     self->complete = 1;
 }
 
-static int poll_refs, poll_id; // TODO: Clean this up when event callbacks are shifted to worker threads
-ilE_handler *poll_timer;
-static void poll_events(const il_value *data, il_value *ctx)
-{
-    (void)data; (void)ctx;
-    glfwPollEvents(); // main thread
-}
-
+void ilG_poll_unref();
 static void *render_thread(void *ptr)
 {
     ilG_context *self = ptr;
 
-    glfwMakeContextCurrent(self->window); // thread safe
+    self->context = SDL_GL_CreateContext(self->window);
 
-    glfwSwapInterval(self->vsync); // thread safe
+    SDL_GL_SetSwapInterval(self->vsync);
     setup_glew(self);
     ilG_context_renderer.build(self, NULL);
     context_resize(self, self->startWidth, self->startHeight);
 
-    while (self->valid && !glfwWindowShouldClose(self->window)) {
+    while (self->valid) {
         // Run per-frame stuff
         il_value nil = il_value_nil();
         ilE_handler_fire(self->tick, &nil);
@@ -543,14 +549,18 @@ static void *render_thread(void *ptr)
             done_consume(self->queue);
         }
         int width, height;
-        glfwGetFramebufferSize(self->window, &width, &height); // unspecified
+        SDL_GetWindowSize(self->window, &width, &height);
+        int dw, dh;
+        SDL_GL_GetDrawableSize(self->window, &dw, &dh);
+        il_log("%i, %i", dw, dh);
         if (width != self->width || height != self->height) {
             context_resize(self, width, height);
         }
         // Render
         render_frame(self);
         if (self->use_default_fb) {
-            glfwSwapBuffers(self->window); // thread safe
+            glViewport(0,0, self->width, self->height);
+            SDL_GL_SwapWindow(self->window);
         }
         // Perform fps measuring calculations
         measure_frametime(self);
@@ -563,14 +573,11 @@ static void *render_thread(void *ptr)
 stop:
     glDeleteFramebuffers(1, &self->framebuffer);
     glDeleteTextures(5, &self->fbtextures[0]);
-    poll_refs--;
-    if (poll_refs < 1) {
-        ilE_unregister(poll_timer, poll_id);
-        ilE_handler_destroy(poll_timer);
-    }
+    ilG_poll_unref();
     return NULL;
 }
 
+void ilG_poll_ref();
 int ilG_context_start(ilG_context *self)
 {
     if (!self->camera) {
@@ -583,15 +590,7 @@ int ilG_context_start(ilG_context *self)
     }
 
     setup_context(self);
-
-    if (poll_refs < 1) {
-        struct timeval tv;
-        tv.tv_sec = 0;
-        tv.tv_usec = 1000000 / 250; // poll 250 times per second for now
-        poll_timer = ilE_handler_timer(&tv);
-        poll_id = ilE_register(poll_timer, ILE_DONTCARE, ILE_ANY, poll_events, il_value_nil());
-    }
-    poll_refs++;
+    ilG_poll_ref();
     
     // Start thread
     int res = pthread_create(&self->thread, NULL, render_thread, self);
