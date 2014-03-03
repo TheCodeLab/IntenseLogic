@@ -40,6 +40,7 @@ struct ilG_gui_frame {
 };
 
 extern il_type ilG_gui_frame_type;
+extern const ilG_renderable ilG_gui_frame_renderer;
 
 void ilG_gui_frame_filler(ilG_gui_frame *self, float col[4]);
 void ilG_gui_frame_image(ilG_gui_frame *self);

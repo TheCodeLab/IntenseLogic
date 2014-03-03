@@ -15,7 +15,7 @@
 struct image {
     GLint pos_loc[2];
     ilG_tex tex;
-    bool premultiply, first;
+    bool premultiply, first, have_tex;
     ilG_material *shader;
 };
 
@@ -53,6 +53,9 @@ static int image_build(ilG_gui_frame *self, ilG_context *context)
     img->first = false;
     img->pos_loc[0] = glGetUniformLocation(img->shader->program, "pos1");
     img->pos_loc[1] = glGetUniformLocation(img->shader->program, "pos2");
+    if (img->have_tex) {
+        ilG_tex_build(&img->tex, self->context);
+    }
     return 1;
 }
 
@@ -93,8 +96,14 @@ void ilG_gui_frame_image(ilG_gui_frame *self)
 
 void ilG_gui_frame_image_setTex(ilG_gui_frame *self, struct ilG_tex *tex, int premultiplied)
 {
-    ilG_tex *mem = calloc(1, sizeof(ilG_tex));
-    memcpy(mem, tex, sizeof(*mem));
-    ilG_context_message(self->context, ilG_gui_frame_wrap(self), 0, il_value_vectorl(2, il_vopaque(mem, free), il_value_int(premultiplied)));
+    if (self->context) {
+        ilG_tex *mem = calloc(1, sizeof(ilG_tex));
+        memcpy(mem, tex, sizeof(*mem));
+        ilG_context_message(self->context, ilG_gui_frame_wrap(self), 0, il_value_vectorl(2, il_vopaque(mem, free), il_value_int(premultiplied)));
+    } else {
+        struct image *img = il_table_mgetsp(&self->base.storage, "gui.image");
+        memcpy(&img->tex, tex, sizeof(ilG_tex));
+        img->have_tex = true;
+    }
 }
 

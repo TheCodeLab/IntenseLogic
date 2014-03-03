@@ -9,6 +9,7 @@ local event         = require "common.event"
 local input         = require "input.input"
 local ffi           = require "ffi"
 local positionable  = require "common.positionable"
+local renderer      = require "graphics.renderer"
 
 return function(ctx, w, root, tick)
     local cam = camera()
@@ -95,8 +96,9 @@ return function(ctx, w, root, tick)
                     local label = text(ctx, "en", "ltr", "latin", georgia, 14, v)
                     f:label(label, {1,1,1,1}, "left middle")
                 end
+                renderer(hint_box, modules.graphics.ilG_gui_frame_renderer):build(ctx)
                 local isShown = false
-                event.register(input.button, function(key, scancode, device, isDown, mods)
+                event.register(input.button, function(key, isDown)
                     if isDown and key == string.byte '/' then
                         isShown = not isShown
                         if isShown then
