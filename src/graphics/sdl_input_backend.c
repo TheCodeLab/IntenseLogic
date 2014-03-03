@@ -142,6 +142,7 @@ void ilG_registerSdlInputBackend()
     tv.tv_sec = 0;
     tv.tv_usec = 1000000 / 250; // poll 250 times per second for now
     poll_timer = ilE_handler_timer(&tv);
+    ilE_handler_name(poll_timer, "SDL Event Poll");
     poll_id = ilE_register(poll_timer, ILE_DONTCARE, ILE_ANY, poll_events, il_value_nil());
 
     ilI_backend *backend = calloc(1, sizeof(ilI_backend));
