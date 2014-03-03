@@ -24,10 +24,7 @@ return function(ctx, w, root, tick)
     local yaw = 0
     local pitch = 0
 
-    local first_mouse = true
     local mousemove = function(xabs, yabs, x, y)
-        print "???!"
-        if first_mouse then first_mouse = false return end
         if not input.get "mouse left" then return end
         yaw = yaw + x * cam.sensitivity
         pitch = pitch - y * cam.sensitivity

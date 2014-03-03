@@ -518,7 +518,6 @@ static void setup_glew(ilG_context *self)
     self->complete = 1;
 }
 
-void ilG_poll_unref();
 static void *render_thread(void *ptr)
 {
     ilG_context *self = ptr;
@@ -550,9 +549,6 @@ static void *render_thread(void *ptr)
         }
         int width, height;
         SDL_GetWindowSize(self->window, &width, &height);
-        int dw, dh;
-        SDL_GL_GetDrawableSize(self->window, &dw, &dh);
-        il_log("%i, %i", dw, dh);
         if (width != self->width || height != self->height) {
             context_resize(self, width, height);
         }
@@ -573,11 +569,9 @@ static void *render_thread(void *ptr)
 stop:
     glDeleteFramebuffers(1, &self->framebuffer);
     glDeleteTextures(5, &self->fbtextures[0]);
-    ilG_poll_unref();
     return NULL;
 }
 
-void ilG_poll_ref();
 int ilG_context_start(ilG_context *self)
 {
     if (!self->camera) {
@@ -590,7 +584,6 @@ int ilG_context_start(ilG_context *self)
     }
 
     setup_context(self);
-    ilG_poll_ref();
     
     // Start thread
     int res = pthread_create(&self->thread, NULL, render_thread, self);

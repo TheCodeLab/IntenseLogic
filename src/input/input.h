@@ -79,8 +79,8 @@ enum ilI_key {
     ILI_KEY_RIGHT_SUPER     = 347,
     ILI_KEY_MENU            = 348,
     ILI_MOUSE_LEFT          = 512,
-    ILI_MOUSE_RIGHT         = 513,
-    ILI_MOUSE_MIDDLE        = 514,
+    ILI_MOUSE_MIDDLE        = 513,
+    ILI_MOUSE_RIGHT         = 514,
     ILI_MOUSE_4             = 515,
     ILI_MOUSE_5             = 516,
     ILI_MOUSE_6             = 517,
@@ -106,10 +106,22 @@ enum ilI_key {
 
 /** Keyboard modifiers */
 enum ilI_mod {
-    ILI_MOD_SHIFT   = 0x1,
-    ILI_MOD_CONTROL = 0x2,
-    ILI_MOD_ALT     = 0x4,
-    ILI_MOD_SUPER   = 0x8
+    ILI_MOD_NONE    = 0x0,
+    ILI_MOD_LSHIFT  = 0x1,
+    ILI_MOD_RSHIFT  = 0x2,
+    ILI_MOD_LCTRL   = 0x4,
+    ILI_MOD_RCTRL   = 0x8,
+    ILI_MOD_LALT    = 0x10,
+    ILI_MOD_RALT    = 0x20,
+    ILI_MOD_LGUI    = 0x40,
+    ILI_MOD_RGUI    = 0x80,
+    ILI_MOD_NUM     = 0x100,
+    ILI_MOD_CAPS    = 0x200,
+    ILI_MOD_MODE    = 0x400,
+    ILI_MOD_CTRL    = ILI_MOD_LCTRL | ILI_MOD_RCTRL,
+    ILI_MOD_SHIFT   = ILI_MOD_LSHIFT | ILI_MOD_RSHIFT,
+    ILI_MOD_ALT     = ILI_MOD_LALT | ILI_MOD_RALT,
+    ILI_MOD_GUI     = ILI_MOD_LGUI | ILI_MOD_RGUI,
 };
 
 /** Key/mouse button press/release */

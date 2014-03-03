@@ -29,7 +29,7 @@ static int joy_getkey(ilI_backend *self, enum ilI_key key)
     return buttons[key - 768];
 }
 
-void ilG_registerJoystickBackend()
+void ilG_registerGlfwJoystickBackend()
 {
     int joy;
     for (joy = 0; glfwJoystickPresent(joy); joy++) {
@@ -114,10 +114,10 @@ static void keyfun(GLFWwindow *window, int key, int scancode, int action, int mo
     ev.action = action;
     ev.mods = mods;*/
     il_value ev = il_value_vectorl(5, 
-        il_value_int(key), 
-        il_value_int(scancode), 
-        il_value_int(0), 
-        il_value_bool(action), 
+        il_value_int(key),
+        il_value_int(scancode),
+        il_value_int(0),
+        il_value_bool(action),
         il_value_int(mods)
     );
     ilG_context *ctx = glfwGetWindowUserPointer(window);
@@ -141,7 +141,7 @@ static void closewindow(GLFWwindow *window)
     ilE_handler_fireasync(ctx->close, val); // prevents closing the window while we're still rendering
 }
 
-void ilG_registerInputBackend(GLFWwindow *window) // only call from main thread
+void ilG_registerGlfwInputBackend(GLFWwindow *window) // only call from main thread
 {
     ilI_backend *backend = calloc(1, sizeof(ilI_backend));
     backend->name = "GLFW Window";
