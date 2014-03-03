@@ -19,6 +19,7 @@ typedef struct ilG_heightmap {
     IL_ARRAY(il_positionable,) positionables;
     ilA_mesh *mesh;
     ilG_drawable3d *drawable;
+    ilG_context *context;
     unsigned w,h;
 } ilG_heightmap;
 
@@ -38,12 +39,18 @@ static void heightmap_draw(void *ptr)
     ilG_tex_bind(&self->color);
     ilG_bindable_bind(&ilG_mesh_bindable, self->drawable);
     ilG_bindable_bind(&ilG_material_bindable, self->shader);
+    for (unsigned i = 0; i < self->positionables.length; i++) {
+        self->context->positionable = &self->positionables.data[i];
+        ilG_bindable_action(&ilG_material_bindable, self->shader);
+        ilG_bindable_action(&ilG_mesh_bindable, self->drawable);
+    }
     ilG_testError("heightmap_draw");
 }
 
 static int heightmap_build(void *ptr, ilG_context *context)
 {
     ilG_heightmap *self = ptr;
+    self->context = context;
     ilG_tex_build(&self->height, context);
     ilG_tex_build(&self->normal, context);
     ilG_tex_build(&self->color, context);
