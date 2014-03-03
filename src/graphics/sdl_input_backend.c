@@ -136,6 +136,18 @@ static void poll_events(const il_value *data, il_value *ctx)
     }
 }
 
+static void poll_shutdown_cb(const il_value *data, il_value *ctx)
+{
+    (void)data; (void)ctx;
+    ilE_unregister(poll_timer, poll_id);
+}
+
+static void poll_shutdown_hnd(const il_value *data, il_value *ctx)
+{
+    (void)data; (void)ctx;
+    ilE_handler_destroy(poll_timer);
+}
+
 void ilG_registerSdlInputBackend()
 {
     struct timeval tv;
@@ -144,6 +156,8 @@ void ilG_registerSdlInputBackend()
     poll_timer = ilE_handler_timer(&tv);
     ilE_handler_name(poll_timer, "SDL Event Poll");
     poll_id = ilE_register(poll_timer, ILE_DONTCARE, ILE_ANY, poll_events, il_value_nil());
+    ilE_register(ilE_shutdownCallbacks, ILE_DONTCARE, ILE_ANY, poll_shutdown_cb, il_value_nil());
+    ilE_register(ilE_shutdownHandlers, ILE_DONTCARE, ILE_ANY, poll_shutdown_hnd, il_value_nil());
 
     ilI_backend *backend = calloc(1, sizeof(ilI_backend));
     backend->name = "SDL";
