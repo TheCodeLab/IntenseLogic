@@ -59,7 +59,7 @@ static void queue_init(struct ilG_context_queue *queue)
 void queue_free(struct ilG_context_queue *queue) // TODO: Fix this cross-translation unit hack
 {
     struct ilG_context_msg *cur;
-    while (cur) {
+    while (queue->first) {
         cur = queue->first;
         queue->first = cur->next;
         free(cur);
@@ -126,11 +126,6 @@ ilG_context *ilG_context_new()
     return self;
 }
 
-void ilG_context_free(ilG_context *self)
-{
-    ilG_context_renderer.free(self);
-}
-
 void ilG_context_hint(ilG_context *self, enum ilG_context_hint hint, int param)
 {
 #define HINT(v, f) case v: self->f = param; break;
@@ -154,6 +149,15 @@ void ilG_context_hint(ilG_context *self, enum ilG_context_hint hint, int param)
 
 /////////////////////////////////////////////////////////////////////////////
 // Message wrappers
+
+void ilG_context_free(ilG_context *self)
+{
+    struct ilG_context_msg *msg = calloc(1, sizeof(struct ilG_context_msg));
+    msg->type = ILG_STOP;
+    produce(self->queue, msg);
+    pthread_join(self->thread, NULL);
+    ilG_context_renderer.free(self);
+}
 
 int ilG_context_upload(ilG_context *self, void (*fn)(void*), void* ptr)
 {
@@ -567,6 +571,7 @@ static void *render_thread(void *ptr)
     }
 
 stop:
+    done_consume(self->queue);
     glDeleteFramebuffers(1, &self->framebuffer);
     glDeleteTextures(5, &self->fbtextures[0]);
     return NULL;

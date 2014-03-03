@@ -24,8 +24,10 @@ static void context_free(void *ptr)
     ilE_handler_destroy(self->resize);
     ilE_handler_destroy(self->close);
     queue_free(self->queue);
+
     SDL_GL_DeleteContext(self->context);
     SDL_DestroyWindow(self->window);
+    free(self);
 }
 
 static void context_draw(void *ptr)
