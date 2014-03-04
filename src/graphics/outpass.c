@@ -201,8 +201,6 @@ const ilG_renderable ilG_out_renderer = {
     .build = out_build,
     .get_storage = out_get_storage,
     .get_complete = out_get_complete,
-    .add_positionable = NULL,
-    .add_renderer = NULL,
     .name = "Out"
 };
 

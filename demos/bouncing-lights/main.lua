@@ -47,7 +47,7 @@ local c, w, root, pipe
 c, w, root, pipe = helper.context { skybox=skybox,
                                     geom=true,
                                     lights=true,
-                                    --transparency=true,
+                                    transparency=true,
                                     gui=true,
                                     --output=true,
                                     hints = {hdr=0,debug_context=1,debug_render=1,use_default_fb=1} }
@@ -79,14 +79,14 @@ glow:matrix("MVP", "mvp")
 glow:posFunc(modules.bouncinglights.custom_data_func, "col")
 
 local ball = renderer.legacy(sphere, glow)
---pipe[4]:add(ball)
+pipe[4]:add(ball)
 
 _G.num_lights = 0
 --event.setPacker(event.registry, "physics.tick", event.nilPacker)
 --event.timer(event.registry, "physics.tick", 1/60)
 --drawable.setattr(sphere, "istransparent", true)
 local debugRender = false --true
-event.register(input.button, function(key, scancode, device, isDown, mods)
+event.register(input.button, function(key, isDown)
     if key < 128 then 
         key = string.char(key)
     end

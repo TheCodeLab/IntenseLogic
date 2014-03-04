@@ -72,8 +72,6 @@ const ilG_renderable ilG_skybox_renderer = {
     .build = sky_build,
     .get_storage = sky_get_storage,
     .get_complete = sky_get_complete,
-    .add_positionable = NULL,
-    .add_renderer = NULL,
     .name = "Skybox"
 };
 

@@ -64,10 +64,14 @@ ex const ilG_renderable debug_renderer = {
     /*.build =*/ debug_build,
     /*.get_storage =*/ NULL,
     /*.get_complete =*/ NULL,
-    /*.add_positionable =*/ NULL,
-    /*.add_renderer =*/ NULL,
-    /*.remove_renderer =*/ NULL,
+    /*.add_positionable =*/ 0,
+    /*.del_positionable =*/ 0,
+    /*.add_renderer =*/ 0,
+    /*.del_renderer =*/ 0,
+    /*.add_light =*/ 0,
+    /*.del_light =*/ 0,
     /*.message =*/ NULL,
+    /*.push_msg =*/ NULL,
     /*.name =*/ "Debug Draw"
 };
 

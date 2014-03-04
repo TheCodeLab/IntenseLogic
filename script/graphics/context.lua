@@ -2,11 +2,11 @@ local ffi       = require "ffi"
 local drawable  = require "graphics.drawable"
 local material  = require "graphics.material"
 local base      = require "common.base"
+local renderer  = require "graphics.renderer"
 
 require "util.timeval"
 require "common.event"
 require "input.input"
-require "graphics.renderer"
 
 ffi.cdef[[
 
@@ -96,7 +96,7 @@ end
 
 function context:add(r)
     assert(self ~= nil and r ~= nil)
-    modules.graphics.ilG_context_renderer.add_renderer(self, r)
+    renderer.wrap(self, modules.graphics.ilG_context_renderer):add(r)
 end
 
 function context:rename(t)

@@ -168,14 +168,35 @@ static bool lights_get_complete(const void *ptr)
     return self->complete;
 }
 
+static void lights_message(void *ptr, int type, il_value *v)
+{
+    (void)type;
+    ilG_lights *self = ptr;
+    ilG_light *light = il_value_tomvoid(v);
+    IL_APPEND(self->lights, *light);
+}
+
+static void lights_push_msg(void *ptr, int type, il_value v)
+{
+    (void)type;
+    ilG_lights *self = ptr;
+    if (self->context) {
+        ilG_context_message(self->context, ilG_lights_wrap(self), type, v);
+    } else {
+        lights_message(ptr, type, &v);
+        il_value_free(v);
+    }
+}
+
 const ilG_renderable ilG_lights_renderer = {
     .free = lights_free,
     .draw = lights_draw,
     .build = lights_build,
     .get_storage = lights_get_storage,
     .get_complete = lights_get_complete,
-    .add_positionable = NULL,
-    .add_renderer = NULL,
+    .add_light = 1,
+    .message = lights_message,
+    .push_msg = lights_push_msg,
     .name = "Deferred Shader"
 };
 
@@ -201,10 +222,5 @@ ilG_lights *ilG_lights_new()
     self->invalidated = 1;
 
     return self;
-}
-
-void ilG_lights_add(ilG_lights *self, ilG_light light)
-{
-    IL_APPEND(self->lights, light);
 }
 

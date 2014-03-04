@@ -19,7 +19,7 @@ typedef enum ilG_gui_inputaction (*ilG_gui_onClick)(ilG_gui_frame *self, int x, 
 typedef enum ilG_gui_inputaction (*ilG_gui_onHover)(ilG_gui_frame *self, int x, int y);
 typedef void (*ilG_gui_draw_fn)(ilG_gui_frame *self, ilG_gui_rect where);
 typedef int (*ilG_gui_build_fn)(ilG_gui_frame *self, struct ilG_context *context);
-typedef void (*ilG_gui_message_fn)(ilG_gui_frame *self, int type, il_value v);
+typedef void (*ilG_gui_message_fn)(ilG_gui_frame *self, int type, il_value *v);
 
 struct ilG_gui_frame {
     il_base base;

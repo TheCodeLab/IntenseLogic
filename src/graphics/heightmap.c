@@ -73,10 +73,52 @@ static bool heightmap_get_complete(const void *ptr)
     return self->complete;
 }
 
-static void heightmap_add_positionable(void *ptr, il_positionable pos)
+static void heightmap_add_positionable(ilG_heightmap *self, il_positionable pos)
 {
-    ilG_heightmap *self = ptr;
     IL_APPEND(self->positionables, pos);
+}
+
+static bool pos_eq(il_positionable p1, il_positionable p2)
+{
+    return p1.id == p2.id && p1.world == p2.world;
+}
+
+static void heightmap_del_positionable(ilG_heightmap *self, il_positionable pos)
+{
+    for (unsigned i = 0; i < self->positionables.length-1; i++) {
+        if (pos_eq(self->positionables.data[i], pos)) {
+            self->positionables.data[i] = self->positionables.data[--self->positionables.length];
+            return;
+        }
+    }
+    if (self->positionables.length > 0 && pos_eq(self->positionables.data[self->positionables.length-1], pos)) {
+        --self->positionables.length;
+        return;
+    }
+    il_error("Heightmap %p does not own positionable %i[%p]", self, pos.id, pos.world);
+}
+
+static void heightmap_message(void *obj, int type, il_value *v)
+{
+    switch (type) {
+    case 1:
+        heightmap_add_positionable(obj, *(il_positionable*)il_value_tomvoid(v));
+        break;
+    case 2:
+        heightmap_del_positionable(obj, *(il_positionable*)il_value_tomvoid(v));
+        break;
+    }
+}
+
+static void heightmap_push_msg(void *obj, int type, il_value v)
+{
+    ilG_heightmap *self = obj;
+    if (self->context) {
+        ilG_context_message(self->context, ilG_heightmap_wrap(self), type, v);
+    } else {
+        heightmap_message(obj, type, &v);
+        il_value_free(v);
+    }
 }
 
 const ilG_renderable ilG_heightmap_renderer = {
@@ -85,8 +127,10 @@ const ilG_renderable ilG_heightmap_renderer = {
     .build = heightmap_build,
     .get_storage = heightmap_get_storage,
     .get_complete = heightmap_get_complete,
-    .add_positionable = heightmap_add_positionable,
-    .add_renderer = NULL,
+    .add_positionable = 1,
+    .del_positionable = 2,
+    .message = heightmap_message,
+    .push_msg = heightmap_push_msg,
     .name = "Heightmap"
 };
 

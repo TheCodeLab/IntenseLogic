@@ -24,8 +24,6 @@ struct ilG_context_msg {
         ILG_UPLOAD,
         ILG_RESIZE,
         ILG_STOP,
-        ILG_ADD,
-        ILG_REMOVE,
         ILG_MESSAGE
     } type;
     union {
@@ -186,24 +184,6 @@ int ilG_context_rename(ilG_context *self, const char *title)
     return 1;
 }
 
-void ilG_context_add(ilG_context *self, ilG_renderer parent, ilG_renderer node)
-{
-    struct ilG_context_msg *msg = calloc(1, sizeof(struct ilG_context_msg));
-    msg->type = ILG_ADD;
-    msg->value.add.parent = parent;
-    msg->value.add.node = node;
-    produce(self->queue, msg);
-}
-
-void ilG_context_remove(ilG_context *self, ilG_renderer parent, ilG_renderer node)
-{
-    struct ilG_context_msg *msg = calloc(1, sizeof(struct ilG_context_msg));
-    msg->type = ILG_REMOVE;
-    msg->value.remove.parent = parent;
-    msg->value.remove.node = node;
-    produce(self->queue, msg);
-}
-
 void ilG_context_message(ilG_context *self, ilG_renderer node, int type, il_value data)
 {
     struct ilG_context_msg *msg = calloc(1, sizeof(struct ilG_context_msg));
@@ -307,19 +287,9 @@ static int context_resize(ilG_context *self, int w, int h)
     return 1;
 }
 
-static void context_add(ilG_renderer parent, ilG_renderer node)
-{
-    parent.vtable->add_renderer(parent.obj, node);
-}
-
-static void context_remove(ilG_renderer parent, ilG_renderer node)
-{
-    parent.vtable->remove_renderer(parent.obj, node);
-}
-
 static void context_message(ilG_renderer parent, int type, il_value data)
 {
-    parent.vtable->message(parent.obj, type, data);
+    parent.vtable->message(parent.obj, type, &data);
     il_value_free(data);
 }
 
@@ -545,8 +515,6 @@ static void *render_thread(void *ptr)
                 case ILG_UPLOAD: context_upload(self, msg->value.upload.cb, msg->value.upload.ptr); break;
                 case ILG_RESIZE: context_resize(self, msg->value.resize[0], msg->value.resize[1]); break;
                 case ILG_STOP: goto stop;
-                case ILG_ADD: context_add(msg->value.add.parent, msg->value.add.node); break;
-                case ILG_REMOVE: context_remove(msg->value.remove.parent, msg->value.remove.node); break;
                 case ILG_MESSAGE: context_message(msg->value.message.node, msg->value.message.type, msg->value.message.data); break;
             }
             done_consume(self->queue);

@@ -59,11 +59,11 @@ static int image_build(ilG_gui_frame *self, ilG_context *context)
     return 1;
 }
 
-static void image_message(ilG_gui_frame *self, int type, il_value v)
+static void image_message(ilG_gui_frame *self, int type, il_value *v)
 {
     (void)type;
     struct image *img = il_table_mgetsp(&self->base.storage, "gui.image");
-    const il_vector *vec = il_value_tovec(&v);
+    const il_vector *vec = il_value_tovec(v);
     const ilG_tex *tex = il_vector_getp(vec, 0);
     int premultiplied = il_vector_geti(vec, 1);
     memcpy(&img->tex, tex, sizeof(ilG_tex));

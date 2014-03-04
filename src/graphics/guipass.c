@@ -56,8 +56,6 @@ const ilG_renderable ilG_gui_renderer = {
     .build = gui_build,
     .get_storage = gui_get_storage,
     .get_complete = gui_get_complete,
-    .add_positionable = NULL,
-    .add_renderer = NULL,
     .name = "GUI"
 };
 

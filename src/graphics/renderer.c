@@ -72,21 +72,73 @@ const char *ilG_renderer_getName(const ilG_renderer *self)
 
 int ilG_renderer_addPositionable(ilG_renderer *self, il_positionable pos)
 {
-    if (!self->vtable->add_positionable) {
-        il_error("Attempt to add a positionable to renderer which does not handle them");
+    if (self->vtable->add_positionable <= 0) {
+        il_error("Renderer %s<%p> does not implement addPositionable", self->vtable->name, self->obj);
         return 0;
     }
-    self->vtable->add_positionable(self->obj, pos);
+    il_positionable *ptr = calloc(1, sizeof(il_positionable));
+    *ptr = pos;
+    self->vtable->push_msg(self->obj, self->vtable->add_positionable, il_vopaque(ptr, free));
     return 1;
 }
 
-int ilG_renderer_addRenderer(ilG_renderer *self, ilG_renderer r)
+int ilG_renderer_delPositionable(ilG_renderer *self, il_positionable pos)
 {
-    if (!self->vtable->add_renderer) {
-        il_error("Attempt to add a renderer to renderer which does not handle them");
+    if (self->vtable->del_positionable <= 0) {
+        il_error("Renderer %s<%p> does not implement delPositionable", self->vtable->name, self->obj);
         return 0;
     }
-    self->vtable->add_renderer(self->obj, r);
+    il_positionable *ptr = calloc(1, sizeof(il_positionable));
+    *ptr = pos;
+    self->vtable->push_msg(self->obj, self->vtable->del_positionable, il_vopaque(ptr, free));
+    return 1;
+}
+
+int ilG_renderer_addRenderer(ilG_renderer *self, ilG_renderer node)
+{
+    if (self->vtable->add_renderer <= 0) {
+        il_error("Renderer %s<%p> does not implement addRenderer", self->vtable->name, self->obj);
+        return 0;
+    }
+    ilG_renderer *ptr = calloc(1, sizeof(ilG_renderer));
+    *ptr = node;
+    self->vtable->push_msg(self->obj, self->vtable->add_renderer, il_vopaque(ptr, free));
+    return 1;
+}
+
+int ilG_renderer_delRenderer(ilG_renderer *self, ilG_renderer node)
+{
+    if (self->vtable->del_renderer <= 0) {
+        il_error("Renderer %s<%p> does not implement delRenderer", self->vtable->name, self->obj);
+        return 0;
+    }
+    ilG_renderer *ptr = calloc(1, sizeof(ilG_renderer));
+    *ptr = node;
+    self->vtable->push_msg(self->obj, self->vtable->del_renderer, il_vopaque(ptr, free));
+    return 1;
+}
+
+int ilG_renderer_addLight(ilG_renderer *self, ilG_light light)
+{
+    if (self->vtable->add_light <= 0) {
+        il_error("Renderer %s<%p> does not implement addLight", self->vtable->name, self->obj);
+        return 0;
+    }
+    ilG_light *ptr = calloc(1, sizeof(ilG_light));
+    *ptr = light;
+    self->vtable->push_msg(self->obj, self->vtable->add_renderer, il_vopaque(ptr, free));
+    return 1;
+}
+
+int ilG_renderer_delLight(ilG_renderer *self, ilG_light light)
+{
+    if (self->vtable->del_light <= 0) {
+        il_error("Renderer %s<%p> does not implement delLight", self->vtable->name, self->obj);
+        return 0;
+    }
+    ilG_light *ptr = calloc(1, sizeof(ilG_renderer));
+    *ptr = light;
+    self->vtable->push_msg(self->obj, self->vtable->del_renderer, il_vopaque(ptr, free));
     return 1;
 }
 

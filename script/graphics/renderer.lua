@@ -5,11 +5,14 @@ ffi.cdef [[
 typedef struct ilG_renderable {
     void (*free)(void *obj);
     void (*draw)(void *obj);
-    void (*build)(void *obj, struct ilG_context *context);
+    int (*build)(void *obj, struct ilG_context *context);
     il_table *(*get_storage)(void *obj);
     bool (*get_complete)(const void *obj);
-    void (*add_positionable)(void *obj, il_positionable pos);
-    void (*add_renderer)(void *obj, struct ilG_renderer r);
+    int add_positionable, del_positionable;
+    int add_renderer, del_renderer;
+    int add_light, del_light;
+    void (*message)(void *obj, int type, il_value *v);
+    void (*push_msg)(void *obj, int type, il_value v);
     const char *name;
 } ilG_renderable;
 
@@ -34,8 +37,12 @@ const il_table *ilG_renderer_getStorage(const ilG_renderer *self);
 il_table *ilG_renderer_mgetStorage(ilG_renderer *self);
 const char *ilG_renderer_getName(const ilG_renderer *self);
 
-void ilG_renderer_addPositionable(ilG_renderer *self, il_positionable pos);
-void ilG_renderer_addRenderer(ilG_renderer *self, ilG_renderer r);
+int ilG_renderer_addPositionable(ilG_renderer *self, il_positionable pos);
+int ilG_renderer_delPositionable(ilG_renderer *self, il_positionable pos);
+int ilG_renderer_addRenderer(ilG_renderer *self, ilG_renderer node);
+int ilG_renderer_delRenderer(ilG_renderer *self, ilG_renderer node);
+int ilG_renderer_addLight(ilG_renderer *self, struct ilG_light light);
+int ilG_renderer_delLight(ilG_renderer *self, struct ilG_light light);
 
 // skyboxpass.h
 
@@ -141,11 +148,7 @@ function renderer:add(o)
     elseif ffi.istype('ilG_renderer', o) then
         modules.graphics.ilG_renderer_addRenderer(self, o)
     elseif ffi.istype('ilG_light', o) then
-        local p = ffi.new('ilG_renderable*', modules.graphics.ilG_lights_renderer)
-        if self.vtable ~= p then
-            error "Attempt to add light to non-light-renderer"
-        end
-        modules.graphics.ilG_lights_add(self.obj, o)
+        modules.graphics.ilG_renderer_addLight(self, o)
     else
         error("Can't handle type")
     end

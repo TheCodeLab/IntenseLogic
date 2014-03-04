@@ -1,6 +1,7 @@
 #include "frame.h"
 
 #include "util/log.h"
+#include "graphics/context.h"
 
 il_type ilG_gui_frame_type = {
     .typeclasses = NULL,
@@ -42,9 +43,8 @@ static bool frame_get_complete(const void *ptr)
     return self->complete;
 }
 
-static void frame_add_renderer(void *ptr, ilG_renderer r)
+static void frame_add_renderer(ilG_gui_frame *self, ilG_renderer r)
 {
-    ilG_gui_frame *self = ptr;
     if (r.vtable != &ilG_gui_frame_renderer) {
         il_error("Cannot add non-frame to frame");
         return;
@@ -52,9 +52,8 @@ static void frame_add_renderer(void *ptr, ilG_renderer r)
     IL_APPEND(self->children, r.obj);
 }
 
-static void frame_remove_renderer(void *ptr, ilG_renderer node)
+static void frame_del_renderer(ilG_gui_frame *self, ilG_renderer node)
 {
-    ilG_gui_frame *self = ptr;
     for (unsigned i = 0; i < self->children.length; i++) {
         if (self->children.data[i] == node.obj) {
             IL_REMOVE(self->children, i);
@@ -63,10 +62,30 @@ static void frame_remove_renderer(void *ptr, ilG_renderer node)
     }
 }
 
-static void frame_message(void *ptr, int type, il_value v)
+static void frame_message(void *ptr, int type, il_value *v)
 {
     ilG_gui_frame *self = ptr;
-    self->message(ptr, type, v);
+    switch (type) {
+    case 1:
+        frame_add_renderer(self, *(ilG_renderer*)il_value_tomvoid(v));
+        break;
+    case 2:
+        frame_del_renderer(self, *(ilG_renderer*)il_value_tomvoid(v));
+        break;
+    default:
+        self->message(ptr, type, v);
+    }
+}
+
+static void frame_push_msg(void *ptr, int type, il_value v)
+{
+    ilG_gui_frame *self = ptr;
+    if (self->context) {
+        ilG_context_message(self->context, ilG_gui_frame_wrap(self), type, v);
+    } else {
+        frame_message(ptr, type, &v);
+        il_value_free(v);
+    }
 }
 
 const ilG_renderable ilG_gui_frame_renderer = {
@@ -75,10 +94,10 @@ const ilG_renderable ilG_gui_frame_renderer = {
     .build = frame_build,
     .get_storage = frame_get_storage,
     .get_complete = frame_get_complete,
-    .add_positionable = NULL,
-    .add_renderer = frame_add_renderer,
-    .remove_renderer = frame_remove_renderer,
+    .add_renderer = 1,
+    .del_renderer = 2,
     .message = frame_message,
+    .push_msg = frame_push_msg,
     .name = "GUI Frame"
 };
 
