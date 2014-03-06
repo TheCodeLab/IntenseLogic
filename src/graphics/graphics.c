@@ -9,6 +9,7 @@
 #include <math.h>
 #include <unistd.h>
 #include <getopt.h>
+#include <signal.h>
 
 #include "graphics/camera.h"
 #include "common/event.h"
@@ -101,6 +102,8 @@ static void sdl_setup()
     if (SDL_VideoInit(NULL) != 0) {
         il_error("SDL_VideoInit: %s", SDL_GetError());
     }
+    signal(SIGINT, SIG_DFL); // TODO: fuck you sdl, for not letting me disable the signal handler
+    signal(SIGTERM, SIG_DFL);
     SDL_LogSetOutputFunction(sdl_error, NULL);
     il_log("Using SDL %s", SDL_GetRevision());
     ilG_registerSdlInputBackend();
