@@ -9,7 +9,7 @@ static int getkey(ilI_backend *self, enum ilI_key key)
     int len;
     const Uint8 *keys = SDL_GetKeyboardState(&len);
     if ((int)key < len) {
-        return keys[len];
+        return keys[key];
     }
     if (key < 768) {
         return 0 != (SDL_GetMouseState(NULL,NULL) & 1<<(key - 512));
