@@ -228,8 +228,12 @@ static int context_upload(ilG_context *self, void (*fn)(void*), void* ptr)
 
 static int context_resize(ilG_context *self, int w, int h)
 {
-    il_log("%i, %i", w, h);
+    self->width = w;
+    self->height = h;
     if (self->use_default_fb) {
+        il_value val = il_value_vectorl(2, il_value_int(self->width), il_value_int(self->height));
+        ilE_handler_fire(self->resize, &val);
+        il_value_free(val);
         self->valid = 1;
         return 1;
     }
@@ -239,8 +243,6 @@ static int context_resize(ilG_context *self, int w, int h)
     glEnable(GL_DEPTH_TEST);
     IL_GRAPHICS_TESTERROR("Error setting up screen");
 
-    self->width = w;
-    self->height = h;
     glBindFramebuffer(GL_FRAMEBUFFER, self->framebuffer);
     glBindTexture(GL_TEXTURE_RECTANGLE, self->fbtextures[ILG_CONTEXT_DEPTH]);
     glTexImage2D(GL_TEXTURE_RECTANGLE, 0, GL_DEPTH_COMPONENT, w, h, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
