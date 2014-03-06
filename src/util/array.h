@@ -133,5 +133,25 @@
                  --(list).length - (id) ); \
     } while(0)
 
+/** Shuffles the last element into the position of the to-be-removed element */
+#define IL_FASTREMOVE(list, id)                                 \
+    do {                                                        \
+        if ((id) < (list).length-1) { /* not the last element */\
+            (list).data[id] = (list).data[--(list).length];     \
+        } else {                                                \
+            --(list).length;                                    \
+        }                                                       \
+    } while(0)
+
+#define IL_FIND(list, var, eq, out_id)  \
+    do {                                \
+        for (out_id = 0; out_id < (list).length; out_id++) { \
+            var = (list).data[out_id];  \
+            if (eq) {                   \
+                break;                  \
+            }                           \
+        }                               \
+    } while(0)
+
 #endif
 

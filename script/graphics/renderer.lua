@@ -154,6 +154,19 @@ function renderer:add(o)
     end
 end
 
+function renderer:del(o)
+    assert(self ~= nil and o ~= nil)
+    if ffi.istype('il_positionable', o) then
+        modules.graphics.ilG_renderer_delPositionable(self, o)
+    elseif ffi.istype('ilG_renderer', o) then
+        modules.graphics.ilG_renderer_delRenderer(self, o)
+    elseif ffi.istype('ilG_light', o) then
+        modules.graphics.ilG_renderer_delLight(self, o)
+    else
+        error("Can't handle type")
+    end
+end
+
 function renderer:destroy()
     modules.graphics.ilG_renderer_free(self)
 end

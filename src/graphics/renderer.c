@@ -126,7 +126,7 @@ int ilG_renderer_addLight(ilG_renderer *self, ilG_light light)
     }
     ilG_light *ptr = calloc(1, sizeof(ilG_light));
     *ptr = light;
-    self->vtable->push_msg(self->obj, self->vtable->add_renderer, il_vopaque(ptr, free));
+    self->vtable->push_msg(self->obj, self->vtable->add_light, il_vopaque(ptr, free));
     return 1;
 }
 
@@ -138,7 +138,7 @@ int ilG_renderer_delLight(ilG_renderer *self, ilG_light light)
     }
     ilG_light *ptr = calloc(1, sizeof(ilG_renderer));
     *ptr = light;
-    self->vtable->push_msg(self->obj, self->vtable->del_renderer, il_vopaque(ptr, free));
+    self->vtable->push_msg(self->obj, self->vtable->del_light, il_vopaque(ptr, free));
     return 1;
 }
 
