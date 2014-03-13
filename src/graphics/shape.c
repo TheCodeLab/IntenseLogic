@@ -234,7 +234,7 @@ il_type ilG_shape_type = {
     .parent = &ilG_drawable3d_type
 };
 
-static ilG_bindable shape_bindable = {
+ilG_bindable ilG_shape_bindable = {
     .name = "il.graphics.bindable",
     .bind = &bind,
     .action = &draw
@@ -242,7 +242,7 @@ static ilG_bindable shape_bindable = {
 
 void ilG_shape_init()
 {
-    il_impl(&ilG_shape_type, &shape_bindable);
+    il_impl(&ilG_shape_type, &ilG_shape_bindable);
 }
 
 ilG_drawable3d *ilG_box(ilG_context *context)

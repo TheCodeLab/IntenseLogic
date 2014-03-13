@@ -5,7 +5,6 @@
 #include "graphics/material.h"
 #include "graphics/arrayattrib.h"
 #include "graphics/fragdata.h"
-#include "graphics/textureunit.h"
 #include "graphics/context.h"
 #include "graphics/gui/quad.h"
 #include "graphics/tex.h"
@@ -86,7 +85,7 @@ void ilG_gui_frame_image(ilG_gui_frame *self)
     ilG_material_name(shader, "GUI Image");
     ilG_material_arrayAttrib(shader, ILG_ARRATTR_POSITION, "in_Position");
     ilG_material_fragData(shader, ILG_FRAGDATA_ACCUMULATION, "out_Color");
-    ilG_material_textureUnit(shader, ILG_TUNIT_COLOR0, "tex");
+    ilG_material_textureUnit(shader, 0, "tex");
 
     il_table_setsp(&self->base.storage, "gui.image", il_opaque(img, free));
     self->draw = image_draw;
@@ -99,6 +98,7 @@ void ilG_gui_frame_image_setTex(ilG_gui_frame *self, struct ilG_tex *tex, int pr
     if (self->context) {
         ilG_tex *mem = calloc(1, sizeof(ilG_tex));
         memcpy(mem, tex, sizeof(*mem));
+        mem->unit = 0;
         ilG_context_message(self->context, ilG_gui_frame_wrap(self), 0, il_value_vectorl(2, il_vopaque(mem, free), il_value_int(premultiplied)));
     } else {
         struct image *img = il_table_mgetsp(&self->base.storage, "gui.image");

@@ -26,7 +26,6 @@
 #include "graphics/glutil.h"
 #include "util/ilstring.h"
 #include "graphics/arrayattrib.h"
-#include "graphics/textureunit.h"
 #include "graphics/fragdata.h"
 #include "graphics/bindable.h"
 

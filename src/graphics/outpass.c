@@ -8,7 +8,6 @@
 #include "graphics/material.h"
 #include "graphics/glutil.h"
 #include "graphics/arrayattrib.h"
-#include "graphics/textureunit.h"
 #include "graphics/framebuffer.h"
 #include "graphics/fragdata.h"
 
@@ -228,7 +227,7 @@ ilG_out *ilG_out_new()
     ilG_material_arrayAttrib(m, ILG_ARRATTR_TEXCOORD, "in_Texcoord");
     ilG_material_fragData(m, 0, "out_Color");
     ilG_material_bindFunc(m, size_uniform, self, "size");
-    ilG_material_textureUnit(m, ILG_TUNIT_NONE, "tex");
+    ilG_material_textureUnit(m, 0, "tex");
     ilG_material_fragment_file(m, "horizblur.frag");
 
     m = self->vertblur = ilG_material_new();
@@ -238,7 +237,7 @@ ilG_out *ilG_out_new()
     ilG_material_arrayAttrib(m, ILG_ARRATTR_TEXCOORD, "in_Texcoord");
     ilG_material_fragData(m, 0, "out_Color");
     ilG_material_bindFunc(m, size_uniform, self, "size");
-    ilG_material_textureUnit(m, ILG_TUNIT_NONE, "tex");
+    ilG_material_textureUnit(m, 0, "tex");
     ilG_material_fragment_file(m, "vertblur.frag");
     
     m = self->material = ilG_material_new();
@@ -247,7 +246,7 @@ ilG_out *ilG_out_new()
     ilG_material_arrayAttrib(m, ILG_ARRATTR_POSITION, "in_Position");
     ilG_material_arrayAttrib(m, ILG_ARRATTR_TEXCOORD, "in_Texcoord");
     ilG_material_bindFunc(m, size_uniform, self, "size");
-    ilG_material_textureUnit(m, ILG_TUNIT_NONE, "tex");
+    ilG_material_textureUnit(m, 0, "tex");
 
     ilG_testError("Failed to build vbo");
 

@@ -5,16 +5,17 @@
 #include "graphics/material.h"
 #include "graphics/shape.h"
 #include "graphics/fragdata.h"
-#include "graphics/textureunit.h"
 #include "graphics/arrayattrib.h"
 #include "graphics/renderer.h"
+#include "graphics/drawable3d.h"
 #include "math/vector.h"
 #include "math/matrix.h"
+#include "util/log.h"
 
 struct ilG_lights {
     ilG_context *context;
     GLuint vao, vbo, ibo, lights_ubo, lights_index, mvp_ubo, mvp_index;
-    GLint lights_size, mvp_size, lights_offset[3], mvp_offset[1];
+    GLint lights_size, mvp_size, lights_offset[3], mvp_offset[1], position_loc, color_loc, radius_loc;
     ilG_material* material;
     int invalidated;
     bool complete;
@@ -89,14 +90,11 @@ static void lights_draw(void *ptr)
     }*/
     //glBindBufferBase(GL_UNIFORM_BUFFER, context->lightdata.lights_index, context->lightdata.lights_ubo);
     //glBindBufferBase(GL_UNIFORM_BUFFER, context->lightdata.mvp_index, context->lightdata.mvp_ubo);
-    context->drawable = ilG_icosahedron(context);
-    context->drawableb = il_cast(il_typeof(context->drawable), "il.graphics.bindable");
-    context->material = self->material;
-    context->materialb = il_cast(il_typeof(context->material), "il.graphics.bindable");
-    ilG_bindable_bind(context->drawableb, context->drawable);
-    ilG_bindable_bind(context->materialb, context->material);
+    ilG_drawable3d *drawable = ilG_icosahedron(context);
+    ilG_bindable_bind(&ilG_shape_bindable, drawable);
+    ilG_bindable_bind(&ilG_material_bindable, self->material);
     il_vec3 pos = il_positionable_getPosition(&context->camera->positionable);
-    glUniform3f(glGetUniformLocation(context->material->program, "camera"), 
+    glUniform3f(glGetUniformLocation(self->material->program, "camera"), 
             pos.x, 
             pos.y,
             pos.z);
@@ -115,29 +113,24 @@ static void lights_draw(void *ptr)
     glFrontFace(GL_CCW);
     glCullFace(GL_FRONT);
     
-    GLint position_loc  = glGetUniformLocation(context->material->program, "position"),
-          color_loc     = glGetUniformLocation(context->material->program, "color"),
-          radius_loc    = glGetUniformLocation(context->material->program, "radius");
     //il_mat vp = ilG_computeMVP(ILG_VP, context->camera, NULL);
     //il_vec4 vec = il_vec4_new();
     unsigned int i;
     for (i = 0; i < self->lights.length; i++) {
         context->positionable = &self->lights.data[i].positionable;
-        ilG_bindable_action(context->materialb, context->material);
+        ilG_bindable_action(&ilG_material_bindable, self->material);
         il_vec3 pos = il_positionable_getPosition(context->positionable);
         //pos = il_mat_mulv(vp, pos, pos);
-        glUniform3f(position_loc, pos.x, pos.y, pos.z);
+        glUniform3f(self->position_loc, pos.x, pos.y, pos.z);
         il_vec3 col = self->lights.data[i].color;
-        glUniform3f(color_loc, col.x, col.y, col.z);
-        glUniform1f(radius_loc, self->lights.data[i].radius);
-        ilG_bindable_action(context->drawableb, context->drawable);
+        glUniform3f(self->color_loc, col.x, col.y, col.z);
+        glUniform1f(self->radius_loc, self->lights.data[i].radius);
+        ilG_bindable_action(&ilG_shape_bindable, drawable);
         //glDrawElements(GL_TRIANGLES, sizeof(indices)/sizeof(GLuint), GL_UNSIGNED_INT, NULL);
     }
     //il_vec4_free(vec);
     //glDrawElementsInstanced(GL_TRIANGLES, sizeof(indices)/sizeof(GLuint), GL_UNSIGNED_INT, NULL, context->lights.length);
     glDisable(GL_BLEND);
-    ilG_bindable_unbind(context->drawableb, context->drawable);
-    ilG_bindable_unbind(context->materialb, context->material);
     context->drawable = NULL;
     context->material = NULL;
     context->drawableb = NULL;
@@ -152,6 +145,10 @@ static int lights_build(void *ptr, ilG_context *context)
     if (ilG_material_link(self->material, context)) {
         return 0;
     }
+    self->position_loc  = glGetUniformLocation(self->material->program, "position");
+    self->color_loc     = glGetUniformLocation(self->material->program, "color");
+    self->radius_loc    = glGetUniformLocation(self->material->program, "radius");
+
     self->complete = 1;
     return 1;
 }
@@ -237,10 +234,10 @@ ilG_lights *ilG_lights_new()
     ilG_material_fragment_file(mtl, "light.frag");
     ilG_material_name(mtl, "Deferred Shader");
     ilG_material_arrayAttrib(mtl, ILG_ARRATTR_POSITION, "in_Position");
-    ilG_material_textureUnit(mtl, ILG_TUNIT_NONE, "depth");
-    ilG_material_textureUnit(mtl, ILG_TUNIT_NONE, "normal");
-    ilG_material_textureUnit(mtl, ILG_TUNIT_NONE, "diffuse");
-    ilG_material_textureUnit(mtl, ILG_TUNIT_NONE, "specular");
+    ilG_material_textureUnit(mtl, 0, "depth");
+    ilG_material_textureUnit(mtl, 1, "normal");
+    ilG_material_textureUnit(mtl, 2, "diffuse");
+    ilG_material_textureUnit(mtl, 3, "specular");
     ilG_material_matrix(mtl, ILG_INVERSE | ILG_VP, "ivp");
     ilG_material_fragData(mtl, ILG_FRAGDATA_ACCUMULATION, "out_Color");
     ilG_material_matrix(mtl, ILG_MODEL_T | ILG_VP, "mvp");

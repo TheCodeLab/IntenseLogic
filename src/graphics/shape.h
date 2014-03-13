@@ -10,5 +10,7 @@ struct ilG_drawable3d* ilG_box(struct ilG_context *context);
 struct ilG_drawable3d* ilG_icosahedron(struct ilG_context *context);
 
 extern il_type ilG_shape_type;
+extern struct ilG_bindable ilG_shape_bindable;
 
 #endif
+

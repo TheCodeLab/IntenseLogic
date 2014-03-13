@@ -5,7 +5,6 @@
 
 #include "graphics/glutil.h"
 #include "graphics/context.h"
-#include "graphics/textureunit.h"
 #include "graphics/arrayattrib.h"
 #include "util/log.h"
 #include "graphics/drawable3d.h"
@@ -65,7 +64,6 @@ static void mtl_bind(void *obj)
     for (i = 0; i < mtl->config->texunits.length; i++) {
         glUniform1i(mtl->config->texunits.data[i].uniform, i);
         ilG_testError("glUniform1i()");
-        ILG_TUNIT_ACTIVE(mtl->context, i, mtl->config->texunits.data[i].type);
     }
     for (i = 0; i < mtl->config->matrices.length; i++) {
         if (!(mtl->config->matrices.data[i].type & ILG_MODEL)) { 

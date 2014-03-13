@@ -4,7 +4,6 @@
 #include "graphics/bindable.h"
 #include "graphics/material.h"
 #include "graphics/arrayattrib.h"
-#include "graphics/textureunit.h"
 #include "graphics/shape.h"
 #include "graphics/tex.h"
 #include "graphics/fragdata.h"
@@ -85,7 +84,7 @@ ilG_skybox *ilG_skybox_new(ilG_tex skytex)
     ilG_material_name(shader, "Skybox Shader");
     ilG_material_arrayAttrib(shader, ILG_ARRATTR_POSITION, "in_Position");
     ilG_material_arrayAttrib(shader, ILG_ARRATTR_TEXCOORD, "in_Texcoord");
-    ilG_material_textureUnit(shader, ILG_TUNIT_COLOR0, "skytex");
+    ilG_material_textureUnit(shader, 0, "skytex");
     ilG_material_matrix(shader, ILG_VIEW_R | ILG_PROJECTION, "mat");
     ilG_material_fragData(shader, ILG_FRAGDATA_ACCUMULATION, "out_Color");
     ilG_material_fragData(shader, ILG_FRAGDATA_NORMAL, "out_Normal");
@@ -94,6 +93,7 @@ ilG_skybox *ilG_skybox_new(ilG_tex skytex)
 
     self->material = shader;
     self->texture = skytex;
+    self->texture.unit = 0;
     return self;
 }
 
