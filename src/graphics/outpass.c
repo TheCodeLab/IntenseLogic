@@ -100,8 +100,10 @@ static void out_draw(void *ptr)
                               0,0, w,h,
                               GL_COLOR_BUFFER_BIT,
                               GL_LINEAR);
+            ilG_testError("Blit failed");
 
             // From the front buffer,
+            glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_RECTANGLE, ilG_fbo_getTex(self->front, 0));
             // into the result buffer,
             ilG_fbo_bind(self->result, ILG_FBO_RW);
@@ -119,6 +121,7 @@ static void out_draw(void *ptr)
             // additively,
             glBlendFunc(GL_ONE, GL_ONE);
             // from the result buffer,
+            glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_RECTANGLE, ilG_fbo_getTex(self->result, 0));
             // do a vertical blur.
             ilG_bindable_bind(&ilG_material_bindable, self->vertblur);
@@ -249,6 +252,8 @@ ilG_out *ilG_out_new()
     ilG_material_textureUnit(m, 0, "tex");
 
     ilG_testError("Failed to build vbo");
+
+    self->which = 1;
 
     self->complete = 1;
 
