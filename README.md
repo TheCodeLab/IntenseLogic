@@ -1,35 +1,67 @@
-# Intense Logic
-Intense Logic is metagaming at its finest.
+# IntenseLogic
+IntenseLogic is a set of libraries for developing a game or game engine written in C99, which runs on Linux, Windows, and OS X.
+
+## Libraries
+
+### Graphics
+A 3D graphics library for rendering scenes using OpenGL, which runs on its own thread.
+
+Supports deferred shading and custom renderers.
+
+Contains simple GUI support, including a fully featured text renderer using Cairo, HarfBuzz, and FreeType2. It is capable of correctly rendering almost any language, provided the loaded font supports it.
+
+### Asset
+A VFS layer with importers for PNG and OBJ formats.
+
+### Common
+Contains some stuff that the other libraries depend on, such as a container for objects placed in the world.
+
+### Util
+Some generally useful stuff (logging, uthash, macros)
+
+### Math
+Contains all that stuff useful for 3D graphics: vectors (3/4d), matrices, quaternions
+
+## Screenshots
+
+![Bouncing Lights Demo](http://i.imgur.com/CXaIVHY.png)
 
 ## Documentation
-API docs can be found at [https://lymiahugs.com/~tiffany/il/api/index.html]
+(very out of date)
 
-Lua API docs can be found at [https://lymiahugs.com/~tiffany/il/doc/index.html]
+- [C API Documentation](https://lymiahugs.com/~tiffany/il/api/index.html)
+- [Lua API Documentation](https://lymiahugs.com/~tiffany/il/doc/index.html)
 
 ## Building
-Compile using [scons](http://scons.org/).
+Compile using [SCons](http://scons.org/).
 
 List of Dependencies:
-* glfw 3.0
-* glew latest
-* libevent2
-* libpng
-* LuaJIT (Lua 5.1)
-* HarfBuzz (with ICU)
-* Cairo
-* FreeType2
+
+- OpenGL 3.1
+- [SDL 2.0](http://libsdl.org/)
+- [GLEW](http://glew.sourceforge.net/)
+- [libevent2](http://libevent.org)
+- [libpng](http://libpng.org/)
+- [LuaJIT (Lua 5.1)](http://luajit.org/)
+- [HarfBuzz (with ICU)](http://www.freedesktop.org/wiki/Software/HarfBuzz/)
+- [Cairo](http://cairographics.org/)
+- [FreeType2](http://freetype.org/)
+- pthread
 
 See the Wiki for help [building](https://github.com/TheCodeLab/IntenseLogic/wiki/Building).
 
-## Authors
-camoy, tiffany352, harutsedo, et al.
-
 ## Contact
-You can contact the developers of Intense Logic by joining the IRC channel.
-The details for the IRC channel are as follows.
 
-    HOST:    irc.freenode.net
-    CHANNEL: ##codelab
+### IRC
+
+[Web Chat](https://webchat.freenode.net/?channels=##codelab)
+
+    Host: irc.freenode.net
+    Channel: ##codelab
+
+### Twitter
+
+[`@tiffany_public`](https://twitter.com/tiffany_public)
 
 ## License
 Copyright (c) 2012 Intense Logic Development Team
@@ -52,3 +84,4 @@ misrepresented as being the original software.
 
 3. This notice may not be removed or altered from any source
 distribution.
+
