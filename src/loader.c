@@ -62,7 +62,36 @@ void il_add_module_path(const char *path)
     IL_APPEND(modpaths, strdup(path));
 }
 
-void il_load_module_dir(const char *path, int argc, char **argv)
+char *il_normalise_module(const char *name)
+{
+    char *p = NULL, *sname;
+    // strip path and extension off of name
+#ifdef WIN32
+    p = strrchr(name, '\\');
+    char *p2 = strrchr(name, '/'); // path component
+    if (p2 > p) {
+        p = p2;
+    }
+#else
+    p = strrchr(name, '/');
+#endif
+    if (p) {
+        p++; // leave out the / itself
+        if (strncmp(p, "lib", 3) == 0) { // lib- prefix
+            sname = strdup(p + 3);
+        } else {
+            sname = strdup(p);
+        }
+    } else {
+        sname = strdup(name);
+    }
+    if ((p = strchr(sname, '.'))) { // extension
+        *p = 0;
+    }
+    return sname;
+}
+
+void il_load_module_dir(const char *path, il_opts *opts)
 {
 #ifdef WIN32
     WIN32_FIND_DATA ffd;
@@ -118,17 +147,17 @@ void il_load_module_dir(const char *path, int argc, char **argv)
         }
         char buf[512];
         snprintf(buf, 512, "%s/%s", path, result->d_name);
-        il_load_module(buf, argc, argv);
+        il_load_module(buf, opts);
     }
     closedir(dir);
 #endif
 }
 
-void il_load_module_paths(int argc, char **argv)
+void il_load_module_paths(il_opts *opts)
 {
     size_t i;
     for (i = 0; i < modpaths.length; i++) {
-        il_load_module_dir(modpaths.data[i], argc, argv);
+        il_load_module_dir(modpaths.data[i], opts);
     }
 }
 
@@ -148,40 +177,19 @@ static char *lookup(const char *modpath, const char *name)
     return NULL;
 }
 
-int il_load_module(const char *name, int argc, char **argv)
+int il_load_module(const char *name, il_opts *opts)
 {
     int res;
     size_t i;
-    char *sname, *path = NULL, *p;
+    char *sname, *path = NULL;
     struct module *mod;
     il_handle handle;
 #ifndef WIN32
     const char *error;
 #endif
 
-    // strip path and extension off of name
-#ifdef WIN32
-    p = strrchr(name, '\\');
-    char *p2 = strrchr(name, '/'); // path component
-    if (p2 > p) {
-        p = p2;
-    }
-#else
-    p = strrchr(name, '/');
-#endif
-    if (p) {
-        p++; // leave out the / itself
-        if (strncmp(p, "lib", 3) == 0) { // lib- prefix
-            sname = strdup(p + 3);
-        } else {
-            sname = strdup(p);
-        }
-    } else {
-        sname = strdup(name);
-    }
-    if ((p = strchr(sname, '.'))) { // extension
-        *p = 0;
-    }
+    sname = il_normalise_module(name);
+
     HASH_FIND_STR(il_loaded, sname, mod); // look it up to see if it's already loaded
     if (mod) {
         return 0;
@@ -216,6 +224,7 @@ int il_load_module(const char *name, int argc, char **argv)
         FreeLibrary(handle);
         goto fail;
     }
+    il_config_fn config = (il_config_fn)GetProcAddress(handle, "il_config");
 #else
     dlerror();
     handle = dlopen(path, RTLD_LAZY | RTLD_GLOBAL);
@@ -227,9 +236,9 @@ int il_load_module(const char *name, int argc, char **argv)
     il_dependencies_fn deps = (il_dependencies_fn)dlsym(handle, "il_dependencies");
     dlerror();
     if (deps) {
-        const char **mods = deps(argc, argv);
+        const char **mods = deps();
         for (i = 0; mods[i]; i++) {
-            if (il_load_module(mods[i], argc, argv)) {
+            if (il_load_module(mods[i], opts)) {
                 fprintf(stderr, "*** Failed to load module %s: Dependency %s failed to load\n", path, mods[i]);
                 goto fail;
             }
@@ -242,10 +251,26 @@ int il_load_module(const char *name, int argc, char **argv)
         dlclose(handle);
         goto fail;
     }
+    il_config_fn config = (il_config_fn)dlsym(handle, "il_config");
+    error = dlerror();
+    if (error) {
+        fprintf(stderr, "*** Failed to load symbol: %s\n", error);
+    }
 #endif
 
+    // pass args to module
+    if (config) {
+        for (unsigned i = 0; i < opts->opts.length; i++) {
+            il_modopts *modopts = &opts->opts.data[i];
+            if (modopts->modname.len == strlen(sname) && strncmp(modopts->modname.str, sname, modopts->modname.len) == 0) {
+                config(modopts);
+                break;
+            }
+        }
+    }
+
     // initialize the module
-    res = func(argc, argv);
+    res = func();
 
     // register it as loaded
     mod = calloc(1, sizeof(struct module));

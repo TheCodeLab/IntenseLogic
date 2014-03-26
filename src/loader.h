@@ -6,23 +6,29 @@
 #define IL_LOADER_H
 
 #ifdef WIN32
-#   include <windows.h>
-    typedef FARPROC WINAPI il_func;
+# include <windows.h>
+typedef FARPROC WINAPI il_func;
 #else
-    /** A generic function pointer. */
-    typedef void *il_func;
+/** A generic function pointer. */
+typedef void *il_func;
 #endif
+
+#include "opt.h"
 
 /** A pointer to the symbol used to bootstrap a module.
  * @return Whether the module was bootstrapped correctly. Zero indicates
  * success.
  */
-typedef int (*il_bootstrap_fn)(int argc, char **argv);
+typedef int (*il_bootstrap_fn)();
+
+/** A pointer to the symbol used to handle command-line arguments.
+ */
+typedef void (*il_config_fn)(il_modopts *opts);
 
 /** A pointer to the symbol used to indicate dependencies of a module.
  * @return An array of dependencies.
  */
-typedef const char** (*il_dependencies_fn)(int argc, char **argv);
+typedef const char** (*il_dependencies_fn)();
 
 /** Sets a certain plugin to not load
  * @param name The name of the plugin
@@ -34,26 +40,31 @@ void il_ignore_module(const char *name);
  */
 void il_add_module_path(const char *path);
 
+/** Normalises a module name
+ * This removes a lib- suffix, the extension, the il- prefix, and the basedir.
+ */
+char *il_normalise_module(const char *path);
+
 /** Loads a module by name.
  * @param module The name of the module to load.
  * @param argc The argument count passed to main.
  * @param argv The arguments passed to main.
  * @return Whether the module was loaded. Zero indicates success.
  */
-int il_load_module(const char *module, int argc, char **argv);
+int il_load_module(const char *module, il_opts *opts);
 
 /** Loads all the modules in a directory.
  * @param path The path of the directory to load.
  * @param argc The argument count passed to main.
  * @param argv The arguments passed to main.
  */
-void il_load_module_dir(const char *path, int argc, char **argv);
+void il_load_module_dir(const char *path, il_opts *opts);
 
 /** Loads all the modules in the paths added by il_add_module_path().
  * @param argc The argument count passed to main.
  * @param argv The arguments passed to main.
  */
-void il_load_module_paths(int argc, char **argv);
+void il_load_module_paths(il_opts *opts);
 
 /** Closes a loaded module.
  * @param module The name of the module to close.

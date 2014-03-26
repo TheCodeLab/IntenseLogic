@@ -11,15 +11,32 @@ static void do_opt(il_opts *opts, il_optslice modname, il_opt opt)
             return;
         }
     }
-    il_modopts modopts = {};
+    il_modopts modopts;
+    memset(&modopts, 0, sizeof(il_modopts));
     modopts.modname = modname;
     IL_APPEND(modopts.args, opt);
     IL_APPEND(opts->opts, modopts);
 }
 
+bool il_opts_cmp(il_optslice a, il_optslice b)
+{
+    return a.len == b.len && strncmp(a.str, b.str, a.len) == 0;
+}
+
+il_modopts *il_opts_lookup(il_opts *self, il_optslice name)
+{
+    for (unsigned i = 0; i < self->opts.length; i++) {
+        if (il_opts_cmp(name, self->opts.data[i].modname)) {
+            return &self->opts.data[i];
+        }
+    }
+    return NULL;
+}
+
 il_opts il_opt_parse(int argc, char **argv)
 {
-    il_opts opts = {};
+    il_opts opts;
+    memset(&opts, 0, sizeof(il_opts));
     for (int i = 1; i < argc; i++) {\
         if (argv[i][0] != '-') {
             il_optslice s = {argv[i], strlen(argv[i])};
@@ -36,7 +53,6 @@ il_opts il_opt_parse(int argc, char **argv)
             namestart = dot+1;
         }
         if ((equals = strchr(start, '='))) {
-            il_opt opt;
             arg = (il_optslice){equals+1, strlen(equals+1)};
             nameend = equals;
         }
