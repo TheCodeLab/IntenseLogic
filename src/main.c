@@ -54,10 +54,21 @@ int main(int argc, char **argv)
             printf("Each module may have its own options, see relavent documentation for those.\n\n");
             printf("Options:\n");
             for (i = 0; help[i].l; i++) {
-                printf(" %c%c %s%-12s %s\n", help[i].s? '-' : ' ', 
+                static const char *arg_strs[] = {
+                    "",
+                    "[=arg]",
+                    "=arg"
+                };
+                char longbuf[64];
+                sprintf(longbuf, "%s%s%s",
+                        help[i].l? "-" : " ",
+                        help[i].l? help[i].l : "",
+                        arg_strs[help[i].arg]
+                );
+                printf(" %c%c %-18s %s\n", 
+                       help[i].s? '-' : ' ', 
                        help[i].s? help[i].s : ' ',
-                       help[i].l? "-" : " ",
-                       help[i].l? help[i].l : "",
+                       longbuf,
                        help[i].h
                 );
             }
