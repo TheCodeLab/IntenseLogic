@@ -1,6 +1,8 @@
 #ifndef ILG_FRAME_H
 #define ILG_FRAME_H
 
+#include <stdbool.h>
+
 #include "common/base.h"
 #include "graphics/gui/types.h"
 #include "util/array.h"
@@ -35,7 +37,7 @@ struct ilG_gui_frame {
     ilG_gui_message_fn message;
     IL_ARRAY(ilG_gui_frame*,) children;
     struct ilG_context *context;
-    _Bool complete;
+    bool complete;
 };
 
 extern il_type ilG_gui_frame_type;
