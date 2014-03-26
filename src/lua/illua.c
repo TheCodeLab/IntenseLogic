@@ -1,10 +1,10 @@
-#include "script.h"
+#include "illua.h"
 
 #include <string.h>
 #include <sys/stat.h>
 #include <stdio.h>
 
-#include "loader.h"
+#include "../loader.h"
 
 char *strdup(const char*);
 

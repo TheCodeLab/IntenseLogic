@@ -1,0 +1,30 @@
+import os
+
+output    = "libillua"
+src_dir   = "#src/lua"
+inputs    = "*.c"
+
+Import("build_dir")
+Import("platform")
+Import("env")
+Import("libilutil")
+
+lua = env.Clone()
+
+lua.Append(CPPPATH = src_dir, LIBS=['ilutil'])
+
+if platform=="mingw":
+    lua.Append(LIBS=['lua51', 'ws2_32'])
+else:
+    lua.ParseConfig("pkg-config luajit --libs --cflags")
+
+sources = []
+for module in Split(inputs) :
+    sources.extend(Glob(module))
+
+libillua = lua.SharedLibrary(target = build_dir + "/" + output, 
+                                   source = sources)
+Depends(libillua, libilutil)
+
+Return("libillua")
+
