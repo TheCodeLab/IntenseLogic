@@ -65,8 +65,8 @@ int main(int argc, char **argv)
                         help[i].l? help[i].l : "",
                         arg_strs[help[i].arg]
                 );
-                printf(" %c%c %-18s %s\n", 
-                       help[i].s? '-' : ' ', 
+                printf(" %c%c %-18s %s\n",
+                       help[i].s? '-' : ' ',
                        help[i].s? help[i].s : ' ',
                        longbuf,
                        help[i].h

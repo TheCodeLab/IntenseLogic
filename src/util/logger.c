@@ -10,11 +10,11 @@
 #include "loader.h"
 
 #define new_args(f) f(const char*, name)
-il_gen_symbol("common", NULL, struct ilE_handler*, ilE_handler_new_with_name, new_args)
+il_gen_symbol("ilcommon", NULL, struct ilE_handler*, ilE_handler_new_with_name, new_args)
 #define des_args(f) f(struct ilE_handler*, self)
-il_gen_noret_symbol("common", ilE_handler_destroy, des_args)
+il_gen_noret_symbol("ilcommon", ilE_handler_destroy, des_args)
 #define fire_args(f) f(struct ilE_handler*, self), f(size_t, size), f(const void *, data)
-il_gen_noret_symbol("common", ilE_handler_fire, fire_args)
+il_gen_noret_symbol("ilcommon", ilE_handler_fire, fire_args)
 
 struct forward {
     il_logger *logger;

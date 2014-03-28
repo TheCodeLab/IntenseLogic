@@ -8,7 +8,6 @@
 #include <SDL_video.h>
 #include <math.h>
 #include <unistd.h>
-#include <getopt.h>
 #include <signal.h>
 
 #include "graphics/camera.h"
@@ -28,24 +27,7 @@
 #include "graphics/arrayattrib.h"
 #include "graphics/fragdata.h"
 #include "graphics/bindable.h"
-
-#define OPTIONS \
-    OPT(0,   "shaders", required_argument, "Adds a directory to look for shaders")
-static const char *optstring = "";
-
-#define OPT(s, l, a, h) {l, a, NULL, s},
-static struct option longopts[] = {
-    OPTIONS
-    {0, 0, NULL, 0}
-};
-#undef OPT
-
-// TODO: help options for modules
-/*#define OPT(s, l, a, h) h,
-static const char *help[] = {
-    OPTIONS
-};
-#undef OPT*/
+#include "opt.h"
 
 il_base *ilG_shaders_dir;
 const ilA_dir *ilG_shaders_iface;
@@ -113,9 +95,8 @@ static void event_setup()
     ilE_register(ilE_shutdown, ILE_DONTCARE, ILE_MAIN, &quit, il_value_nil());
 }
 
-const char **il_dependencies(int argc, char **argv)
+const char **il_dependencies()
 {
-    (void)argc, (void)argv;
     static const char *deps[] = {
         "ilcommon",
         "ilutil",
@@ -124,35 +105,35 @@ const char **il_dependencies(int argc, char **argv)
     return deps;
 }
 
+void il_config(il_modopts *opts)
+{
+    if (!opts) {
+        return;
+    }
+    for (unsigned i = 0; i < opts->args.length; i++) {
+        il_opt *opt = &opts->args.data[i];
+        char *arg = strndup(opt->arg.str, opt->arg.len);
+#define option(l) if (il_opts_cmp(opt->name, il_optslice_s(l)))
+        option("shaders") {
+            ilA_path *path = ilA_path_chars(arg);
+            const ilA_dir *iface;
+            il_base *base = ilA_stdiodir(path, &iface);
+            ilA_path_free(path);
+            if (ilG_shaders_dir) {
+                ilG_shaders_dir = ilA_union(ilG_shaders_iface, iface, ilG_shaders_dir, base, &ilG_shaders_iface);
+            } else {
+                ilG_shaders_dir = base;
+                ilG_shaders_iface = iface;
+            }
+        }
+    }
+}
+
 void ilG_material_init();
 void ilG_shape_init();
 void ilG_quad_init();
-int il_bootstrap(int argc, char **argv)
+int il_bootstrap()
 {
-    int opt, idx;
-    opterr = 0; // we don't want to print an error if another package uses an option
-    optind = 0; // reset getopt
-    while ((opt = getopt_long(argc, argv, optstring, longopts, &idx)) != -1) {
-        switch(opt) {
-            case 0:
-            if (strcmp(longopts[idx].name, "shaders") == 0) {
-                ilA_path *path = ilA_path_chars(optarg);
-                const ilA_dir *iface;
-                il_base *base = ilA_stdiodir(path, &iface);
-                ilA_path_free(path);
-                if (ilG_shaders_dir) {
-                    ilG_shaders_dir = ilA_union(ilG_shaders_iface, iface, ilG_shaders_dir, base, &ilG_shaders_iface);
-                } else {
-                    ilG_shaders_dir = base;
-                    ilG_shaders_iface = iface;
-                }
-            }
-            break;
-            case '?':
-            default:
-            break;
-        }
-    }
     if (!ilG_shaders_dir) {
         ilA_path *path = ilA_path_chars("shaders");
         ilG_shaders_dir = ilA_stdiodir(path, &ilG_shaders_iface);

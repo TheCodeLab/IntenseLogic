@@ -260,13 +260,8 @@ int il_load_module(const char *name, il_opts *opts)
 
     // pass args to module
     if (config) {
-        for (unsigned i = 0; i < opts->opts.length; i++) {
-            il_modopts *modopts = &opts->opts.data[i];
-            if (modopts->modname.len == strlen(sname) && strncmp(modopts->modname.str, sname, modopts->modname.len) == 0) {
-                config(modopts);
-                break;
-            }
-        }
+        il_modopts *modopts = il_opts_lookup(opts, il_optslice_s(sname));
+        config(modopts);
     }
 
     // initialize the module
@@ -293,20 +288,20 @@ il_func il_get_symbol(const char *module, const char *name)
     il_func sym;
     HASH_FIND_STR(il_loaded, module, mod);
     if (!mod) {
-        fprintf(stderr, "*** No loaded module %s\n", module);
+        fprintf(stderr, "*** Could not look up symbol %s: No loaded module %s\n", name, module);
         return NULL;
     }
 #ifdef WIN32
     sym = GetProcAddress(mod->handle, name);
     if (!sym) {
-        fprintf(stderr, "*** Failed to load symbol %s\n", name);
+        fprintf(stderr, "*** Failed to load symbol %s from %s\n", name, module);
         return NULL;
     }
 #else
     sym = dlsym(mod->handle, name);
     const char *error = dlerror();
     if (error) {
-        fprintf(stderr, "*** Failed to load symbol: %s\n", error);
+        fprintf(stderr, "*** Failed to load symbol %s from %s: %s\n", name, module, error);
         return NULL;
     }
 #endif
