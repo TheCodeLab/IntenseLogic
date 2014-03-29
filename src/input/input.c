@@ -2,9 +2,8 @@
 
 #include "util/array.h"
 
-int il_bootstrap(int argc, char **argv)
+int il_load_ilinput()
 {
-    (void)argc, (void)argv;
     ilI_handler_init(&ilI_globalHandler);
     return 0;
 }

@@ -15,20 +15,24 @@ typedef void *il_func;
 
 #include "opt.h"
 
+/** A pointer to the symbol used to indicate dependencies of a module.
+ * @return An array of dependencies.
+ */
+typedef const char** (*il_preload_fn)();
+
+/** A pointer to the symbol used to handle command-line arguments.
+ */
+typedef void (*il_configure_fn)(il_modopts *opts);
+
 /** A pointer to the symbol used to bootstrap a module.
  * @return Whether the module was bootstrapped correctly. Zero indicates
  * success.
  */
-typedef int (*il_bootstrap_fn)();
+typedef int (*il_load_fn)();
 
-/** A pointer to the symbol used to handle command-line arguments.
+/** Called after all modules have been loaded 
  */
-typedef void (*il_config_fn)(il_modopts *opts);
-
-/** A pointer to the symbol used to indicate dependencies of a module.
- * @return An array of dependencies.
- */
-typedef const char** (*il_dependencies_fn)();
+typedef void (*il_postload_fn)();
 
 /** Sets a certain plugin to not load
  * @param name The name of the plugin
@@ -65,6 +69,14 @@ void il_load_module_dir(const char *path, il_opts *opts);
  * @param argv The arguments passed to main.
  */
 void il_load_module_paths(il_opts *opts);
+
+/** Runs the postload function in the plugin
+ */
+void il_postload(const char *module);
+
+/* Runs the postload function for all loaded plugins
+ */
+void il_postload_all();
 
 /** Closes a loaded module.
  * @param module The name of the module to close.

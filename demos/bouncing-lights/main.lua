@@ -33,6 +33,8 @@ extern const ilG_renderable debug_renderer;
 
 ]]
 
+print 'Bouncing Lights Demo'
+
 math.randomseed(os.time())
 
 local skybox = {

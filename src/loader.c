@@ -177,16 +177,32 @@ static char *lookup(const char *modpath, const char *name)
     return NULL;
 }
 
+static il_func get_symbol(struct module *mod, const char *name)
+{
+    il_func sym;
+#ifdef WIN32
+    sym = GetProcAddress(mod->handle, name);
+#else
+    sym = dlsym(mod->handle, name);
+#endif
+    return sym;
+}
+
+static const char *get_error()
+{
+#ifdef WIN32
+    return GetLastError();
+#else
+    return dlerror();
+#endif
+}
+
 int il_load_module(const char *name, il_opts *opts)
 {
     int res;
     size_t i;
     char *sname, *path = NULL;
     struct module *mod;
-    il_handle handle;
-#ifndef WIN32
-    const char *error;
-#endif
 
     sname = il_normalise_module(name);
 
@@ -195,6 +211,9 @@ int il_load_module(const char *name, il_opts *opts)
         return 0;
     }
     
+    mod = calloc(1, sizeof(struct module));
+    mod->name = sname;
+
     // look through our search paths for the module
     fprintf(stderr, "*** Loading module %s\n", sname);
     path = lookup(NULL, name);
@@ -205,36 +224,26 @@ int il_load_module(const char *name, il_opts *opts)
         fprintf(stderr, "*** Could not find module %s\n", sname);
         goto fail;
     }
+    char preload_name[64], load_name[64], config_name[64];
+    sprintf(preload_name, "il_preload_%s", sname);
+    sprintf(load_name, "il_load_%s", sname);
+    sprintf(config_name, "il_configure_%s", sname);
 #ifdef WIN32
-    handle = LoadLibrary(TEXT(path));
-    if (!handle) {
-        fprintf(stderr, "*** Failed to load module %s\n", path);
+    mod->handle = LoadLibrary(TEXT(path));
+    if (!mod->handle) {
+        fprintf(stderr, "*** Failed to load module %s: %s\n", path, get_error());
         goto fail;
     }
-    il_dependencies_fn deps = (il_dependencies_fn)GetProcAddress(handle, "il_dependencies");
-    if (deps) {
-        const char **mods = deps(argc, argv);
-        for (i = 0; mods[i]; i++) {
-            il_load_module(mods[i], argc, argv);
-        }
-    }
-    il_bootstrap_fn func = (il_bootstrap_fn)GetProcAddress(handle, "il_bootstrap");
-    if (!func) {
-        fprintf(stderr, "*** Failed to load symbol il_bootstrap\n");
-        FreeLibrary(handle);
-        goto fail;
-    }
-    il_config_fn config = (il_config_fn)GetProcAddress(handle, "il_config");
 #else
     dlerror();
-    handle = dlopen(path, RTLD_LAZY | RTLD_GLOBAL);
-    if (!handle) {
-        fprintf(stderr, "*** Failed to load module %s: %s\n", path, dlerror());
+    mod->handle = dlopen(path, RTLD_LAZY | RTLD_GLOBAL);
+    if (!mod->handle) {
+        fprintf(stderr, "*** Failed to load module %s: %s\n", path, get_error());
         goto fail;
     }
-    dlerror();
-    il_dependencies_fn deps = (il_dependencies_fn)dlsym(handle, "il_dependencies");
-    dlerror();
+#endif
+
+    il_preload_fn deps = (il_preload_fn)get_symbol(mod, preload_name);
     if (deps) {
         const char **mods = deps();
         for (i = 0; mods[i]; i++) {
@@ -244,35 +253,25 @@ int il_load_module(const char *name, il_opts *opts)
             }
         }
     }
-    il_bootstrap_fn func = (il_bootstrap_fn)dlsym(handle, "il_bootstrap");
-    error = dlerror();
-    if (error) {
-        fprintf(stderr, "*** Failed to load symbol: %s\n", error);
-        dlclose(handle);
-        goto fail;
-    }
-    il_config_fn config = (il_config_fn)dlsym(handle, "il_config");
-    error = dlerror();
-    if (error) {
-        fprintf(stderr, "*** Failed to load symbol: %s\n", error);
-    }
-#endif
 
-    // pass args to module
+    il_configure_fn config = (il_configure_fn)get_symbol(mod, config_name);
     if (config) {
         il_modopts *modopts = il_opts_lookup(opts, il_optslice_s(sname));
-        config(modopts);
+        if (modopts) {
+            config(modopts);
+        }
     }
 
-    // initialize the module
-    res = func();
+    il_load_fn load = (il_load_fn)get_symbol(mod, load_name);
+    if (!load) {
+        fprintf(stderr, "*** Failed to load %s: %s\n", sname, get_error());
+        goto fail;
+    }
+    res = load();
 
     // register it as loaded
-    mod = calloc(1, sizeof(struct module));
-    mod->name = sname;
-    mod->handle = handle;
     HASH_ADD_KEYPTR(hh, il_loaded, sname, strlen(sname), mod);
-    //free(sname);
+    //free(sname); // memory owned by hash table entry
     free(path);
     return res;
 
@@ -282,30 +281,49 @@ fail:
     return 1;
 }
 
+static int postload(struct module *mod)
+{
+    char postload_name[64];
+    sprintf(postload_name, "il_postload_%s", mod->name);
+    il_postload_fn func = (il_postload_fn)get_symbol(mod, postload_name);
+    if (!func) {
+        return 1;
+    }
+    func();
+    return 0;
+}
+
+void il_postload(const char *module)
+{
+    struct module *mod;
+    HASH_FIND_STR(il_loaded, module, mod);
+    if (!mod) {
+        fprintf(stderr, "*** Could not postload: No loaded module %s\n", module);
+        return;
+    }
+    if (!postload(mod)) {
+        fprintf(stderr, "*** No postload function in %s\n", module);
+        return;
+    }
+}
+
+void il_postload_all()
+{
+    struct module *mod;
+    for (mod = il_loaded; mod; mod = mod->hh.next) {
+        postload(mod);
+    }
+}
+
 il_func il_get_symbol(const char *module, const char *name)
 {
     struct module *mod;
-    il_func sym;
     HASH_FIND_STR(il_loaded, module, mod);
     if (!mod) {
         fprintf(stderr, "*** Could not look up symbol %s: No loaded module %s\n", name, module);
         return NULL;
     }
-#ifdef WIN32
-    sym = GetProcAddress(mod->handle, name);
-    if (!sym) {
-        fprintf(stderr, "*** Failed to load symbol %s from %s\n", name, module);
-        return NULL;
-    }
-#else
-    sym = dlsym(mod->handle, name);
-    const char *error = dlerror();
-    if (error) {
-        fprintf(stderr, "*** Failed to load symbol %s from %s: %s\n", name, module, error);
-        return NULL;
-    }
-#endif
-    return sym;
+    return get_symbol(mod, name);
 }
 
 void il_close_module(const char *module)

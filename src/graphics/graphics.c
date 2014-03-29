@@ -95,7 +95,7 @@ static void event_setup()
     ilE_register(ilE_shutdown, ILE_DONTCARE, ILE_MAIN, &quit, il_value_nil());
 }
 
-const char **il_dependencies()
+const char **il_preload_ilgraphics()
 {
     static const char *deps[] = {
         "ilcommon",
@@ -105,7 +105,7 @@ const char **il_dependencies()
     return deps;
 }
 
-void il_config(il_modopts *opts)
+void il_configure_ilgraphics(il_modopts *opts)
 {
     if (!opts) {
         return;
@@ -132,7 +132,7 @@ void il_config(il_modopts *opts)
 void ilG_material_init();
 void ilG_shape_init();
 void ilG_quad_init();
-int il_bootstrap()
+int il_load_ilgraphics()
 {
     if (!ilG_shaders_dir) {
         ilA_path *path = ilA_path_chars("shaders");

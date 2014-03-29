@@ -3,8 +3,10 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <stdio.h>
+#include <errno.h>
+#include <unistd.h>
 
-#include "../loader.h"
+#include "loader.h"
 
 char *strdup(const char*);
 
@@ -96,7 +98,6 @@ static const char * reader(lua_State* L, void * data, size_t * size)
 
 int ilS_fromSource(ilS_script* self, const char *source, size_t len)
 {
-    if (!self || !source) return -1;
     struct reader_ctx data;
     data.loaded = 0;
     data.source = source;
@@ -158,7 +159,15 @@ int ilS_fromFile(ilS_script* self, const char * filename)
     stat(filename, &s);
     char contents[s.st_size + 1];
     FILE *f = fopen(filename, "r");
+    if (!f) {
+        self->err = strerror(errno);
+        return -1;
+    }
     int res = fread(contents, 1, s.st_size, f);
+    if (res < 0) {
+        self->err = strerror(errno);
+        return -1;
+    }
     contents[res] = 0;
     self->filename = strdup(filename);
     return ilS_fromSource(self, contents, res);
@@ -175,5 +184,95 @@ int ilS_run(ilS_script* self)
         return -1;
     }
     return 0;
+}
+
+static IL_ARRAY(char*,) scripts;
+static IL_ARRAY(char*,) paths;
+static char *bootstrap;
+static int has_scripts;
+
+void il_configure_illua(il_modopts *opts)
+{
+    for (unsigned i = 0; i < opts->args.length; i++) {
+        il_opt *opt = &opts->args.data[i];
+        char *arg = strndup(opt->arg.str, opt->arg.len);
+#define option(l) if (il_opts_cmp(opt->name, il_optslice_s(l)))
+        option("run") {
+            IL_APPEND(scripts, arg);
+        }
+        option("scripts") {
+            IL_APPEND(paths, arg);
+            has_scripts = 1;
+        }
+        option("bootstrap") {
+            bootstrap = arg;
+        }
+    }
+}
+
+int il_load_illua()
+{
+    return 0;
+}
+
+static void add_paths(ilS_script *self)
+{
+    for (unsigned i = 0; i < paths.length; i++) {
+        ilS_addPath(self, paths.data[i]);
+    }
+}
+
+static int run_bootstrap(ilS_script *s)
+{
+    if (bootstrap) {
+        return !ilS_fromFile(s, bootstrap);
+    } else {
+        for (unsigned i = 0; i < paths.length; i++) {
+            char path[strlen(paths.data[i]) + strlen("/bootstrap.lua") + 1];
+            sprintf(path, "%s/bootstrap.lua", paths.data[i]);
+            if (!access(path, F_OK)) { // returns 0 on success
+                if (!ilS_fromFile(s, path)) {
+                    return !ilS_run(s);
+                }
+            }
+        }
+        fprintf(stderr, "Failed to find bootstrap.lua\n");
+        return 0;
+    }
+}
+
+static int run_script(char *path)
+{
+    ilS_script *s = ilS_new();
+
+    add_paths(s);
+    if (!run_bootstrap(s)) {
+        return 0;
+    }
+    if (ilS_fromFile(s, path)) {
+        fprintf(stderr, "Failed to load %s: %s\n", s->filename, s->err);
+        ilS_free(s);
+        return 0;
+    }
+    printf("script: %s\n", s->filename);
+    if (ilS_run(s)) {
+        fprintf(stderr, "Failed to execute %s: %s\n", s->filename, s->err);
+        return 0;
+    }
+    //ilS_free(s);
+    return 1;
+}
+
+void il_postload_illua()
+{
+    if (!has_scripts) { // default script path, unless one is specified
+        IL_APPEND(paths, "script");
+    }
+
+    for (unsigned i = 0; i < scripts.length; i++) {
+        run_script(scripts.data[i]);
+        free(scripts.data[i]);
+    }
+    IL_FREE(scripts);
 }
 

@@ -3,9 +3,8 @@
 
 void ilE_init();
 
-int il_bootstrap(int argc, char **argv)
+int il_load_ilcommon()
 {
-    (void)argc, (void)argv;
     ilE_init();
     return 0;
 }

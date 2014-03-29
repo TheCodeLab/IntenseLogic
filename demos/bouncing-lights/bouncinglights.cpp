@@ -196,9 +196,8 @@ ex void update(int debug)
     }
 }
 
-ex int il_bootstrap(int argc, char **argv)
+ex int il_load_bouncinglights()
 {
-    (void)argc; (void)argv;
     broadphase = new btDbvtBroadphase();
     broadphase->getOverlappingPairCache()->setInternalGhostPairCallback(new btGhostPairCallback());
     collisionConfiguration = new btDefaultCollisionConfiguration();

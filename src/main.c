@@ -79,6 +79,7 @@ int main(int argc, char **argv)
             printf("Built %s\n", __DATE__);
             return 0;
         }
+        free(arg);
     }
 
     fprintf(stderr, "MAIN: Initializing engine.\n");
@@ -89,6 +90,8 @@ int main(int argc, char **argv)
         il_load_module_dir("modules", &opts); // default path
     }
     il_load_module_paths(&opts);
+
+    il_postload_all();
    
     // main loop
     fprintf(stderr, "MAIN: Starting main loop\n");

@@ -1,6 +1,5 @@
-int il_bootstrap(int argc, char **argv)
+int il_load_ilmath()
 {
-    (void)argc, (void)argv;
     return 0;
 }
 
