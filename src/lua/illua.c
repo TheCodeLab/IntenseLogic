@@ -254,7 +254,6 @@ static int run_script(char *path)
         ilS_free(s);
         return 0;
     }
-    printf("script: %s\n", s->filename);
     if (ilS_run(s)) {
         fprintf(stderr, "Failed to execute %s: %s\n", s->filename, s->err);
         return 0;
