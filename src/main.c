@@ -2,12 +2,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <dirent.h>
-#include <errno.h>
-#include <unistd.h>
 
 #include "loader.h"
-#include "util/array.h" // entirely in preprocessor, so it's fine
 #include "version.h"
 #include "opt.h"
 
