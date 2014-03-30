@@ -44,15 +44,15 @@ il_opts il_opt_parse(int argc, char **argv)
             continue;
         }
         il_opt opt;
-        char *equals, *dot, *start = argv[i] + 1, *namestart = start, *nameend = argv[i] + strlen(argv[i]);
+        char *dot, *start = argv[i] + 1, *equals = strchr(start, '='),  *namestart = start, *nameend = argv[i] + strlen(argv[i]);
         il_optslice modname = {NULL, 0},
                     name    = {NULL, 0},
                     arg     = {NULL, 0};
-        if ((dot = strchr(start, '.'))) {
+        if (((dot = strchr(start, '.'))) && (!equals || dot < equals)) {
             modname = (il_optslice){start, dot - start};
             namestart = dot+1;
         }
-        if ((equals = strchr(start, '='))) {
+        if (equals) {
             arg = (il_optslice){equals+1, strlen(equals+1)};
             nameend = equals;
         }
