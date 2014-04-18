@@ -2,6 +2,7 @@
 #define ILG_TEX_H
 
 #include <GL/glew.h>
+#include <stdbool.h>
 
 struct ilG_context;
 struct ilA_file;
@@ -9,7 +10,7 @@ struct ilA_img;
 
 typedef struct ilG_tex {
     unsigned unit;
-    _Bool complete;
+    bool complete;
     GLenum target;
     GLenum object;
     void (*build)(struct ilG_tex *self, struct ilG_context *context);
