@@ -82,7 +82,7 @@ static void mtl_update(void *obj)
     if (!mtl->valid) {
         return;
     }
-    if ((mtl->attrs & mtl->context->drawable->attrs) != mtl->attrs) {
+    if (mtl->context->drawable && (mtl->attrs & mtl->context->drawable->attrs) != mtl->attrs) {
         il_error("%s<%p> does not have the required attributes to "
                  "be drawn with %s<%p>", 
                  il_typeof(mtl->context->drawable)->name, 
