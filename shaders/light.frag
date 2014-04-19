@@ -47,7 +47,7 @@ void main()
     // gl_FragCoord is from (.5, .5) to (w - .5, h - .5), depth texture is 0..1, feep's function wants (0,0,-1)..(1,1,1)
     vec3 pos = screen_to_world(vec3(gl_FragCoord.xy / size, texture(depth, gl_FragCoord.xy).x) * 2 - 1);
     vec3 light_dir = normalize(position - pos);
-    vec3 norm = texture(normal, gl_FragCoord.xy).xyz;
+    vec3 norm = texture(normal, gl_FragCoord.xy).xyz * vec3(2) - vec3(1);
     float dist = length(position - pos) / radius;
     float daf = max(0, 1 - dist);
 
