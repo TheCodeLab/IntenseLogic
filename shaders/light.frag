@@ -55,7 +55,9 @@ void main()
     vec3 diffuse = texture(diffuse, gl_FragCoord.xy).xyz; 
     col = diffuse * vec3(max(0, dot(light_dir, norm)));
     vec4 spec = texture(specular, gl_FragCoord.xy);
-    col += spec.xyz * pow(max(0, dot(normalize(2 * dot(light_dir, norm) * norm - light_dir), normalize(camera - pos))), spec.w * 255);
+    vec3 reflection = normalize(-reflect(light_dir, norm));
+    vec3 viewer = normalize(camera - pos);
+    col += spec.xyz * pow(max(0, dot(reflection, viewer)), spec.w * 255);
 
     out_Color = max(vec3(0), col * daf * color);
     out_Normal = vec3(0);
