@@ -31,8 +31,8 @@ linkflags += " -L"+build_dir_raw
 
 # clang-specific flags
 if "CC" in os.environ and "clang" in os.environ["CC"]:
-    ccflags   += " -fsanitize=address"
-    linkflags += " -fsanitize=address"
+    ccflags   += " -fsanitize=address -fsanitize=undefined"
+    linkflags += " -fsanitize=address -fsanitize=undefined"
 
 # debug mode
 build_mode = ARGUMENTS.get("mode", "debug")
