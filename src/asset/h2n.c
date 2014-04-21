@@ -21,7 +21,7 @@ ilA_img *ilA_img_height_to_normal(const ilA_img *self)
             float height[3];
             for (i = 0; i < 3; i++) {
                 unsigned lx = x + offs[2*i], ly = y + offs[2*i + 1];
-                unsigned hval = *(unsigned*)(self->data + ly*self->width*self->bpp/8 + lx*self->bpp/8);
+                uint8_t hval = *(uint8_t*)(self->data + ly*self->width*self->bpp/8 + lx*self->bpp/8); // TODO: Support higher than 8-bit
                 hval &= (1<<self->bpp) - 1; // we only care about red channel
                 height[i] = (float)hval / (1<<self->bpp);
             }
