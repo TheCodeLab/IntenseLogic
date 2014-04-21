@@ -110,7 +110,7 @@ il_vec3 il_vec4_to_vec3(il_vec4 a)
     vec.x = a.x / a.w;
     vec.y = a.y / a.w;
     vec.z = a.z / a.w;
-    vec.w = 1/0.f;
+    vec.w = NAN;
     return vec;
 }
 
@@ -129,7 +129,7 @@ il_vec3 il_vec3_new(float x, float y, float z)
         .x = x,
         .y = y,
         .z = z,
-        .w = 1/0.f
+        .w = NAN
     };
 }
 
@@ -139,7 +139,7 @@ il_vec3 il_vec3_add(il_vec3 a, il_vec3 b)
     vec.x = a.x + b.x;
     vec.y = a.y + b.y;
     vec.z = a.z + b.z;
-    vec.w = 1/0.f;
+    vec.w = NAN;
     return vec;
 }
 
@@ -149,7 +149,7 @@ il_vec3 il_vec3_sub(il_vec3 a, il_vec3 b)
     vec.x = a.x - b.x;
     vec.y = a.y - b.y;
     vec.z = a.z - b.z;
-    vec.w = 1/0.f;
+    vec.w = NAN;
     return vec;
 }
 
@@ -159,7 +159,7 @@ il_vec3 il_vec3_mul(il_vec3 a, il_vec3 b)
     vec.x = a.x * b.x;
     vec.y = a.y * b.y;
     vec.z = a.z * b.z;
-    vec.w = 1/0.f;
+    vec.w = NAN;
     return vec;
 }
 
@@ -169,7 +169,7 @@ il_vec3 il_vec3_div(il_vec3 a, il_vec3 b)
     vec.x = a.x / b.x;
     vec.y = a.y / b.y;
     vec.z = a.z / b.z;
-    vec.w = 1/0.f;
+    vec.w = NAN;
     return vec;
 }
 
@@ -210,7 +210,7 @@ il_vec3 il_vec3_cross(il_vec3 a, il_vec3 b)
     vec.x = a.y * b.z - b.y * a.z;
     vec.y = a.z * b.x - b.z * a.x;
     vec.z = a.x * b.y - b.x * a.y;
-    vec.w = 1/0.f;
+    vec.w = NAN;
     return vec;
 }
 
