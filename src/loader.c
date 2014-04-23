@@ -126,7 +126,7 @@ void il_load_module_dir(const char *path, il_opts *opts)
         strcpy(buf, path);
         strcat(buf, "\\");
         strcat(buf, name);
-        il_load_module(buf, argc, argv);
+        il_load_module(buf, opts);
     } while (FindNextFile(hFind, &ffd) != 0);
 
     FindClose(hFind);

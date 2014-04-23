@@ -23,6 +23,7 @@ struct {
 };
 
 char *strdup(const char*);
+char *strndup(const char*, size_t);
 int main(int argc, char **argv)
 {
     int has_modules = 0;

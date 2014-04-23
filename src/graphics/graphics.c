@@ -4,8 +4,8 @@
 #include <time.h>
 #include <sys/time.h>
 #include <GL/glew.h>
-#include <SDL.h>
-#include <SDL_video.h>
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_video.h>
 #include <math.h>
 #include <unistd.h>
 #include <signal.h>

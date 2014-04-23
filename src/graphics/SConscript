@@ -25,7 +25,7 @@ pkg_libs = {
 }
 
 if platform=="mingw":
-    graphics.Append(LIBS=["opengl32", "glew32", "glfw3", "png", "z", "harfbuzz", "harfbuzz-icu", "cairo"])
+    graphics.Append(LIBS=["opengl32", "SDL2", "glew32", "glfw3", "png", "z", "harfbuzz", "harfbuzz-icu", "cairo"])
 
 for lib in pkg_libs[platform]:
     graphics.ParseConfig("pkg-config " + lib + " --cflags --libs")
