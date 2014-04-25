@@ -39,9 +39,11 @@ ilG_legacy *ilG_renderer_legacy(struct ilG_drawable3d *dr, struct ilG_material *
 void ilG_renderer_addTexture(ilG_legacy *self, struct ilG_tex tex);
 
 ilG_renderer ilG_renderer_wrap(void *obj, const ilG_renderable *vtable);
+// render-thread only
 void ilG_renderer_free(ilG_renderer self);
 
 void ilG_renderer_build(ilG_renderer *self, struct ilG_context *context);
+// render-thread only
 void ilG_renderer_draw(ilG_renderer *self);
 
 bool ilG_renderer_isComplete(const ilG_renderer *self);

@@ -162,6 +162,8 @@ void ilG_context_add(ilG_context *self, ilG_renderer parent, ilG_renderer node);
 void ilG_context_remove(ilG_context *self, ilG_renderer parent, ilG_renderer node);
 /** Send a message to a renderer */
 void ilG_context_message(ilG_context *self, ilG_renderer node, int type, il_value data);
+/** Frees a renderer */
+void ilG_context_free_node(ilG_context *self, ilG_renderer node);
 
 /* Rendering thread calls */
 /** Internal: Binds the context's internal framebuffer */

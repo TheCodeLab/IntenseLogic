@@ -24,7 +24,8 @@ struct ilG_context_msg {
         ILG_UPLOAD,
         ILG_RESIZE,
         ILG_STOP,
-        ILG_MESSAGE
+        ILG_MESSAGE,
+        ILG_FREE
     } type;
     union {
         struct {
@@ -33,13 +34,11 @@ struct ilG_context_msg {
         } upload;
         int resize[2];
         struct {
-            ilG_renderer parent, node;
-        } add, remove;
-        struct {
             ilG_renderer node;
             int type;
             il_value data;
         } message;
+        ilG_renderer free;
     } value;
 };
 
@@ -194,6 +193,14 @@ void ilG_context_message(ilG_context *self, ilG_renderer node, int type, il_valu
     produce(self->queue, msg);
 }
 
+void ilG_context_free_node(ilG_context *self, ilG_renderer node)
+{
+    struct ilG_context_msg *msg = calloc(1, sizeof(struct ilG_context_msg));
+    msg->type = ILG_FREE;
+    msg->value.free = node;
+    produce(self->queue, msg);
+}
+
 void ilG_context_bindFB(ilG_context *self)
 {
     if (self->use_default_fb) {
@@ -293,6 +300,11 @@ static void context_message(ilG_renderer parent, int type, il_value data)
 {
     parent.vtable->message(parent.obj, type, &data);
     il_value_free(data);
+}
+
+static void context_free(ilG_renderer r)
+{
+    r.vtable->free(r.obj);
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -518,6 +530,7 @@ static void *render_thread(void *ptr)
                 case ILG_RESIZE: context_resize(self, msg->value.resize[0], msg->value.resize[1]); break;
                 case ILG_STOP: goto stop;
                 case ILG_MESSAGE: context_message(msg->value.message.node, msg->value.message.type, msg->value.message.data); break;
+                case ILG_FREE: context_free(msg->value.free); break;
             }
             done_consume(self->queue);
         }
