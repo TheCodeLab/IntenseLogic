@@ -11,10 +11,10 @@ Import("env")
 il = env.Clone()
 
 libs = {
-    "osx":   ["dl"],
-    "mingw": ["mingw32", "lua51"],
-    "arch":  ["dl"],
-    "linux": ["dl"]
+    "osx":   ["dl", "ilutil"],
+    "mingw": ["mingw32", "lua51", "ilutil"],
+    "arch":  ["dl", "ilutil"],
+    "linux": ["dl", "ilutil"]
 }
 
 pkg_libs = {

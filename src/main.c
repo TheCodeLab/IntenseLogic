@@ -3,9 +3,9 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "loader.h"
+#include "util/loader.h"
 #include "version.h"
-#include "opt.h"
+#include "util/opt.h"
 
 struct {
     enum {

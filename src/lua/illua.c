@@ -6,7 +6,8 @@
 #include <errno.h>
 #include <unistd.h>
 
-#include "loader.h"
+#include "util/loader.h"
+#include "util/opt.h"
 
 char *strdup(const char*);
 

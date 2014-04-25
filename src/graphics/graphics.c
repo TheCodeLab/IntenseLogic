@@ -27,7 +27,7 @@
 #include "graphics/arrayattrib.h"
 #include "graphics/fragdata.h"
 #include "graphics/bindable.h"
-#include "opt.h"
+#include "util/opt.h"
 
 il_base *ilG_shaders_dir;
 const ilA_dir *ilG_shaders_iface;
