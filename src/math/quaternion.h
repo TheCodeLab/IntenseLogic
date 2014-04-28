@@ -19,6 +19,7 @@ il_quat il_quat_fromYPR(float yaw, float pitch, float roll);
 il_quat il_quat_fromAxisAngle(float x, float y, float z, float a);
 /** Normalizes a quaternion to keep it as a rotation */
 il_quat il_quat_normalize(il_quat a);
+il_quat il_quat_invert(il_quat q);
 float il_quat_len(il_quat a);
 float il_quat_dot(il_quat a, il_quat b);
 char *il_quat_print(il_quat q, char *buf, unsigned len);

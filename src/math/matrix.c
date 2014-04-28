@@ -7,6 +7,7 @@
 #endif
 #include <math.h>
 #include <assert.h>
+#include <stdio.h>
 
 // SSE code copied from GLM which is under the MIT license: http://glm.g-truc.net/copying.txt
 
@@ -140,7 +141,7 @@ il_mat il_mat_perspective(float fovy, float aspect, float znear, float zfar)
     float f = 1.0/tan(fovy/2);
     float clip0 = (zfar+znear)/(znear-zfar);
     float clip1 = (2*zfar*znear)/(znear-zfar);
-    return il_mat_new (
+    return il_mat_new(
         f / aspect, 0, 0    , 0,
         0         , f, 0    , 0,
         0         , 0, clip0, clip1,
@@ -232,5 +233,13 @@ il_mat il_mat_transpose(il_mat a)
         }
     }
     return res;
+}
+
+void il_mat_print(il_mat a)
+{
+    fprintf(stderr, "%.06f %.06f %.06f %.06f\n", a.data[0], a.data[1], a.data[2], a.data[3]);
+    fprintf(stderr, "%.06f %.06f %.06f %.06f\n", a.data[4], a.data[5], a.data[6], a.data[7]);
+    fprintf(stderr, "%.06f %.06f %.06f %.06f\n", a.data[8], a.data[9], a.data[10], a.data[11]);
+    fprintf(stderr, "%.06f %.06f %.06f %.06f\n", a.data[12], a.data[13], a.data[14], a.data[15]);
 }
 

@@ -35,6 +35,7 @@ il_mat il_mat_rotate(il_quat q);
 il_mat il_mat_invert(il_mat a);
 /** Transposes the elements of a matrix over the diagonal */
 il_mat il_mat_transpose(il_mat a);
+void il_mat_print(il_mat a);
 
 #endif
 

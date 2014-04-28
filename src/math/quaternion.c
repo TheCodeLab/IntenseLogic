@@ -82,6 +82,16 @@ il_quat il_quat_normalize(il_quat a)
     return q;
 }
 
+il_quat il_quat_invert(il_quat q)
+{
+    il_quat r;
+    r.x = -q.x;
+    r.y = -q.y;
+    r.z = -q.z;
+    r.w = q.w;
+    return r;
+}
+
 float il_quat_len(il_quat a)
 {
     return sqrt(il_quat_dot(a, a));
