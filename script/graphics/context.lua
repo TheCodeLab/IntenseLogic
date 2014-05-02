@@ -76,12 +76,18 @@ void ilG_context_addStage(ilG_context* self, struct ilG_stage* stage, int num);
 void ilG_context_clearStages(ilG_context *self);
 
 int ilG_context_start(ilG_context*);
+void ilG_context_stop(ilG_context*);
 
 ]]
 
 local context = {}
 
 -- TODO: Error propagation
+
+function context:stop()
+    assert(self ~= nil)
+    modules.graphics.ilG_context_stop(self)
+end
 
 function context:destroy()
     assert(self ~= nil)

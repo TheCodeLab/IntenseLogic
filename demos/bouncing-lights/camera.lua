@@ -140,6 +140,7 @@ return function(ctx, w, root, tick)
     local on_after_close = event()
     local after_close = function(hnd)
         event.destroy(tick)
+        ctx:stop()
         ctx:destroy()
         event.fireAsync(event.shutdown)
     end

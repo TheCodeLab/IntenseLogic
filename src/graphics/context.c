@@ -2,6 +2,7 @@
 
 #include <string.h>
 #include <errno.h>
+#include <assert.h>
 
 #include "util/log.h"
 #include "util/logger.h"
@@ -149,38 +150,35 @@ void ilG_context_hint(ilG_context *self, enum ilG_context_hint hint, int param)
 
 void ilG_context_free(ilG_context *self)
 {
-    struct ilG_context_msg *msg = calloc(1, sizeof(struct ilG_context_msg));
-    msg->type = ILG_STOP;
-    produce(self->queue, msg);
-    pthread_join(self->thread, NULL);
+    assert(!self->running);
     ilG_context_renderer.free(self);
 }
 
-int ilG_context_upload(ilG_context *self, void (*fn)(void*), void* ptr)
+bool ilG_context_upload(ilG_context *self, void (*fn)(void*), void* ptr)
 {
     struct ilG_context_msg *msg = calloc(1, sizeof(struct ilG_context_msg));
     msg->type = ILG_UPLOAD;
     msg->value.upload.cb = fn;
     msg->value.upload.ptr = ptr;
     produce(self->queue, msg);
-    return 1;
+    return true;
 }
 
-int ilG_context_resize(ilG_context *self, int w, int h)
+bool ilG_context_resize(ilG_context *self, int w, int h)
 {
     struct ilG_context_msg *msg = calloc(1, sizeof(struct ilG_context_msg));
     msg->type = ILG_RESIZE;
     msg->value.resize[0] = w;
     msg->value.resize[1] = h;
     produce(self->queue, msg);
-    return 1;
+    return true;
 }
 
 char *strdup(const char*);
-int ilG_context_rename(ilG_context *self, const char *title)
+bool ilG_context_rename(ilG_context *self, const char *title)
 {
     SDL_SetWindowTitle(self->window, title);
-    return 1;
+    return true;
 }
 
 void ilG_context_message(ilG_context *self, ilG_renderer node, int type, il_value data)
@@ -560,24 +558,34 @@ stop:
     return NULL;
 }
 
-int ilG_context_start(ilG_context *self)
+bool ilG_context_start(ilG_context *self)
 {
     if (!self->camera) {
         il_error("No camera");
-        return 0;
+        return false;
     }
     if (!self->world) {
         il_error("No world");
-        return 0;
+        return false;
     }
 
     setup_context(self);
     
+    self->running = true;
     // Start thread
     int res = pthread_create(&self->thread, NULL, render_thread, self);
     if (res) {
         il_error("pthread_create: %s", strerror(errno));
     }
     return res == 0;
+}
+
+void ilG_context_stop(ilG_context *self)
+{
+    struct ilG_context_msg *msg = calloc(1, sizeof(struct ilG_context_msg));
+    msg->type = ILG_STOP;
+    produce(self->queue, msg);
+    pthread_join(self->thread, NULL);
+    self->running = false;
 }
 

@@ -6,6 +6,7 @@
 #include <SDL2/SDL_video.h>
 #include <sys/time.h>
 #include <pthread.h>
+#include <stdbool.h>
 
 #include "util/array.h"
 #include "util/list.h"
@@ -107,7 +108,7 @@ typedef struct ilG_context { // **remember to update context.lua**
     unsigned *texunits;
     size_t num_texunits;
     /* Private */
-    int valid;
+    bool valid;
     GLuint fbtextures[ILG_CONTEXT_NUMATTACHMENTS], framebuffer;
     IL_ARRAY(ilG_renderer,) renderers;
     int tick_id;
@@ -116,21 +117,22 @@ typedef struct ilG_context { // **remember to update context.lua**
     SDL_Window *window;
     SDL_GLContext context;
     pthread_t thread;
+    bool running;
     /* Creation parameters */
-    int complete;
+    bool complete;
     int contextMajor;
     int contextMinor;
-    int forwardCompat;
+    bool forwardCompat;
     enum ilG_context_profile profile;
-    int debug_context;
-    int experimental;
+    bool debug_context;
+    bool experimental;
     int startWidth;
     int startHeight;
-    int hdr;
-    int use_default_fb;
-    int debug_render;
+    bool hdr;
+    bool use_default_fb;
+    bool debug_render;
     char *initialTitle;
-    int vsync;
+    bool vsync;
 } ilG_context;
 
 extern const ilG_renderable ilG_context_renderer;
@@ -146,16 +148,18 @@ void ilG_context_free(ilG_context *self);
 void ilG_context_hint(ilG_context *self, enum ilG_context_hint hint, int param);
 /** Start rendering.
  * @return Success. */
-int ilG_context_start(ilG_context* self);
+bool ilG_context_start(ilG_context* self);
+/** Stops the render thread. Blocks. */
+void ilG_context_stop(ilG_context *self);
 
 /* External calls */
 /** Calls a function at the beginning of the frame on the context thread, usually for building VBOs */
-int ilG_context_upload(ilG_context *self, void (*fn)(void*), void*);
+bool ilG_context_upload(ilG_context *self, void (*fn)(void*), void*);
 /** Resizes (and creates if first call) the context's framebuffers and calls the #ilG_context.resize event. 
  * @return Success. */
-int ilG_context_resize(ilG_context *self, int w, int h);
+bool ilG_context_resize(ilG_context *self, int w, int h);
 /** Renames the window */
-int ilG_context_rename(ilG_context *self, const char *title);
+bool ilG_context_rename(ilG_context *self, const char *title);
 /** Adds a node to the scenegraph */
 void ilG_context_add(ilG_context *self, ilG_renderer parent, ilG_renderer node);
 /** Removes a connection between a node and its parent */
