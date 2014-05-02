@@ -30,9 +30,9 @@ if platform=="osx":
 linkflags += " -L"+build_dir_raw
 
 # clang-specific flags
-if "CC" in os.environ and "clang" in os.environ["CC"]:
-    ccflags   += " -fsanitize=address -fsanitize=undefined"
-    linkflags += " -fsanitize=address -fsanitize=undefined"
+if "ASAN" in os.environ and "1" in os.environ["ASAN"]:
+    ccflags   += " -fsanitize=address,undefined"
+    linkflags += " -fsanitize=address,undefined"
 
 # debug mode
 build_mode = ARGUMENTS.get("mode", "debug")
