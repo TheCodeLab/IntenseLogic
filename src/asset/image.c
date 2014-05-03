@@ -133,19 +133,25 @@ ilA_img *ilA_img_loadfile(const char *name)
 
 ilA_img *ilA_img_fromdata(const void *data, unsigned w, unsigned h, unsigned depth, enum ilA_imgchannels channels)
 {
+    unsigned size = compute_bpp(channels, depth) * w * h / 8;
+    void *copy = malloc(size);
+    if (data) {
+        memcpy(copy, data, size);
+    } else {
+        memset(copy, 0, size);
+    }
+    return ilA_img_frombuf(copy, w, h, depth, channels);
+}
+
+ilA_img *ilA_img_frombuf(void *data, unsigned w, unsigned h, unsigned depth, enum ilA_imgchannels channels)
+{
     ilA_img *img = calloc(1, sizeof(ilA_img));
     img->width = w;
     img->height = h;
     img->channels = channels;
     img->depth = depth;
     img->bpp = compute_bpp(channels, depth);
-    unsigned size = img->bpp * w * h / 8;
-    img->data = malloc(size);
-    if (data) {
-        memcpy(img->data, data, size);
-    } else {
-        memset(img->data, 0, size);
-    }
+    img->data = data;
     return img;
 }
 

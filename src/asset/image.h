@@ -38,6 +38,8 @@ ilA_img *ilA_img_loadasset(const ilA_file *iface, il_base *file);
 ilA_img *ilA_img_loadfile(const char *file);
 /** Creates a new image from raw data */
 ilA_img *ilA_img_fromdata(const void *data, unsigned w, unsigned h, unsigned depth, enum ilA_imgchannels channels);
+/** Creates a new image without copying */
+ilA_img *ilA_img_frombuf(void *data, unsigned w, unsigned h, unsigned depth, enum ilA_imgchannels channels);
 /** Allocates a copy of an image */
 ilA_img *ilA_img_copy(const ilA_img *old);
 /** Destroys all data associated with an image */
