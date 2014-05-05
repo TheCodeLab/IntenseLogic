@@ -2,7 +2,6 @@
 
 #include <btBulletDynamicsCommon.h>
 #include <LinearMath/btIDebugDraw.h>
-#include <cstddef>
 
 using namespace std;
 using namespace il::bouncinglights;
