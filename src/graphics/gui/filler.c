@@ -42,7 +42,7 @@ static void filler_draw(ilG_gui_frame *self, ilG_gui_rect where)
     ilG_testError("Unknown");
     ilG_drawable3d *quad = ilG_quad(self->context);
     ilG_material *shader = get_shader(self->context);
-    const il_vector *col = il_table_getsp(&self->base.storage, "gui.frame.fillcolor");
+    const il_vector *col = il_table_getsa(&self->base.storage, "gui.frame.fillcolor");
     const GLuint *col_loc = il_table_getsp(&self->context->storage, "gui.frame.color_loc"),
                  *pos_loc = il_table_getsp(&self->context->storage, "gui.frame.pos_loc");
     if (!col_loc || !pos_loc) {
@@ -68,7 +68,8 @@ void ilG_gui_frame_filler(ilG_gui_frame *self, float col[4])
         il_error("No context set in filler");
         return;
     }
-    il_table_sets(&self->base.storage, "gui.frame.fillcolor", il_value_vectorl(4, col[0], col[1], col[2], col[3]));
+#define f il_value_float
+    il_table_setsa(&self->base.storage, "gui.frame.fillcolor", il_vector_new(4, f(col[0]), f(col[1]), f(col[2]), f(col[3])));
     self->draw = filler_draw;
 }
 
