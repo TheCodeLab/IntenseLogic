@@ -952,3 +952,53 @@ void ilG_context_stop(ilG_context *self)
     self->running = false;
 }
 
+static void tabulate(unsigned n)
+{
+    for (unsigned i = 0; i < 2*n; i++) {
+        fputc(' ', stderr);
+    }
+}
+
+void ilG_context_recursivePrint(ilG_context *self, ilG_rendid id, unsigned depth)
+{
+    tabulate(depth); fprintf(stderr, "%u:\n", id);
+    tabulate(depth+1); fprintf(stderr, "sink: %s\n", ilG_context_findSink(self, id)? "true" : "false");
+    ilG_renderer *r;
+    unsigned iter;
+    while ((r = ilG_context_iterChildren(self, id, &iter))) {
+        ilG_context_recursivePrint(self, r->id, depth+1);
+    }
+}
+
+void ilG_context_printScenegraph(ilG_context *self)
+{
+    fprintf(stderr, "storage:\n");
+    il_table_show(&self->storage);
+    fprintf(stderr, "renderers:\n");
+    ilG_rendermanager *rm = &self->manager;
+    for (unsigned i = 0; i < rm->names.length; i++) {
+        fprintf(stderr, "  %s: ", rm->names.data[i]);
+        for (unsigned j = 0; j < rm->namelinks.length; j++) {
+            if (rm->namelinks.data[j].second == i) {
+                fprintf(stderr, "%u, ", rm->namelinks.data[j].first);
+            }
+        }
+        fprintf(stderr, "\n");
+    }
+    fprintf(stderr, "  No name: ");
+    for (unsigned i = 0; i < rm->renderers.length; i++) {
+        bool has_name = false;
+        for (unsigned j = 0; j < rm->namelinks.length; j++) {
+            if (rm->namelinks.data[j].first == rm->renderers.data[i].id) {
+                has_name = true;
+            }
+        }
+        if (!has_name) {
+            fprintf(stderr, "%u, ", rm->renderers.data[i].id);
+        }
+    }
+    fprintf(stderr, "\n");
+    fprintf(stderr, "hierarchy:\n");
+    ilG_context_recursivePrint(self, 0, 1);
+}
+

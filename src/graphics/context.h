@@ -187,5 +187,7 @@ void ilG_context_bindFB(ilG_context *self);
 void ilG_context_bind_for_outpass(ilG_context *self);
 bool ilG_context_build(void *obj, ilG_rendid id, ilG_context *context, ilG_renderer *out);
 
+void ilG_context_printScenegraph(ilG_context *self);
+
 #endif
 
