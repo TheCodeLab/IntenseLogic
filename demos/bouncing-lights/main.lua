@@ -29,7 +29,7 @@ void add_ball(il_positionable *pos);
 void update(int debug);
 void custom_data_func(struct ilG_material *self, il_positionable *pos, GLuint loc, void *user);
 
-extern const ilG_renderable debug_renderer;
+ilG_builder debug_builder();
 
 ]]
 
@@ -45,15 +45,14 @@ local skybox = {
     'demos/bouncing-lights/west.png',
     'demos/bouncing-lights/east.png',
 }
-local c, w, root, pipe
-c, w, root, pipe = helper.context { skybox=skybox,
-                                    geom=true,
-                                    lights=true,
-                                    transparency=true,
-                                    gui=true,
-                                    output=true,
-                                    hints = {hdr=1,debug_context=1,debug_render=1,use_default_fb=0} }
-local pipe2 = {pipe[1], pipe[2], pipe[3], pipe[4], renderer.wrap(nil, modules.bouncinglights.debug_renderer), pipe[5], pipe[6]}
+local c, w, pipe
+c, w, pipe = helper.context { skybox=skybox,
+                              geom=true,
+                              lights=true,
+                              transparency=true,
+                              output=true,
+                              hints = {hdr=1,debug_context=1,debug_render=1,use_default_fb=0} }
+local pipe2 = {pipe[1], pipe[2], pipe[3], pipe[4], modules.bouncinglights.debug_builder(), pipe[5], pipe[6]}
 --c:addStage(pipe2[5], 5)
 modules.bouncinglights.set_world(w)
 -- heightmap renderer
@@ -62,7 +61,7 @@ modules.bouncinglights.add_heightmap(hmt, 128, 128, 50)
 local height = tex.image(hmt)
 local normal = tex.image(hmt:height_to_normal())
 local color  = tex.file "demos/bouncing-lights/terrain.png"
-local hmr = heightmap(100, 100, height, normal, color)
+local hmr = heightmap(100, 100, height, normal, color):build(c)
 pipe[2]:add(hmr)
 local hm = positionable(w)
 hm.position = vector3(0, 0, 0).ptr
@@ -80,7 +79,7 @@ glow:arrayAttrib("position", "in_Position")
 glow:matrix("MVP", "mvp")
 glow:posFunc(modules.bouncinglights.custom_data_func, "col")
 
-local ball = renderer.legacy(sphere, glow)
+local ball = renderer.legacy(sphere, glow):build(c)
 pipe[4]:add(ball)
 
 _G.num_lights = 0
@@ -134,7 +133,7 @@ end)
 local tick = event(1/20, "bouncinglights.tick")
 event.register(tick, function() modules.bouncinglights.update(debugRender and 1 or 0) end)
 
-camera(c, w, root, tick)
+camera(c, w, tick)
 
 c:resize(800, 600, "Bouncing Lights")
 c:start()

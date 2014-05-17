@@ -2,8 +2,6 @@ local file          = require 'asset.file'
 local input         = require 'input.input'
 local quaternion    = require 'math.quaternion'
 local vector3       = require 'math.vector3'
-local frame         = require 'graphics.gui.frame'
-local text          = require 'graphics.gui.text'
 local event         = require 'common.event'
 local camera        = require 'graphics.camera'
 local matrix        = require 'math.matrix'
@@ -41,39 +39,32 @@ function helper.context(args, hints)
         else
             error("Expected string or table")
         end
-        local s = renderer.skybox(skybox)
+        local s = renderer.skybox(skybox):build(c)
         c:add(s)
         pipe[#pipe+1] = s
     end
     if args.geom then -- geometry pass
-        local s = renderer.geometry()
+        local s = renderer.geometry():build(c)
         c:add(s)
         pipe[#pipe+1] = s
     end
     if args.lights then -- light pass
-        local s = renderer.lights()
+        local s = renderer.lights():build(c)
         c:add(s)
         pipe[#pipe+1] = s
     end
     if args.transparency then -- transparency pass
-        local s = renderer.transparency()
-        c:add(s)
-        pipe[#pipe+1] = s
-    end
-    local root
-    if args.gui then-- gui pass
-        root = frame()
-        local s = renderer.gui(root)
+        local s = renderer.transparency():build(c)
         c:add(s)
         pipe[#pipe+1] = s
     end
     if args.output then -- output pass
-        local s = renderer.out()
+        local s = renderer.out():build(c)
         c:add(s)
         pipe[#pipe+1] = s
     end
 
-    return c, w, root, pipe
+    return c, w, pipe
 end
 
 function helper.camera(ctx, root)
@@ -92,25 +83,6 @@ function helper.camera(ctx, root)
         local pitch = quaternion(vector3(1, 0, 0), y * cam.sensitivity)
         local rot = quaternion.wrap(cam.positionable.rotation) * yaw * pitch
         cam.positionable.rotation = rot.ptr
-    end
-
-    local georgia = file.load "demos/georgia.ttf"
-    local camera_pos_label = frame()
-    camera_pos_label.context = ctx
-    camera_pos_label:setPosition(5,-19, 0, 1)
-    root:addChild(camera_pos_label)
-    local render_pos = function(pos)
-        local label = text(ctx, "en", "ltr", "latin", georgia, 14, tostring(pos))
-        camera_pos_label:label(label, {1,1,1,1}, "left middle")
-    end
-
-    local fps_label = frame()
-    fps_label.context = ctx
-    fps_label:setPosition(5, 5, 0, 0)
-    root:addChild(fps_label)
-    local render_fps = function(f)
-        local label = text(ctx, "en", "ltr", "latin", georgia, 14, string.format("FPS: %.1f", tonumber(f)))
-        fps_label:label(label, {1,1,1,1}, "left middle")
     end
 
     local ontick = function()

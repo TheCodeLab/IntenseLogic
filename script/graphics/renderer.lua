@@ -2,84 +2,60 @@ local ffi = require 'ffi'
 
 ffi.cdef [[
 
-typedef struct ilG_renderable {
-    void (*free)(void *obj);
-    void (*draw)(void *obj);
-    int (*build)(void *obj, struct ilG_context *context);
-    il_table *(*get_storage)(void *obj);
-    bool (*get_complete)(const void *obj);
-    int add_positionable, del_positionable;
-    int add_renderer, del_renderer;
-    int add_light, del_light;
-    void (*message)(void *obj, int type, il_value *v);
-    void (*push_msg)(void *obj, int type, il_value v);
-    const char *name;
-} ilG_renderable;
+typedef unsigned ilG_rendid;
 
-typedef struct ilG_renderer {
+typedef bool (*ilG_build_fn)(void *obj, ilG_rendid id, struct ilG_context *context, struct ilG_renderer *out);
+typedef struct ilG_builder {
+    const ilG_build_fn fn;
     void *obj;
-    const ilG_renderable *vtable;
-} ilG_renderer;
+} ilG_builder;
+
+typedef struct ilG_handle {
+    ilG_rendid id;
+    struct ilG_context *context;
+} ilG_handle;
+
+typedef struct ilG_rendermanager ilG_rendermanager;
 
 typedef struct ilG_legacy ilG_legacy;
+ilG_legacy *ilG_legacy_new(struct ilG_drawable3d *dr, struct ilG_material *mtl);
+void ilG_legacy_addTexture(ilG_legacy *self, struct ilG_tex tex);
+bool ilG_legacy_build(void *ptr, ilG_rendid id, struct ilG_context *context, struct ilG_renderer *out);
 
-extern const ilG_renderable ilG_legacy_renderer;
+ilG_builder ilG_builder_wrap(void *obj, const ilG_build_fn build);
 
-ilG_renderer ilG_renderer_wrap(void *obj, const ilG_renderable *vtable);
-ilG_legacy *ilG_renderer_legacy(struct ilG_drawable3d *dr, struct ilG_material *mtl);
-void ilG_renderer_free(ilG_renderer self);
-
-void ilG_renderer_build(ilG_renderer *self, struct ilG_context *context);
-void ilG_renderer_draw(ilG_renderer *self);
-
-bool ilG_renderer_isComplete(const ilG_renderer *self);
-const il_table *ilG_renderer_getStorage(const ilG_renderer *self);
-il_table *ilG_renderer_mgetStorage(ilG_renderer *self);
-const char *ilG_renderer_getName(const ilG_renderer *self);
-
-int ilG_renderer_addPositionable(ilG_renderer *self, il_positionable pos);
-int ilG_renderer_delPositionable(ilG_renderer *self, il_positionable pos);
-int ilG_renderer_addRenderer(ilG_renderer *self, ilG_renderer node);
-int ilG_renderer_delRenderer(ilG_renderer *self, ilG_renderer node);
-int ilG_renderer_addLight(ilG_renderer *self, struct ilG_light light);
-int ilG_renderer_delLight(ilG_renderer *self, struct ilG_light light);
+ilG_handle ilG_build(ilG_builder self, struct ilG_context *context);
+void ilG_handle_destroy(ilG_handle self);
+bool ilG_handle_ready(ilG_handle self);
+il_table *ilG_handle_storage(ilG_handle self);
+const char *ilG_handle_getName(ilG_handle self);
+void ilG_handle_addPositionable(ilG_handle self, il_positionable pos);
+void ilG_handle_delPositionable(ilG_handle self, il_positionable pos);
+void ilG_handle_addRenderer(ilG_handle self, ilG_handle node);
+void ilG_handle_delRenderer(ilG_handle self, ilG_handle node);
+void ilG_handle_addLight(ilG_handle self, ilG_light light);
+void ilG_handle_delLight(ilG_handle self, ilG_light light);
+void ilG_handle_message(ilG_handle self, int type, il_value v);
 
 // skyboxpass.h
 
-typedef struct ilG_skybox ilG_skybox;
-extern const ilG_renderable ilG_skybox_renderer;
-ilG_skybox *ilG_skybox_new(struct ilG_tex skytex);
+ilG_builder ilG_skybox_builder(struct ilG_tex skytex);
 
 // geometrypass.h
 
-typedef struct ilG_geometry ilG_geometry;
-extern const ilG_renderable ilG_geometry_renderer;
-struct ilG_geometry *ilG_geometry_new();
+ilG_builder ilG_geometry_builder();
 
 // lightpass.h
 
-typedef struct ilG_lights ilG_lights;
-extern const ilG_renderable ilG_lights_renderer;
-ilG_lights *ilG_lights_new();
-void ilG_lights_add(ilG_lights *self, struct ilG_light light);
+ilG_builder ilG_lights_builder();
 
 // transparencypass.h
 
-typedef struct ilG_transparency ilG_transparency;
-extern const ilG_renderable ilG_transparency_renderer;
-ilG_transparency *ilG_transparency_new();
-
-// guipass.h
-
-typedef struct ilG_gui ilG_gui;
-extern const ilG_renderable ilG_gui_renderer;
-ilG_gui *ilG_gui_new(struct ilG_gui_frame *root);
+ilG_builder ilG_transparency_builder();
 
 // outpass.h
 
-typedef struct ilG_out ilG_out;
-extern const ilG_renderable ilG_out_renderer;
-ilG_out *ilG_out_new();
+ilG_builder ilG_out_builder();
 
 ]]
 
@@ -88,7 +64,7 @@ local renderer = {}
 -----------------------
 -- constructors
 
-function renderer.create(...)
+function renderer.builder(...)
     if select('#', ...) == 3 then
         return renderer.legacy(...)
     elseif select('#', ...) == 2 then
@@ -97,40 +73,35 @@ function renderer.create(...)
     error("Don't know how to handle arguments")
 end
 
-function renderer.wrap(ptr, vtable)
-    assert(vtable ~= nil)
-    return modules.graphics.ilG_renderer_wrap(ptr, vtable)
+function renderer.wrap(ptr, fn)
+    assert(fn ~= nil)
+    return modules.graphics.ilG_builder_wrap(ptr, fn)
 end
 
 function renderer.legacy(dr, mtl)
     assert(dr ~= nil and mtl ~= nil)
-    return renderer.wrap(modules.graphics.ilG_renderer_legacy(dr, mtl), modules.graphics.ilG_legacy_renderer)
+    return renderer.wrap(modules.graphics.ilG_legacy_new(dr, mtl), modules.graphics.ilG_legacy_build)
 end
 
 function renderer.skybox(tex)
     assert(tex ~= nil)
-    return renderer.wrap(modules.graphics.ilG_skybox_new(tex), modules.graphics.ilG_skybox_renderer)
+    return modules.graphics.ilG_skybox_builder(tex)
 end
 
 function renderer.geometry()
-    return renderer.wrap(modules.graphics.ilG_geometry_new(), modules.graphics.ilG_geometry_renderer)
+    return modules.graphics.ilG_geometry_builder()
 end
 
 function renderer.lights()
-    return renderer.wrap(modules.graphics.ilG_lights_new(), modules.graphics.ilG_lights_renderer)
+    return modules.graphics.ilG_lights_builder()
 end
 
 function renderer.transparency()
-    return renderer.wrap(modules.graphics.ilG_transparency_new(), modules.graphics.ilG_transparency_renderer)
-end
-
-function renderer.gui(root)
-    assert(root ~= nil)
-    return renderer.wrap(modules.graphics.ilG_gui_new(root), modules.graphics.ilG_gui_renderer)
+    return modules.graphics.ilG_transparency_builder()
 end
 
 function renderer.out()
-    return renderer.wrap(modules.graphics.ilG_out_new(), modules.graphics.ilG_out_renderer)
+    return modules.graphics.ilG_out_builder()
 end
 
 --------------------
@@ -138,53 +109,61 @@ end
 
 function renderer:build(c)
     assert(self ~= nil and c ~= nil)
-    modules.graphics.ilG_renderer_build(self, c)
+    return modules.graphics.ilG_build(self, c)
 end
 
 function renderer:add(o)
     assert(self ~= nil and o ~= nil)
     if ffi.istype('il_positionable', o) then
-        modules.graphics.ilG_renderer_addPositionable(self, o)
-    elseif ffi.istype('ilG_renderer', o) then
-        modules.graphics.ilG_renderer_addRenderer(self, o)
+        modules.graphics.ilG_handle_addPositionable(self, o)
+    elseif ffi.istype('ilG_handle', o) then
+        modules.graphics.ilG_handle_addRenderer(self, o)
     elseif ffi.istype('ilG_light', o) then
-        modules.graphics.ilG_renderer_addLight(self, o)
+        modules.graphics.ilG_handle_addLight(self, o)
+    elseif ffi.istype('ilG_builder', o) then
+        error("Argument is a builder - try calling build() first")
     else
-        error("Can't handle type")
+        error("Can't handle type "..type(o))
     end
 end
 
 function renderer:del(o)
     assert(self ~= nil and o ~= nil)
     if ffi.istype('il_positionable', o) then
-        modules.graphics.ilG_renderer_delPositionable(self, o)
-    elseif ffi.istype('ilG_renderer', o) then
-        modules.graphics.ilG_renderer_delRenderer(self, o)
+        modules.graphics.ilG_handle_delPositionable(self, o)
+    elseif ffi.istype('ilG_handle', o) then
+        modules.graphics.ilG_handle_delRenderer(self, o)
     elseif ffi.istype('ilG_light', o) then
-        modules.graphics.ilG_renderer_delLight(self, o)
+        modules.graphics.ilG_handle_delLight(self, o)
     else
         error("Can't handle type")
     end
 end
 
 function renderer:destroy()
-    modules.graphics.ilG_renderer_free(self)
+    modules.graphics.ilG_handle_destroy(self)
 end
 
-ffi.metatype("ilG_renderer", {
+ffi.metatype("ilG_handle", {
     __index = function(self, k)
-        local s = modules.graphics.ilG_renderer_mgetStorage(self)
-        assert(s ~= nil)
+        local s = modules.graphics.ilG_handle_storage(self)
         return 
-           (k == 'complete' and modules.graphics.ilG_renderer_isComplete(self)) 
-        or (k == 'name' and ffi.string(modules.graphics.ilG_renderer_getName(self)))
-        or s[k] 
+           (k == 'complete' and modules.graphics.ilG_handle_ready(self)) 
+        or (k == 'name' and ffi.string(modules.graphics.ilG_handle_getName(self)))
+        or (s ~= nil and s[k] or false)
         or renderer[k]
     end,
     __newindex = function(self, k, v)
-        local s = modules.graphics.ilG_renderer_mgetStorage(self)
+        local s = modules.graphics.ilG_handle_storage(self)
         assert(s ~= nil)
         s[k] = v
+    end
+})
+ffi.metatype("ilG_builder", {
+    __index = function(self, k)
+        if k == 'build' then
+            return renderer.build
+        end
     end
 })
 

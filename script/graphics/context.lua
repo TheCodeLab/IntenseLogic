@@ -62,9 +62,8 @@ typedef struct ilG_context {
                 *close,
                 *on_destroy;
     ilI_handler handler;
+    ilG_handle root;
 } ilG_context;
-
-extern const ilG_renderable ilG_context_renderer;
 
 ilG_context *ilG_context_new();
 void ilG_context_free(ilG_context *self);
@@ -102,7 +101,7 @@ end
 
 function context:add(r)
     assert(self ~= nil and r ~= nil)
-    renderer.wrap(self, modules.graphics.ilG_context_renderer):add(r)
+    self.root:add(r)
 end
 
 function context:rename(t)
