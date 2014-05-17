@@ -11,7 +11,7 @@
 #include "graphics/framebuffer.h"
 #include "graphics/fragdata.h"
 
-struct ilG_out {
+typedef struct ilG_out {
     ilG_context *context;
     ilG_material *material;
     ilG_material *horizblur, *vertblur;
@@ -19,12 +19,11 @@ struct ilG_out {
     GLuint vao, vbo;
     unsigned w, h;
     int which;
-    bool complete;
-    il_table storage;
-};
+} ilG_out;
 
-static void out_free(void *ptr)
+static void out_free(void *ptr, ilG_rendid id)
 {
+    (void)id;
     ilG_out *self = ptr;
     il_unref(self->material);
     il_unref(self->horizblur);
@@ -33,6 +32,7 @@ static void out_free(void *ptr)
     ilG_fbo_free(self->result);
     glDeleteBuffers(1, &self->vao);
     glDeleteBuffers(1, &self->vbo);
+    free(self);
 }
 
 static void fullscreenTexture(ilG_out *self)
@@ -51,14 +51,11 @@ static void size_uniform(ilG_material *self, GLint location, void *user)
     glUniform2f(location, out->w, out->h);
 }
 
-static void out_draw(void *ptr)
+static void out_draw(void *ptr, ilG_rendid id)
 {
+    (void)id;
     ilG_out *self = ptr;
     ilG_context *context = self->context;
-
-    if (!self->complete) {
-        return;
-    }
 
     ilG_testError("Unknown");
     ilG_bindable_unbind(context->materialb, context->material);
@@ -141,27 +138,27 @@ static void out_draw(void *ptr)
     ilG_testError("outpass");
 }
 
-static int out_build(void *ptr, ilG_context *context)
+static bool out_build(void *ptr, ilG_rendid id, ilG_context *context, ilG_renderer *out)
 {
     ilG_out *self = ptr;
     self->context = context;
     if (context->hdr) {
         if (ilG_fbo_build(self->front, context)) {
-            return 0;
+            return false;
         }
         if (ilG_fbo_build(self->result, context)) {
-            return 0;
+            return false;
         }
         if (ilG_material_link(self->horizblur, context)) {
-            return 0;
+            return false;
         }
         if (ilG_material_link(self->vertblur, context)) {
-            return 0;
+            return false;
         }
     }
     ilG_material_fragment_file(self->material, context->hdr? "hdr.frag" : "post.frag");
     if (ilG_material_link(self->material, context)) {
-        return 0;
+        return false;
     }
     static const float data[] = {
         0, 0,
@@ -181,32 +178,16 @@ static int out_build(void *ptr, ilG_context *context)
     glEnableVertexAttribArray(ILG_ARRATTR_TEXCOORD);
     ilG_testError("Failed to upload quad");
 
-    self->complete = true;
-    return 1;
+    *out = (ilG_renderer) {
+        .id = id,
+        .free = out_free,
+        .draw = out_draw,
+        .obj = self
+    };
+    return true;
 }
 
-static il_table *out_get_storage(void *ptr)
-{
-    ilG_out *self = ptr;
-    return &self->storage;
-}
-
-static bool out_get_complete(const void *ptr)
-{
-    const ilG_out *self = ptr;
-    return self->complete;
-}
-
-const ilG_renderable ilG_out_renderer = {
-    .free = out_free,
-    .draw = out_draw,
-    .build = out_build,
-    .get_storage = out_get_storage,
-    .get_complete = out_get_complete,
-    .name = "Out"
-};
-
-ilG_out *ilG_out_new()
+ilG_builder ilG_out_builder()
 {
     ilG_out *self = calloc(1, sizeof(ilG_out));
     ilG_material *m;
@@ -252,11 +233,8 @@ ilG_out *ilG_out_new()
     ilG_material_textureUnit(m, 0, "tex");
 
     ilG_testError("Failed to build vbo");
-
     self->which = 1;
 
-    self->complete = 1;
-
-    return self;
+    return ilG_builder_wrap(self, out_build);
 }
 

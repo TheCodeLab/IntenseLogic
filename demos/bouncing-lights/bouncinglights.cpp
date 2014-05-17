@@ -44,36 +44,28 @@ static DebugDraw *debugdraw;
 #define ex extern "C"
 #endif
 
-static void debug_draw(void *ptr)
+static void debug_draw(void *ptr, ilG_rendid id)
 {
-    (void)ptr;
+    (void)ptr, (void)id;
     debugdraw->render();
 }
 
-static int debug_build(void *ptr, ilG_context *context)
+static bool debug_build(void *ptr, ilG_rendid id, ilG_context *context, ilG_renderer *out)
 {
     (void)ptr;
     debugdraw = new DebugDraw(context);
     dynamicsWorld->setDebugDrawer(debugdraw);
-    return 1;
+    out->id = id;
+    out->free = NULL;
+    out->draw = debug_draw;
+    out->obj = NULL;
+    return true;
 }
 
-ex const ilG_renderable debug_renderer = {
-    /*.free =*/ NULL,
-    /*.draw =*/ debug_draw,
-    /*.build =*/ debug_build,
-    /*.get_storage =*/ NULL,
-    /*.get_complete =*/ NULL,
-    /*.add_positionable =*/ 0,
-    /*.del_positionable =*/ 0,
-    /*.add_renderer =*/ 0,
-    /*.del_renderer =*/ 0,
-    /*.add_light =*/ 0,
-    /*.del_light =*/ 0,
-    /*.message =*/ NULL,
-    /*.push_msg =*/ NULL,
-    /*.name =*/ "Debug Draw"
-};
+ex ilG_builder debug_builder()
+{
+    return ilG_builder_wrap(NULL, debug_build);
+}
 
 ex void custom_data_func(struct ilG_material *self, il_positionable *pos, GLuint loc, void *user)
 {

@@ -8,23 +8,22 @@
 #include "graphics/tex.h"
 #include "graphics/fragdata.h"
 
-struct ilG_skybox {
+typedef struct ilG_skybox {
     ilG_context *context;
     ilG_material *material;
     ilG_tex texture;
-    bool complete;
-    il_table storage;
-};
+} ilG_skybox;
 
-static void sky_free(void *ptr)
+static void sky_free(void *ptr, ilG_rendid id)
 {
+    (void)id;
     ilG_skybox *self = ptr;
     il_unref(self->material);
-    il_table_free(self->storage);
 }
 
-static void sky_draw(void *ptr)
+static void sky_draw(void *ptr, ilG_rendid id)
 {
+    (void)id;
     ilG_skybox *self = ptr;
     ilG_context *context = self->context;
 
@@ -42,39 +41,25 @@ static void sky_draw(void *ptr)
     glClear(GL_DEPTH_BUFFER_BIT);
 }
 
-static int sky_build(void *ptr, ilG_context *context)
+static bool sky_build(void *ptr, ilG_rendid id, ilG_context *context, ilG_renderer *out)
 {
     ilG_skybox *self = ptr;
     self->context = context;
     ilG_tex_build(&self->texture, context);
     if (ilG_material_link(self->material, context)) {
-        return 0;
+        return false;
     }
-    return self->complete = 1;
+    ilG_context_addName(context, id, "Skybox");
+    *out = (ilG_renderer) {
+        .id = id,
+        .free = sky_free,
+        .draw = sky_draw,
+        .obj = self
+    };
+    return true;
 }
 
-static il_table *sky_get_storage(void *ptr)
-{
-    ilG_skybox *self = ptr;
-    return &self->storage;
-}
-
-static bool sky_get_complete(const void *ptr)
-{
-    const ilG_skybox *self = ptr;
-    return self->complete;
-}
-
-const ilG_renderable ilG_skybox_renderer = {
-    .free = sky_free,
-    .draw = sky_draw,
-    .build = sky_build,
-    .get_storage = sky_get_storage,
-    .get_complete = sky_get_complete,
-    .name = "Skybox"
-};
-
-ilG_skybox *ilG_skybox_new(ilG_tex skytex)
+ilG_builder ilG_skybox_builder(ilG_tex skytex)
 {
     ilG_skybox *self = calloc(1, sizeof(ilG_skybox));
 
@@ -94,6 +79,6 @@ ilG_skybox *ilG_skybox_new(ilG_tex skytex)
     self->material = shader;
     self->texture = skytex;
     self->texture.unit = 0;
-    return self;
+    return ilG_builder_wrap(self, sky_build);
 }
 

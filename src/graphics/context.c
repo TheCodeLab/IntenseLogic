@@ -3,6 +3,7 @@
 #include <string.h>
 #include <errno.h>
 #include <assert.h>
+#include <limits.h>
 
 #include "util/log.h"
 #include "util/logger.h"
@@ -26,7 +27,12 @@ struct ilG_context_msg {
         ILG_RESIZE,
         ILG_STOP,
         ILG_MESSAGE,
-        ILG_FREE
+        ILG_ADD_RENDERER,
+        ILG_DEL_RENDERER,
+        ILG_ADD_POSITIONABLE,
+        ILG_DEL_POSITIONABLE,
+        ILG_ADD_LIGHT,
+        ILG_DEL_LIGHT
     } type;
     union {
         struct {
@@ -35,11 +41,21 @@ struct ilG_context_msg {
         } upload;
         int resize[2];
         struct {
-            ilG_renderer node;
+            ilG_rendid node;
             int type;
             il_value data;
         } message;
-        ilG_renderer free;
+        struct {
+            ilG_rendid parent, child;
+        } renderer;
+        struct {
+            ilG_rendid parent;
+            il_positionable child;
+        } positionable;
+        struct {
+            ilG_rendid parent;
+            ilG_light child;
+        } light;
     } value;
 };
 
@@ -121,6 +137,11 @@ ilG_context *ilG_context_new()
     ilI_handler_init(&self->handler);
     self->queue = calloc(1, sizeof(struct ilG_context_queue));
     queue_init(self->queue);
+    ilG_context_addRenderer(self, 0, ilG_builder_wrap(NULL, ilG_context_build));
+    self->root = (ilG_handle) {
+        .id = 0,
+        .context = self
+    };
     return self;
 }
 
@@ -151,7 +172,38 @@ void ilG_context_hint(ilG_context *self, enum ilG_context_hint hint, int param)
 void ilG_context_free(ilG_context *self)
 {
     assert(!self->running);
-    ilG_context_renderer.free(self);
+    self->complete = 0;
+
+    il_value nil = il_value_nil();
+    ilE_handler_fire(self->destroy, &nil);
+    il_value_free(nil);
+
+    for (unsigned i = 0; i < self->manager.renderers.length; i++) {
+        ilG_renderer *r = &self->manager.renderers.data[i];
+        r->free(r->obj, r->id);
+    }
+    for (unsigned i = 0; i < self->manager.names.length; i++) {
+        free(self->manager.names.data[i]);
+    }
+    IL_FREE(self->manager.renderers);
+    IL_FREE(self->manager.sinks);
+    IL_FREE(self->manager.children);
+    IL_FREE(self->manager.positionables);
+    IL_FREE(self->manager.lights);
+    IL_FREE(self->manager.storages);
+    IL_FREE(self->manager.namelinks);
+    IL_FREE(self->manager.names);
+
+    free(self->texunits);
+    ilE_unregister(self->tick, self->tick_id);
+    ilE_handler_destroy(self->tick);
+    ilE_handler_destroy(self->resize);
+    ilE_handler_destroy(self->close);
+    queue_free(self->queue);
+
+    SDL_GL_DeleteContext(self->context);
+    SDL_DestroyWindow(self->window);
+    free(self);
 }
 
 bool ilG_context_upload(ilG_context *self, void (*fn)(void*), void* ptr)
@@ -181,22 +233,68 @@ bool ilG_context_rename(ilG_context *self, const char *title)
     return true;
 }
 
-void ilG_context_message(ilG_context *self, ilG_renderer node, int type, il_value data)
+void ilG_handle_addPositionable(ilG_handle self, il_positionable pos)
+{
+    struct ilG_context_msg *msg = calloc(1, sizeof(struct ilG_context_msg));
+    msg->type = ILG_ADD_POSITIONABLE;
+    msg->value.positionable.parent = self.id;
+    msg->value.positionable.child = pos;
+    produce(self.context->queue, msg);
+}
+
+void ilG_handle_delPositionable(ilG_handle self, il_positionable pos)
+{
+    struct ilG_context_msg *msg = calloc(1, sizeof(struct ilG_context_msg));
+    msg->type = ILG_DEL_POSITIONABLE;
+    msg->value.positionable.parent = self.id;
+    msg->value.positionable.child = pos;
+    produce(self.context->queue, msg);
+}
+
+void ilG_handle_addRenderer(ilG_handle self, ilG_handle node)
+{
+    struct ilG_context_msg *msg = calloc(1, sizeof(struct ilG_context_msg));
+    msg->type = ILG_ADD_RENDERER;
+    msg->value.renderer.parent = self.id;
+    msg->value.renderer.child = node.id;
+    produce(self.context->queue, msg);
+}
+
+void ilG_handle_delRenderer(ilG_handle self, ilG_handle node)
+{
+    struct ilG_context_msg *msg = calloc(1, sizeof(struct ilG_context_msg));
+    msg->type = ILG_DEL_RENDERER;
+    msg->value.renderer.parent = self.id;
+    msg->value.renderer.child = node.id;
+    produce(self.context->queue, msg);
+}
+
+void ilG_handle_addLight(ilG_handle self, struct ilG_light light)
+{
+    struct ilG_context_msg *msg = calloc(1, sizeof(struct ilG_context_msg));
+    msg->type = ILG_ADD_LIGHT;
+    msg->value.light.parent = self.id;
+    msg->value.light.child = light;
+    produce(self.context->queue, msg);
+}
+
+void ilG_handle_delLight(ilG_handle self, struct ilG_light light)
+{
+    struct ilG_context_msg *msg = calloc(1, sizeof(struct ilG_context_msg));
+    msg->type = ILG_DEL_LIGHT;
+    msg->value.light.parent = self.id;
+    msg->value.light.child = light;
+    produce(self.context->queue, msg);
+}
+
+void ilG_handle_message(ilG_handle self, int type, il_value data)
 {
     struct ilG_context_msg *msg = calloc(1, sizeof(struct ilG_context_msg));
     msg->type = ILG_MESSAGE;
-    msg->value.message.node = node;
+    msg->value.message.node = self.id;
     msg->value.message.type = type;
     msg->value.message.data = data;
-    produce(self->queue, msg);
-}
-
-void ilG_context_free_node(ilG_context *self, ilG_renderer node)
-{
-    struct ilG_context_msg *msg = calloc(1, sizeof(struct ilG_context_msg));
-    msg->type = ILG_FREE;
-    msg->value.free = node;
-    produce(self->queue, msg);
+    produce(self.context->queue, msg);
 }
 
 void ilG_context_bindFB(ilG_context *self)
@@ -294,19 +392,267 @@ static int context_resize(ilG_context *self, int w, int h)
     return 1;
 }
 
-static void context_message(ilG_renderer parent, int type, il_value data)
+static void context_message(ilG_context *self, ilG_rendid id, int type, il_value data)
 {
-    parent.vtable->message(parent.obj, type, &data);
+    ilG_msgsink *s = ilG_context_findSink(self, id);
+    ilG_renderer *r = ilG_context_findRenderer(self, id);
+    assert(s && r);
+    s->fn(r->obj, type, &data);
     il_value_free(data);
 }
 
-static void context_free(ilG_renderer r)
+ilG_renderer *ilG_context_findRenderer(ilG_context *self, ilG_rendid id)
 {
-    r.vtable->free(r.obj);
+    ilG_renderer r;
+    unsigned idx;
+    IL_FIND(self->manager.renderers, r, r.id == id, idx);
+    if (idx < self->manager.renderers.length) {
+        return &self->manager.renderers.data[idx];
+    }
+    return NULL;
+}
+
+ilG_msgsink *ilG_context_findSink(ilG_context *self, ilG_rendid id)
+{
+    ilG_msgsink r;
+    unsigned idx;
+    IL_FIND(self->manager.sinks, r, r.id == id, idx);
+    if (idx < self->manager.sinks.length) {
+        return &self->manager.sinks.data[idx];
+    }
+    return NULL;
+}
+
+il_table *ilG_context_findStorage(ilG_context *self, ilG_rendid id)
+{
+    ilG_rendstorage r;
+    unsigned idx;
+    IL_FIND(self->manager.storages, r, r.first == id, idx);
+    if (idx < self->manager.storages.length) {
+        return &self->manager.storages.data[idx].second;
+    }
+    return NULL;
+}
+
+const char *ilG_context_findName(ilG_context *self, ilG_rendid id)
+{
+    ilG_rendname r;
+    unsigned idx;
+    IL_FIND(self->manager.namelinks, r, r.first == id, idx);
+    if (idx < self->manager.namelinks.length) {
+        return self->manager.names.data[r.second];
+    }
+    return NULL;
+}
+
+ilG_renderer *ilG_context_iterChildren(ilG_context *self, ilG_rendid id, unsigned *ctx)
+{
+    for (unsigned i = *ctx; i < self->manager.children.length; i++) {
+        if (self->manager.children.data[i].first == id) {
+            *ctx = i+1;
+            return &self->manager.renderers.data[self->manager.children.data[i].second];
+        }
+    }
+    return NULL;
+}
+
+il_positionable *ilG_context_iterPositionables(ilG_context *self, ilG_rendid id, unsigned *ctx)
+{
+    for (unsigned i = *ctx; i < self->manager.positionables.length; i++) {
+        if (self->manager.positionables.data[i].first == id) {
+            *ctx = i+1;
+            return &self->manager.positionables.data[i].second;
+        }
+    }
+    return NULL;
+}
+
+ilG_light *ilG_context_iterLights(ilG_context *self, ilG_rendid id, unsigned *ctx)
+{
+    for (unsigned i = *ctx; i < self->manager.lights.length; i++) {
+        if (self->manager.lights.data[i].first == id) {
+            *ctx = i+1;
+            return &self->manager.lights.data[i].second;
+        }
+    }
+    return NULL;
+}
+
+unsigned ilG_context_addRenderer(ilG_context *self, ilG_rendid id, ilG_builder builder)
+{
+    ilG_renderer r;
+    bool res = builder.build(builder.obj, id, self, &r);
+    if (res) {
+        IL_APPEND(self->manager.renderers, r);
+        return self->manager.renderers.length - 1;
+    }
+    return UINT_MAX;
+}
+
+unsigned ilG_context_addSink(ilG_context *self, ilG_rendid id, ilG_message_fn sink)
+{
+    ilG_msgsink s = {
+        .fn = sink,
+        .id = id
+    };
+    IL_APPEND(self->manager.sinks, s);
+    return self->manager.sinks.length - 1;
+}
+
+unsigned ilG_context_addChild(ilG_context *self, ilG_rendid parent, ilG_rendid child)
+{
+    ilG_rendchild r = {
+        .first = parent,
+        .second = child
+    };
+    IL_APPEND(self->manager.children, r);
+    return self->manager.children.length - 1;
+}
+
+unsigned ilG_context_addPositionable(ilG_context *self, ilG_rendid parent, il_positionable pos)
+{
+    ilG_rendpos r = {
+        .first = parent,
+        .second = pos
+    };
+    IL_APPEND(self->manager.positionables, r);
+    return self->manager.children.length - 1;
+}
+
+unsigned ilG_context_addLight(ilG_context *self, ilG_rendid id, ilG_light light)
+{
+    ilG_rendlight r = {
+        .first = id,
+        .second = light
+    };
+    IL_APPEND(self->manager.lights, r);
+    return self->manager.lights.length - 1;
+}
+
+unsigned ilG_context_addStorage(ilG_context *self, ilG_rendid id)
+{
+    ilG_rendstorage r = {
+        .first = id,
+        .second = il_table_new()
+    };
+    IL_APPEND(self->manager.storages, r);
+    return self->manager.storages.length - 1;
+}
+
+unsigned ilG_context_addName(ilG_context *self, ilG_rendid id, const char *name)
+{
+    unsigned idx;
+    IL_FIND(self->manager.names, const char *s, strcmp(s, name) == 0, idx);
+    if (idx == self->manager.names.length) {
+        char *s = strdup(name);
+        IL_APPEND(self->manager.names, s);
+    }
+    ilG_rendname r = {
+        .first = id,
+        .second = idx
+    };
+    IL_APPEND(self->manager.namelinks, r);
+    return self->manager.namelinks.length - 1;
+}
+
+bool ilG_context_delRenderer(ilG_context *self, ilG_rendid id)
+{
+    unsigned idx;
+    ilG_renderer r;
+    IL_FIND(self->manager.renderers, r, r.id == id, idx);
+    if (idx < self->manager.renderers.length) {
+        IL_FASTREMOVE(self->manager.renderers, idx);
+        return true;
+    }
+    return false;
+}
+
+bool ilG_context_delSink(ilG_context *self, ilG_rendid id)
+{
+    unsigned idx;
+    ilG_msgsink r;
+    IL_FIND(self->manager.sinks, r, r.id == id, idx);
+    if (idx < self->manager.sinks.length) {
+        IL_FASTREMOVE(self->manager.sinks, idx);
+        return true;
+    }
+    return false;
+}
+
+bool ilG_context_delChild(ilG_context *self, ilG_rendid parent, ilG_rendid child)
+{
+    unsigned idx;
+    ilG_rendchild r;
+    IL_FIND(self->manager.children, r, r.first == parent && r.second == child, idx);
+    if (idx < self->manager.children.length) {
+        IL_FASTREMOVE(self->manager.children, idx);
+        return true;
+    }
+    return false;
+}
+
+bool ilG_context_delPositionable(ilG_context *self, ilG_rendid parent, il_positionable pos)
+{
+    unsigned idx;
+    ilG_rendpos r;
+    IL_FIND(self->manager.positionables, r, r.first == parent && r.second.id == pos.id && r.second.world == pos.world, idx);
+    if (idx < self->manager.positionables.length) {
+        IL_FASTREMOVE(self->manager.positionables, idx);
+        return true;
+    }
+    return false;
+}
+
+// lights are currently not easily uniquely identified
+/*bool ilG_context_delLight(ilG_context *self, ilG_rendid id, ilG_light light)
+{
+    unsigned idx;
+    ilG_rendlight r;
+    IL_FIND(self->manager.lights, r, r.first == parent && , idx);
+    if (idx < self->manager.positionables.length) {
+        IL_FASTREMOVE(self->manager.positionables, idx);
+        return true;
+    }
+    return false;
+}*/
+
+bool ilG_context_delStorage(ilG_context *self, ilG_rendid id)
+{
+    unsigned idx;
+    ilG_rendstorage r;
+    IL_FIND(self->manager.storages, r, r.first == id, idx);
+    if (idx < self->manager.storages.length) {
+        IL_FASTREMOVE(self->manager.storages, idx);
+        return true;
+    }
+    return false;
+}
+
+bool ilG_context_delName(ilG_context *self, ilG_rendid id)
+{
+    unsigned idx;
+    ilG_rendname r;
+    IL_FIND(self->manager.namelinks, r, r.first == id, idx);
+    if (idx < self->manager.namelinks.length) {
+        IL_REMOVE(self->manager.namelinks, idx);
+        return true;
+    }
+    return false;
 }
 
 /////////////////////////////////////////////////////////////////////////////
 // Rendering logic and context setup
+
+static void render_renderer(ilG_context *context, ilG_rendid id)
+{
+    ilG_renderer *r;
+    unsigned iter = 0;
+    while ((r = ilG_context_iterChildren(context, id, &iter))) {
+        r->draw(r->obj, r->id);
+        ilG_testError("In %s", ilG_context_findName(context, r->id));
+        render_renderer(context, r->id);
+    }
+}
 
 static void render_frame(ilG_context *context)
 {
@@ -331,7 +677,8 @@ static void render_frame(ilG_context *context)
     ilG_testError("glClearDepth");
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    ilG_context_renderer.draw(context);
+    // asserts that first renderer is the context itself
+    render_renderer(context, 0);
 }
 
 static void measure_frametime(ilG_context *context)
@@ -512,7 +859,6 @@ static void *render_thread(void *ptr)
 
     SDL_GL_SetSwapInterval(self->vsync);
     setup_glew(self);
-    ilG_context_renderer.build(self, NULL);
     context_resize(self, self->startWidth, self->startHeight);
 
     while (self->valid) {
@@ -524,11 +870,28 @@ static void *render_thread(void *ptr)
         struct ilG_context_msg *msg;
         while ((msg = consume(self->queue))) {
             switch (msg->type) {
-                case ILG_UPLOAD: context_upload(self, msg->value.upload.cb, msg->value.upload.ptr); break;
-                case ILG_RESIZE: context_resize(self, msg->value.resize[0], msg->value.resize[1]); break;
-                case ILG_STOP: goto stop;
-                case ILG_MESSAGE: context_message(msg->value.message.node, msg->value.message.type, msg->value.message.data); break;
-                case ILG_FREE: context_free(msg->value.free); break;
+            case ILG_UPLOAD: context_upload(self, msg->value.upload.cb, msg->value.upload.ptr); break;
+            case ILG_RESIZE: context_resize(self, msg->value.resize[0], msg->value.resize[1]); break;
+            case ILG_STOP: goto stop;
+            case ILG_MESSAGE: context_message(self, msg->value.message.node, msg->value.message.type, msg->value.message.data); break;
+            case ILG_ADD_RENDERER:
+                ilG_context_addChild(self, msg->value.renderer.parent, msg->value.renderer.child);
+                break;
+            case ILG_DEL_RENDERER:
+                ilG_context_delChild(self, msg->value.renderer.parent, msg->value.renderer.child);
+                break;
+            case ILG_ADD_POSITIONABLE:
+                ilG_context_addPositionable(self, msg->value.positionable.parent, msg->value.positionable.child);
+                break;
+            case ILG_DEL_POSITIONABLE:
+                ilG_context_delPositionable(self, msg->value.positionable.parent, msg->value.positionable.child);
+                break;
+            case ILG_ADD_LIGHT:
+                ilG_context_addLight(self, msg->value.light.parent, msg->value.light.child);
+                break;
+            case ILG_DEL_LIGHT:
+                ilG_context_delLight(self, msg->value.light.parent, msg->value.light.child);
+                break;
             }
             done_consume(self->queue);
         }

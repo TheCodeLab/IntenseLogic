@@ -99,7 +99,10 @@ typedef struct ilG_context { // **remember to update context.lua**
                 *close,
                 *destroy;
     ilI_handler handler;
+    ilG_handle root;
     /* For rendering */
+    ilG_rendermanager manager;
+    /* Legacy rendering */
     struct il_positionable *positionable;
     struct ilG_drawable3d* drawable;
     struct ilG_material* material;
@@ -110,7 +113,6 @@ typedef struct ilG_context { // **remember to update context.lua**
     /* Private */
     bool valid;
     GLuint fbtextures[ILG_CONTEXT_NUMATTACHMENTS], framebuffer;
-    IL_ARRAY(ilG_renderer,) renderers;
     int tick_id;
     size_t num_active;
     struct ilG_context_queue *queue;
@@ -135,10 +137,6 @@ typedef struct ilG_context { // **remember to update context.lua**
     bool vsync;
 } ilG_context;
 
-extern const ilG_renderable ilG_context_renderer;
-
-#define ilG_context_wrap(c) ilG_renderer_wrap(c, &ilG_context_renderer)
-
 ilG_context *ilG_context_new();
 /** Destroys the window, associated GL context, and all owned memory */
 void ilG_context_free(ilG_context *self);
@@ -160,20 +158,34 @@ bool ilG_context_upload(ilG_context *self, void (*fn)(void*), void*);
 bool ilG_context_resize(ilG_context *self, int w, int h);
 /** Renames the window */
 bool ilG_context_rename(ilG_context *self, const char *title);
-/** Adds a node to the scenegraph */
-void ilG_context_add(ilG_context *self, ilG_renderer parent, ilG_renderer node);
-/** Removes a connection between a node and its parent */
-void ilG_context_remove(ilG_context *self, ilG_renderer parent, ilG_renderer node);
-/** Send a message to a renderer */
-void ilG_context_message(ilG_context *self, ilG_renderer node, int type, il_value data);
-/** Frees a renderer */
-void ilG_context_free_node(ilG_context *self, ilG_renderer node);
 
 /* Rendering thread calls */
+ilG_renderer    *ilG_context_findRenderer       (ilG_context *self, ilG_rendid id);
+ilG_msgsink     *ilG_context_findSink           (ilG_context *self, ilG_rendid id);
+il_table        *ilG_context_findStorage        (ilG_context *self, ilG_rendid id);
+const char      *ilG_context_findName           (ilG_context *self, ilG_rendid id);
+ilG_renderer    *ilG_context_iterChildren       (ilG_context *self, ilG_rendid id, unsigned *ctx);
+il_positionable *ilG_context_iterPositionables  (ilG_context *self, ilG_rendid id, unsigned *ctx);
+ilG_light       *ilG_context_iterLights         (ilG_context *self, ilG_rendid id, unsigned *ctx);
+unsigned ilG_context_addRenderer    (ilG_context *self, ilG_rendid id, ilG_builder builder);
+unsigned ilG_context_addSink        (ilG_context *self, ilG_rendid id, ilG_message_fn sink);
+unsigned ilG_context_addChild       (ilG_context *self, ilG_rendid parent, ilG_rendid child);
+unsigned ilG_context_addPositionable(ilG_context *self, ilG_rendid parent, il_positionable pos);
+unsigned ilG_context_addLight       (ilG_context *self, ilG_rendid id, struct ilG_light light);
+unsigned ilG_context_addStorage     (ilG_context *self, ilG_rendid id);
+unsigned ilG_context_addName        (ilG_context *self, ilG_rendid id, const char *name);
+bool ilG_context_delRenderer    (ilG_context *self, ilG_rendid id);
+bool ilG_context_delSink        (ilG_context *self, ilG_rendid id);
+bool ilG_context_delChild       (ilG_context *self, ilG_rendid parent, ilG_rendid child);
+bool ilG_context_delPositionable(ilG_context *self, ilG_rendid parent, il_positionable pos);
+bool ilG_context_delLight       (ilG_context *self, ilG_rendid id, struct ilG_light light);
+bool ilG_context_delStorage     (ilG_context *self, ilG_rendid id);
+bool ilG_context_delName        (ilG_context *self, ilG_rendid id);
 /** Internal: Binds the context's internal framebuffer */
 void ilG_context_bindFB(ilG_context *self);
 /** Internal: Special case function which will be around until #ilG_context is changed to use #ilG_fbo */
 void ilG_context_bind_for_outpass(ilG_context *self);
+bool ilG_context_build(void *obj, ilG_rendid id, ilG_context *context, ilG_renderer *out);
 
 #endif
 

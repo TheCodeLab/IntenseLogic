@@ -1,5 +1,6 @@
 #include "lightpass.h"
 
+#include "graphics/light.h"
 #include "graphics/context.h"
 #include "graphics/bindable.h"
 #include "graphics/material.h"
@@ -12,21 +13,23 @@
 #include "math/matrix.h"
 #include "util/log.h"
 
-struct ilG_lights {
+typedef struct ilG_lights {
     ilG_context *context;
     GLuint vao, vbo, ibo, lights_ubo, lights_index, mvp_ubo, mvp_index;
     GLint lights_size, mvp_size, lights_offset[3], mvp_offset[1], position_loc, color_loc, radius_loc;
     ilG_material* material;
     int invalidated;
-    bool complete;
-    IL_ARRAY(ilG_light,) lights;
-    il_table storage;
-};
+} ilG_lights;
 
-static void lights_free(void *ptr)
+static void lights_free(void *ptr, ilG_rendid id)
 {
+    (void)id;
     ilG_lights *self = ptr;
-    IL_FREE(self->lights);
+    glDeleteVertexArrays(1, &self->vao);
+    glDeleteBuffers(1, &self->vbo);
+    glDeleteBuffers(1, &self->ibo);
+    il_unref(self->material);
+    free(self);
 }
 
 static void size_uniform(ilG_material *self, GLint location, void *user)
@@ -36,7 +39,7 @@ static void size_uniform(ilG_material *self, GLint location, void *user)
     glUniform2f(location, lights->context->width, lights->context->height);
 }
 
-static void lights_draw(void *ptr)
+static void lights_draw(void *ptr, ilG_rendid id)
 { 
     ilG_lights *self = ptr;
     ilG_context *context = self->context;
@@ -115,16 +118,17 @@ static void lights_draw(void *ptr)
     
     //il_mat vp = ilG_computeMVP(ILG_VP, context->camera, NULL);
     //il_vec4 vec = il_vec4_new();
-    unsigned int i;
-    for (i = 0; i < self->lights.length; i++) {
-        context->positionable = &self->lights.data[i].positionable;
+    unsigned iter;
+    ilG_light *l;
+    while ((l = ilG_context_iterLights(self->context, id, &iter))) {
+        context->positionable = &l->positionable;
         ilG_bindable_action(&ilG_material_bindable, self->material);
-        il_vec3 pos = il_positionable_getPosition(context->positionable);
+        il_vec3 pos = il_positionable_getPosition(&l->positionable);
         //pos = il_mat_mulv(vp, pos, pos);
         glUniform3f(self->position_loc, pos.x, pos.y, pos.z);
-        il_vec3 col = self->lights.data[i].color;
+        il_vec3 col = l->color;
         glUniform3f(self->color_loc, col.x, col.y, col.z);
-        glUniform1f(self->radius_loc, self->lights.data[i].radius);
+        glUniform1f(self->radius_loc, l->radius);
         ilG_bindable_action(&ilG_shape_bindable, drawable);
         //glDrawElements(GL_TRIANGLES, sizeof(indices)/sizeof(GLuint), GL_UNSIGNED_INT, NULL);
     }
@@ -138,93 +142,27 @@ static void lights_draw(void *ptr)
     ilG_testError("Error drawing lights");
 }
 
-static int lights_build(void *ptr, ilG_context *context)
+static bool lights_build(void *ptr, ilG_rendid id, ilG_context *context, ilG_renderer *out)
 {
     ilG_lights *self = ptr;
     self->context = context;
     if (ilG_material_link(self->material, context)) {
-        return 0;
+        return false;
     }
     self->position_loc  = glGetUniformLocation(self->material->program, "position");
     self->color_loc     = glGetUniformLocation(self->material->program, "color");
     self->radius_loc    = glGetUniformLocation(self->material->program, "radius");
 
-    self->complete = 1;
-    return 1;
+    *out = (ilG_renderer) {
+        .id = id,
+        .free = lights_free,
+        .draw = lights_draw,
+        .obj = self
+    };
+    return true;
 }
 
-static il_table *lights_get_storage(void *ptr)
-{
-    ilG_lights *self = ptr;
-    return &self->storage;
-}
-
-static bool lights_get_complete(const void *ptr)
-{
-    const ilG_lights *self = ptr;
-    return self->complete;
-}
-
-static void lights_add_light(ilG_lights *self, ilG_light l)
-{
-    IL_APPEND(self->lights, l);
-}
-
-static void lights_del_light(ilG_lights *self, ilG_light l)
-{
-    ilG_light var;
-    unsigned i;
-#define eq memcmp(&var, &l, sizeof(ilG_light))
-    IL_FIND(self->lights, var, eq, i);
-#undef eq
-    if (i < self->lights.length) {
-        IL_FASTREMOVE(self->lights, i);
-    }
-}
-
-static void lights_message(void *ptr, int type, il_value *v)
-{
-    (void)type;
-    ilG_lights *self = ptr;
-    ilG_light *light = il_value_tomvoid(v);
-    switch (type) {
-    case 1:
-        lights_add_light(self, *light);
-        break;
-    case 2:
-        lights_del_light(self, *light);
-        break;
-    default:
-        il_error("Unknown message ID %i", type);
-    }
-}
-
-static void lights_push_msg(void *ptr, int type, il_value v)
-{
-    (void)type;
-    ilG_lights *self = ptr;
-    if (self->context) {
-        ilG_context_message(self->context, ilG_lights_wrap(self), type, v);
-    } else {
-        lights_message(ptr, type, &v);
-        il_value_free(v);
-    }
-}
-
-const ilG_renderable ilG_lights_renderer = {
-    .free = lights_free,
-    .draw = lights_draw,
-    .build = lights_build,
-    .get_storage = lights_get_storage,
-    .get_complete = lights_get_complete,
-    .add_light = 1,
-    .del_light = 2,
-    .message = lights_message,
-    .push_msg = lights_push_msg,
-    .name = "Deferred Shader"
-};
-
-ilG_lights *ilG_lights_new()
+ilG_builder ilG_lights_builder()
 {
     ilG_lights *self = calloc(1, sizeof(ilG_lights));
 
@@ -245,6 +183,6 @@ ilG_lights *ilG_lights_new()
     self->material = mtl;
     self->invalidated = 1;
 
-    return self;
+    return ilG_builder_wrap(self, lights_build);
 }
 
