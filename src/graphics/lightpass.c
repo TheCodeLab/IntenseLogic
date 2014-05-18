@@ -118,7 +118,7 @@ static void lights_draw(void *ptr, ilG_rendid id)
     
     //il_mat vp = ilG_computeMVP(ILG_VP, context->camera, NULL);
     //il_vec4 vec = il_vec4_new();
-    unsigned iter;
+    unsigned iter = 0;
     ilG_light *l;
     while ((l = ilG_context_iterLights(self->context, id, &iter))) {
         context->positionable = &l->positionable;
