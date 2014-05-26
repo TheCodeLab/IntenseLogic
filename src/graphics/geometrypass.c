@@ -10,12 +10,12 @@
 #include "graphics/drawable3d.h"
 #include "util/ilassert.h"
 
-static void geometry_free(void *ptr, ilG_rendid id)
+static void geometry_free(void *ptr)
 {
-    (void)ptr, (void)id;
+    (void)ptr;
 }
 
-static void geometry_draw(void *ptr, ilG_rendid id)
+static void geometry_update(void *ptr, ilG_rendid id)
 {
     (void)ptr, (void)id;
     ilG_testError("Unknown");
@@ -27,14 +27,15 @@ static void geometry_draw(void *ptr, ilG_rendid id)
     ilG_testError("Could not setup to draw geometry");
 }
 
-static bool geometry_build(void *ptr, ilG_rendid id, ilG_context *ctx, ilG_renderer *out)
+static bool geometry_build(void *ptr, ilG_rendid id, ilG_context *ctx, ilG_buildresult *out)
 {
     (void)ctx;
     ilG_context_addName(ctx, id, "Geometry");
-    *out = (ilG_renderer) {
-        .id = id,
+    *out = (ilG_buildresult) {
         .free = geometry_free,
-        .draw = geometry_draw,
+        .update = geometry_update,
+        .types = NULL,
+        .num_types = 0,
         .obj = ptr
     };
     return true;
@@ -44,4 +45,3 @@ ilG_builder ilG_geometry_builder()
 {
     return ilG_builder_wrap(NULL, geometry_build);
 }
-

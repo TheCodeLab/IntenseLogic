@@ -7,9 +7,9 @@
 
 void queue_free(struct ilG_context_queue *queue);
 
-static void context_free(void *ptr, ilG_rendid id) 
+static void context_free(void *ptr)
 {
-    (void)ptr, (void)id;
+    (void)ptr;
 }
 
 static void context_draw(void *ptr, ilG_rendid id)
@@ -18,16 +18,17 @@ static void context_draw(void *ptr, ilG_rendid id)
     ilG_testError("Unknown");
 }
 
-bool ilG_context_build(void *ptr, ilG_rendid id, ilG_context *self, ilG_renderer *out)
+bool ilG_context_build(void *ptr, ilG_rendid id, ilG_context *self, ilG_buildresult *out)
 {
     (void)ptr;
     ilG_context_addName(self, id, "Context");
-    *out = (ilG_renderer) {
-        .id = id,
+    *out = (ilG_buildresult) {
         .free = context_free,
-        .draw = context_draw,
+        .update = context_draw,
+        .draw = NULL,
+        .types = NULL,
+        .num_types = 0,
         .obj = self
     };
     return true;
 }
-

@@ -1,6 +1,5 @@
 #include "lightpass.h"
 
-#include "graphics/light.h"
 #include "graphics/context.h"
 #include "graphics/bindable.h"
 #include "graphics/material.h"
@@ -21,9 +20,8 @@ typedef struct ilG_lights {
     int invalidated;
 } ilG_lights;
 
-static void lights_free(void *ptr, ilG_rendid id)
+static void lights_free(void *ptr)
 {
-    (void)id;
     ilG_lights *self = ptr;
     glDeleteVertexArrays(1, &self->vao);
     glDeleteBuffers(1, &self->vbo);
@@ -39,10 +37,34 @@ static void size_uniform(ilG_material *self, GLint location, void *user)
     glUniform2f(location, lights->context->width, lights->context->height);
 }
 
-static void lights_draw(void *ptr, ilG_rendid id)
-{ 
+static void lights_update(void *ptr, ilG_rendid id)
+{
     ilG_lights *self = ptr;
     ilG_context *context = self->context;
+    ilG_drawable3d *drawable = ilG_icosahedron(context);
+    ilG_bindable_bind(&ilG_shape_bindable, drawable);
+    ilG_bindable_bind(&ilG_material_bindable, self->material);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_RECTANGLE, context->fbtextures[0]);
+    glActiveTexture(GL_TEXTURE0 + 1);
+    glBindTexture(GL_TEXTURE_RECTANGLE, context->fbtextures[2]);
+    glActiveTexture(GL_TEXTURE0 + 2);
+    glBindTexture(GL_TEXTURE_RECTANGLE, context->fbtextures[3]);
+    glActiveTexture(GL_TEXTURE0 + 3);
+    glBindTexture(GL_TEXTURE_RECTANGLE, context->fbtextures[4]);
+    glEnable(GL_BLEND);
+    glDisable(GL_DEPTH_TEST);
+    glBlendFunc(GL_ONE, GL_ONE);
+    glFrontFace(GL_CCW);
+    glCullFace(GL_FRONT);
+}
+
+static void lights_draw(void *ptr, ilG_rendid id, il_mat **mats, unsigned num_mats)
+{
+    (void)id;
+    ilG_lights *self = ptr;
+    ilG_context *context = self->context;
+    ilG_drawable3d *drawable = ilG_icosahedron(context);
     ilG_testError("Unknown");
     /*if (context->lightdata.invalidated) {
         if (!context->lightdata.created) {
@@ -93,46 +115,18 @@ static void lights_draw(void *ptr, ilG_rendid id)
     }*/
     //glBindBufferBase(GL_UNIFORM_BUFFER, context->lightdata.lights_index, context->lightdata.lights_ubo);
     //glBindBufferBase(GL_UNIFORM_BUFFER, context->lightdata.mvp_index, context->lightdata.mvp_ubo);
-    ilG_drawable3d *drawable = ilG_icosahedron(context);
-    ilG_bindable_bind(&ilG_shape_bindable, drawable);
-    ilG_bindable_bind(&ilG_material_bindable, self->material);
-    il_vec3 pos = il_positionable_getPosition(&context->camera->positionable);
-    glUniform3f(glGetUniformLocation(self->material->program, "camera"), 
-            pos.x, 
-            pos.y,
-            pos.z);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_RECTANGLE, context->fbtextures[0]);
-    glActiveTexture(GL_TEXTURE0 + 1);
-    glBindTexture(GL_TEXTURE_RECTANGLE, context->fbtextures[2]);
-    glActiveTexture(GL_TEXTURE0 + 2);
-    glBindTexture(GL_TEXTURE_RECTANGLE, context->fbtextures[3]);
-    glActiveTexture(GL_TEXTURE0 + 3);
-    glBindTexture(GL_TEXTURE_RECTANGLE, context->fbtextures[4]);
-    glEnable(GL_BLEND);
-    glDisable(GL_DEPTH_TEST);
-    glBlendFunc(GL_ONE, GL_ONE);
-    //glDisable(GL_CULL_FACE);
-    glFrontFace(GL_CCW);
-    glCullFace(GL_FRONT);
-    
-    //il_mat vp = ilG_computeMVP(ILG_VP, context->camera, NULL);
-    //il_vec4 vec = il_vec4_new();
-    unsigned iter = 0;
+
+    ilG_renderer *r = ilG_context_findRenderer(self->context, id);
     ilG_light *l;
-    while ((l = ilG_context_iterLights(self->context, id, &iter))) {
-        context->positionable = &l->positionable;
+    for (unsigned i = 0; i < num_mats; i++) {
         ilG_bindable_action(&ilG_material_bindable, self->material);
-        il_vec3 pos = il_positionable_getPosition(&l->positionable);
-        //pos = il_mat_mulv(vp, pos, pos);
-        glUniform3f(self->position_loc, pos.x, pos.y, pos.z);
+        l = &r->lights.data[i];
         il_vec3 col = l->color;
         glUniform3f(self->color_loc, col.x, col.y, col.z);
         glUniform1f(self->radius_loc, l->radius);
         ilG_bindable_action(&ilG_shape_bindable, drawable);
         //glDrawElements(GL_TRIANGLES, sizeof(indices)/sizeof(GLuint), GL_UNSIGNED_INT, NULL);
     }
-    //il_vec4_free(vec);
     //glDrawElementsInstanced(GL_TRIANGLES, sizeof(indices)/sizeof(GLuint), GL_UNSIGNED_INT, NULL, context->lights.length);
     glDisable(GL_BLEND);
     context->drawable = NULL;
@@ -142,8 +136,9 @@ static void lights_draw(void *ptr, ilG_rendid id)
     ilG_testError("Error drawing lights");
 }
 
-static bool lights_build(void *ptr, ilG_rendid id, ilG_context *context, ilG_renderer *out)
+static bool lights_build(void *ptr, ilG_rendid id, ilG_context *context, ilG_buildresult *out)
 {
+    (void)id;
     ilG_lights *self = ptr;
     self->context = context;
     if (ilG_material_link(self->material, context)) {
@@ -153,10 +148,15 @@ static bool lights_build(void *ptr, ilG_rendid id, ilG_context *context, ilG_ren
     self->color_loc     = glGetUniformLocation(self->material->program, "color");
     self->radius_loc    = glGetUniformLocation(self->material->program, "radius");
 
-    *out = (ilG_renderer) {
-        .id = id,
+    int *types = malloc(sizeof(int) * 2);
+    types[0] = ILG_INVERSE | ILG_VP;
+    types[1] = ILG_MODEL_T | ILG_VP;
+    *out = (ilG_buildresult) {
         .free = lights_free,
+        .update = lights_update,
         .draw = lights_draw,
+        .types = types,
+        .num_types = 2,
         .obj = self
     };
     return true;
@@ -185,4 +185,3 @@ ilG_builder ilG_lights_builder()
 
     return ilG_builder_wrap(self, lights_build);
 }
-

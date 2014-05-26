@@ -6,7 +6,6 @@
 #include <stdio.h>
 
 #include "math/matrix.h"
-#include "graphics/camera.h"
 #include "util/log.h"
 #include "util/logger.h"
 
@@ -58,7 +57,7 @@ void ilG_testError_(const char *file, int line, const char *func,
 
         char reason[64];
         snprintf(reason, 64, "%s (%i)", ilG_strerror(err), err);
-        
+
         il_logmsg *lmsg = il_logmsg_new(1);
         il_logmsg_setLevel(lmsg, IL_ERROR);
         il_logmsg_copyMessage(lmsg, msg);
@@ -150,7 +149,7 @@ int ilG_linkProgram(GLuint program)
     return 0;
 }
 
-il_mat ilG_computeMVP(enum ilG_transform filter, const ilG_camera* camera, const il_positionable* object)
+/*il_mat ilG_computeMVP(enum ilG_transform filter, const ilG_camera* camera, const il_positionable* object)
 {
     il_mat mvp;
     if (filter & ILG_PROJECTION) {
@@ -193,35 +192,13 @@ il_mat ilG_computeMVP(enum ilG_transform filter, const ilG_camera* camera, const
     }
     
     return mvp;
-}
+    }*/
 
-void ilG_bindMVP(GLint location, enum ilG_transform filter, const ilG_camera * camera, const il_positionable * object)
+/*void ilG_bindMVP(GLint location, enum ilG_transform filter, const ilG_camera * camera, const il_positionable * object)
 {
     ilG_testError("Unknown");
     il_mat mat = ilG_computeMVP(filter, camera, object);
-    /*if (!mat) {
-        return;
-    }*/
-    // I really resorted to this to try tracking down a bug with rendering
-    /*char *camera_pos = il_vec4_print(camera->positionable->position, NULL, 0),
-         *camera_rot = il_quat_print(camera->positionable->rotation, NULL, 0),
-         *object_pos = NULL, *object_rot = NULL;
-    if (object) {
-        object_pos = il_vec4_print(object->position, NULL, 0);
-        object_rot = il_quat_print(object->rotation, NULL, 0);
-    }
-    printf("T<%i> camera<%p, %s, %s> object<%p, %s, %s>", filter, camera, camera_pos, camera_rot, object, object_pos, object_rot);
-    free(camera_pos);
-    free(camera_rot);
-    free(object_pos);
-    free(object_rot);
-    int i;
-    for (i = 0; i < 16; i++) {
-        printf(" % .6f", mat[i]);
-    }
-    printf("\n");*/
-    
+
     glUniformMatrix4fv(location, 1, GL_TRUE, mat.data);
     ilG_testError("glUniformMatrix4fv failed");
-}
-
+    }*/

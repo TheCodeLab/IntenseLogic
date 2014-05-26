@@ -20,16 +20,16 @@ typedef struct ilG_heightmap {
     unsigned w,h;
 } ilG_heightmap;
 
-static void heightmap_free(void *ptr, ilG_rendid id)
+static void heightmap_free(void *ptr)
 {
-    (void) id;
     ilG_heightmap *self = ptr;
     il_unref(self->shader);
     free(self);
 }
 
-static void heightmap_draw(void *ptr, ilG_rendid id)
+static void heightmap_update(void *ptr, ilG_rendid id)
 {
+    (void)id;
     ilG_testError("Unknown");
     ilG_heightmap *self = ptr;
     ilG_tex_bind(&self->height);
@@ -37,18 +37,23 @@ static void heightmap_draw(void *ptr, ilG_rendid id)
     ilG_tex_bind(&self->color);
     ilG_bindable_bind(&ilG_mesh_bindable, self->drawable);
     ilG_bindable_bind(&ilG_material_bindable, self->shader);
-    il_positionable *pos;
-    unsigned iter;
-    while ((pos = ilG_context_iterPositionables(self->context, id, &iter))) {
-        self->context->positionable = pos;
+}
+
+static void heightmap_draw(void *ptr, ilG_rendid id, il_mat **mats, unsigned num_mats)
+{
+    (void)id;
+    ilG_heightmap *self = ptr;
+    for (unsigned i = 0; i < num_mats; i++) {
+        // TODO: Input matrix into shader somehow
         ilG_bindable_action(&ilG_material_bindable, self->shader);
         ilG_bindable_action(&ilG_mesh_bindable, self->drawable);
     }
     ilG_testError("heightmap_draw");
 }
 
-static bool heightmap_build(void *ptr, ilG_rendid id, ilG_context *context, ilG_renderer *out)
+static bool heightmap_build(void *ptr, ilG_rendid id, ilG_context *context, ilG_buildresult *out)
 {
+    (void)id;
     ilG_heightmap *self = ptr;
     self->context = context;
     ilG_tex_build(&self->height, context);
@@ -59,10 +64,15 @@ static bool heightmap_build(void *ptr, ilG_rendid id, ilG_context *context, ilG_
     }
     self->drawable = ilG_mesh(self->mesh, context);
     ilA_mesh_free(self->mesh);
-    *out = (ilG_renderer) {
-        .id = id,
+    int *types = malloc(sizeof(int) * 2);
+    types[0] = ILG_MVP;
+    types[1] = ILG_INVERSE | ILG_MODEL | ILG_TRANSPOSE;
+    *out = (ilG_buildresult) {
         .free = heightmap_free,
+        .update = heightmap_update,
         .draw = heightmap_draw,
+        .types = types,
+        .num_types = 2,
         .obj = self
     };
     return true;
@@ -79,7 +89,7 @@ ilG_builder ilG_heightmap_builder(unsigned w, unsigned h, ilG_tex height, ilG_te
 {
     ilA_mesh *mesh = ilA_mesh_new(ILA_MESH_POSITION|ILA_MESH_TEXCOORD, w * h * 6);
     unsigned x, y, i = 0, j;
-    
+
     mesh->mode = ILA_MESH_TRIANGLES;
     for (y = 1; y < h; y++) {
         for (x = 1; x < w; x++) {
@@ -143,4 +153,3 @@ ilG_builder ilG_heightmap_builder(unsigned w, unsigned h, ilG_tex height, ilG_te
 
     return ilG_builder_wrap(self, heightmap_build);
 }
-

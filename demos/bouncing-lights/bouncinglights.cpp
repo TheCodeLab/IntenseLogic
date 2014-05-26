@@ -18,7 +18,6 @@ extern "C" {
 #include "asset/image.h"
 #include "common/world.h"
 #include "common/world.h"
-#include "graphics/camera.h"
 #include "graphics/glutil.h"
 #include "math/matrix.h"
 #include "graphics/renderer.h"
@@ -30,8 +29,6 @@ static btCollisionDispatcher* dispatcher;
 static btSequentialImpulseConstraintSolver* solver;
 static btDiscreteDynamicsWorld* dynamicsWorld;
 static btCollisionShape *ball_shape;
-static il_world *world;
-static ilG_camera *camera;
 static btKinematicCharacterController *player;
 static btPairCachingGhostObject *ghostObject;
 static btSphereShape *playerShape;

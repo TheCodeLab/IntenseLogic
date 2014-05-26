@@ -21,9 +21,8 @@ typedef struct ilG_out {
     int which;
 } ilG_out;
 
-static void out_free(void *ptr, ilG_rendid id)
+static void out_free(void *ptr)
 {
-    (void)id;
     ilG_out *self = ptr;
     il_unref(self->material);
     il_unref(self->horizblur);
@@ -51,7 +50,7 @@ static void size_uniform(ilG_material *self, GLint location, void *user)
     glUniform2f(location, out->w, out->h);
 }
 
-static void out_draw(void *ptr, ilG_rendid id)
+static void out_update(void *ptr, ilG_rendid id)
 {
     (void)id;
     ilG_out *self = ptr;
@@ -87,7 +86,7 @@ static void out_draw(void *ptr, ilG_rendid id)
             unsigned w = context->width / (1<<i),
                      h = context->height / (1<<i);
             self->w = w; self->h = h;
-            
+
             // Into the front buffer,
             ilG_fbo_bind(self->front, ILG_FBO_WRITE);
             // from the context,
@@ -138,8 +137,9 @@ static void out_draw(void *ptr, ilG_rendid id)
     ilG_testError("outpass");
 }
 
-static bool out_build(void *ptr, ilG_rendid id, ilG_context *context, ilG_renderer *out)
+static bool out_build(void *ptr, ilG_rendid id, ilG_context *context, ilG_buildresult *out)
 {
+    (void)id;
     ilG_out *self = ptr;
     self->context = context;
     if (context->hdr) {
@@ -162,9 +162,9 @@ static bool out_build(void *ptr, ilG_rendid id, ilG_context *context, ilG_render
     }
     static const float data[] = {
         0, 0,
-	0, 1,
-	1, 1,
-	1, 0
+        0, 1,
+        1, 1,
+        1, 0
     };
     ilG_testError("Unknown");
     glGenVertexArrays(1, &self->vao);
@@ -178,10 +178,12 @@ static bool out_build(void *ptr, ilG_rendid id, ilG_context *context, ilG_render
     glEnableVertexAttribArray(ILG_ARRATTR_TEXCOORD);
     ilG_testError("Failed to upload quad");
 
-    *out = (ilG_renderer) {
-        .id = id,
+    *out = (ilG_buildresult) {
         .free = out_free,
-        .draw = out_draw,
+        .update = out_update,
+        .draw = NULL,
+        .types = NULL,
+        .num_types = 0,
         .obj = self
     };
     return true;
@@ -191,7 +193,7 @@ ilG_builder ilG_out_builder()
 {
     ilG_out *self = calloc(1, sizeof(ilG_out));
     ilG_material *m;
-    
+
     ilG_fbo *f = self->front = ilG_fbo_new();
     ilG_fbo_numTargets(f, 1);
     ilG_fbo_name(f, ilG_fbo_self, "Blur Front Buffer");
@@ -223,7 +225,7 @@ ilG_builder ilG_out_builder()
     ilG_material_bindFunc(m, size_uniform, self, "size");
     ilG_material_textureUnit(m, 0, "tex");
     ilG_material_fragment_file(m, "vertblur.frag");
-    
+
     m = self->material = ilG_material_new();
     ilG_material_vertex_file(m, "post.vert");
     ilG_material_name(m, "Tone Mapping Shader");
@@ -237,4 +239,3 @@ ilG_builder ilG_out_builder()
 
     return ilG_builder_wrap(self, out_build);
 }
-

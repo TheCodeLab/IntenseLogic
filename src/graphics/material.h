@@ -4,7 +4,6 @@
 #include <GL/glew.h>
 
 #include "util/ilstring.h"
-#include "graphics/light.h"
 #include "graphics/glutil.h"
 #include "graphics/bindable.h"
 
@@ -45,4 +44,3 @@ void ilG_material_posFunc(ilG_material*, ilG_material_onPosFunc func, void *user
 int /*failure*/ ilG_material_link(ilG_material*, struct ilG_context *ctx);
 
 #endif
-

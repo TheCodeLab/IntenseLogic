@@ -56,6 +56,12 @@ il_quat il_quat_fromAxisAngle(float x, float y, float z, float a)
 {
     il_quat q;
     float s = sinf(a/2);
+    if (abs(x*x + y*y + z*z - 1) > 0.001) {
+        float m = 1/sqrt(x*x+y*y+z*z);
+        x *= m;
+        y *= m;
+        z *= m;
+    }
     q.x = s * x;
     q.y = s * y;
     q.z = s * z;

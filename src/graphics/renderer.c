@@ -44,10 +44,14 @@ ilG_handle ilG_build(ilG_builder self, ilG_context *context)
 
 bool ilG_handle_ready(ilG_handle self)
 {
-    ilG_renderer r;
     unsigned idx;
-    IL_FIND(self.context->manager.renderers, r, r.id == self.id, idx);
-    return idx < self.context->manager.renderers.length; // existence in table
+    ilG_rendid id;
+    IL_FIND(self.context->manager.rendids, id, id == self.id, idx);
+    if (idx < self.context->manager.renderers.length) {
+        return true; // existence in table
+    }
+    IL_FIND(self.context->manager.multirendids, id, id == self.id, idx);
+    return idx < self.context->manager.multirenderers.length;
 }
 
 il_table *ilG_handle_storage(ilG_handle self)
@@ -59,4 +63,3 @@ const char *ilG_handle_getName(ilG_handle self)
 {
     return ilG_context_findName(self.context, self.id);
 }
-

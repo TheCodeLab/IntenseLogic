@@ -14,14 +14,13 @@ typedef struct ilG_skybox {
     ilG_tex texture;
 } ilG_skybox;
 
-static void sky_free(void *ptr, ilG_rendid id)
+static void sky_free(void *ptr)
 {
-    (void)id;
     ilG_skybox *self = ptr;
     il_unref(self->material);
 }
 
-static void sky_draw(void *ptr, ilG_rendid id)
+static void sky_update(void *ptr, ilG_rendid id)
 {
     (void)id;
     ilG_skybox *self = ptr;
@@ -41,7 +40,7 @@ static void sky_draw(void *ptr, ilG_rendid id)
     glClear(GL_DEPTH_BUFFER_BIT);
 }
 
-static bool sky_build(void *ptr, ilG_rendid id, ilG_context *context, ilG_renderer *out)
+static bool sky_build(void *ptr, ilG_rendid id, ilG_context *context, ilG_buildresult *out)
 {
     ilG_skybox *self = ptr;
     self->context = context;
@@ -50,10 +49,12 @@ static bool sky_build(void *ptr, ilG_rendid id, ilG_context *context, ilG_render
         return false;
     }
     ilG_context_addName(context, id, "Skybox");
-    *out = (ilG_renderer) {
-        .id = id,
+    *out = (ilG_buildresult) {
         .free = sky_free,
-        .draw = sky_draw,
+        .update = sky_update,
+        .draw = NULL,
+        .types = NULL,
+        .num_types = 0,
         .obj = self
     };
     return true;
@@ -81,4 +82,3 @@ ilG_builder ilG_skybox_builder(ilG_tex skytex)
     self->texture.unit = 0;
     return ilG_builder_wrap(self, sky_build);
 }
-

@@ -41,7 +41,7 @@ struct posfunc {
 };
 
 struct ilG_material_config {
-    IL_ARRAY(struct textureunit,) texunits;    
+    IL_ARRAY(struct textureunit,) texunits;
     IL_ARRAY(struct matrixinfo,) matrices;
     IL_ARRAY(struct bindfunc,) bindfuncs;
     IL_ARRAY(struct posfunc,) posfuncs;
@@ -68,7 +68,7 @@ static void mtl_bind(void *obj)
     for (i = 0; i < mtl->config->matrices.length; i++) {
         if (!(mtl->config->matrices.data[i].type & ILG_MODEL)) { 
             // same for any positionable, otherwise it goes in update()
-            ilG_bindMVP(mtl->config->matrices.data[i].uniform, mtl->config->matrices.data[i].type, mtl->context->camera, NULL);
+            //ilG_bindMVP(mtl->config->matrices.data[i].uniform, mtl->config->matrices.data[i].type, mtl->context->camera, NULL);
         }
     }
     for (i = 0; i < mtl->config->bindfuncs.length; i++) {
@@ -93,7 +93,7 @@ static void mtl_update(void *obj)
     for (i = 0; i < mtl->config->matrices.length; i++) {
         if (mtl->config->matrices.data[i].type & ILG_MODEL) {
             // otherwise it was bound in bind()
-            ilG_bindMVP(mtl->config->matrices.data[i].uniform, mtl->config->matrices.data[i].type, mtl->context->camera, mtl->context->positionable);
+            //ilG_bindMVP(mtl->config->matrices.data[i].uniform, mtl->config->matrices.data[i].type, mtl->context->camera, mtl->context->positionable);
         }
     }
     for (i = 0; i < mtl->config->posfuncs.length; i++) {

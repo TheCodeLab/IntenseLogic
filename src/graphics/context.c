@@ -29,8 +29,6 @@ struct ilG_context_msg {
         ILG_MESSAGE,
         ILG_ADD_RENDERER,
         ILG_DEL_RENDERER,
-        ILG_ADD_POSITIONABLE,
-        ILG_DEL_POSITIONABLE,
         ILG_ADD_LIGHT,
         ILG_DEL_LIGHT
     } type;
@@ -180,19 +178,27 @@ void ilG_context_free(ilG_context *self)
 
     for (unsigned i = 0; i < self->manager.renderers.length; i++) {
         ilG_renderer *r = &self->manager.renderers.data[i];
-        r->free(r->obj, r->id);
+        r->free(r->obj);
+    }
+    for (unsigned i = 0; i < self->manager.multirenderers.length; i++) {
+        ilG_multirenderer *r = &self->manager.multirenderers.data[i];
+        r->first.free(r->first.obj);
+        free(r->second.types);
     }
     for (unsigned i = 0; i < self->manager.names.length; i++) {
         free(self->manager.names.data[i]);
     }
+    for (unsigned i = 0; i < self->manager.coordsystems.length; i++) {
+        ilG_coordsys *c = &self->manager.coordsystems.data[i];
+        c->free(c->obj);
+    }
     IL_FREE(self->manager.renderers);
+    IL_FREE(self->manager.multirenderers);
     IL_FREE(self->manager.sinks);
-    IL_FREE(self->manager.children);
-    IL_FREE(self->manager.positionables);
-    IL_FREE(self->manager.lights);
     IL_FREE(self->manager.storages);
     IL_FREE(self->manager.namelinks);
     IL_FREE(self->manager.names);
+    IL_FREE(self->manager.coordsystems);
 
     free(self->texunits);
     ilE_unregister(self->tick, self->tick_id);
@@ -231,24 +237,6 @@ bool ilG_context_rename(ilG_context *self, const char *title)
 {
     SDL_SetWindowTitle(self->window, title);
     return true;
-}
-
-void ilG_handle_addPositionable(ilG_handle self, il_positionable pos)
-{
-    struct ilG_context_msg *msg = calloc(1, sizeof(struct ilG_context_msg));
-    msg->type = ILG_ADD_POSITIONABLE;
-    msg->value.positionable.parent = self.id;
-    msg->value.positionable.child = pos;
-    produce(self.context->queue, msg);
-}
-
-void ilG_handle_delPositionable(ilG_handle self, il_positionable pos)
-{
-    struct ilG_context_msg *msg = calloc(1, sizeof(struct ilG_context_msg));
-    msg->type = ILG_DEL_POSITIONABLE;
-    msg->value.positionable.parent = self.id;
-    msg->value.positionable.child = pos;
-    produce(self.context->queue, msg);
 }
 
 void ilG_handle_addRenderer(ilG_handle self, ilG_handle node)
@@ -403,10 +391,10 @@ static void context_message(ilG_context *self, ilG_rendid id, int type, il_value
 
 ilG_renderer *ilG_context_findRenderer(ilG_context *self, ilG_rendid id)
 {
-    ilG_renderer r;
+    ilG_rendid key;
     unsigned idx;
-    IL_FIND(self->manager.renderers, r, r.id == id, idx);
-    if (idx < self->manager.renderers.length) {
+    IL_FIND(self->manager.rendids, key, key == id, idx);
+    if (idx < self->manager.rendids.length) {
         return &self->manager.renderers.data[idx];
     }
     return NULL;
@@ -445,45 +433,35 @@ const char *ilG_context_findName(ilG_context *self, ilG_rendid id)
     return NULL;
 }
 
-ilG_renderer *ilG_context_iterChildren(ilG_context *self, ilG_rendid id, unsigned *ctx)
-{
-    for (unsigned i = *ctx; i < self->manager.children.length; i++) {
-        if (self->manager.children.data[i].first == id) {
-            *ctx = i+1;
-            return &self->manager.renderers.data[self->manager.children.data[i].second];
-        }
-    }
-    return NULL;
-}
-
-il_positionable *ilG_context_iterPositionables(ilG_context *self, ilG_rendid id, unsigned *ctx)
-{
-    for (unsigned i = *ctx; i < self->manager.positionables.length; i++) {
-        if (self->manager.positionables.data[i].first == id) {
-            *ctx = i+1;
-            return &self->manager.positionables.data[i].second;
-        }
-    }
-    return NULL;
-}
-
-ilG_light *ilG_context_iterLights(ilG_context *self, ilG_rendid id, unsigned *ctx)
-{
-    for (unsigned i = *ctx; i < self->manager.lights.length; i++) {
-        if (self->manager.lights.data[i].first == id) {
-            *ctx = i+1;
-            return &self->manager.lights.data[i].second;
-        }
-    }
-    return NULL;
-}
-
 unsigned ilG_context_addRenderer(ilG_context *self, ilG_rendid id, ilG_builder builder)
 {
-    ilG_renderer r;
-    bool res = builder.build(builder.obj, id, self, &r);
+    ilG_buildresult b;
+    bool res = builder.build(builder.obj, id, self, &b);
     if (res) {
-        IL_APPEND(self->manager.renderers, r);
+        ilG_renderer r = (ilG_renderer) {
+            .free = b.free,
+            .update = b.update,
+            .rchildren = {0,0,0},
+            .mchildren = {0,0,0},
+            .lights = {0,0,0},
+            .obj = b.obj
+        };
+        if (b.draw) {
+            ilG_multirenderer m = (ilG_multirenderer) {
+                .first = r,
+                .second = {
+                    .draw = b.draw,
+                    .coordsys = 0, // TODO: Select coord system
+                    .types = b.types,
+                    .num_types = b.num_types
+                }
+            };
+            IL_APPEND(self->manager.multirenderers, m);
+            IL_APPEND(self->manager.multirendids, id);
+        } else {
+            IL_APPEND(self->manager.renderers, r);
+            IL_APPEND(self->manager.rendids, id);
+        }
         return self->manager.renderers.length - 1;
     }
     return UINT_MAX;
@@ -501,32 +479,28 @@ unsigned ilG_context_addSink(ilG_context *self, ilG_rendid id, ilG_message_fn si
 
 unsigned ilG_context_addChild(ilG_context *self, ilG_rendid parent, ilG_rendid child)
 {
-    ilG_rendchild r = {
-        .first = parent,
-        .second = child
-    };
-    IL_APPEND(self->manager.children, r);
-    return self->manager.children.length - 1;
-}
-
-unsigned ilG_context_addPositionable(ilG_context *self, ilG_rendid parent, il_positionable pos)
-{
-    ilG_rendpos r = {
-        .first = parent,
-        .second = pos
-    };
-    IL_APPEND(self->manager.positionables, r);
-    return self->manager.children.length - 1;
+    ilG_renderer *r = ilG_context_findRenderer(self, parent);
+    unsigned idx;
+    ilG_rendid id;
+    IL_FIND(self->manager.rendids, id, id == child, idx);
+    if (idx < self->manager.rendids.length) {
+        IL_APPEND(r->rchildren, idx);
+        return 1;
+    }
+    IL_FIND(self->manager.multirendids, id, id == child, idx);
+    if (idx < self->manager.multirendids.length) {
+        IL_APPEND(r->mchildren, idx);
+        return 1;
+    }
+    il_error("No such renderer %u", child);
+    return 0;
 }
 
 unsigned ilG_context_addLight(ilG_context *self, ilG_rendid id, ilG_light light)
 {
-    ilG_rendlight r = {
-        .first = id,
-        .second = light
-    };
-    IL_APPEND(self->manager.lights, r);
-    return self->manager.lights.length - 1;
+    ilG_renderer *r = ilG_context_findRenderer(self, id);
+    IL_APPEND(r->lights, light);
+    return r->lights.length-1;
 }
 
 unsigned ilG_context_addStorage(ilG_context *self, ilG_rendid id)
@@ -558,10 +532,17 @@ unsigned ilG_context_addName(ilG_context *self, ilG_rendid id, const char *name)
 bool ilG_context_delRenderer(ilG_context *self, ilG_rendid id)
 {
     unsigned idx;
-    ilG_renderer r;
-    IL_FIND(self->manager.renderers, r, r.id == id, idx);
-    if (idx < self->manager.renderers.length) {
+    ilG_rendid key;
+    IL_FIND(self->manager.rendids, key, key == id, idx);
+    if (idx < self->manager.rendids.length) {
         IL_FASTREMOVE(self->manager.renderers, idx);
+        IL_FASTREMOVE(self->manager.rendids, idx);
+        return true;
+    }
+    IL_FIND(self->manager.multirendids, key, key == id, idx);
+    if (idx < self->manager.multirendids.length) {
+        IL_FASTREMOVE(self->manager.multirenderers, idx);
+        IL_FASTREMOVE(self->manager.multirendids, idx);
         return true;
     }
     return false;
@@ -582,39 +563,32 @@ bool ilG_context_delSink(ilG_context *self, ilG_rendid id)
 bool ilG_context_delChild(ilG_context *self, ilG_rendid parent, ilG_rendid child)
 {
     unsigned idx;
-    ilG_rendchild r;
-    IL_FIND(self->manager.children, r, r.first == parent && r.second == child, idx);
-    if (idx < self->manager.children.length) {
-        IL_FASTREMOVE(self->manager.children, idx);
-        return true;
+    ilG_rendid id;
+    ilG_renderer *par = ilG_context_findRenderer(self, parent);
+    IL_FIND(self->manager.rendids, id, id == child, idx);
+    if (idx < self->manager.rendids.length) {
+        unsigned idx2;
+        IL_FIND(par->rchildren, id, id == idx, idx2);
+        if (idx2 < par->rchildren.length) {
+            IL_FASTREMOVE(par->rchildren, idx2);
+            return true;
+        } else {
+            return false;
+        }
+    }
+    IL_FIND(self->manager.multirendids, id, id == child, idx);
+    if (idx < self->manager.multirendids.length) {
+        unsigned idx2;
+        IL_FIND(par->mchildren, id, id == idx, idx2);
+        if (idx2 < par->mchildren.length) {
+            IL_FASTREMOVE(par->mchildren, idx2);
+            return true;
+        } else {
+            return false;
+        }
     }
     return false;
 }
-
-bool ilG_context_delPositionable(ilG_context *self, ilG_rendid parent, il_positionable pos)
-{
-    unsigned idx;
-    ilG_rendpos r;
-    IL_FIND(self->manager.positionables, r, r.first == parent && r.second.id == pos.id && r.second.world == pos.world, idx);
-    if (idx < self->manager.positionables.length) {
-        IL_FASTREMOVE(self->manager.positionables, idx);
-        return true;
-    }
-    return false;
-}
-
-// lights are currently not easily uniquely identified
-/*bool ilG_context_delLight(ilG_context *self, ilG_rendid id, ilG_light light)
-{
-    unsigned idx;
-    ilG_rendlight r;
-    IL_FIND(self->manager.lights, r, r.first == parent && , idx);
-    if (idx < self->manager.positionables.length) {
-        IL_FASTREMOVE(self->manager.positionables, idx);
-        return true;
-    }
-    return false;
-}*/
 
 bool ilG_context_delStorage(ilG_context *self, ilG_rendid id)
 {
@@ -643,14 +617,26 @@ bool ilG_context_delName(ilG_context *self, ilG_rendid id)
 /////////////////////////////////////////////////////////////////////////////
 // Rendering logic and context setup
 
-static void render_renderer(ilG_context *context, ilG_rendid id)
+static void render_renderer(ilG_context *context, ilG_renderer *par)
 {
+    ilG_rendermanager *rm = &context->manager;
     ilG_renderer *r;
-    unsigned iter = 0;
-    while ((r = ilG_context_iterChildren(context, id, &iter))) {
-        r->draw(r->obj, r->id);
-        ilG_testError("In %s", ilG_context_findName(context, r->id));
-        render_renderer(context, r->id);
+    ilG_multirenderer *m;
+    for (unsigned i = 0, len = par->rchildren.length; i < len; i++) {
+        r = &rm->renderers.data[par->rchildren.data[i]];
+        ilG_rendid id = rm->rendids.data[par->rchildren.data[i]];
+        r->update(r->obj, id);
+        ilG_testError("In %s draw", ilG_context_findName(context, id));
+        render_renderer(context, r);
+    }
+    for (unsigned i = 0, len = par->mchildren.length; i < len; i++) {
+        m = &rm->multirenderers.data[par->mchildren.data[i]];
+        ilG_rendid id = rm->multirendids.data[par->mchildren.data[i]];
+        m->first.update(m->first.obj, id);
+        ilG_testError("In %s draw", ilG_context_findName(context, id));
+        //m->second.draw(m->first.obj, m->first.id);
+        ilG_testError("In %s multidraw", ilG_context_findName(context, id));
+        render_renderer(context, &m->first);
     }
 }
 
@@ -880,12 +866,6 @@ static void *render_thread(void *ptr)
             case ILG_DEL_RENDERER:
                 ilG_context_delChild(self, msg->value.renderer.parent, msg->value.renderer.child);
                 break;
-            case ILG_ADD_POSITIONABLE:
-                ilG_context_addPositionable(self, msg->value.positionable.parent, msg->value.positionable.child);
-                break;
-            case ILG_DEL_POSITIONABLE:
-                ilG_context_delPositionable(self, msg->value.positionable.parent, msg->value.positionable.child);
-                break;
             case ILG_ADD_LIGHT:
                 ilG_context_addLight(self, msg->value.light.parent, msg->value.light.child);
                 break;
@@ -923,17 +903,8 @@ stop:
 
 bool ilG_context_start(ilG_context *self)
 {
-    if (!self->camera) {
-        il_error("No camera");
-        return false;
-    }
-    if (!self->world) {
-        il_error("No world");
-        return false;
-    }
-
     setup_context(self);
-    
+
     self->running = true;
     // Start thread
     int res = pthread_create(&self->thread, NULL, render_thread, self);
@@ -959,7 +930,7 @@ static void tabulate(unsigned n)
     }
 }
 
-void ilG_context_recursivePrint(ilG_context *self, ilG_rendid id, unsigned depth)
+/*void ilG_context_recursivePrint(ilG_context *self, ilG_rendid id, unsigned depth)
 {
     tabulate(depth); fprintf(stderr, "%u:\n", id);
     tabulate(depth+1); fprintf(stderr, "sink: %s\n", ilG_context_findSink(self, id)? "true" : "false");
@@ -968,9 +939,9 @@ void ilG_context_recursivePrint(ilG_context *self, ilG_rendid id, unsigned depth
     while ((r = ilG_context_iterChildren(self, id, &iter))) {
         ilG_context_recursivePrint(self, r->id, depth+1);
     }
-}
+}*/
 
-void ilG_context_printScenegraph(ilG_context *self)
+/*void ilG_context_printScenegraph(ilG_context *self)
 {
     fprintf(stderr, "storage:\n");
     il_table_show(&self->storage);
@@ -999,6 +970,5 @@ void ilG_context_printScenegraph(ilG_context *self)
     }
     fprintf(stderr, "\n");
     fprintf(stderr, "hierarchy:\n");
-    ilG_context_recursivePrint(self, 0, 1);
-}
-
+    //ilG_context_recursivePrint(self, 0, 1);
+    }*/

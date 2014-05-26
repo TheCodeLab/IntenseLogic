@@ -10,11 +10,9 @@
 #include <unistd.h>
 #include <signal.h>
 
-#include "graphics/camera.h"
 #include "common/event.h"
 #include "math/matrix.h"
 #include "common/base.h"
-//#include "common/keymap.h"
 #include "graphics/context.h"
 #include "util/log.h"
 #include "util/logger.h"
@@ -159,4 +157,3 @@ static void quit(const il_value *data, il_value *ctx)
     SDL_VideoQuit();
     SDL_Quit();
 }
-

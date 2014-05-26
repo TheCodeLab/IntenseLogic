@@ -5,7 +5,6 @@
 
 #include "util/ilstring.h"
 #include "common/world.h"
-#include "graphics/camera.h"
 #include "math/matrix.h"
 
 const char * ilG_strerror(GLenum err);
@@ -34,10 +33,9 @@ enum ilG_transform {
     ILG_MODEL = ILG_MODEL_R | ILG_MODEL_T | ILG_MODEL_S,
     ILG_MVP = ILG_VP | ILG_MODEL,
 };
-il_mat ilG_computeMVP(enum ilG_transform filter, const ilG_camera *camera, 
+/*il_mat ilG_computeMVP(enum ilG_transform filter, const ilG_camera *camera,
     const il_positionable * object);
-void ilG_bindMVP(GLint location, enum ilG_transform filter, 
-    const ilG_camera *camera, const il_positionable * object);
+void ilG_bindMVP(GLint location, enum ilG_transform filter,
+const ilG_camera *camera, const il_positionable * object);*/
 
 #endif
-

@@ -10,12 +10,12 @@
 #include "util/array.h"
 #include "util/log.h"
 
-static void trans_free(void *ptr, ilG_rendid id)
+static void trans_free(void *ptr)
 {
-    (void)ptr, (void)id;
+    (void)ptr;
 }
 
-static void trans_draw(void *ptr, ilG_rendid id)
+static void trans_update(void *ptr, ilG_rendid id)
 {
     (void)ptr, (void)id;
     ilG_testError("Unknown");
@@ -28,13 +28,15 @@ static void trans_draw(void *ptr, ilG_rendid id)
     ilG_testError("glEnable");
 }
 
-static bool trans_build(void *ptr, ilG_rendid id, ilG_context *context, ilG_renderer *out)
+static bool trans_build(void *ptr, ilG_rendid id, ilG_context *context, ilG_buildresult *out)
 {
     (void)context;
-    *out = (ilG_renderer) {
-        .id = id,
+    *out = (ilG_buildresult) {
         .free = trans_free,
-        .draw = trans_draw,
+        .update = trans_update,
+        .draw = NULL,
+        .types = NULL,
+        .num_types = 0,
         .obj = ptr
     };
     return true;
@@ -44,5 +46,3 @@ ilG_builder ilG_transparency_builder()
 {
     return ilG_builder_wrap(NULL, trans_build);
 }
-
-
