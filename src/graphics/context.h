@@ -36,7 +36,7 @@ enum ilG_context_profile {
 enum ilG_context_hint {
     /** OpenGL context major (the number before the dot) version.
      * Defaults to 3. */
-    ILG_CONTEXT_MAJOR, 
+    ILG_CONTEXT_MAJOR,
     /** OpenGL context minor (the number after the dot) version.
      * Defaults to 1 (2 on OS X). */
     ILG_CONTEXT_MINOR,
@@ -169,6 +169,7 @@ const char      *ilG_context_findName           (ilG_context *self, ilG_rendid i
 unsigned ilG_context_addRenderer    (ilG_context *self, ilG_rendid id, ilG_builder builder);
 unsigned ilG_context_addSink        (ilG_context *self, ilG_rendid id, ilG_message_fn sink);
 unsigned ilG_context_addChild       (ilG_context *self, ilG_rendid parent, ilG_rendid child);
+unsigned ilG_context_addCoords      (ilG_context *self, ilG_rendid id, ilG_cosysid cosys, unsigned codata);
 unsigned ilG_context_addLight       (ilG_context *self, ilG_rendid id, struct ilG_light light);
 unsigned ilG_context_addStorage     (ilG_context *self, ilG_rendid id);
 unsigned ilG_context_addName        (ilG_context *self, ilG_rendid id, const char *name);
@@ -176,6 +177,7 @@ unsigned ilG_context_addCoordSys    (ilG_context *self, ilG_coordsys co);
 bool ilG_context_delRenderer    (ilG_context *self, ilG_rendid id);
 bool ilG_context_delSink        (ilG_context *self, ilG_rendid id);
 bool ilG_context_delChild       (ilG_context *self, ilG_rendid parent, ilG_rendid child);
+bool ilG_context_delCoords      (ilG_context *self, ilG_rendid id, ilG_cosysid cosys, unsigned codata);
 bool ilG_context_delLight       (ilG_context *self, ilG_rendid id, struct ilG_light light);
 bool ilG_context_delStorage     (ilG_context *self, ilG_rendid id);
 bool ilG_context_delName        (ilG_context *self, ilG_rendid id);

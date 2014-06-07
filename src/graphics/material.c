@@ -20,102 +20,38 @@ struct textureunit {
     unsigned long type;
 };
 
-struct matrixinfo {
-    char *location;
-    GLint uniform;
-    enum ilG_transform type;
-};
-
-struct bindfunc {
-    char *location;
-    ilG_material_onBindFunc func;
-    GLint uniform;
-    void *user;
-};
-
-struct posfunc {
-    char *location;
-    ilG_material_onPosFunc func;
-    GLint uniform;
-    void *user;
-};
-
 struct ilG_material_config {
     IL_ARRAY(struct textureunit,) texunits;
-    IL_ARRAY(struct matrixinfo,) matrices;
-    IL_ARRAY(struct bindfunc,) bindfuncs;
-    IL_ARRAY(struct posfunc,) posfuncs;
     il_string *vertsource;
     il_string *fragsource;
     char* attriblocs[ILG_ARRATTR_NUMATTRS];
     char* fraglocs[ILG_FRAGDATA_NUMATTRS];
 };
 
-static void mtl_bind(void *obj)
-{
-    ilG_material* mtl = obj;
-    if (!mtl->valid) { // silently fail so we don't flood the console, the error has already been printed
-        return;
-    }
-    ilG_testError("Unknown");
-    glUseProgram(mtl->program);
-    ilG_testError("glUseProgram()");
-    unsigned int i;
-    for (i = 0; i < mtl->config->texunits.length; i++) {
-        glUniform1i(mtl->config->texunits.data[i].uniform, i);
-        ilG_testError("glUniform1i()");
-    }
-    for (i = 0; i < mtl->config->matrices.length; i++) {
-        if (!(mtl->config->matrices.data[i].type & ILG_MODEL)) { 
-            // same for any positionable, otherwise it goes in update()
-            //ilG_bindMVP(mtl->config->matrices.data[i].uniform, mtl->config->matrices.data[i].type, mtl->context->camera, NULL);
-        }
-    }
-    for (i = 0; i < mtl->config->bindfuncs.length; i++) {
-        mtl->config->bindfuncs.data[i].func(mtl, mtl->config->bindfuncs.data[i].uniform, mtl->config->bindfuncs.data[i].user);
-    }
-}
-
-static void mtl_update(void *obj)
-{
-    ilG_material* mtl = obj;
-    if (!mtl->valid) {
-        return;
-    }
-    if (mtl->context->drawable && (mtl->attrs & mtl->context->drawable->attrs) != mtl->attrs) {
-        il_error("%s<%p> does not have the required attributes to "
-                 "be drawn with %s<%p>", 
-                 il_typeof(mtl->context->drawable)->name, 
-                 (void*)mtl->context->drawable,
-                 il_typeof(mtl)->name, (void*)mtl);
-    }
-    unsigned int i;
-    for (i = 0; i < mtl->config->matrices.length; i++) {
-        if (mtl->config->matrices.data[i].type & ILG_MODEL) {
-            // otherwise it was bound in bind()
-            //ilG_bindMVP(mtl->config->matrices.data[i].uniform, mtl->config->matrices.data[i].type, mtl->context->camera, mtl->context->positionable);
-        }
-    }
-    for (i = 0; i < mtl->config->posfuncs.length; i++) {
-        mtl->config->posfuncs.data[i].func(mtl, mtl->context->positionable, mtl->config->posfuncs.data[i].uniform, mtl->config->posfuncs.data[i].user);
-    }
-}
-
-static void mtl_unbind(void *obj)
-{
-    ilG_material *mtl = obj;
-    mtl->context->num_active = 0;
-}
-
 char *strdup(const char*);
 
-static void material_init(void *obj)
+void ilG_material_init(ilG_material *mtl)
 {
-    ilG_material* mtl = obj;
     mtl->config = calloc(1, sizeof(struct ilG_material_config));
 }
 
-void ilG_material_vertex(ilG_material* self, il_string *source) 
+void ilG_material_free(ilG_material *self)
+{
+    IL_FREE(self->config->texunits);
+    il_unref(self->config->fragsource);
+    il_unref(self->config->vertsource);
+    for (unsigned i = 0; i < ILG_FRAGDATA_NUMATTRS; i++) {
+        free(self->config->attriblocs[i]);
+        free(self->config->fraglocs[i]);
+    }
+    free(self->config);
+    free(self->name);
+    glDeleteShader(self->vertshader);
+    glDeleteShader(self->fragshader);
+    glDeleteProgram(self->program);
+}
+
+void ilG_material_vertex(ilG_material* self, il_string *source)
 {
     if (self->config->vertsource) {
         il_string_unref(self->config->vertsource);
@@ -197,36 +133,27 @@ void ilG_material_textureUnit(ilG_material* self, unsigned long unittype, const 
     IL_APPEND(self->config->texunits, unit);
 }
 
-void ilG_material_matrix(ilG_material* self, enum ilG_transform type, const char *location)
+GLuint ilG_material_getLoc(ilG_material *self, const char *location)
 {
-    struct matrixinfo mat = (struct matrixinfo){
-        strdup(location),
-        0,//glGetUniformLocation(self->program, location),
-        type
-    };
-    IL_APPEND(self->config->matrices, mat);
+    return glGetUniformLocation(self->program, location);
 }
 
-void ilG_material_bindFunc(ilG_material* self, ilG_material_onBindFunc func, void *user, const char *location)
+void ilG_material_bind(ilG_material *mtl)
 {
-    struct bindfunc f = (struct bindfunc) {
-        strdup(location),
-        func,
-        0,
-        user
-    };
-    IL_APPEND(self->config->bindfuncs, f);
+    ilG_testError("Unknown");
+    glUseProgram(mtl->program);
+    ilG_testError("glUseProgram()");
+    unsigned int i;
+    for (i = 0; i < mtl->config->texunits.length; i++) {
+        glUniform1i(mtl->config->texunits.data[i].uniform, i);
+        ilG_testError("glUniform1i()");
+    }
 }
 
-void ilG_material_posFunc(ilG_material* self, ilG_material_onPosFunc func, void *user, const char *location)
+void ilG_material_bindMatrix(ilG_material* self, GLuint loc, il_mat m)
 {
-    struct posfunc f = (struct posfunc) {
-        strdup(location),
-        func,
-        0,
-        user
-    };
-    IL_APPEND(self->config->posfuncs, f);
+    (void)self;
+    glUniformMatrix4fv(loc, 1, GL_TRUE, m.data);
 }
 
 static void link(ilG_material *self)
@@ -268,16 +195,6 @@ static void link(ilG_material *self)
         self->config->texunits.data[i].uniform = glGetUniformLocation(self->program, self->config->texunits.data[i].location);
     }
     ilG_testError("Error binding texture units");
-    for (i = 0; i < self->config->matrices.length; i++) {
-        self->config->matrices.data[i].uniform = glGetUniformLocation(self->program, self->config->matrices.data[i].location);
-    }
-    ilG_testError("Error binding matrices");
-    for (i = 0; i < self->config->bindfuncs.length; i++) {
-        self->config->bindfuncs.data[i].uniform = glGetUniformLocation(self->program, self->config->bindfuncs.data[i].location);
-    }
-    for (i = 0; i < self->config->posfuncs.length; i++) {
-        self->config->posfuncs.data[i].uniform = glGetUniformLocation(self->program, self->config->posfuncs.data[i].location);
-    }
 
     self->valid = 1;
 }
@@ -294,29 +211,3 @@ int /*failure*/ ilG_material_link(ilG_material* self, ilG_context *ctx)
     link(self);
     return 0;
 }
-
-il_type ilG_material_type = {
-    .typeclasses = NULL,
-    .storage = {NULL},
-    .constructor = material_init,
-    .destructor = NULL,
-    .copy = NULL,
-    .name = "il.graphics.material",
-    .size = sizeof(ilG_material),
-    .parent = NULL
-};
-
-struct ilG_bindable ilG_material_bindable = {
-    .name = "il.graphics.bindable",
-    .bind = mtl_bind,
-    .action = mtl_update,
-    .unbind = mtl_unbind
-};
-
-ilG_material ilG_material_default;
-
-void ilG_material_init()
-{
-    il_impl(&ilG_material_type, &ilG_material_bindable);
-}
-

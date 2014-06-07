@@ -8,13 +8,18 @@
 il_world *il_world_new(size_t prealloc)
 {
     il_world *self = calloc(1, sizeof(il_world));
+    il_world_init(self, prealloc);
+    return self;
+}
+
+void il_world_init(il_world *self, size_t prealloc)
+{
     IL_RESIZE(self->positions, prealloc);
     IL_RESIZE(self->rotations, prealloc);
     IL_RESIZE(self->sizes, prealloc);
     IL_RESIZE(self->velocities, prealloc);
     IL_RESIZE(self->last_updates, prealloc);
     IL_RESIZE(self->storages, prealloc);
-    return self;
 }
 
 void il_world_free(il_world *self)

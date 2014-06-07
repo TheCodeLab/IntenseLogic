@@ -45,4 +45,3 @@ Depends(libilgraphics, libilasset)
 Depends(libilgraphics, libilinput)
 
 Return("libilgraphics")
-

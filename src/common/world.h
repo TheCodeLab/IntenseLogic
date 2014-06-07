@@ -29,6 +29,7 @@ typedef struct il_world {
 } il_world;
 
 il_world* il_world_new(size_t prealloc);
+void il_world_init(il_world *self, size_t prealloc);
 void il_world_free(il_world *self);
 
 size_t il_world_numPositionables(const il_world *self);
@@ -56,4 +57,3 @@ void il_positionable_setVelocity(il_positionable *self, il_vec3 vel);
 void il_positionable_setLastUpdate(il_positionable *self, struct timeval tv);
 
 #endif
-

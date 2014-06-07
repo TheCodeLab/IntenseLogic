@@ -30,11 +30,12 @@ static void trans_update(void *ptr, ilG_rendid id)
 
 static bool trans_build(void *ptr, ilG_rendid id, ilG_context *context, ilG_buildresult *out)
 {
-    (void)context;
+    (void)context, (void)id;
     *out = (ilG_buildresult) {
         .free = trans_free,
         .update = trans_update,
         .draw = NULL,
+        .view = NULL,
         .types = NULL,
         .num_types = 0,
         .obj = ptr

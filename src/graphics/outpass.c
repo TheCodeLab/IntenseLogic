@@ -13,10 +13,10 @@
 
 typedef struct ilG_out {
     ilG_context *context;
-    ilG_material *material;
-    ilG_material *horizblur, *vertblur;
+    ilG_material material;
+    ilG_material horizblur, vertblur;
     ilG_fbo *front, *result;
-    GLuint vao, vbo;
+    GLuint vao, vbo, size_loc;
     unsigned w, h;
     int which;
 } ilG_out;
@@ -24,9 +24,9 @@ typedef struct ilG_out {
 static void out_free(void *ptr)
 {
     ilG_out *self = ptr;
-    il_unref(self->material);
-    il_unref(self->horizblur);
-    il_unref(self->vertblur);
+    ilG_material_free(&self->material);
+    ilG_material_free(&self->horizblur);
+    ilG_material_free(&self->vertblur);
     ilG_fbo_free(self->front);
     ilG_fbo_free(self->result);
     glDeleteBuffers(1, &self->vao);
@@ -43,13 +43,6 @@ static void fullscreenTexture(ilG_out *self)
     ilG_testError("Error drawing fullscreen quad");
 }
 
-static void size_uniform(ilG_material *self, GLint location, void *user)
-{
-    (void)self;
-    ilG_out *out = user;
-    glUniform2f(location, out->w, out->h);
-}
-
 static void out_update(void *ptr, ilG_rendid id)
 {
     (void)id;
@@ -57,7 +50,6 @@ static void out_update(void *ptr, ilG_rendid id)
     ilG_context *context = self->context;
 
     ilG_testError("Unknown");
-    ilG_bindable_unbind(context->materialb, context->material);
     // prepare the GL state for outputting to the default framebuffer
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     if (context->debug_render) {
@@ -74,10 +66,9 @@ static void out_update(void *ptr, ilG_rendid id)
 
     self->w = context->width;
     self->h = context->height;
-    // no action() as we don't deal with positionables here
-    ilG_bindable_bind(&ilG_material_bindable, self->material);
+    ilG_material_bind(&self->material);
+    glUniform2f(self->size_loc, self->w, self->h);
     fullscreenTexture(self);
-    ilG_bindable_unbind(&ilG_material_bindable, self->material);
 
     if (context->hdr) {
         unsigned i;
@@ -105,9 +96,9 @@ static void out_update(void *ptr, ilG_rendid id)
             ilG_fbo_bind(self->result, ILG_FBO_RW);
             glViewport(0,0, w,h);
             // do a horizontal blur.
-            ilG_bindable_bind(&ilG_material_bindable, self->horizblur);
+            ilG_material_bind(&self->horizblur);
+            glUniform2f(self->size_loc, self->w, self->h);
             fullscreenTexture(self);
-            ilG_bindable_unbind(&ilG_material_bindable, self->horizblur);
 
             // Into the screen,
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -120,9 +111,9 @@ static void out_update(void *ptr, ilG_rendid id)
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_RECTANGLE, ilG_fbo_getTex(self->result, 0));
             // do a vertical blur.
-            ilG_bindable_bind(&ilG_material_bindable, self->vertblur);
+            ilG_material_bind(&self->vertblur);
+            glUniform2f(self->size_loc, self->w, self->h);
             fullscreenTexture(self);
-            ilG_bindable_unbind(&ilG_material_bindable, self->vertblur);
             glDisable(GL_BLEND);
 
             swapped = !swapped;
@@ -149,17 +140,18 @@ static bool out_build(void *ptr, ilG_rendid id, ilG_context *context, ilG_buildr
         if (ilG_fbo_build(self->result, context)) {
             return false;
         }
-        if (ilG_material_link(self->horizblur, context)) {
+        if (ilG_material_link(&self->horizblur, context)) {
             return false;
         }
-        if (ilG_material_link(self->vertblur, context)) {
+        if (ilG_material_link(&self->vertblur, context)) {
             return false;
         }
     }
-    ilG_material_fragment_file(self->material, context->hdr? "hdr.frag" : "post.frag");
-    if (ilG_material_link(self->material, context)) {
+    ilG_material_fragment_file(&self->material, context->hdr? "hdr.frag" : "post.frag");
+    if (ilG_material_link(&self->material, context)) {
         return false;
     }
+    self->size_loc = ilG_material_getLoc(&self->material, "size");
     static const float data[] = {
         0, 0,
         0, 1,
@@ -182,6 +174,7 @@ static bool out_build(void *ptr, ilG_rendid id, ilG_context *context, ilG_buildr
         .free = out_free,
         .update = out_update,
         .draw = NULL,
+        .view = NULL,
         .types = NULL,
         .num_types = 0,
         .obj = self
@@ -206,32 +199,33 @@ ilG_builder ilG_out_builder()
     ilG_fbo_size_rel(f, 0, 1.0, 1.0);
     ilG_fbo_texture(f, 0, GL_TEXTURE_RECTANGLE, GL_RGB, GL_COLOR_ATTACHMENT0);
 
-    m = self->horizblur = ilG_material_new();
+    ilG_material_init(&self->horizblur);
+    ilG_material_init(&self->vertblur);
+    ilG_material_init(&self->material);
+
+    m = &self->horizblur;
     ilG_material_vertex_file(m, "post.vert");
     ilG_material_name(m, "Horizontal Blur Shader");
     ilG_material_arrayAttrib(m, ILG_ARRATTR_POSITION, "in_Position");
     ilG_material_arrayAttrib(m, ILG_ARRATTR_TEXCOORD, "in_Texcoord");
     ilG_material_fragData(m, 0, "out_Color");
-    ilG_material_bindFunc(m, size_uniform, self, "size");
     ilG_material_textureUnit(m, 0, "tex");
     ilG_material_fragment_file(m, "horizblur.frag");
 
-    m = self->vertblur = ilG_material_new();
+    m = &self->vertblur;
     ilG_material_vertex_file(m, "post.vert");
     ilG_material_name(m, "Vertical Blur Shader");
     ilG_material_arrayAttrib(m, ILG_ARRATTR_POSITION, "in_Position");
     ilG_material_arrayAttrib(m, ILG_ARRATTR_TEXCOORD, "in_Texcoord");
     ilG_material_fragData(m, 0, "out_Color");
-    ilG_material_bindFunc(m, size_uniform, self, "size");
     ilG_material_textureUnit(m, 0, "tex");
     ilG_material_fragment_file(m, "vertblur.frag");
 
-    m = self->material = ilG_material_new();
+    m = &self->material;
     ilG_material_vertex_file(m, "post.vert");
     ilG_material_name(m, "Tone Mapping Shader");
     ilG_material_arrayAttrib(m, ILG_ARRATTR_POSITION, "in_Position");
     ilG_material_arrayAttrib(m, ILG_ARRATTR_TEXCOORD, "in_Texcoord");
-    ilG_material_bindFunc(m, size_uniform, self, "size");
     ilG_material_textureUnit(m, 0, "tex");
 
     ilG_testError("Failed to build vbo");

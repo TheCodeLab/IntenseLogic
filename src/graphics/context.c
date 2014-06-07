@@ -17,7 +17,7 @@
 #include "input/input.h"
 
 /////////////////////////////////////////////////////////////////////////////
-// Queue 
+// Queue
 
 // TODO: Generalize this and split into its own file
 struct ilG_context_msg {
@@ -27,6 +27,8 @@ struct ilG_context_msg {
         ILG_RESIZE,
         ILG_STOP,
         ILG_MESSAGE,
+        ILG_ADD_COORDS,
+        ILG_DEL_COORDS,
         ILG_ADD_RENDERER,
         ILG_DEL_RENDERER,
         ILG_ADD_LIGHT,
@@ -48,8 +50,8 @@ struct ilG_context_msg {
         } renderer;
         struct {
             ilG_rendid parent;
-            il_positionable child;
-        } positionable;
+            unsigned cosys, codata;
+        } coords;
         struct {
             ilG_rendid parent;
             ilG_light child;
@@ -111,8 +113,12 @@ static void done_consume(struct ilG_context_queue *queue)
 /////////////////////////////////////////////////////////////////////////////
 // Book keeping
 
-void ilG_registerInputBackend(ilG_context *ctx);
-
+void ilG_default_update(void *, ilG_rendid);
+void ilG_default_multiupdate(void *, ilG_rendid, il_mat *);
+void ilG_default_draw(void *, ilG_rendid, il_mat **, const unsigned*, unsigned);
+void ilG_default_viewmats(void*, il_mat*, int*, unsigned);
+void ilG_default_objmats(void*, const unsigned*, unsigned, il_mat*, int);
+void ilG_default_free(void*);
 ilG_context *ilG_context_new()
 {
     ilG_context *self = calloc(1, sizeof(ilG_context));
@@ -136,6 +142,30 @@ ilG_context *ilG_context_new()
     self->queue = calloc(1, sizeof(struct ilG_context_queue));
     queue_init(self->queue);
     ilG_context_addRenderer(self, 0, ilG_builder_wrap(NULL, ilG_context_build));
+    ilG_statrenderer stat = (ilG_statrenderer) {ilG_default_update};
+    ilG_viewrenderer view = (ilG_viewrenderer) {
+        .update = ilG_default_multiupdate,
+        .coordsys = 0,
+        .types = NULL,
+        .num_types = 0
+    };
+    ilG_objrenderer obj = (ilG_objrenderer) {
+        .draw = ilG_default_draw,
+        .coordsys = 0,
+        .types = NULL,
+        .num_types = 0
+    };
+    ilG_coordsys co = (ilG_coordsys) {
+        .free = ilG_default_free,
+        .viewmats = ilG_default_viewmats,
+        .objmats = ilG_default_objmats,
+        .obj = NULL,
+        .id = 0,
+    };
+    IL_APPEND(self->manager.objrenderers, obj);
+    IL_APPEND(self->manager.viewrenderers, view);
+    IL_APPEND(self->manager.statrenderers, stat);
+    IL_APPEND(self->manager.coordsystems, co);
     self->root = (ilG_handle) {
         .id = 0,
         .context = self
@@ -178,12 +208,7 @@ void ilG_context_free(ilG_context *self)
 
     for (unsigned i = 0; i < self->manager.renderers.length; i++) {
         ilG_renderer *r = &self->manager.renderers.data[i];
-        r->free(r->obj);
-    }
-    for (unsigned i = 0; i < self->manager.multirenderers.length; i++) {
-        ilG_multirenderer *r = &self->manager.multirenderers.data[i];
-        r->first.free(r->first.obj);
-        free(r->second.types);
+        r->free(r->data);
     }
     for (unsigned i = 0; i < self->manager.names.length; i++) {
         free(self->manager.names.data[i]);
@@ -193,7 +218,6 @@ void ilG_context_free(ilG_context *self)
         c->free(c->obj);
     }
     IL_FREE(self->manager.renderers);
-    IL_FREE(self->manager.multirenderers);
     IL_FREE(self->manager.sinks);
     IL_FREE(self->manager.storages);
     IL_FREE(self->manager.namelinks);
@@ -237,6 +261,25 @@ bool ilG_context_rename(ilG_context *self, const char *title)
 {
     SDL_SetWindowTitle(self->window, title);
     return true;
+}
+
+void ilG_handle_addCoords(ilG_handle self, unsigned cosys, unsigned codata)
+{
+    struct ilG_context_msg *msg = calloc(1, sizeof(struct ilG_context_msg));
+    msg->type = ILG_ADD_COORDS;
+    msg->value.coords.parent = self.id;
+    msg->value.coords.cosys = cosys;
+    msg->value.coords.codata = codata;
+    produce(self.context->queue, msg);
+}
+
+void ilG_handle_delCoords(ilG_handle self, unsigned cosys, unsigned codata)
+{
+    struct ilG_context_msg *msg = calloc(1, sizeof(struct ilG_context_msg));
+    msg->type = ILG_DEL_COORDS;
+    msg->value.coords.cosys = cosys;
+    msg->value.coords.codata = codata;
+    produce(self.context->queue, msg);
 }
 
 void ilG_handle_addRenderer(ilG_handle self, ilG_handle node)
@@ -385,7 +428,7 @@ static void context_message(ilG_context *self, ilG_rendid id, int type, il_value
     ilG_msgsink *s = ilG_context_findSink(self, id);
     ilG_renderer *r = ilG_context_findRenderer(self, id);
     assert(s && r);
-    s->fn(r->obj, type, &data);
+    s->fn(r->data, type, &data);
     il_value_free(data);
 }
 
@@ -440,28 +483,71 @@ unsigned ilG_context_addRenderer(ilG_context *self, ilG_rendid id, ilG_builder b
     if (res) {
         ilG_renderer r = (ilG_renderer) {
             .free = b.free,
-            .update = b.update,
-            .rchildren = {0,0,0},
-            .mchildren = {0,0,0},
+            .children = {0,0,0},
             .lights = {0,0,0},
-            .obj = b.obj
+            .obj = 0,
+            .view = 0,
+            .stat = 0,
+            .data = b.obj
         };
-        if (b.draw) {
-            ilG_multirenderer m = (ilG_multirenderer) {
-                .first = r,
-                .second = {
-                    .draw = b.draw,
-                    .coordsys = 0, // TODO: Select coord system
-                    .types = b.types,
-                    .num_types = b.num_types
-                }
+        if (b.update) {
+            ilG_statrenderer s = (ilG_statrenderer) {
+                .update = b.update
             };
-            IL_APPEND(self->manager.multirenderers, m);
-            IL_APPEND(self->manager.multirendids, id);
-        } else {
-            IL_APPEND(self->manager.renderers, r);
-            IL_APPEND(self->manager.rendids, id);
+            r.stat = self->manager.statrenderers.length;
+            IL_APPEND(self->manager.statrenderers, s);
         }
+        if (b.view) {
+            unsigned num_types = 0;
+            int *types;
+            for (unsigned i = 0; i < b.num_types; i++) {
+                if (! (b.types[i] & ILG_MODEL)) { // select those which can be statically computed
+                    num_types++;
+                }
+            }
+            types = malloc(num_types * sizeof(int));
+            for (unsigned i = 0, j = 0; i < b.num_types; i++) {
+                if (! (b.types[i] & ILG_MODEL)) {
+                    types[j] = b.types[i];
+                    j++;
+                }
+            }
+            ilG_viewrenderer v = (ilG_viewrenderer) {
+                .update = b.view,
+                .coordsys = 0, // TODO: Select coord system
+                .types = types,
+                .num_types = num_types,
+            };
+            r.view = self->manager.viewrenderers.length;
+            IL_APPEND(self->manager.viewrenderers, v);
+        }
+        if (b.draw) {
+            unsigned num_types = 0;
+            int *types;
+            for (unsigned i = 0; i < b.num_types; i++) {
+                if (b.types[i] & ILG_MODEL) { // select those that are per-object
+                    num_types++;
+                }
+            }
+            types = malloc(num_types * sizeof(int));
+            for (unsigned i = 0, j = 0; i < b.num_types; i++) {
+                if (b.types[i] & ILG_MODEL) {
+                    types[j] = b.types[i];
+                    j++;
+                }
+            }
+            ilG_objrenderer m = (ilG_objrenderer) {
+                .draw = b.draw,
+                .coordsys = 0, // TODO: Select coord system
+                .types = types,
+                .num_types = num_types
+            };
+            r.obj = self->manager.objrenderers.length;
+            IL_APPEND(self->manager.objrenderers, m);
+        }
+        free(b.types);
+        IL_APPEND(self->manager.renderers, r);
+        IL_APPEND(self->manager.rendids, id);
         return self->manager.renderers.length - 1;
     }
     return UINT_MAX;
@@ -484,16 +570,29 @@ unsigned ilG_context_addChild(ilG_context *self, ilG_rendid parent, ilG_rendid c
     ilG_rendid id;
     IL_FIND(self->manager.rendids, id, id == child, idx);
     if (idx < self->manager.rendids.length) {
-        IL_APPEND(r->rchildren, idx);
-        return 1;
-    }
-    IL_FIND(self->manager.multirendids, id, id == child, idx);
-    if (idx < self->manager.multirendids.length) {
-        IL_APPEND(r->mchildren, idx);
+        IL_APPEND(r->children, idx);
         return 1;
     }
     il_error("No such renderer %u", child);
     return 0;
+}
+
+unsigned ilG_context_addCoords(ilG_context *self, ilG_rendid id, ilG_cosysid cosysid, unsigned codata)
+{
+    ilG_renderer *r = ilG_context_findRenderer(self, id);
+    ilG_objrenderer *or = &self->manager.objrenderers.data[r->obj];
+    unsigned cosys;
+    ilG_coordsys co;
+    IL_FIND(self->manager.coordsystems, co, co.id == cosysid, cosys);
+    if (or->coordsys != cosys) {
+        or->coordsys = cosys;
+        if (or->objects.length > 0) {
+            il_warning("Multiple coord systems per renderer not supported: Overwriting");
+        }
+        or->objects.length = 0;
+    }
+    IL_APPEND(or->objects, codata);
+    return or->objects.length - 1;
 }
 
 unsigned ilG_context_addLight(ilG_context *self, ilG_rendid id, ilG_light light)
@@ -529,6 +628,12 @@ unsigned ilG_context_addName(ilG_context *self, ilG_rendid id, const char *name)
     return self->manager.namelinks.length - 1;
 }
 
+unsigned ilG_context_addCoordSys(ilG_context *self, ilG_coordsys co)
+{
+    IL_APPEND(self->manager.coordsystems, co);
+    return self->manager.coordsystems.length-1;
+}
+
 bool ilG_context_delRenderer(ilG_context *self, ilG_rendid id)
 {
     unsigned idx;
@@ -537,12 +642,6 @@ bool ilG_context_delRenderer(ilG_context *self, ilG_rendid id)
     if (idx < self->manager.rendids.length) {
         IL_FASTREMOVE(self->manager.renderers, idx);
         IL_FASTREMOVE(self->manager.rendids, idx);
-        return true;
-    }
-    IL_FIND(self->manager.multirendids, key, key == id, idx);
-    if (idx < self->manager.multirendids.length) {
-        IL_FASTREMOVE(self->manager.multirenderers, idx);
-        IL_FASTREMOVE(self->manager.multirendids, idx);
         return true;
     }
     return false;
@@ -568,24 +667,41 @@ bool ilG_context_delChild(ilG_context *self, ilG_rendid parent, ilG_rendid child
     IL_FIND(self->manager.rendids, id, id == child, idx);
     if (idx < self->manager.rendids.length) {
         unsigned idx2;
-        IL_FIND(par->rchildren, id, id == idx, idx2);
-        if (idx2 < par->rchildren.length) {
-            IL_FASTREMOVE(par->rchildren, idx2);
+        IL_FIND(par->children, id, id == idx, idx2);
+        if (idx2 < par->children.length) {
+            IL_FASTREMOVE(par->children, idx2);
             return true;
-        } else {
-            return false;
         }
     }
-    IL_FIND(self->manager.multirendids, id, id == child, idx);
-    if (idx < self->manager.multirendids.length) {
-        unsigned idx2;
-        IL_FIND(par->mchildren, id, id == idx, idx2);
-        if (idx2 < par->mchildren.length) {
-            IL_FASTREMOVE(par->mchildren, idx2);
-            return true;
-        } else {
-            return false;
-        }
+    return false;
+}
+
+bool ilG_context_delCoords(ilG_context *self, ilG_rendid id, unsigned cosys, unsigned codata)
+{
+    ilG_renderer *r = ilG_context_findRenderer(self, id);
+    ilG_objrenderer *or = &self->manager.objrenderers.data[r->obj];
+    unsigned idx;
+    unsigned d;
+    if (or->coordsys != cosys) {
+        return false;
+    }
+    IL_FIND(or->objects, d, d == codata, idx);
+    if (idx < or->objects.length) {
+        IL_FASTREMOVE(or->objects, idx);
+        return true;
+    }
+    return false;
+}
+
+bool ilG_context_delLight(ilG_context *self, ilG_rendid id, ilG_light light)
+{
+    ilG_renderer *r = ilG_context_findRenderer(self, id);
+    unsigned idx;
+    ilG_light val;
+    IL_FIND(r->lights, val, val.id == light.id, idx);
+    if (idx < r->lights.length) {
+        IL_FASTREMOVE(r->lights, idx);
+        return true;
     }
     return false;
 }
@@ -614,6 +730,18 @@ bool ilG_context_delName(ilG_context *self, ilG_rendid id)
     return false;
 }
 
+bool ilG_context_delCoordSys(ilG_context *self, unsigned id)
+{
+    unsigned idx;
+    ilG_coordsys co;
+    IL_FIND(self->manager.coordsystems, co, co.id == id, idx);
+    if (idx < self->manager.coordsystems.length) {
+        IL_FASTREMOVE(self->manager.coordsystems, idx);
+        return true;
+    }
+    return false;
+}
+
 /////////////////////////////////////////////////////////////////////////////
 // Rendering logic and context setup
 
@@ -621,22 +749,31 @@ static void render_renderer(ilG_context *context, ilG_renderer *par)
 {
     ilG_rendermanager *rm = &context->manager;
     ilG_renderer *r;
-    ilG_multirenderer *m;
-    for (unsigned i = 0, len = par->rchildren.length; i < len; i++) {
-        r = &rm->renderers.data[par->rchildren.data[i]];
-        ilG_rendid id = rm->rendids.data[par->rchildren.data[i]];
-        r->update(r->obj, id);
-        ilG_testError("In %s draw", ilG_context_findName(context, id));
+    for (unsigned i = 0, len = par->children.length; i < len; i++) {
+        r = &rm->renderers.data[par->children.data[i]];
+        ilG_rendid id = rm->rendids.data[par->children.data[i]];
+        ilG_statrenderer *stat = &rm->statrenderers.data[r->stat];
+        ilG_viewrenderer *view = &rm->viewrenderers.data[r->view];
+        ilG_objrenderer *obj = &rm->objrenderers.data[r->obj];
+        stat->update(r->data, id);
+        ilG_testError("In %s static update", ilG_context_findName(context, id));
+
+        ilG_coordsys *co = &rm->coordsystems.data[view->coordsys];
+        il_mat viewmats[view->num_types];
+        co->viewmats(co->obj, viewmats, view->types, view->num_types);
+        view->update(r->data, id, viewmats);
+        ilG_testError("In %s view update", ilG_context_findName(context, id));
+
+        co = &rm->coordsystems.data[obj->coordsys];
+        unsigned num_mats = obj->objects.length;
+        il_mat objmats[obj->num_types][num_mats];
+        il_mat *objmats_p[obj->num_types];
+        for (unsigned i = 0; i < obj->num_types; i++) {
+            co->objmats(co->obj, obj->objects.data, num_mats, objmats[i], obj->types[i]);
+            objmats_p[i] = &objmats[i][0];
+        }
+        obj->draw(r->data, id, objmats_p, obj->objects.data, num_mats);
         render_renderer(context, r);
-    }
-    for (unsigned i = 0, len = par->mchildren.length; i < len; i++) {
-        m = &rm->multirenderers.data[par->mchildren.data[i]];
-        ilG_rendid id = rm->multirendids.data[par->mchildren.data[i]];
-        m->first.update(m->first.obj, id);
-        ilG_testError("In %s draw", ilG_context_findName(context, id));
-        //m->second.draw(m->first.obj, m->first.id);
-        ilG_testError("In %s multidraw", ilG_context_findName(context, id));
-        render_renderer(context, &m->first);
     }
 }
 
@@ -664,7 +801,7 @@ static void render_frame(ilG_context *context)
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // asserts that first renderer is the context itself
-    render_renderer(context, 0);
+    render_renderer(context, &context->manager.renderers.data[0]);
 }
 
 static void measure_frametime(ilG_context *context)
@@ -761,7 +898,7 @@ static void setup_context(ilG_context *self) // main thread
     }
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, self->contextMajor);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, self->contextMinor);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, 
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS,
         (self->forwardCompat? SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG : 0) |
         (self->debug_context? SDL_GL_CONTEXT_DEBUG_FLAG : 0)
     );
@@ -860,6 +997,12 @@ static void *render_thread(void *ptr)
             case ILG_RESIZE: context_resize(self, msg->value.resize[0], msg->value.resize[1]); break;
             case ILG_STOP: goto stop;
             case ILG_MESSAGE: context_message(self, msg->value.message.node, msg->value.message.type, msg->value.message.data); break;
+            case ILG_ADD_COORDS:
+                ilG_context_addCoords(self, msg->value.coords.parent, msg->value.coords.cosys, msg->value.coords.codata);
+                break;
+            case ILG_DEL_COORDS:
+                ilG_context_delCoords(self, msg->value.coords.parent, msg->value.coords.cosys, msg->value.coords.codata);
+                break;
             case ILG_ADD_RENDERER:
                 ilG_context_addChild(self, msg->value.renderer.parent, msg->value.renderer.child);
                 break;
@@ -923,14 +1066,14 @@ void ilG_context_stop(ilG_context *self)
     self->running = false;
 }
 
-static void tabulate(unsigned n)
+/*static void tabulate(unsigned n)
 {
     for (unsigned i = 0; i < 2*n; i++) {
         fputc(' ', stderr);
     }
 }
 
-/*void ilG_context_recursivePrint(ilG_context *self, ilG_rendid id, unsigned depth)
+void ilG_context_recursivePrint(ilG_context *self, ilG_rendid id, unsigned depth)
 {
     tabulate(depth); fprintf(stderr, "%u:\n", id);
     tabulate(depth+1); fprintf(stderr, "sink: %s\n", ilG_context_findSink(self, id)? "true" : "false");

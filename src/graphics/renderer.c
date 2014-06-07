@@ -42,16 +42,39 @@ ilG_handle ilG_build(ilG_builder self, ilG_context *context)
     };
 }
 
+struct coordsys_ctx {
+    ilG_coordsys_builder builder;
+    ilG_context *context;
+    ilG_cosysid id;
+};
+static void coordsys_build(void *ptr)
+{
+    struct coordsys_ctx *ctx = ptr;
+    ilG_coordsys co;
+    bool res = ctx->builder.build(ctx->builder.obj, ctx->context->manager.coordsystems.length, ctx->context, &co);
+    co.id = ctx->id;
+    if (res) {
+        ilG_context_addCoordSys(ctx->context, co);
+    }
+    free(ctx);
+}
+
+ilG_cosysid ilG_coordsys_build(ilG_coordsys_builder self, struct ilG_context *context)
+{
+    struct coordsys_ctx *ctx = calloc(1, sizeof(struct coordsys_ctx));
+    ctx->builder = self;
+    ctx->context = context;
+    ctx->id = ++context->manager.cursysid;
+    ilG_context_upload(context, coordsys_build, ctx);
+    return ctx->id;
+}
+
 bool ilG_handle_ready(ilG_handle self)
 {
     unsigned idx;
     ilG_rendid id;
     IL_FIND(self.context->manager.rendids, id, id == self.id, idx);
-    if (idx < self.context->manager.renderers.length) {
-        return true; // existence in table
-    }
-    IL_FIND(self.context->manager.multirendids, id, id == self.id, idx);
-    return idx < self.context->manager.multirenderers.length;
+    return idx < self.context->manager.renderers.length;
 }
 
 il_table *ilG_handle_storage(ilG_handle self)

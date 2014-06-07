@@ -38,4 +38,3 @@ il_mat il_mat_transpose(il_mat a);
 void il_mat_print(il_mat a);
 
 #endif
-
