@@ -68,7 +68,7 @@ typedef struct ilG_light {
 } ilG_light;
 
 typedef struct ilG_objrenderer {
-    const ilG_draw_fn draw;
+    ilG_draw_fn draw;
     unsigned coordsys;
     int *types;
     unsigned num_types;
