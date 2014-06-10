@@ -498,54 +498,31 @@ unsigned ilG_context_addRenderer(ilG_context *self, ilG_rendid id, ilG_builder b
             IL_APPEND(self->manager.statrenderers, s);
         }
         if (b.view) {
-            unsigned num_types = 0;
-            int *types;
             for (unsigned i = 0; i < b.num_types; i++) {
-                if (! (b.types[i] & ILG_MODEL)) { // select those which can be statically computed
-                    num_types++;
-                }
-            }
-            types = malloc(num_types * sizeof(int));
-            for (unsigned i = 0, j = 0; i < b.num_types; i++) {
-                if (! (b.types[i] & ILG_MODEL)) {
-                    types[j] = b.types[i];
-                    j++;
+                if (b.types[i] & ILG_MODEL) {
+                    il_error("View renderers cannot have model transformations");
+                    return UINT_MAX;
                 }
             }
             ilG_viewrenderer v = (ilG_viewrenderer) {
                 .update = b.view,
                 .coordsys = 0, // TODO: Select coord system
-                .types = types,
-                .num_types = num_types,
+                .types = b.types,
+                .num_types = b.num_types,
             };
             r.view = self->manager.viewrenderers.length;
             IL_APPEND(self->manager.viewrenderers, v);
         }
         if (b.draw) {
-            unsigned num_types = 0;
-            int *types;
-            for (unsigned i = 0; i < b.num_types; i++) {
-                if (b.types[i] & ILG_MODEL) { // select those that are per-object
-                    num_types++;
-                }
-            }
-            types = malloc(num_types * sizeof(int));
-            for (unsigned i = 0, j = 0; i < b.num_types; i++) {
-                if (b.types[i] & ILG_MODEL) {
-                    types[j] = b.types[i];
-                    j++;
-                }
-            }
             ilG_objrenderer m = (ilG_objrenderer) {
                 .draw = b.draw,
                 .coordsys = 0, // TODO: Select coord system
-                .types = types,
-                .num_types = num_types
+                .types = b.types,
+                .num_types = b.num_types
             };
             r.obj = self->manager.objrenderers.length;
             IL_APPEND(self->manager.objrenderers, m);
         }
-        free(b.types);
         IL_APPEND(self->manager.renderers, r);
         IL_APPEND(self->manager.rendids, id);
         return self->manager.renderers.length - 1;
