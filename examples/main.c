@@ -28,12 +28,11 @@ int main(int argc, char **argv)
 {
     int has_modules = 0;
     size_t i;
-    void (*loop)();
     void (*quit)();
     il_opts opts = il_opt_parse(argc, argv);
     il_optslice empty = {NULL, 0};
     il_modopts *main_opts = il_opts_lookup(&opts, empty);
-    
+
     for (i = 0; i < main_opts->args.length; i++) {
         il_opt *opt = &main_opts->args.data[i];
         char *arg = strndup(opt->arg.str, opt->arg.len);
@@ -89,14 +88,13 @@ int main(int argc, char **argv)
     il_load_module_paths(&opts);
 
     il_postload_all();
-   
-    // main loop
-    fprintf(stderr, "MAIN: Starting main loop\n");
-    loop = (void(*)())il_get_symbol("ilcommon", "ilE_loop");
-    if (!loop) {
-        return 1;
-    }
-    loop();
+
+    //
+    // MAIN LOOP GOES HERE
+    // Call ilG_sdlPollEvents regularly from the main loop.
+    // TODO: Example of setting up graphics
+    //
+
     quit = (void(*)())il_get_symbol("ilcommon", "ilE_quit");
     quit();
 

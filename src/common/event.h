@@ -4,7 +4,7 @@
  * The event mechanism is how many things are propagated with IL, they can be fired from anywhere, and anyone can hook them. The "main loop" is really just calling into libevent and waiting on events to process.
  *
  * @section Overview
- * Every handler contains a list of callbacks, which can be added and removed 
+ * Every handler contains a list of callbacks, which can be added and removed
  * with ilE_register() and ilE_unregister, respectively. This means there is
  * a 1:N relationship between handlers and callbacks, which allows multiple
  * parts of the codebase to listen to the same events without running into
@@ -30,12 +30,9 @@
 
 #include "common/storage.h"
 
-struct il_type;
-struct il_base;
-
 typedef struct ilE_handler ilE_handler;
 
-/*! The behaviour when registering an event hook, on how important it is 
+/*! The behaviour when registering an event hook, on how important it is
  * @see ilE_register */
 enum ilE_behaviour {
     ILE_DONTCARE,       /**< No preference for when the event is called */
@@ -43,20 +40,12 @@ enum ilE_behaviour {
     ILE_AFTER = 100,    /**< Must be called after previously registered handlers */
 };
 
-/*! How the handler should schedule the callback 
+/*! How the handler should schedule the callback
  * @see ilE_register */
 enum ilE_threading {
     ILE_ANY,            /**< Runs on any of the worker threads */
     ILE_MAIN,           /**< Runs only on the main thread */
     ILE_TLS,
-};
-
-/*! What events to wait for on a file descriptor 
- * @see ilE_handler_watch */
-enum ilE_fdevent {
-    ILE_READ = 1,       /**< When data is ready to be read, call the handlers */
-    ILE_READASARG = 2,  /**< Reads the ready data from the file descriptor and passes it to callbacks; ONLY USE IF O_NONBLOCK IS SET! */
-    ILE_WRITE = 4,      /**< When the FD is ready to be written to, call the handlers */
 };
 
 /*! Callback type for events */
@@ -66,10 +55,6 @@ typedef void(*ilE_callback)(const il_value *data, il_value *ctx);
 ilE_handler *ilE_handler_new();
 /*! Combination of ilE_handler_new() and ilE_handler_name(). */
 ilE_handler *ilE_handler_new_with_name(const char *name);
-/*! Create a timer which is only fired at the specified interval. */
-ilE_handler *ilE_handler_timer(const struct timeval *tv);
-/*! Create a handler which only fires on the specified events on the specified file descriptor. */
-ilE_handler *ilE_handler_watch(int fd, enum ilE_fdevent what);
 /*! Destroy a handler. Make sure all callbacks have been cleaned up first! */
 void ilE_handler_destroy(ilE_handler *self);
 
@@ -81,12 +66,10 @@ void ilE_handler_name(ilE_handler *self, const char *name);
 
 /*! Fires an event for a handler immediately, using no copies. */
 void ilE_handler_fire(ilE_handler *self, const il_value *data);
-/*! Moves the data for the handler and pushes it onto the event loop to be run later. */
-void ilE_handler_fireasync(ilE_handler *self, il_value data);
 
-/*! Registers a handler for a given event. 
+/*! Registers a handler for a given event.
  * @param name A string name used for introspection, such as debugging
- * @return A unique handle into the handler which can be used to unregister the callback. 
+ * @return A unique handle into the handler which can be used to unregister the callback.
  * @see ilE_unregister */
 int ilE_register_real(ilE_handler* self, const char *name, int priority, enum ilE_threading threads, ilE_callback callback, il_value ctx);
 /*! Convienience wrapper which sets the name to __func__ */
@@ -94,14 +77,9 @@ int ilE_register_real(ilE_handler* self, const char *name, int priority, enum il
 /*! Deletes a callback - use this on all your registered callbacks before destroying a handler. */
 void ilE_unregister(ilE_handler *self, int handle);
 
-/*! Dumps a list of all the callbacks currently set to stderr. 
+/*! Dumps a list of all the callbacks currently set to stderr.
  * Uses the naming information provided by the other functions. */
 void ilE_dump(ilE_handler *self);
-/*! Dumps all currently running handlers (timers, file watches).
- * Useful for finding why the engine won't shutdown. */
-void ilE_dumpAll();
-/*! Dumps all pending events */
-void ilE_dumpPending();
 
 /*! Called to shutdown the engine. */
 extern ilE_handler *ilE_shutdown;
@@ -111,4 +89,3 @@ extern ilE_handler *ilE_shutdownCallbacks;
 extern ilE_handler *ilE_shutdownHandlers;
 
 #endif
-
