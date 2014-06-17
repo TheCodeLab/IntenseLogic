@@ -129,6 +129,7 @@ il_table *ilG_handle_storage(ilG_handle self);
 const char *ilG_handle_getName(ilG_handle self);
 void ilG_handle_addCoords(ilG_handle self, ilG_cosysid cosys, unsigned codata);
 void ilG_handle_delCoords(ilG_handle self, ilG_cosysid cosys, unsigned codata);
+void ilG_handle_setViewCoords(ilG_handle self, ilG_cosysid cosys);
 void ilG_handle_addRenderer(ilG_handle self, ilG_handle node);
 void ilG_handle_delRenderer(ilG_handle self, ilG_handle node);
 void ilG_handle_addLight(ilG_handle self, ilG_light light);

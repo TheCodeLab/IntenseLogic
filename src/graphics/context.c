@@ -29,6 +29,7 @@ struct ilG_context_msg {
         ILG_MESSAGE,
         ILG_ADD_COORDS,
         ILG_DEL_COORDS,
+        ILG_VIEW_COORDS,
         ILG_ADD_RENDERER,
         ILG_DEL_RENDERER,
         ILG_ADD_LIGHT,
@@ -277,8 +278,18 @@ void ilG_handle_delCoords(ilG_handle self, unsigned cosys, unsigned codata)
 {
     struct ilG_context_msg *msg = calloc(1, sizeof(struct ilG_context_msg));
     msg->type = ILG_DEL_COORDS;
+    msg->value.coords.parent = self.id;
     msg->value.coords.cosys = cosys;
     msg->value.coords.codata = codata;
+    produce(self.context->queue, msg);
+}
+
+void ilG_handle_setViewCoords(ilG_handle self, ilG_cosysid cosys)
+{
+    struct ilG_context_msg *msg = calloc(1, sizeof(struct ilG_context_msg));
+    msg->type = ILG_VIEW_COORDS;
+    msg->value.coords.parent = self.id;
+    msg->value.coords.cosys = cosys;
     produce(self.context->queue, msg);
 }
 
@@ -570,6 +581,14 @@ unsigned ilG_context_addCoords(ilG_context *self, ilG_rendid id, ilG_cosysid cos
     }
     IL_APPEND(or->objects, codata);
     return or->objects.length - 1;
+}
+
+unsigned ilG_context_viewCoords(ilG_context *self, ilG_rendid id, ilG_cosysid cosys)
+{
+    ilG_renderer *r = ilG_context_findRenderer(self, id);
+    ilG_viewrenderer *vr = &self->manager.viewrenderers.data[r->view];
+    vr->coordsys = cosys;
+    return 0;
 }
 
 unsigned ilG_context_addLight(ilG_context *self, ilG_rendid id, ilG_light light)
@@ -979,6 +998,9 @@ static void *render_thread(void *ptr)
                 break;
             case ILG_DEL_COORDS:
                 ilG_context_delCoords(self, msg->value.coords.parent, msg->value.coords.cosys, msg->value.coords.codata);
+                break;
+            case ILG_VIEW_COORDS:
+                ilG_context_viewCoords(self, msg->value.coords.parent, msg->value.coords.cosys);
                 break;
             case ILG_ADD_RENDERER:
                 ilG_context_addChild(self, msg->value.renderer.parent, msg->value.renderer.child);
