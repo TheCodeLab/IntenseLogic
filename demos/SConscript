@@ -6,10 +6,15 @@ Import("libilcommon")
 Import("libilmath")
 Import("libilgraphics")
 
+demoenv = env.Clone()
+
+main_obj = demoenv.Object(target = build_dir + "/main.o",
+                          source = "main.c")
+
 def build_demo(name):
     src_dir = "#demos/" + name
-    inputs = "main.c %s/*.c %s/*.cpp" % (name, name)
-    demo = env.Clone()
+    inputs = "%s/*.c %s/*.cpp" % (name, name)
+    demo = demoenv.Clone()
     demo.Append(CPPPATH = src_dir, LIBS=['ilutil', 'ilcommon', 'ilmath', 'ilgraphics'])
     if platform == "mingw":
         demo.Append(LIBS=[])
@@ -17,7 +22,9 @@ def build_demo(name):
         demo.Append(LIBS=['dl', 'm'])
     if name == "bouncing-lights":
         demo.ParseConfig("pkg-config bullet --libs --cflags")
-    sources = []
+    demo.ParseConfig("pkg-config glew --libs --cflags")
+    demo.ParseConfig("pkg-config sdl2 --libs --cflags")
+    sources = [main_obj]
     for mod in Split(inputs):
         sources.extend(Glob(mod))
     binary = demo.Program(target = build_dir + "/" + name,
@@ -28,5 +35,6 @@ def build_demo(name):
     Depends(binary, libilgraphics)
 
 build_demo("noop")
+build_demo("box")
 
 Default(None)
