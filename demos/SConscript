@@ -1,11 +1,32 @@
 Import("platform")
 Import("env")
 Import("build_dir")
+Import("libilutil")
+Import("libilcommon")
+Import("libilmath")
+Import("libilgraphics")
 
-Export("platform")
-Export("env")
-Export("build_dir")
+def build_demo(name):
+    src_dir = "#demos/" + name
+    inputs = "main.c %s/*.c %s/*.cpp" % (name, name)
+    demo = env.Clone()
+    demo.Append(CPPPATH = src_dir, LIBS=['ilutil', 'ilcommon', 'ilmath', 'ilgraphics'])
+    if platform == "mingw":
+        demo.Append(LIBS=[])
+    else:
+        demo.Append(LIBS=['dl', 'm'])
+    if name == "bouncing-lights":
+        demo.ParseConfig("pkg-config bullet --libs --cflags")
+    sources = []
+    for mod in Split(inputs):
+        sources.extend(Glob(mod))
+    binary = demo.Program(target = build_dir + "/" + name,
+                          source = sources)
+    Depends(binary, libilutil)
+    Depends(binary, libilcommon)
+    Depends(binary, libilmath)
+    Depends(binary, libilgraphics)
 
-SConscript("bouncing-lights/SConscript")
+build_demo("noop")
+
 Default(None)
-
