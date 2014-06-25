@@ -1,5 +1,6 @@
 #include <SDL2/SDL.h>
 #include <time.h>
+#include <sys/time.h>
 #include <math.h>
 
 #include "graphics/context.h"
@@ -136,10 +137,10 @@ static void update_camera(const il_value *data, il_value *ctx)
 {
     (void)data;
     ilG_floatspace *fs = il_value_tomvoid(ctx);
-    struct timespec ts;
-    clock_gettime(CLOCK_REALTIME, &ts);
+    struct timeval ts;
+    gettimeofday(&ts, NULL);
     int secs = 5;
-    float delta = ((float)(ts.tv_sec%secs) + ts.tv_nsec / 1000000000.0) / secs;
+    float delta = ((float)(ts.tv_sec%secs) + ts.tv_usec / 1000000.0) / secs;
     il_vec3 v;
     v.x = sinf(delta * M_PI * 2) * 5;
     v.y = 0;
