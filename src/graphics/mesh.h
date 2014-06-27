@@ -1,19 +1,33 @@
 #ifndef ILG_MESH_H
 #define ILG_MESH_H
 
-#include "common/base.h"
-#include "graphics/bindable.h"
+#include <GL/glew.h>
 
-struct ilG_drawable3d;
 struct ilA_mesh;
 struct ilG_context;
 
-extern il_type ilG_mesh_type;
-extern const ilG_bindable ilG_mesh_bindable;
+typedef struct ilG_mesh {
+    GLuint vbo, vao;
+    GLint count;
+    GLenum type;
+    struct ilA_mesh *mesh;
+} ilG_mesh;
 
-struct ilG_drawable3d* ilG_mesh(const struct ilA_mesh* self, struct ilG_context *context);
+enum ilG_mesh_attribs {
+    ILG_MESH_ERROR,
+    ILG_MESH_POS,
+    ILG_MESH_TEX,
+    ILG_MESH_NORM,
+    ILG_MESH_AMBIENT,
+    ILG_MESH_DIFFUSE,
+    ILG_MESH_SPECULAR
+};
 
-struct ilG_drawable3d* ilG_mesh_fromfile(const char *name, struct ilG_context *context);
+int ilG_mesh_init(ilG_mesh *mesh, const struct ilA_mesh *source);
+int ilG_mesh_fromfile(ilG_mesh *mesh, const char *name);
+void ilG_mesh_free(ilG_mesh *mesh);
+enum ilG_mesh_attribs ilG_mesh_build(ilG_mesh *mesh, struct ilG_context *context);
+void ilG_mesh_bind(ilG_mesh *mesh);
+void ilG_mesh_draw(ilG_mesh *mesh);
 
 #endif
-

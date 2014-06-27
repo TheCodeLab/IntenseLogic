@@ -5,7 +5,6 @@
 #include "graphics/material.h"
 #include "asset/mesh.h"
 #include "graphics/fragdata.h"
-#include "graphics/arrayattrib.h"
 #include "graphics/mesh.h"
 #include "graphics/tex.h"
 #include "graphics/renderer.h"
@@ -14,8 +13,8 @@
 typedef struct ilG_heightmap {
     ilG_tex height, normal, color;
     ilG_material shader;
-    ilA_mesh *mesh;
-    ilG_drawable3d *drawable;
+    ilA_mesh *source;
+    ilG_mesh mesh;
     ilG_context *context;
     unsigned w,h;
     GLenum mvp, imt, size;
@@ -35,14 +34,13 @@ static void heightmap_draw(void *ptr, ilG_rendid id, il_mat **mats, const unsign
     ilG_tex_bind(&self->height);
     ilG_tex_bind(&self->normal);
     ilG_tex_bind(&self->color);
-    ilG_bindable_bind(&ilG_mesh_bindable, self->drawable);
+    ilG_mesh_bind(&self->mesh);
     ilG_material_bind(&self->shader);
     for (unsigned i = 0; i < num_mats; i++) {
         ilG_material_bindMatrix(&self->shader, self->mvp, mats[0][i]);
         ilG_material_bindMatrix(&self->shader, self->imt, mats[1][i]);
         glUniform2f(self->size, self->w, self->h);
-
-        ilG_bindable_action(&ilG_mesh_bindable, self->drawable);
+        ilG_mesh_draw(&self->mesh);
     }
 }
 
@@ -60,8 +58,9 @@ static bool heightmap_build(void *ptr, ilG_rendid id, ilG_context *context, ilG_
     self->mvp = ilG_material_getLoc(&self->shader, "mvp");
     self->imt = ilG_material_getLoc(&self->shader, "imt");
     self->size = ilG_material_getLoc(&self->shader, "size");
-    self->drawable = ilG_mesh(self->mesh, context);
-    ilA_mesh_free(self->mesh);
+    if (ILG_MESH_ERROR & ilG_mesh_build(&self->mesh, context)) {
+        return false;
+    }
     int *types = malloc(sizeof(int) * 2);
     types[0] = ILG_MVP;
     types[1] = ILG_INVERSE | ILG_MODEL | ILG_TRANSPOSE;
@@ -122,15 +121,17 @@ ilG_builder ilG_heightmap_builder(unsigned w, unsigned h, ilG_tex height, ilG_te
     self->height = height;
     self->normal = normal;
     self->color = color;
-    self->mesh = mesh;
+
+    ilG_mesh_init(&self->mesh, mesh);
+    ilA_mesh_free(mesh);
 
     ilG_material_init(&self->shader);
     ilG_material *mat = &self->shader;
     ilG_material_vertex_file(mat, "heightmap.vert");
     ilG_material_fragment_file(mat, "heightmap.frag");
     ilG_material_name(mat, "Heightmap Shader");
-    ilG_material_arrayAttrib(mat, ILG_ARRATTR_POSITION, "in_Position");
-    ilG_material_arrayAttrib(mat, ILG_ARRATTR_TEXCOORD, "in_Texcoord");
+    ilG_material_arrayAttrib(mat, ILG_MESH_POS, "in_Position");
+    ilG_material_arrayAttrib(mat, ILG_MESH_TEX, "in_Texcoord");
     ilG_material_textureUnit(mat, 0, "height_tex");
     ilG_material_textureUnit(mat, 1, "normal_tex");
     ilG_material_textureUnit(mat, 2, "ambient_tex");
