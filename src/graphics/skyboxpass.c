@@ -11,6 +11,7 @@
 typedef struct ilG_skybox {
     ilG_context *context;
     ilG_material material;
+    ilG_shape *box;
     ilG_tex texture;
     GLuint vp_loc;
 } ilG_skybox;
@@ -25,17 +26,16 @@ static void sky_view(void *ptr, ilG_rendid id, il_mat *mats)
 {
     (void)id;
     ilG_skybox *self = ptr;
-    ilG_context *context = self->context;
 
     ilG_testError("Unknown");
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
-    ilG_bindable_swap(&context->drawableb, (void**)&context->drawable, ilG_box(context));
+    ilG_shape_bind(self->box);
     ilG_material_bind(&self->material);
     ilG_material_bindMatrix(&self->material, self->vp_loc, mats[0]);
 
     ilG_tex_bind(&self->texture);
-    ilG_bindable_action(context->drawableb, context->drawable);
+    ilG_shape_draw(self->box);
     glEnable(GL_DEPTH_TEST);
     glClearDepth(1.0);
     glClear(GL_DEPTH_BUFFER_BIT);
@@ -50,6 +50,9 @@ static bool sky_build(void *ptr, ilG_rendid id, ilG_context *context, ilG_buildr
         return false;
     }
     self->vp_loc = ilG_material_getLoc(&self->material, "mat");
+
+    self->box = ilG_box(context);
+
     ilG_context_addName(context, id, "Skybox");
     int *types = malloc(1 * sizeof(int));
     types[0] = ILG_VIEW_R | ILG_PROJECTION;
