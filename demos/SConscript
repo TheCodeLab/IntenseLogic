@@ -36,5 +36,6 @@ def build_demo(name):
 
 build_demo("noop")
 build_demo("box")
+build_demo("teapots")
 
 Default(None)
