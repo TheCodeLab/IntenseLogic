@@ -1,9 +1,8 @@
 #version 140
 
-uniform vec3 position;
+uniform vec3 lightpos;
 uniform vec3 color;
 uniform float radius;
-uniform vec3 camera;
 uniform sampler2DRect depth;
 uniform sampler2DRect normal;
 uniform sampler2DRect diffuse;
@@ -46,17 +45,17 @@ void main()
 {
     // gl_FragCoord is from (.5, .5) to (w - .5, h - .5), depth texture is 0..1, feep's function wants (0,0,-1)..(1,1,1)
     vec3 pos = screen_to_world(vec3(gl_FragCoord.xy / size, texture(depth, gl_FragCoord.xy).x) * 2 - 1);
-    vec3 light_dir = normalize(position - pos);
+    vec3 light_dir = normalize(lightpos - pos);
     vec3 norm = texture(normal, gl_FragCoord.xy).xyz * vec3(2) - vec3(1);
-    float dist = length(position - pos) / radius;
+    float dist = length(lightpos - pos) / radius;
     float daf = max(0, 1 - dist);
 
     vec3 col = vec3(0);
-    vec3 diffuse = texture(diffuse, gl_FragCoord.xy).xyz; 
+    vec3 diffuse = texture(diffuse, gl_FragCoord.xy).xyz;
     col = diffuse * vec3(max(0, dot(light_dir, norm)));
     vec4 spec = texture(specular, gl_FragCoord.xy);
     vec3 reflection = normalize(-reflect(light_dir, norm));
-    vec3 viewer = normalize(camera - pos);
+    vec3 viewer = normalize(-pos); // camera space
     col += spec.xyz * pow(max(0, dot(reflection, viewer)), spec.w * 255);
 
     out_Color = max(vec3(0), col * daf * color);
@@ -64,4 +63,3 @@ void main()
     out_Diffuse = vec3(0);
     out_Specular = vec3(0);
 }
-

@@ -1,13 +1,11 @@
 #include "lightpass.h"
 
 #include "graphics/context.h"
-#include "graphics/bindable.h"
 #include "graphics/material.h"
 #include "graphics/shape.h"
 #include "graphics/fragdata.h"
 #include "graphics/arrayattrib.h"
 #include "graphics/renderer.h"
-#include "graphics/drawable3d.h"
 #include "math/vector.h"
 #include "math/matrix.h"
 #include "util/log.h"
@@ -18,6 +16,7 @@ typedef struct ilG_lights {
     GLint lights_size, mvp_size, lights_offset[3], mvp_offset[1], position_loc, color_loc, radius_loc, mvp_loc, ivp_loc, size_loc;
     ilG_material material;
     int invalidated;
+    ilG_shape *ico;
 } ilG_lights;
 
 static void lights_free(void *ptr)
@@ -35,8 +34,7 @@ static void lights_draw(void *ptr, ilG_rendid id, il_mat **mats, const unsigned 
     (void)id, (void)objects;
     ilG_lights *self = ptr;
     ilG_context *context = self->context;
-    ilG_drawable3d *drawable = ilG_icosahedron(context);
-    ilG_bindable_bind(&ilG_shape_bindable, drawable);
+    ilG_shape_bind(self->ico);
     ilG_material_bind(&self->material);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_RECTANGLE, context->fbtextures[0]);
@@ -80,7 +78,7 @@ static void lights_draw(void *ptr, ilG_rendid id, il_mat **mats, const unsigned 
         glGenBuffers(1, &context->lightdata.lights_ubo);
         glGenBuffers(1, &context->lightdata.mvp_ubo);
         glBindBuffer(GL_UNIFORM_BUFFER, context->lightdata.lights_ubo);
-        GLubyte *lights_buf = calloc(1, context->lightdata.lights_size);        
+        GLubyte *lights_buf = calloc(1, context->lightdata.lights_size);
         unsigned int i;
         for (i = 0; i < context->lights.length; i++) {
             ((il_Vector3*)lights_buf + context->lightdata.lights_offset[0])[i] = context->lights.data[i]->positionable->position;
@@ -92,7 +90,7 @@ static void lights_draw(void *ptr, ilG_rendid id, il_mat **mats, const unsigned 
         free(lights_buf);
         GLubyte *mvp_buf = calloc(1, context->lightdata.mvp_size);
         for (i = 0; i < context->lights.length; i++) {
-            ((il_Matrix*)mvp_buf + context->lightdata.mvp_offset[0])[i] = 
+            ((il_Matrix*)mvp_buf + context->lightdata.mvp_offset[0])[i] =
                 il_Matrix_transpose(ilG_computeMVP(context->camera, context->lights.data[i]->positionable));
         }
         glBufferData(GL_UNIFORM_BUFFER, context->lightdata.mvp_size, mvp_buf, GL_DYNAMIC_DRAW);
@@ -112,15 +110,11 @@ static void lights_draw(void *ptr, ilG_rendid id, il_mat **mats, const unsigned 
         il_vec3 col = l->color;
         glUniform3f(self->color_loc, col.x, col.y, col.z);
         glUniform1f(self->radius_loc, l->radius);
-        ilG_bindable_action(&ilG_shape_bindable, drawable);
+        ilG_shape_draw(self->ico);
         //glDrawElements(GL_TRIANGLES, sizeof(indices)/sizeof(GLuint), GL_UNSIGNED_INT, NULL);
     }
     //glDrawElementsInstanced(GL_TRIANGLES, sizeof(indices)/sizeof(GLuint), GL_UNSIGNED_INT, NULL, context->lights.length);
     glDisable(GL_BLEND);
-    context->drawable = NULL;
-    context->material = NULL;
-    context->drawableb = NULL;
-    context->materialb = NULL;
     ilG_testError("Error drawing lights");
 }
 
@@ -132,7 +126,8 @@ static bool lights_build(void *ptr, ilG_rendid id, ilG_context *context, ilG_bui
     if (ilG_material_link(&self->material, context)) {
         return false;
     }
-    self->position_loc  = glGetUniformLocation(self->material.program, "position");
+    self->ico = ilG_icosahedron(context);
+    self->position_loc  = glGetUniformLocation(self->material.program, "lightpos");
     self->color_loc     = glGetUniformLocation(self->material.program, "color");
     self->radius_loc    = glGetUniformLocation(self->material.program, "radius");
     self->mvp_loc       = glGetUniformLocation(self->material.program, "mvp");

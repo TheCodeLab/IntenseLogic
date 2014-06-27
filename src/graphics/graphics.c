@@ -127,7 +127,6 @@ void il_configure_ilgraphics(il_modopts *opts)
     }
 }
 
-void ilG_shape_init();
 void ilG_quad_init();
 int il_load_ilgraphics()
 {
@@ -140,7 +139,6 @@ int il_load_ilgraphics()
     //glfw_setup();
     sdl_setup();
 
-    ilG_shape_init();
     ilG_quad_init();
 
     // register events

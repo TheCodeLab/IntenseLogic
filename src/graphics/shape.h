@@ -1,16 +1,12 @@
 #ifndef IL_GRAPHICS_SHAPE_H
 #define IL_GRAPHICS_SHAPE_H
 
-#include "common/base.h"
-
-struct ilG_drawable3d;
 struct ilG_context;
+typedef struct ilG_shape ilG_shape;
 
-struct ilG_drawable3d* ilG_box(struct ilG_context *context);
-struct ilG_drawable3d* ilG_icosahedron(struct ilG_context *context);
-
-extern il_type ilG_shape_type;
-extern struct ilG_bindable ilG_shape_bindable;
+ilG_shape* ilG_box(struct ilG_context *context);
+ilG_shape* ilG_icosahedron(struct ilG_context *context);
+void ilG_shape_bind(ilG_shape *shape);
+void ilG_shape_draw(ilG_shape *shape);
 
 #endif
-
