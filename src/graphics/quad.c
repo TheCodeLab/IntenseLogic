@@ -2,68 +2,36 @@
 
 #include <GL/glew.h>
 
-#include "graphics/drawable3d.h"
 #include "graphics/context.h"
 #include "graphics/arrayattrib.h"
 #include "graphics/bindable.h"
 
-struct quad {
-    ilG_drawable3d drawable;
+struct ilG_quad {
     GLuint vbo, vao;
     int valid;
 };
 
-il_type ilG_quad_type = {
-    .typeclasses = NULL,
-    .storage = {NULL},
-    .constructor = NULL,
-    .destructor = NULL,
-    .copy = NULL,
-    .name = "il.graphics.gui.quad",
-    .size = sizeof(struct quad),
-    .parent = &ilG_drawable3d_type
-};
-
-static void quad_bind(void *obj)
+static void quad_free(void *ptr)
 {
-    struct quad *q = obj;
-    glBindBuffer(GL_ARRAY_BUFFER, q->vbo);
-    glBindVertexArray(q->vao);
+    ilG_quad *self = ptr;
+    glDeleteBuffers(1, &self->vbo);
+    glDeleteBuffers(1, &self->vao);
+    free(self);
 }
 
-static void quad_draw(void *obj)
+ilG_quad *ilG_quad_get(ilG_context* context)
 {
-    (void)obj;
-    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-}
-
-static ilG_bindable quad_bindable = {
-    .name = "il.graphics.bindable",
-    .bind = quad_bind,
-    .action = quad_draw
-};
-
-void ilG_quad_init()
-{
-    il_impl(&ilG_quad_type, &quad_bindable);
-}
-
-ilG_drawable3d *ilG_quad(ilG_context* context)
-{
-    static float verts[] = {
+    static const float verts[] = {
         0.f, 0.f,
         1.f, 0.f,
         1.f, 1.f,
         0.f, 1.f,
     };
-    struct quad *q = il_table_mgetsp(&context->storage, "gui.quad");
+    ilG_quad *q = il_table_mgetsp(&context->storage, "quad");
     if (q) {
-        return &q->drawable;
+        return q;
     }
-    q = il_new(&ilG_quad_type);
-    q->drawable.context = context;
-    q->drawable.name = "Fullscreen Quad";
-    ILG_SETATTR(q->drawable.attrs, ILG_ARRATTR_POSITION);
+    q = calloc(1, sizeof(ilG_quad));
     glGenBuffers(1, &q->vbo);
     glGenVertexArrays(1, &q->vao);
     glBindBuffer(GL_ARRAY_BUFFER, q->vbo);
@@ -73,8 +41,18 @@ ilG_drawable3d *ilG_quad(ilG_context* context)
     glVertexAttribPointer(ILG_ARRATTR_TEXCOORD, 2, GL_FLOAT, GL_FALSE, 0, NULL);
     glEnableVertexAttribArray(ILG_ARRATTR_POSITION);
     glEnableVertexAttribArray(ILG_ARRATTR_TEXCOORD);
-    q->valid = 1;
-    il_table_setsp(&context->storage, "gui.quad", il_opaque(q, il_unref));
-    return &q->drawable;
+    il_table_setsp(&context->storage, "quad", il_opaque(q, quad_free));
+    return q;
 }
 
+void ilG_quad_bind(ilG_quad *q)
+{
+    glBindBuffer(GL_ARRAY_BUFFER, q->vbo);
+    glBindVertexArray(q->vao);
+}
+
+void ilG_quad_draw(ilG_quad *q)
+{
+    (void)q;
+    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+}

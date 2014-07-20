@@ -35,7 +35,9 @@ def build_demo(name):
     Depends(binary, libilgraphics)
 
 build_demo("noop")
+build_demo("quad")
 build_demo("box")
 build_demo("teapots")
+build_demo("bouncing-lights")
 
 Default(None)
