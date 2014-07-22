@@ -26,6 +26,7 @@ static void quad_draw(void *obj, ilG_rendid id)
     (void)id;
     struct quad *q = obj;
     ilG_material_bind(&q->mat);
+    ilG_quad_bind(q->quad);
     ilG_quad_draw(q->quad);
 }
 
@@ -43,6 +44,7 @@ static bool quad_build(void *obj, ilG_rendid id, ilG_context *context, ilG_build
     if (ilG_material_link(&q->mat, context)) {
         return false;
     }
+    q->quad = ilG_quad_get(context);
 
     memset(out, 0, sizeof(ilG_buildresult));
     out->free = quad_free;
