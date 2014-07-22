@@ -32,6 +32,7 @@ enum ilG_transform {
     ILG_VP = ILG_PROJECTION | ILG_VIEW,
     ILG_MODEL = ILG_MODEL_R | ILG_MODEL_T | ILG_MODEL_S,
     ILG_MVP = ILG_VP | ILG_MODEL,
+    ILG_IMT = ILG_MODEL | ILG_VIEW_T | ILG_TRANSPOSE | ILG_INVERSE,
 };
 /*il_mat ilG_computeMVP(enum ilG_transform filter, const ilG_camera *camera,
     const il_positionable * object);

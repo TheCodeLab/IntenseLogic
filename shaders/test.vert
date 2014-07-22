@@ -22,8 +22,7 @@ void main()
     texcoord = in_Texcoord;
     vec4 normal4 = vec4(in_Normal, 0.0) * imt;
     normal = normal4.xyz;
-    ambient = in_Diffuse;//in_Ambient;
+    ambient = normal;//in_Diffuse;//in_Ambient;
     diffuse = in_Diffuse;
-    specular = in_Specular;
+    specular = vec4(.5,.5,.5,96/255.f);//in_Specular;
 }
-

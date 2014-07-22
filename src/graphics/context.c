@@ -134,6 +134,7 @@ ilG_context *ilG_context_new()
     self->experimental = 1;
     self->startWidth = 800;
     self->startHeight = 600;
+    self->vsync = 1;
     self->initialTitle = "IntenseLogic";
     self->tick      = ilE_handler_new_with_name("il.graphics.context.tick");
     self->resize    = ilE_handler_new_with_name("il.graphics.context.resize");

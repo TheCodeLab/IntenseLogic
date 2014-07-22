@@ -3,6 +3,7 @@
 
 #include "graphics/renderer.h"
 
-ilG_builder ilG_lights_builder();
+ilG_builder ilG_pointlight_builder();
+ilG_builder ilG_sunlight_builder();
 
 #endif

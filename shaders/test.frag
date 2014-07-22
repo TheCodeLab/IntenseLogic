@@ -16,8 +16,7 @@ uniform sampler2D tex;
 void main()
 {
     out_Normal = normal;
-    out_Ambient = texture(tex, texcoord) * vec4(.5, .5, .5, 1.0); 
+    out_Ambient = texture(tex, texcoord) * vec4(.5, .5, .5, 1.0);
     out_Diffuse = diffuse;
     out_Specular = vec4(specular.xyz, specular.w);
 }
-

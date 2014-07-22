@@ -1,13 +1,12 @@
 #version 140
 
-uniform vec3 lightpos;
 uniform vec3 color;
 uniform float radius;
 uniform sampler2DRect depth;
 uniform sampler2DRect normal;
 uniform sampler2DRect diffuse;
 uniform sampler2DRect specular;
-uniform mat4 mvp;
+uniform mat4 mv;
 uniform mat4 ivp;
 uniform vec2 size;
 
@@ -41,20 +40,27 @@ vec3 screen_to_world(vec3 sp)
     return res.xyz/res.w;
 }
 
+vec3 get_lightpos()
+{
+    vec4 res = mv * vec4(0,0,0, 1);
+    return res.xyz / res.w;
+}
+
 void main()
 {
     // gl_FragCoord is from (.5, .5) to (w - .5, h - .5), depth texture is 0..1, feep's function wants (0,0,-1)..(1,1,1)
     vec3 pos = screen_to_world(vec3(gl_FragCoord.xy / size, texture(depth, gl_FragCoord.xy).x) * 2 - 1);
-    vec3 light_dir = normalize(lightpos - pos);
+    vec3 lightpos = get_lightpos();
+    vec3 lightdir = normalize(lightpos - pos);
     vec3 norm = texture(normal, gl_FragCoord.xy).xyz * vec3(2) - vec3(1);
     float dist = length(lightpos - pos) / radius;
     float daf = max(0, 1 - dist);
 
     vec3 col = vec3(0);
     vec3 diffuse = texture(diffuse, gl_FragCoord.xy).xyz;
-    col = diffuse * vec3(max(0, dot(light_dir, norm)));
+    col += diffuse * vec3(max(0, dot(lightdir, norm)));
     vec4 spec = texture(specular, gl_FragCoord.xy);
-    vec3 reflection = normalize(-reflect(light_dir, norm));
+    vec3 reflection = normalize(reflect(norm, lightdir));
     vec3 viewer = normalize(-pos); // camera space
     col += spec.xyz * pow(max(0, dot(reflection, viewer)), spec.w * 255);
 

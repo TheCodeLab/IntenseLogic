@@ -25,7 +25,7 @@ struct teapot {
     ilG_material mat;
     ilG_mesh mesh;
     ilG_tex tex;
-    GLuint mvp_loc;
+    GLuint mvp_loc, imt_loc;
 };
 
 static void teapot_draw(void *obj, ilG_rendid id, il_mat **mats, const unsigned *objects, unsigned num_mats)
@@ -37,6 +37,7 @@ static void teapot_draw(void *obj, ilG_rendid id, il_mat **mats, const unsigned 
     ilG_tex_bind(&t->tex);
     for (unsigned i = 0; i < num_mats; i++) {
         ilG_material_bindMatrix(&t->mat, t->mvp_loc, mats[0][i]);
+        ilG_material_bindMatrix(&t->mat, t->imt_loc, mats[1][i]);
         ilG_mesh_draw(&t->mesh);
     }
 }
@@ -57,6 +58,7 @@ static bool teapot_build(void *obj, ilG_rendid id, ilG_context *context, ilG_bui
         return false;
     }
     t->mvp_loc = ilG_material_getLoc(&t->mat, "mvp");
+    t->imt_loc = ilG_material_getLoc(&t->mat, "imt");
 
     if (!ilG_mesh_build(&t->mesh, context)) {
         return false;
@@ -65,12 +67,13 @@ static bool teapot_build(void *obj, ilG_rendid id, ilG_context *context, ilG_bui
     ilG_tex_build(&t->tex, context);
 
     memset(out, 0, sizeof(ilG_buildresult));
-    int *types = calloc(1, sizeof(int));
+    int *types = calloc(2, sizeof(int));
     types[0] = ILG_MVP;
+    types[1] = ILG_IMT;
     out->free = teapot_free;
     out->draw = teapot_draw;
     out->types = types;
-    out->num_types = 1;
+    out->num_types = 2;
     out->obj = obj;
     return true;
 }
@@ -122,9 +125,10 @@ void demo_start()
 {
     ilG_context *context = ilG_context_new();
     ilG_context_hint(context, ILG_CONTEXT_DEBUG_RENDER, 1);
+    ilG_context_hint(context, ILG_CONTEXT_VSYNC, 1);
     ilG_handle geom, lights, out, teapot;
     geom = ilG_build(ilG_geometry_builder(), context);
-    lights = ilG_build(ilG_lights_builder(), context);
+    lights = ilG_build(ilG_sunlight_builder(), context);
     out = ilG_build(ilG_out_builder(), context);
     teapot = ilG_build(teapot_builder(), context);
 
@@ -148,7 +152,7 @@ void demo_start()
     ilG_floatspace_addPos(fs, lights, lightp);
 
     ilG_light lightl;
-    lightl.color = il_vec3_new(.8, .7, .2);
+    lightl.color = il_vec3_new(.8*2, .7*2, .2*2);
     lightl.radius = 50;
     ilG_handle_addLight(lights, lightl);
 
@@ -160,7 +164,7 @@ void demo_start()
 
     SDL_Event ev;
     while (1) {
-        if (SDL_PollEvent(&ev)) {
+        while (SDL_PollEvent(&ev)) {
             switch (ev.type) {
             case SDL_QUIT:
                 il_log("Stopping");
@@ -172,3 +176,6 @@ void demo_start()
         nanosleep(&t, &t);
     }
 }
+
+/*  LocalWords:  il
+ */

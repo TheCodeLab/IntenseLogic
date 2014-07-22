@@ -88,11 +88,6 @@ static void sdl_setup()
     ilG_registerSdlInputBackend();
 }
 
-static void event_setup()
-{
-    ilE_register(ilE_shutdown, ILE_DONTCARE, ILE_MAIN, &quit, il_value_nil());
-}
-
 const char **il_preload_ilgraphics()
 {
     static const char *deps[] = {
@@ -127,7 +122,6 @@ void il_configure_ilgraphics(il_modopts *opts)
     }
 }
 
-void ilG_quad_init();
 int il_load_ilgraphics()
 {
     if (!ilG_shaders_dir) {
@@ -135,15 +129,8 @@ int il_load_ilgraphics()
         ilG_shaders_dir = ilA_stdiodir(path, &ilG_shaders_iface);
         ilA_path_free(path);
     }
-
-    //glfw_setup();
     sdl_setup();
-
-    ilG_quad_init();
-
-    // register events
-    event_setup();
-
+    ilE_register(ilE_shutdown, ILE_DONTCARE, ILE_MAIN, &quit, il_value_nil());
     return 0;
 }
 
