@@ -8,8 +8,7 @@ extern "C" {
 #include "graphics/material.h"
 }
 
-namespace il {
-namespace bouncinglights {
+namespace BouncingLights {
 
 struct Vertex {
     Vertex(const btVector3 &pos, const btVector3 &col) :
@@ -21,18 +20,24 @@ struct Vertex {
 };
 
 class DebugDraw : public btIDebugDraw {
-    ilG_material *mat;
+    ilG_material mat;
     std::vector<Vertex> lines;
     GLuint vbo, vao;
+    GLuint vp_loc;
     int debugMode;
     unsigned count;
     ilG_context *context;
-    static void constructor_cb(void*);
+
     static void upload_cb(void*);
+    static void view(void *ptr, ilG_rendid id, il_mat *mats);
+    static void free(void *ptr);
+    static bool build(void *ptr, ilG_rendid id, ilG_context *context, ilG_buildresult *out);
 public:
-    DebugDraw(ilG_context *ctx);
+    DebugDraw();
+
+    ilG_builder builder();
+
     void render();
-    void compile();
     void upload();
     void drawLine(const btVector3 &from, const btVector3 &to, const btVector3 &color);
     void drawLine(const btVector3 &from, const btVector3 &to, const btVector3 &fromColor, const btVector3 &toColor);
@@ -44,5 +49,3 @@ public:
 };
 
 }
-}
-

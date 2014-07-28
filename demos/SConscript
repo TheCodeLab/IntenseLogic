@@ -10,12 +10,14 @@ demoenv = env.Clone()
 
 main_obj = demoenv.Object(target = build_dir + "/main.o",
                           source = "main.c")
+helper_obj = demoenv.Object(target = build_dir + "/helper.o",
+                            source = "helper.c")
 
 def build_demo(name):
     src_dir = "#demos/" + name
     inputs = "%s/*.c %s/*.cpp" % (name, name)
     demo = demoenv.Clone()
-    demo.Append(CPPPATH = src_dir, LIBS=['ilutil', 'ilcommon', 'ilmath', 'ilgraphics'])
+    demo.Append(CPPPATH = [src_dir, "#demos/"], LIBS=['ilutil', 'ilcommon', 'ilmath', 'ilasset', 'ilgraphics'])
     if platform == "mingw":
         demo.Append(LIBS=[])
     else:
@@ -24,7 +26,7 @@ def build_demo(name):
         demo.ParseConfig("pkg-config bullet --libs --cflags")
     demo.ParseConfig("pkg-config glew --libs --cflags")
     demo.ParseConfig("pkg-config sdl2 --libs --cflags")
-    sources = [main_obj]
+    sources = [main_obj, helper_obj]
     for mod in Split(inputs):
         sources.extend(Glob(mod))
     binary = demo.Program(target = build_dir + "/" + name,

@@ -4,12 +4,10 @@
 #include <LinearMath/btIDebugDraw.h>
 
 using namespace std;
-using namespace il::bouncinglights;
+using namespace BouncingLights;
 
 extern "C" {
 #include "common/world.h"
-#include "common/world.h"
-#include "graphics/camera.h"
 #include "graphics/glutil.h"
 #include "math/matrix.h"
 #include "graphics/renderer.h"
@@ -19,9 +17,52 @@ extern "C" {
 #include "util/log.h"
 }
 
-void DebugDraw::constructor_cb(void *ptr)
+DebugDraw::DebugDraw()
 {
-    DebugDraw *self = (DebugDraw*)ptr;
+    debugMode = DBG_DrawAabb;
+    ilG_material_init(&this->mat);
+    ilG_material *mat = &this->mat;
+    ilG_material_vertex_file(mat, "bullet-debug.vert");
+    ilG_material_fragment_file(mat, "bullet-debug.frag");
+    ilG_material_name(mat, "Bullet Line Renderer");
+    ilG_material_arrayAttrib(mat, ILG_ARRATTR_POSITION, "in_Position");
+    ilG_material_arrayAttrib(mat, ILG_ARRATTR_AMBIENT, "in_Ambient");
+    ilG_material_fragData(mat, ILG_FRAGDATA_ACCUMULATION, "out_Color");
+    count = 0;
+}
+
+void DebugDraw::view(void *ptr, ilG_rendid id, il_mat *mats)
+{
+    (void)id;
+    DebugDraw *self = reinterpret_cast<DebugDraw*>(ptr);
+    glDisable(GL_BLEND);
+    glDisable(GL_CULL_FACE);
+    glEnable(GL_DEPTH_TEST);
+    ilG_material_bind(&self->mat);
+    ilG_material_bindMatrix(&self->mat, self->vp_loc, mats[0]);
+    glBindVertexArray(self->vao);
+    glBindBuffer(GL_ARRAY_BUFFER, self->vbo);
+    glDrawArrays(GL_LINES, 0, self->count);
+}
+
+void DebugDraw::free(void *ptr)
+{
+    DebugDraw *debugdraw = reinterpret_cast<DebugDraw*>(ptr);
+    delete debugdraw;
+}
+
+bool DebugDraw::build(void *ptr, ilG_rendid id, ilG_context *context, ilG_buildresult *out)
+{
+    (void)id;
+    DebugDraw *self = reinterpret_cast<DebugDraw*>(ptr);
+
+    self->context = context;
+
+    if (ilG_material_link(&self->mat, context)) {
+        return false;
+    }
+    self->vp_loc = ilG_material_getLoc(&self->mat, "vp");
+
     glGenBuffers(1, &self->vbo);
     glGenVertexArrays(1, &self->vao);
     glBindBuffer(GL_ARRAY_BUFFER, self->vbo);
@@ -31,35 +72,20 @@ void DebugDraw::constructor_cb(void *ptr)
     glEnableVertexAttribArray(ILG_ARRATTR_POSITION);
     glEnableVertexAttribArray(ILG_ARRATTR_AMBIENT);
     glBufferData(GL_ARRAY_BUFFER, 0, NULL, GL_DYNAMIC_DRAW);
+
+    memset(out, 0, sizeof(ilG_buildresult));
+    int *types = reinterpret_cast<int*>(calloc(1, sizeof(int)));
+    types[0] = ILG_VP;
+    out->free = &DebugDraw::free;
+    out->view = &DebugDraw::view;
+    out->types = types;
+    out->num_types = 1;
+    return true;
 }
 
-DebugDraw::DebugDraw(ilG_context *ctx) : context(ctx)
+ilG_builder DebugDraw::builder()
 {
-    debugMode = DBG_DrawAabb;
-    mat = (ilG_material*)ilG_material_new();
-    ilG_material_name(mat, "Bullet Line Renderer");
-    ilG_material_arrayAttrib(mat, ILG_ARRATTR_POSITION, "in_Position");
-    ilG_material_arrayAttrib(mat, ILG_ARRATTR_AMBIENT, "in_Ambient");
-    ilG_material_fragData(mat, ILG_FRAGDATA_ACCUMULATION, "out_Color");
-    ilG_material_matrix(mat, ILG_VP, "vp");
-    ilG_context_upload(context, constructor_cb, this);
-    compile();
-    count = 0;
-}
-
-void DebugDraw::render()
-{
-    //printf("render: %u\n", count/2);
-    glDisable(GL_BLEND);
-    glDisable(GL_CULL_FACE);
-    glEnable(GL_DEPTH_TEST);
-    ilG_bindable_unbind(context->drawableb, context->drawable);
-    context->drawable = NULL;
-    context->drawableb = NULL;
-    ilG_bindable_swap(&context->materialb, (void**)&context->material, mat);
-    glBindVertexArray(vao);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glDrawArrays(GL_LINES, 0, count);
+    return ilG_builder_wrap(this, &DebugDraw::build);
 }
 
 void DebugDraw::upload_cb(void *ptr)
@@ -74,15 +100,6 @@ void DebugDraw::upload_cb(void *ptr)
 void DebugDraw::upload()
 {
     ilG_context_upload(context, upload_cb, this);
-}
-
-void DebugDraw::compile()
-{
-    ilG_material_vertex_file(mat, "bullet-debug.vert");
-    ilG_material_fragment_file(mat, "bullet-debug.frag");
-    if (ilG_material_link(mat, context)) {
-
-    }
 }
 
 void DebugDraw::drawLine(const btVector3 &from, const btVector3 &to, const btVector3 &color)
@@ -121,4 +138,3 @@ void DebugDraw::drawContactPoint(const btVector3 &PointOnB, const btVector3 &nor
 {
     (void)PointOnB; (void)normalOnB; (void)distance; (void)lifeTime; (void)color;
 }
-
