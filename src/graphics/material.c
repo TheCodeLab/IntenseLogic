@@ -32,6 +32,7 @@ char *strdup(const char*);
 
 void ilG_material_init(ilG_material *mtl)
 {
+    memset(mtl, 0, sizeof(ilG_material));
     mtl->config = calloc(1, sizeof(struct ilG_material_config));
 }
 

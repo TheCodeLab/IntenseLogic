@@ -14,6 +14,7 @@
 
 int ilG_mesh_init(ilG_mesh *mesh, const ilA_mesh* self)
 {
+    memset(mesh, 0, sizeof(ilG_mesh));
     static GLenum mapping[] = {
         GL_POINTS,                  //ILA_MESH_POINTS
         GL_LINES,                   //ILA_MESH_LINES
