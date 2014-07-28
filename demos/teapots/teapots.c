@@ -163,19 +163,12 @@ void demo_start()
     ilG_context_start(context);
 
     SDL_Event ev;
-    while (1) {
-        while (SDL_PollEvent(&ev)) {
-            switch (ev.type) {
-            case SDL_QUIT:
-                il_log("Stopping");
-                ilG_context_stop(context);
-                return;
-            }
+    while (SDL_WaitEvent(&ev)) {
+        switch (ev.type) {
+        case SDL_QUIT:
+            il_log("Stopping");
+            ilG_context_stop(context);
+            return;
         }
-        struct timespec t = {0, 50 * 1000 * 1000};
-        nanosleep(&t, &t);
     }
 }
-
-/*  LocalWords:  il
- */
