@@ -20,9 +20,8 @@ void compute_normal()
 
 void main()
 {
-    float height = texture(height_tex, in_Position.xy).x;
-    gl_Position = mvp * vec4(in_Position.x, height, in_Position.y, 1.0);
+    float height = texture(height_tex, in_Position.xy).x - .5;
+    gl_Position = mvp * vec4(in_Position.x - .5, height, in_Position.y - .5, 1.0);
     compute_normal();
     texcoord = in_Position.xy;
 }
-
