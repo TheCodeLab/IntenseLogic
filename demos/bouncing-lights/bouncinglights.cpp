@@ -37,70 +37,6 @@ extern "C" {
 #define ex extern "C"
 #endif
 
-/*
-
-ex void add_ball(il_positionable *pos)
-{
-    il_quat r = il_positionable_getRotation(pos);
-    btQuaternion rot = btQuaternion(r.x, r.y, r.z, r.w);
-    il_vec3 p = il_positionable_getPosition(pos);
-    btVector3 vec = btVector3(p.x, p.y, p.z);
-    btDefaultMotionState *state = new btDefaultMotionState(btTransform(rot, vec));
-    float mass = 1.f;
-    btVector3 inertia(0,0,0);
-    ball_shape->calculateLocalInertia(mass, inertia);
-    btRigidBody::btRigidBodyConstructionInfo ballRigidBodyCI(mass, state, ball_shape, inertia);
-    btRigidBody* ballRigidBody = new btRigidBody(ballRigidBodyCI);
-    ballRigidBody->setRestitution(1.0);
-    dynamicsWorld->addRigidBody(ballRigidBody);
-    il_storage_void sv;
-    sv.data = ballRigidBody;
-    sv.dtor = [](void *p) {delete (btRigidBody*)p;};
-    il_table_setsp(il_positionable_mgetStorage(pos), "rigidbody", sv);
-}
-
-ex void update(int debug)
-{
-    player->setWalkDirection(playerWalk);
-    dynamicsWorld->stepSimulation(1/20.f, 10, 1/60.f);
-    il_positionable pos;
-    unsigned i;
-    for (pos = il_world_iter(world), i = 0; i < il_world_numPositionables(world); pos = il_world_next(&pos), i++) {
-        btRigidBody *body = (btRigidBody*)il_table_mgetsp(il_positionable_mgetStorage(&pos), "rigidbody");
-        if (!body) {
-            continue;
-        }
-        btTransform trans;
-        body->getMotionState()->getWorldTransform(trans);
-        btVector3 vec = trans.getOrigin();
-        il_vec3 position;
-        position.x = vec.getX();
-        position.y = vec.getY();
-        position.z = vec.getZ();
-        //position.w = 1.0;
-        il_positionable_setPosition(&pos, position);
-        btQuaternion rot = trans.getRotation();
-        il_quat rotation;
-        rotation.x = rot.getX();
-        rotation.y = rot.getY();
-        rotation.z = rot.getZ();
-        rotation.w = rot.getW();
-        il_positionable_setRotation(&pos, rotation);
-    }
-    btTransform trans = ghostObject->getWorldTransform();
-    btVector3 vec = trans.getOrigin();
-    il_vec3 position;
-    position.x = vec.x();
-    position.y = vec.y();
-    position.z = vec.z();
-    il_positionable_setPosition(&camera->positionable, position);
-    if (debug) {
-        dynamicsWorld->debugDrawWorld();
-        debugdraw->upload();
-    }
-}
-*/
-
 void add_objects(BulletSpace &bs, BallRenderer &ball, ilG_handle lights, ilG_handle r, btCollisionShape *shape, unsigned num, unsigned *seedp)
 {
     for (unsigned i = 0; i < num; i++) {
@@ -129,10 +65,18 @@ void add_objects(BulletSpace &bs, BallRenderer &ball, ilG_handle lights, ilG_han
     }
 }
 
-static void gtick(const il_value *data, il_value ctx)
+struct gtick_ctx {
+    gtick_ctx(BulletSpace &bs, ilG_context *context) : bs(bs), context(context)
+    {}
+    BulletSpace &bs;
+    ilG_context *context;
+};
+
+static void gtick(const il_value *data, il_value *ctx)
 {
-    BulletSpace &world = *reinterpret_cast<BulletSpace*>(il_value_tomvoid(ctx));
-    world.projection = il_mat_perspective(45, 4/3.f, .5, 1000);
+    (void)data;
+    gtick_ctx &c = *reinterpret_cast<gtick_ctx*>(il_value_tomvoid(ctx));
+    c.bs.projection = il_mat_perspective(45, c.context->width / (float)c.context->height, .5, 1000);
 }
 
 #include <fenv.h>
@@ -253,6 +197,12 @@ ex void demo_start()
     ilG_handle_addRenderer(h.geom, ball_r);
     unsigned seed = time(NULL);
     add_objects(world, ball, h.lights, ball_r, &ball_shape, 100, &seed);
+
+    gtick_ctx ctx(world, context);
+    il_storage_void sv;
+    sv.data = &ctx;
+    sv.dtor = NULL;
+    ilE_register(context->tick, ILE_DONTCARE, ILE_ANY, gtick, il_value_opaque(sv));
 
     ilG_context_start(context);
 
