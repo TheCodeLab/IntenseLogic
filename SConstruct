@@ -16,9 +16,6 @@ cxxflags  = "-std=c++11 -isystem-prefixbullet"
 linkflags = "-L."
 if platform == "mingw":
     cflags += " -DWIN32 -I/usr/x86_64-w64-mingw32/include/luajit-2.1 " # TODO: Fix this
-    linkflags += " -Wl,--export-all-symbols"
-else:
-    linkflags += " -rdynamic" # assume ELF because I'm terrible
 
 # build path
 build_dir_raw = ARGUMENTS.get("build_dir", "build")
