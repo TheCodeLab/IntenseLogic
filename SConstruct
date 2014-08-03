@@ -43,7 +43,7 @@ if build_mode != "release":
 # glGetError
 geterror = ARGUMENTS.get("geterror", "false")
 if geterror != "false":
-    ccflags += "-DILG_ENABLE_GETERROR"
+    ccflags += " -DILG_ENABLE_GETERROR"
 
 # create environment
 env = Environment(ENV=os.environ)
