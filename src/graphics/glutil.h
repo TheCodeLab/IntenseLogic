@@ -12,8 +12,12 @@ const char * ilG_strerror(GLenum err);
 void ilG_testError_(const char *file, int line, const char *func,
   const char* fmt, ...);
 
+#ifdef ILG_ENABLE_GETERROR
 #define ilG_testError(...) ilG_testError_(__FILE__, __LINE__, \
   __func__, __VA_ARGS__);
+#else
+#define ilG_testError(...)
+#endif
 #define IL_GRAPHICS_TESTERROR ilG_testError
 
 GLuint ilG_makeShader(GLenum type, il_string *source);
