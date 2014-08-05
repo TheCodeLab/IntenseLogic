@@ -3,7 +3,7 @@
 #include <cassert>
 
 extern "C" {
-#include "graphics/glutil.h"
+#include "graphics/transform.h"
 }
 
 using namespace BouncingLights;

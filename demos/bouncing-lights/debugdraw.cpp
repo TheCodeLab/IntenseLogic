@@ -8,7 +8,7 @@ using namespace BouncingLights;
 
 extern "C" {
 #include "common/world.h"
-#include "graphics/glutil.h"
+#include "graphics/transform.h"
 #include "math/matrix.h"
 #include "graphics/renderer.h"
 #include "graphics/arrayattrib.h"

@@ -5,7 +5,7 @@
 #include <stdbool.h>
 
 #include "util/ilstring.h"
-#include "graphics/glutil.h"
+#include "math/matrix.h"
 
 struct ilG_context;
 

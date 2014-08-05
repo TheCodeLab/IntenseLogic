@@ -8,17 +8,17 @@
 #include "graphics/floatspace.h"
 #include "graphics/fragdata.h"
 #include "graphics/geometrypass.h"
-#include "graphics/glutil.h"
 #include "graphics/material.h"
 #include "graphics/outpass.h"
-#include "graphics/quad.h"
+#include "tgl/tgl.h"
 #include "graphics/renderer.h"
 #include "math/matrix.h"
 #include "util/log.h"
 
 struct quad {
     ilG_material mat;
-    ilG_quad *quad;
+    tgl_quad quad;
+    tgl_vao vao;
 };
 
 static void quad_draw(void *obj, ilG_rendid id)
@@ -26,14 +26,16 @@ static void quad_draw(void *obj, ilG_rendid id)
     (void)id;
     struct quad *q = obj;
     ilG_material_bind(&q->mat);
-    ilG_quad_bind(q->quad);
-    ilG_quad_draw(q->quad);
+    tgl_vao_bind(&q->vao);
+    tgl_quad_draw_once(&q->quad);
 }
 
 static void quad_free(void *obj)
 {
     struct quad *q = obj;
     ilG_material_free(&q->mat);
+    tgl_vao_free(&q->vao);
+    tgl_quad_free(&q->quad);
     free(q);
 }
 
@@ -44,7 +46,9 @@ static bool quad_build(void *obj, ilG_rendid id, ilG_context *context, ilG_build
     if (ilG_material_link(&q->mat, context)) {
         return false;
     }
-    q->quad = ilG_quad_get(context);
+    tgl_vao_init(&q->vao);
+    tgl_vao_bind(&q->vao);
+    tgl_quad_init(&q->quad, ILG_ARRATTR_POSITION);
 
     memset(out, 0, sizeof(ilG_buildresult));
     out->free = quad_free;

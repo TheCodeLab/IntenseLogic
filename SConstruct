@@ -40,14 +40,14 @@ if build_mode != "release":
 # glGetError
 geterror = ARGUMENTS.get("geterror", "false")
 if geterror != "false":
-    ccflags += " -DILG_ENABLE_GETERROR"
+    ccflags += " -DTGL_GETERROR"
 
 # create environment
 env = Environment(ENV=os.environ)
 for item in os.environ:
     env[item] = os.environ[item]
 env.Append(CCFLAGS=" ", CFLAGS=" ", CXXFLAGS=" ", LINKFLAGS=" ") # Make CFLAGS/etc in env work right.
-env.Append(CCFLAGS=ccflags, CFLAGS = cflags, CXXFLAGS=cxxflags, LINKFLAGS = linkflags, CPPPATH = [src_dir])
+env.Append(CCFLAGS=ccflags, CFLAGS = cflags, CXXFLAGS=cxxflags, LINKFLAGS = linkflags, CPPPATH = [src_dir, "#tiffgl/src"])
 
 # generate version information
 handle = open("src/version.h", "w")

@@ -1,7 +1,7 @@
 #include "floatspace.h"
 
 #include "graphics/context.h"
-#include "graphics/glutil.h"
+#include "graphics/transform.h"
 
 ilG_floatspace *ilG_floatspace_new(il_world *world)
 {

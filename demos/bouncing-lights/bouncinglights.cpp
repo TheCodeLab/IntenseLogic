@@ -23,7 +23,7 @@ extern "C" {
 #include "asset/image.h"
 #include "common/world.h"
 #include "common/world.h"
-#include "graphics/glutil.h"
+#include "graphics/transform.h"
 #include "math/matrix.h"
 #include "graphics/heightmap.h"
 #include "graphics/renderer.h"

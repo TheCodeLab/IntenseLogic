@@ -3,14 +3,14 @@
 #include <stdlib.h>
 #include <GL/glew.h>
 
-#include "graphics/context.h"
-#include "graphics/glutil.h"
+#include "asset/mesh.h"
+#include "asset/node.h"
+#include "asset/path.h"
 #include "graphics/arrayattrib.h"
 #include "graphics/bindable.h"
+#include "graphics/context.h"
 #include "graphics/renderer.h"
-#include "asset/mesh.h"
-#include "asset/path.h"
-#include "asset/node.h"
+#include "tgl/tgl.h"
 
 int ilG_mesh_init(ilG_mesh *mesh, const ilA_mesh* self)
 {
@@ -64,7 +64,7 @@ enum ilG_mesh_attribs ilG_mesh_build(ilG_mesh *m, ilG_context *context)
 {
     (void)context;
     ilA_mesh *self = m->mesh;
-    ilG_testError("Unknown");
+    tgl_check("Unknown");
     glGenVertexArrays(1, &m->vao);
     glBindVertexArray(m->vao);
     glGenBuffers(1, &m->vbo);
@@ -129,21 +129,21 @@ enum ilG_mesh_attribs ilG_mesh_build(ilG_mesh *m, ilG_context *context)
     }
     ilA_mesh_free(self);
     m->mesh = NULL;
-    ilG_testError("Error uploading mesh");
+    tgl_check("Error uploading mesh");
     return attribs;
 }
 
 void ilG_mesh_bind(ilG_mesh *mesh)
 {
-    ilG_testError("Unknown error");
+    tgl_check("Unknown error");
     glBindVertexArray(mesh->vao);
     glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo);
-    ilG_testError("Failed to bind mesh");
+    tgl_check("Failed to bind mesh");
 }
 
 void ilG_mesh_draw(ilG_mesh *mesh)
 {
-    ilG_testError("Unknown error");
+    tgl_check("Unknown error");
     glDrawArrays(mesh->type, 0, mesh->count);
-    ilG_testError("Failed to draw mesh");
+    tgl_check("Failed to draw mesh");
 }

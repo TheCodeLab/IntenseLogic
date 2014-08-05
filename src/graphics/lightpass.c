@@ -4,11 +4,12 @@
 #include "graphics/context.h"
 #include "graphics/fragdata.h"
 #include "graphics/material.h"
-#include "graphics/quad.h"
 #include "graphics/renderer.h"
 #include "graphics/shape.h"
+#include "graphics/transform.h"
 #include "math/matrix.h"
 #include "math/vector.h"
+#include "tgl/tgl.h"
 #include "util/array.h"
 #include "util/log.h"
 
@@ -21,20 +22,19 @@ typedef struct ilG_lights ilG_lights;
 struct ilG_lights {
     enum ilG_light_type type;
     ilG_context *context;
-    GLuint vao, vbo, ibo, lights_ubo, lights_index, mvp_ubo, mvp_index;
     GLint lights_size, mvp_size, lights_offset[3], mvp_offset[1], color_loc, radius_loc, mvp_loc, mv_loc, ivp_loc, size_loc;
     ilG_material material;
     ilG_shape *ico;
-    ilG_quad *quad;
+    tgl_vao vao;
+    tgl_quad quad;
 };
 
 static void lights_free(void *ptr)
 {
     ilG_lights *self = ptr;
-    glDeleteVertexArrays(1, &self->vao);
-    glDeleteBuffers(1, &self->vbo);
-    glDeleteBuffers(1, &self->ibo);
     ilG_material_free(&self->material);
+    tgl_vao_free(&self->vao);
+    tgl_quad_free(&self->quad);
     free(self);
 }
 
@@ -58,15 +58,15 @@ static void lights_draw(void *ptr, ilG_rendid id, il_mat **mats, const unsigned 
     glBlendFunc(GL_ONE, GL_ONE);
     glDepthMask(GL_FALSE);
     if (point) {
-        glEnable(GL_CULL_FACE);
+        //glEnable(GL_CULL_FACE);
         glFrontFace(GL_CCW);
         glCullFace(GL_FRONT);
         ilG_shape_bind(self->ico);
     } else {
         glDisable(GL_CULL_FACE);
-        ilG_quad_bind(self->quad);
+        tgl_vao_bind(&self->vao);
     }
-    ilG_testError("Unknown");
+    tgl_check("Unknown");
 
     ilG_renderer *r = ilG_context_findRenderer(context, id);
     for (unsigned i = 0; i < num_mats; i++) {
@@ -81,13 +81,13 @@ static void lights_draw(void *ptr, ilG_rendid id, il_mat **mats, const unsigned 
         if (point) {
             ilG_shape_draw(self->ico);
         } else {
-            ilG_quad_draw(self->quad);
+            tgl_quad_draw_once(&self->quad);
         }
     }
 
     glDisable(GL_BLEND);
     glDepthMask(GL_TRUE);
-    ilG_testError("Error drawing lights");
+    tgl_check("Error drawing lights");
 }
 
 static bool lights_build(void *ptr, ilG_rendid id, ilG_context *context, ilG_buildresult *out)
@@ -99,7 +99,9 @@ static bool lights_build(void *ptr, ilG_rendid id, ilG_context *context, ilG_bui
         return false;
     }
     self->ico = ilG_icosahedron(context);
-    self->quad = ilG_quad_get(context);
+    tgl_vao_init(&self->vao);
+    tgl_vao_bind(&self->vao);
+    tgl_quad_init(&self->quad, ILG_ARRATTR_POSITION);
     self->color_loc     = glGetUniformLocation(self->material.program, "color");
     self->radius_loc    = glGetUniformLocation(self->material.program, "radius");
     self->mvp_loc       = glGetUniformLocation(self->material.program, "mvp");

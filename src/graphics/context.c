@@ -11,10 +11,12 @@
 #ifndef timeradd
 # include "util/timer.h"
 #endif
-#include "graphics/glutil.h"
+#include "graphics/transform.h"
 #include "common/event.h"
 #include "graphics/graphics.h"
 #include "input/input.h"
+#include "math/matrix.h"
+#include "tgl/tgl.h"
 
 /////////////////////////////////////////////////////////////////////////////
 // Queue
@@ -387,29 +389,29 @@ static int context_resize(ilG_context *self, int w, int h)
     // GL setup
     glDepthFunc(GL_LESS);
     glEnable(GL_DEPTH_TEST);
-    IL_GRAPHICS_TESTERROR("Error setting up screen");
+    tgl_check("Error setting up screen");
 
     glBindFramebuffer(GL_FRAMEBUFFER, self->framebuffer);
     glBindTexture(GL_TEXTURE_RECTANGLE, self->fbtextures[ILG_CONTEXT_DEPTH]);
     glTexImage2D(GL_TEXTURE_RECTANGLE, 0, GL_DEPTH_COMPONENT, w, h, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_RECTANGLE, self->fbtextures[ILG_CONTEXT_DEPTH], 0);
-    ilG_testError("Unable to create depth buffer");
+    tgl_check("Unable to create depth buffer");
     glBindTexture(GL_TEXTURE_RECTANGLE, self->fbtextures[ILG_CONTEXT_ACCUM]);
     glTexImage2D(GL_TEXTURE_RECTANGLE, 0, GL_RGBA, w, h, 0, GL_RGBA, self->hdr? GL_FLOAT : GL_UNSIGNED_BYTE, NULL);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_RECTANGLE, self->fbtextures[ILG_CONTEXT_ACCUM], 0);
-    ilG_testError("Unable to create accumulation buffer");
+    tgl_check("Unable to create accumulation buffer");
     glBindTexture(GL_TEXTURE_RECTANGLE, self->fbtextures[ILG_CONTEXT_NORMAL]);
     glTexImage2D(GL_TEXTURE_RECTANGLE, 0, GL_RGB, w, h, 0, GL_RGB, GL_FLOAT, NULL);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_RECTANGLE, self->fbtextures[ILG_CONTEXT_NORMAL], 0);
-    ilG_testError("Unable to create normal buffer");
+    tgl_check("Unable to create normal buffer");
     glBindTexture(GL_TEXTURE_RECTANGLE, self->fbtextures[ILG_CONTEXT_DIFFUSE]);
     glTexImage2D(GL_TEXTURE_RECTANGLE, 0, GL_RGB, w, h, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_RECTANGLE, self->fbtextures[ILG_CONTEXT_DIFFUSE], 0);
-    ilG_testError("Unable to create diffuse buffer");
+    tgl_check("Unable to create diffuse buffer");
     glBindTexture(GL_TEXTURE_RECTANGLE, self->fbtextures[ILG_CONTEXT_SPECULAR]);
     glTexImage2D(GL_TEXTURE_RECTANGLE, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_RECTANGLE, self->fbtextures[ILG_CONTEXT_SPECULAR], 0);
-    ilG_testError("Unable to create specular buffer");
+    tgl_check("Unable to create specular buffer");
     // completeness testing
     GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
     if (status != GL_FRAMEBUFFER_COMPLETE) {
@@ -753,13 +755,13 @@ static void render_renderer(ilG_context *context, ilG_renderer *par)
         ilG_viewrenderer *view = &rm->viewrenderers.data[r->view];
         ilG_objrenderer *obj = &rm->objrenderers.data[r->obj];
         stat->update(r->data, id);
-        ilG_testError("In %s static update", ilG_context_findName(context, id));
+        tgl_check("In %s static update", ilG_context_findName(context, id));
 
         ilG_coordsys *co = &rm->coordsystems.data[view->coordsys];
         il_mat viewmats[view->num_types];
         co->viewmats(co->obj, viewmats, view->types, view->num_types);
         view->update(r->data, id, viewmats);
-        ilG_testError("In %s view update", ilG_context_findName(context, id));
+        tgl_check("In %s view update", ilG_context_findName(context, id));
 
         co = &rm->coordsystems.data[obj->coordsys];
         unsigned num_mats = obj->objects.length;
@@ -792,9 +794,9 @@ static void render_frame(ilG_context *context)
     } else {
         glClearColor(0, 0, 0, 1.0);
     }
-    ilG_testError("glClearColor");
+    tgl_check("glClearColor");
     glClearDepth(1.0);
-    ilG_testError("glClearDepth");
+    tgl_check("glClearDepth");
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // asserts that first renderer is the context itself
@@ -949,24 +951,24 @@ static void setup_glew(ilG_context *self)
     }
 #endif
 
-    IL_GRAPHICS_TESTERROR("Unknown");
+    tgl_check("Unknown");
     if (GLEW_KHR_debug) {
         glDebugMessageCallback((GLDEBUGPROC)&error_cb, NULL);
         glEnable(GL_DEBUG_OUTPUT);
         il_log("KHR_debug present, enabling advanced errors");
-        IL_GRAPHICS_TESTERROR("glDebugMessageCallback()");
+        tgl_check("glDebugMessageCallback()");
     } else {
         il_log("KHR_debug missing");
     }
     GLint num_texunits;
     glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &num_texunits);
-    ilG_testError("glGetIntegerv");
+    tgl_check("glGetIntegerv");
     self->texunits = calloc(sizeof(unsigned), num_texunits);
     self->num_texunits = num_texunits;
     if (!self->use_default_fb) {
         glGenFramebuffers(1, &self->framebuffer);
         glGenTextures(5, &self->fbtextures[0]);
-        ilG_testError("Unable to generate framebuffer");
+        tgl_check("Unable to generate framebuffer");
     }
     self->complete = 1;
 }

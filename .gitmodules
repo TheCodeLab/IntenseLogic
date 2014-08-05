@@ -1,0 +1,3 @@
+[submodule "tiffgl"]
+	path = tiffgl
+	url = https://github.com/tiffany352/tiffgl.git

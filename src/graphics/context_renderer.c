@@ -1,9 +1,6 @@
 #include "graphics/context.h"
 
-#include "util/log.h"
-#include "util/logger.h"
-#include "input/input.h"
-#include "graphics/glutil.h"
+#include "math/matrix.h"
 
 void queue_free(struct ilG_context_queue *queue);
 

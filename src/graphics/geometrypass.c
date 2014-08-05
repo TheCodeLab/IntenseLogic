@@ -5,9 +5,10 @@
 #include "graphics/renderer.h"
 #include "graphics/bindable.h"
 #include "graphics/context.h"
-#include "graphics/glutil.h"
+#include "graphics/transform.h"
 #include "graphics/arrayattrib.h"
 #include "graphics/drawable3d.h"
+#include "tgl/tgl.h"
 #include "util/ilassert.h"
 
 static void geometry_free(void *ptr)
@@ -18,13 +19,13 @@ static void geometry_free(void *ptr)
 static void geometry_update(void *ptr, ilG_rendid id)
 {
     (void)ptr, (void)id;
-    ilG_testError("Unknown");
+    tgl_check("Unknown");
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
     glDisable(GL_BLEND);
     glFrontFace(GL_CCW);
     glCullFace(GL_BACK);
-    ilG_testError("Could not setup to draw geometry");
+    tgl_check("Could not setup to draw geometry");
 }
 
 static bool geometry_build(void *ptr, ilG_rendid id, ilG_context *ctx, ilG_buildresult *out)

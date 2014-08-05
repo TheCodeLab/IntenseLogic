@@ -3,13 +3,13 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
-#include "graphics/renderer.h"
-#include "graphics/context.h"
-#include "graphics/material.h"
-#include "graphics/glutil.h"
 #include "graphics/arrayattrib.h"
-#include "graphics/framebuffer.h"
+#include "graphics/context.h"
 #include "graphics/fragdata.h"
+#include "graphics/framebuffer.h"
+#include "graphics/material.h"
+#include "graphics/renderer.h"
+#include "tgl/tgl.h"
 
 typedef struct ilG_out {
     ilG_context *context;
@@ -36,11 +36,11 @@ static void out_free(void *ptr)
 
 static void fullscreenTexture(ilG_out *self)
 {
-    ilG_testError("Unknown");
+    tgl_check("Unknown");
     glBindVertexArray(self->vao);
     glBindBuffer(GL_ARRAY_BUFFER, self->vbo);
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-    ilG_testError("Error drawing fullscreen quad");
+    tgl_check("Error drawing fullscreen quad");
 }
 
 static void out_update(void *ptr, ilG_rendid id)
@@ -49,7 +49,7 @@ static void out_update(void *ptr, ilG_rendid id)
     ilG_out *self = ptr;
     ilG_context *context = self->context;
 
-    ilG_testError("Unknown");
+    tgl_check("Unknown");
     // prepare the GL state for outputting to the default framebuffer
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     if (context->debug_render) {
@@ -62,7 +62,7 @@ static void out_update(void *ptr, ilG_rendid id)
     glDisable(GL_CULL_FACE);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_RECTANGLE, context->fbtextures[self->which]); // bind the framebuffer we want to display
-    ilG_testError("Error setting up for post processing");
+    tgl_check("Error setting up for post processing");
 
     self->w = context->width;
     self->h = context->height;
@@ -87,7 +87,7 @@ static void out_update(void *ptr, ilG_rendid id)
                               0,0, w,h,
                               GL_COLOR_BUFFER_BIT,
                               GL_LINEAR);
-            ilG_testError("Blit failed");
+            tgl_check("Blit failed");
 
             // From the front buffer,
             glActiveTexture(GL_TEXTURE0);
@@ -125,7 +125,7 @@ static void out_update(void *ptr, ilG_rendid id)
     context->materialb = NULL;
 
     SDL_GL_SwapWindow(context->window);
-    ilG_testError("outpass");
+    tgl_check("outpass");
 }
 
 static bool out_build(void *ptr, ilG_rendid id, ilG_context *context, ilG_buildresult *out)
@@ -158,7 +158,7 @@ static bool out_build(void *ptr, ilG_rendid id, ilG_context *context, ilG_buildr
         1, 1,
         1, 0
     };
-    ilG_testError("Unknown");
+    tgl_check("Unknown");
     glGenVertexArrays(1, &self->vao);
     glBindVertexArray(self->vao);
     glGenBuffers(1, &self->vbo);
@@ -168,7 +168,7 @@ static bool out_build(void *ptr, ilG_rendid id, ilG_context *context, ilG_buildr
     glVertexAttribPointer(ILG_ARRATTR_TEXCOORD, 2, GL_FLOAT, GL_FALSE, 0, NULL);
     glEnableVertexAttribArray(ILG_ARRATTR_POSITION);
     glEnableVertexAttribArray(ILG_ARRATTR_TEXCOORD);
-    ilG_testError("Failed to upload quad");
+    tgl_check("Failed to upload quad");
 
     *out = (ilG_buildresult) {
         .free = out_free,
@@ -228,7 +228,7 @@ ilG_builder ilG_out_builder()
     ilG_material_arrayAttrib(m, ILG_ARRATTR_TEXCOORD, "in_Texcoord");
     ilG_material_textureUnit(m, 0, "tex");
 
-    ilG_testError("Failed to build vbo");
+    tgl_check("Failed to build vbo");
     self->which = 1;
 
     return ilG_builder_wrap(self, out_build);

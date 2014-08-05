@@ -7,6 +7,7 @@
 #include "graphics/material.h"
 #include "graphics/drawable3d.h"
 #include "graphics/tex.h"
+#include "tgl/tgl.h"
 #include "util/array.h"
 #include "util/log.h"
 
@@ -46,7 +47,7 @@ static void legacy_draw(void *obj, ilG_rendid id, il_mat **mats, const unsigned 
             ilG_tex_bind(&self->textures.data[j]);
         }
         ilG_bindable_action(ctx->drawableb, ctx->drawable);
-        ilG_testError("Legacy Renderer");
+        tgl_check("Legacy Renderer");
     }
 }
 

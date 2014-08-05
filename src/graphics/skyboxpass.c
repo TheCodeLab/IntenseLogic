@@ -1,12 +1,14 @@
 #include "skyboxpass.h"
 
-#include "graphics/context.h"
-#include "graphics/bindable.h"
-#include "graphics/material.h"
 #include "graphics/arrayattrib.h"
+#include "graphics/bindable.h"
+#include "graphics/context.h"
+#include "graphics/fragdata.h"
+#include "graphics/material.h"
 #include "graphics/shape.h"
 #include "graphics/tex.h"
-#include "graphics/fragdata.h"
+#include "graphics/transform.h"
+#include "tgl/tgl.h"
 
 typedef struct ilG_skybox {
     ilG_context *context;
@@ -27,7 +29,7 @@ static void sky_view(void *ptr, ilG_rendid id, il_mat *mats)
     (void)id;
     ilG_skybox *self = ptr;
 
-    ilG_testError("Unknown");
+    tgl_check("Unknown");
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
     ilG_shape_bind(self->box);

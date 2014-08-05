@@ -3,16 +3,17 @@
 #include <GL/glew.h>
 #include <string.h>
 
-#include "graphics/glutil.h"
-#include "graphics/context.h"
+#include "asset/node.h"
 #include "graphics/arrayattrib.h"
-#include "util/log.h"
+#include "graphics/context.h"
 #include "graphics/drawable3d.h"
 #include "graphics/fragdata.h"
-#include "util/array.h"
-#include "asset/node.h"
-#include "util/ilassert.h"
 #include "graphics/graphics.h"
+#include "graphics/transform.h"
+#include "tgl/tgl.h"
+#include "util/array.h"
+#include "util/ilassert.h"
+#include "util/log.h"
 
 struct textureunit {
     char *location;
@@ -141,13 +142,13 @@ GLuint ilG_material_getLoc(ilG_material *self, const char *location)
 
 void ilG_material_bind(ilG_material *mtl)
 {
-    ilG_testError("Unknown");
+    tgl_check("Unknown");
     glUseProgram(mtl->program);
-    ilG_testError("glUseProgram()");
+    tgl_check("glUseProgram()");
     unsigned int i;
     for (i = 0; i < mtl->config->texunits.length; i++) {
         glUniform1i(mtl->config->texunits.data[i].uniform, i);
-        ilG_testError("glUniform1i()");
+        tgl_check("glUniform1i()");
     }
 }
 
@@ -159,10 +160,17 @@ void ilG_material_bindMatrix(ilG_material* self, GLuint loc, il_mat m)
 
 static void link(ilG_material *self)
 {
-    ilG_testError("Unknown");
+    tgl_check("Unknown");
     il_log("Building shader \"%s\"", self->name);
-    self->vertshader = ilG_makeShader(GL_VERTEX_SHADER, self->config->vertsource);
-    self->fragshader = ilG_makeShader(GL_FRAGMENT_SHADER, self->config->fragsource);
+    il_string *vs = self->config->vertsource, *fs = self->config->fragsource;
+    if (!tgl_make_shader(&self->vertshader, GL_VERTEX_SHADER, vs->data, vs->length)) {
+        self->valid = 0;
+        return;
+    }
+    if (!tgl_make_shader(&self->fragshader, GL_FRAGMENT_SHADER, fs->data, fs->length)) {
+        self->valid = 0;
+        return;
+    }
     self->program = glCreateProgram();
     /*if (GLEW_KHR_debug) {
         glObjectLabel(GL_PROGRAM, self->program, strlen(self->name), self->name);
@@ -170,13 +178,9 @@ static void link(ilG_material *self)
         glGetObjectLabel(GL_PROGRAM, self->program, 1024, NULL, buf);
         printf("Program %u labelled %s\n", self->program, buf);
     }*/
-    if (!glIsShader(self->vertshader) || !glIsShader(self->fragshader) || !glIsProgram(self->program)) {
-        self->valid = 0;
-        return;
-    }
     glAttachShader(self->program, self->vertshader);
     glAttachShader(self->program, self->fragshader);
-    ilG_testError("glAttachShader");
+    tgl_check("glAttachShader");
     unsigned int i;
     for (i = 0; i < ILG_ARRATTR_NUMATTRS; i++) {
         if (self->config->attriblocs[i]) {
@@ -184,18 +188,18 @@ static void link(ilG_material *self)
             ILG_SETATTR(self->attrs, i);
         }
     }
-    ilG_testError("Error binding array attributes");
+    tgl_check("Error binding array attributes");
     for (i = 0; i < ILG_FRAGDATA_NUMATTRS; i++) {
         if (self->config->fraglocs[i]) {
             glBindFragDataLocation(self->program, i, self->config->fraglocs[i]);
         }
     }
-    ilG_testError("Error binding fragment outputs");
-    ilG_linkProgram(self->program);
+    tgl_check("Error binding fragment outputs");
+    tgl_link_program(self->program);
     for (i = 0; i < self->config->texunits.length; i++) {
         self->config->texunits.data[i].uniform = glGetUniformLocation(self->program, self->config->texunits.data[i].location);
     }
-    ilG_testError("Error binding texture units");
+    tgl_check("Error binding texture units");
 
     self->valid = 1;
 }

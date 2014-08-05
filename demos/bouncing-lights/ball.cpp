@@ -5,6 +5,7 @@ extern "C" {
 #include "graphics/material.h"
 #include "graphics/mesh.h"
 #include "graphics/renderer.h"
+#include "graphics/transform.h"
 #include "math/matrix.h"
 }
 
