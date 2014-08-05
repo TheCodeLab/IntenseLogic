@@ -19,12 +19,12 @@ def build_demo(name):
     demo = demoenv.Clone()
     demo.Append(CPPPATH = [src_dir, "#demos/"], LIBS=['ilutil', 'ilcommon', 'ilmath', 'ilasset', 'ilgraphics'])
     if platform == "mingw":
-        demo.Append(LIBS=[])
+        demo.Append(LIBS=['glew32', 'opengl32'])
     else:
         demo.Append(LIBS=['dl', 'm'])
+        demo.ParseConfig("pkg-config glew --libs --cflags")
     if name == "bouncing-lights":
         demo.ParseConfig("pkg-config bullet --libs --cflags")
-    demo.ParseConfig("pkg-config glew --libs --cflags")
     demo.ParseConfig("pkg-config sdl2 --libs --cflags")
     sources = [main_obj, helper_obj]
     for mod in Split(inputs):

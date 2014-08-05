@@ -1,5 +1,7 @@
 #include "bulletspace.hpp"
 
+#include <cassert>
+
 extern "C" {
 #include "graphics/glutil.h"
 }

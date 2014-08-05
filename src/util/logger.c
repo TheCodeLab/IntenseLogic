@@ -321,4 +321,3 @@ void il_logger_init()
 }
 
 il_logger *il_logger_stderr;
-

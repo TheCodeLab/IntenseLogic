@@ -11,9 +11,8 @@ const char **il_preload_ilutil() // TODO: Make this a soft dependency
     return deps;
 }
 
-int il_load_ilutil() 
+int il_load_ilutil()
 {
     il_logger_init();
     return 0;
 }
-

@@ -9,6 +9,7 @@
 #include <iostream>
 #include <utility>
 #include <ctime>
+#include <math.h>
 
 #include "debugdraw.hpp"
 #include "bulletspace.hpp"
@@ -30,6 +31,10 @@ extern "C" {
 #include "util/log.h"
 #include "helper.h"
 }
+
+#ifndef M_PI
+#define M_PI 3.1415926535
+#endif
 
 #ifdef WIN32
 #define ex extern "C" __declspec(dllexport)

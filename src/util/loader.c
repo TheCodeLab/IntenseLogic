@@ -191,7 +191,19 @@ static il_func get_symbol(struct module *mod, const char *name)
 static const char *get_error()
 {
 #ifdef WIN32
-    return GetLastError();
+    // https://stackoverflow.com/a/3006356
+    DWORD dwLastError = GetLastError();
+    static TCHAR lpBuffer[256] = _T("?");
+    if (dwLastError != 0) {
+        FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM,                // It's a system error
+                      NULL,                                      // No string to be formatted needed
+                      dwLastError,                               // Hey Windows: Please explain this error!
+                      MAKELANGID(LANG_NEUTRAL,SUBLANG_DEFAULT),  // Do it in the standard language
+                      lpBuffer,                                  // Put the message here
+                      255,                                       // Number of bytes to store the message
+                      NULL);
+    }
+    return lpBuffer;
 #else
     return dlerror();
 #endif
@@ -210,7 +222,7 @@ int il_load_module(const char *name, il_opts *opts)
     if (mod) {
         return 0;
     }
-    
+
     mod = calloc(1, sizeof(struct module));
     mod->name = sname;
 
