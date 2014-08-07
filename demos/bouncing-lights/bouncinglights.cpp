@@ -159,8 +159,8 @@ ex void demo_start()
              &groundMotionState[i],
              &groundShape[i],
              btVector3(0,0,0) );
-        btRigidBody &groundRigidBody = *reinterpret_cast<btRigidBody*>(ground_backing + sizeof(btRigidBody)*i);
-        groundRigidBody = btRigidBody(groundRigidBodyCI);
+        char *ptr = ground_backing + sizeof(btRigidBody)*i;
+        btRigidBody &groundRigidBody = *new(ptr) btRigidBody(groundRigidBodyCI);
         groundRigidBody.setRestitution(0.5);
         world.world.addRigidBody(&groundRigidBody);
     }
