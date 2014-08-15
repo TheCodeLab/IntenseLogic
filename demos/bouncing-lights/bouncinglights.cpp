@@ -25,6 +25,7 @@ extern "C" {
 #include "common/world.h"
 #include "graphics/transform.h"
 #include "math/matrix.h"
+#include "graphics/graphics.h"
 #include "graphics/heightmap.h"
 #include "graphics/renderer.h"
 #include "graphics/tex.h"
@@ -87,6 +88,7 @@ static void gtick(const il_value *data, il_value *ctx)
 #include <fenv.h>
 ex void demo_start()
 {
+    ilG_shaders_addPath("demos/bouncing-lights/");
     //feenableexcept(FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW);
     // Create context
     helper_config c;

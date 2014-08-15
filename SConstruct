@@ -21,6 +21,14 @@ if platform == "mingw":
 build_dir_raw = ARGUMENTS.get("build_dir", "build")
 build_dir = "#"+build_dir_raw
 
+# setup a reasonable default library search path
+if platform=='arch' or platform=='linux':
+    linkflags += " -Wl,-rpath "+build_dir_raw
+
+# module paths
+module_path = ARGUMENTS.get("module_path", build_dir_raw)
+ccflags += " -DDEMO_MODULES=\\\""+module_path+"\\\""
+
 #link flags
 if platform=="osx":
     linkflags += " -pagezero_size 10000 -image_base 100000000"

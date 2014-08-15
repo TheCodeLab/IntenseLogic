@@ -31,6 +31,20 @@ const ilA_dir *ilG_shaders_iface;
 
 static void quit();
 
+void ilG_shaders_addPath(const char *arg)
+{
+    ilA_path *path = ilA_path_chars(arg);
+    const ilA_dir *iface;
+    il_base *base = ilA_stdiodir(path, &iface);
+    ilA_path_free(path);
+    if (ilG_shaders_dir) {
+        ilG_shaders_dir = ilA_union(ilG_shaders_iface, iface, ilG_shaders_dir, base, &ilG_shaders_iface);
+    } else {
+        ilG_shaders_dir = base;
+        ilG_shaders_iface = iface;
+    }
+}
+
 static void sdl_error(void *ptr, int cat, SDL_LogPriority pri, const char *msg)
 {
     (void)ptr;
@@ -107,16 +121,7 @@ void il_configure_ilgraphics(il_modopts *opts)
         char *arg = strndup(opt->arg.str, opt->arg.len);
 #define option(l) if (il_opts_cmp(opt->name, il_optslice_s(l)))
         option("shaders") {
-            ilA_path *path = ilA_path_chars(arg);
-            const ilA_dir *iface;
-            il_base *base = ilA_stdiodir(path, &iface);
-            ilA_path_free(path);
-            if (ilG_shaders_dir) {
-                ilG_shaders_dir = ilA_union(ilG_shaders_iface, iface, ilG_shaders_dir, base, &ilG_shaders_iface);
-            } else {
-                ilG_shaders_dir = base;
-                ilG_shaders_iface = iface;
-            }
+            ilG_shaders_addPath(arg);
         }
     }
 }

@@ -7,5 +7,6 @@
 extern il_base *ilG_shaders_dir;
 extern const ilA_dir *ilG_shaders_iface;
 
-#endif
+void ilG_shaders_addPath(const char *path);
 
+#endif

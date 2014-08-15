@@ -22,6 +22,10 @@ struct {
     {NO_ARG,      0, NULL,      NULL}
 };
 
+#ifndef DEMO_MODULES
+#define DEMO_MODULES "modules"
+#endif
+
 void demo_start();
 
 char *strdup(const char*);
@@ -85,8 +89,20 @@ int main(int argc, char **argv)
     fprintf(stderr, "MAIN: Built %s\n", __DATE__);
 
     if (!has_modules) {
-        il_load_module_dir("modules", &opts); // default path
+        il_add_module_path(DEMO_MODULES);
     }
+
+#define dep(n) if (il_load_module(n, &opts)) {                         \
+        fprintf(stderr, "Base module " n " failed to load. Exiting.\n"); \
+        return 1; \
+    }
+    dep("ilutil");
+    dep("ilcommon");
+    dep("ilasset");
+    dep("ilinput");
+    dep("ilmath");
+    dep("ilgraphics");
+
     il_load_module_paths(&opts);
 
     il_postload_all();
