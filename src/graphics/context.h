@@ -187,6 +187,39 @@ bool ilG_context_delCoordSys    (ilG_context *self, unsigned id);
 void ilG_context_bindFB(ilG_context *self);
 /** Internal: Special case function which will be around until #ilG_context is changed to use #ilG_fbo */
 void ilG_context_bind_for_outpass(ilG_context *self);
+/** Render thread call for resizing framebuffer */
+int ilG_context_localResize(ilG_context *self, int w, int h);
+/** Render for one frame. Useful if you want your own render loop. */
+void ilG_context_renderFrame(ilG_context *context);
+/** Run the render loop. Useful if you want to pick the thread yourself.
+    Takes a void * to fit the pthread function call syntax. It is an ilG_context.
+
+    Steps to running your own render thread:
+
+    - Create the window on the main thread. ilG_context_setupSDLWindow is provided.
+    - Create the thread. Pthread is used for this.
+    - Setup your GL context. SDL is used for this.
+    - Setup GLEW. ilG_context_setupGLEW is provided.
+    - Setup the context's render thread stuff using ilG_context_localSetup().
+    - Run the render thread. The render thread has several duties.
+      + Fire the tick event.
+      + Check the message queue. (See context-internal.h for the interface.)
+      + Check if the window has resized and call ilG_context_localResize.
+      + Render a frame using ilG_context_renderFrame.
+      + Swap the window buffer using SDL_GL_SwapWindow.
+      + Collect fps statistics with ilG_context_measure.
+
+    ilG_context_start will get everything going by default. You should use it unless you wish to create the thread yourself, or do rendering on the main thread for some reason.
+
+    ilG_context_loop, should you want to create the thread yourself, can be passed directly to pthread_create as such:
+
+        pthread_create(&context->thread, NULL, ilG_context_loop, context);
+*/
+void *ilG_context_loop(void *context);
+void ilG_context_setupSDLWindow(ilG_context *context);
+void ilG_context_setupGLEW(ilG_context *context);
+void ilG_context_localSetup(ilG_context *context);
+void ilG_context_measure(ilG_context *context);
 bool ilG_context_build(void *obj, ilG_rendid id, ilG_context *context, ilG_buildresult *out);
 
 void ilG_context_printScenegraph(ilG_context *self);

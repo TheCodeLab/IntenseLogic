@@ -1,79 +1,36 @@
 #include "context.h"
+#include "context-internal.h"
 
 #include <string.h>
 #include <errno.h>
 #include <assert.h>
 #include <limits.h>
 
-#include "util/log.h"
-#include "util/logger.h"
-#include "util/ilassert.h"
-#ifndef timeradd
-# include "util/timer.h"
-#endif
-#include "graphics/transform.h"
 #include "common/event.h"
+#include "common/storage.h"
 #include "graphics/graphics.h"
+#include "graphics/transform.h"
 #include "input/input.h"
 #include "math/matrix.h"
 #include "tgl/tgl.h"
+#include "util/ilassert.h"
+#include "util/log.h"
+#include "util/logger.h"
+
+#ifndef timeradd
+# include "util/timer.h"
+#endif
 
 /////////////////////////////////////////////////////////////////////////////
 // Queue
 
-// TODO: Generalize this and split into its own file
-struct ilG_context_msg {
-    struct ilG_context_msg *next;
-    enum ilG_context_msgtype {
-        ILG_UPLOAD,
-        ILG_RESIZE,
-        ILG_STOP,
-        ILG_MESSAGE,
-        ILG_ADD_COORDS,
-        ILG_DEL_COORDS,
-        ILG_VIEW_COORDS,
-        ILG_ADD_RENDERER,
-        ILG_DEL_RENDERER,
-        ILG_ADD_LIGHT,
-        ILG_DEL_LIGHT
-    } type;
-    union {
-        struct {
-            void (*cb)(void*);
-            void *ptr;
-        } upload;
-        int resize[2];
-        struct {
-            ilG_rendid node;
-            int type;
-            il_value data;
-        } message;
-        struct {
-            ilG_rendid parent, child;
-        } renderer;
-        struct {
-            ilG_rendid parent;
-            unsigned cosys, codata;
-        } coords;
-        struct {
-            ilG_rendid parent;
-            ilG_light child;
-        } light;
-    } value;
-};
-
-struct ilG_context_queue {
-    struct ilG_context_msg *first;
-    volatile struct ilG_context_msg *head, *tail;
-};
-
-static void queue_init(struct ilG_context_queue *queue)
+void ilG_context_queue_init(ilG_context_queue *queue)
 {
     queue->head = queue->tail = calloc(1, sizeof(struct ilG_context_msg));
     queue->first = (struct ilG_context_msg*)queue->head;
 }
 
-void queue_free(struct ilG_context_queue *queue) // TODO: Fix this cross-translation unit hack
+void ilG_context_queue_free(ilG_context_queue *queue)
 {
     struct ilG_context_msg *cur;
     while (queue->first) {
@@ -84,7 +41,7 @@ void queue_free(struct ilG_context_queue *queue) // TODO: Fix this cross-transla
 }
 
 // TODO: Multiple producer threads
-static void produce(struct ilG_context_queue *queue, struct ilG_context_msg *msg)
+void ilG_context_queue_produce(ilG_context_queue *queue, ilG_context_msg *msg)
 {
     msg->next = NULL;
     queue->tail->next = msg;
@@ -97,7 +54,7 @@ static void produce(struct ilG_context_queue *queue, struct ilG_context_msg *msg
     }
 }
 
-static struct ilG_context_msg *consume(struct ilG_context_queue *queue)
+ilG_context_msg *ilG_context_queue_consume(ilG_context_queue *queue)
 {
     if (queue->head != queue->tail) {
         return (struct ilG_context_msg*)queue->head->next;
@@ -105,7 +62,7 @@ static struct ilG_context_msg *consume(struct ilG_context_queue *queue)
     return NULL;
 }
 
-static void done_consume(struct ilG_context_queue *queue)
+void ilG_context_queue_doneconsume(ilG_context_queue *queue)
 {
     if (queue->head != queue->tail)
     {
@@ -116,12 +73,6 @@ static void done_consume(struct ilG_context_queue *queue)
 /////////////////////////////////////////////////////////////////////////////
 // Book keeping
 
-void ilG_default_update(void *, ilG_rendid);
-void ilG_default_multiupdate(void *, ilG_rendid, il_mat *);
-void ilG_default_draw(void *, ilG_rendid, il_mat **, const unsigned*, unsigned);
-void ilG_default_viewmats(void*, il_mat*, int*, unsigned);
-void ilG_default_objmats(void*, const unsigned*, unsigned, il_mat*, int);
-void ilG_default_free(void*);
 ilG_context *ilG_context_new()
 {
     ilG_context *self = calloc(1, sizeof(ilG_context));
@@ -144,7 +95,7 @@ ilG_context *ilG_context_new()
     self->destroy   = ilE_handler_new_with_name("il.graphics.context.destroy");
     ilI_handler_init(&self->handler);
     self->queue = calloc(1, sizeof(struct ilG_context_queue));
-    queue_init(self->queue);
+    ilG_context_queue_init(self->queue);
     ilG_context_addRenderer(self, 0, ilG_builder_wrap(NULL, ilG_context_build));
     ilG_statrenderer stat = (ilG_statrenderer) {ilG_default_update};
     ilG_viewrenderer view = (ilG_viewrenderer) {
@@ -198,9 +149,6 @@ void ilG_context_hint(ilG_context *self, enum ilG_context_hint hint, int param)
     }
 }
 
-/////////////////////////////////////////////////////////////////////////////
-// Message wrappers
-
 void ilG_context_free(ilG_context *self)
 {
     assert(!self->running);
@@ -233,113 +181,11 @@ void ilG_context_free(ilG_context *self)
     ilE_handler_destroy(self->tick);
     ilE_handler_destroy(self->resize);
     ilE_handler_destroy(self->close);
-    queue_free(self->queue);
+    ilG_context_queue_free(self->queue);
 
     SDL_GL_DeleteContext(self->context);
     SDL_DestroyWindow(self->window);
     free(self);
-}
-
-bool ilG_context_upload(ilG_context *self, void (*fn)(void*), void* ptr)
-{
-    struct ilG_context_msg *msg = calloc(1, sizeof(struct ilG_context_msg));
-    msg->type = ILG_UPLOAD;
-    msg->value.upload.cb = fn;
-    msg->value.upload.ptr = ptr;
-    produce(self->queue, msg);
-    return true;
-}
-
-bool ilG_context_resize(ilG_context *self, int w, int h)
-{
-    struct ilG_context_msg *msg = calloc(1, sizeof(struct ilG_context_msg));
-    msg->type = ILG_RESIZE;
-    msg->value.resize[0] = w;
-    msg->value.resize[1] = h;
-    produce(self->queue, msg);
-    return true;
-}
-
-char *strdup(const char*);
-bool ilG_context_rename(ilG_context *self, const char *title)
-{
-    SDL_SetWindowTitle(self->window, title);
-    return true;
-}
-
-void ilG_handle_addCoords(ilG_handle self, unsigned cosys, unsigned codata)
-{
-    struct ilG_context_msg *msg = calloc(1, sizeof(struct ilG_context_msg));
-    msg->type = ILG_ADD_COORDS;
-    msg->value.coords.parent = self.id;
-    msg->value.coords.cosys = cosys;
-    msg->value.coords.codata = codata;
-    produce(self.context->queue, msg);
-}
-
-void ilG_handle_delCoords(ilG_handle self, unsigned cosys, unsigned codata)
-{
-    struct ilG_context_msg *msg = calloc(1, sizeof(struct ilG_context_msg));
-    msg->type = ILG_DEL_COORDS;
-    msg->value.coords.parent = self.id;
-    msg->value.coords.cosys = cosys;
-    msg->value.coords.codata = codata;
-    produce(self.context->queue, msg);
-}
-
-void ilG_handle_setViewCoords(ilG_handle self, ilG_cosysid cosys)
-{
-    struct ilG_context_msg *msg = calloc(1, sizeof(struct ilG_context_msg));
-    msg->type = ILG_VIEW_COORDS;
-    msg->value.coords.parent = self.id;
-    msg->value.coords.cosys = cosys;
-    produce(self.context->queue, msg);
-}
-
-void ilG_handle_addRenderer(ilG_handle self, ilG_handle node)
-{
-    struct ilG_context_msg *msg = calloc(1, sizeof(struct ilG_context_msg));
-    msg->type = ILG_ADD_RENDERER;
-    msg->value.renderer.parent = self.id;
-    msg->value.renderer.child = node.id;
-    produce(self.context->queue, msg);
-}
-
-void ilG_handle_delRenderer(ilG_handle self, ilG_handle node)
-{
-    struct ilG_context_msg *msg = calloc(1, sizeof(struct ilG_context_msg));
-    msg->type = ILG_DEL_RENDERER;
-    msg->value.renderer.parent = self.id;
-    msg->value.renderer.child = node.id;
-    produce(self.context->queue, msg);
-}
-
-void ilG_handle_addLight(ilG_handle self, struct ilG_light light)
-{
-    struct ilG_context_msg *msg = calloc(1, sizeof(struct ilG_context_msg));
-    msg->type = ILG_ADD_LIGHT;
-    msg->value.light.parent = self.id;
-    msg->value.light.child = light;
-    produce(self.context->queue, msg);
-}
-
-void ilG_handle_delLight(ilG_handle self, struct ilG_light light)
-{
-    struct ilG_context_msg *msg = calloc(1, sizeof(struct ilG_context_msg));
-    msg->type = ILG_DEL_LIGHT;
-    msg->value.light.parent = self.id;
-    msg->value.light.child = light;
-    produce(self.context->queue, msg);
-}
-
-void ilG_handle_message(ilG_handle self, int type, il_value data)
-{
-    struct ilG_context_msg *msg = calloc(1, sizeof(struct ilG_context_msg));
-    msg->type = ILG_MESSAGE;
-    msg->value.message.node = self.id;
-    msg->value.message.type = type;
-    msg->value.message.data = data;
-    produce(self.context->queue, msg);
 }
 
 void ilG_context_bindFB(ilG_context *self)
@@ -367,23 +213,12 @@ void ilG_context_bind_for_outpass(ilG_context *self)
 /////////////////////////////////////////////////////////////////////////////
 // Message handlers
 
-static int context_upload(ilG_context *self, void (*fn)(void*), void* ptr)
-{
-    (void)self;
-    fn(ptr);
-    return 1;
-}
-
-static int context_resize(ilG_context *self, int w, int h)
+int ilG_context_localResize(ilG_context *self, int w, int h)
 {
     self->width = w;
     self->height = h;
     if (self->use_default_fb) {
-        il_value val = il_value_vectorl(2, il_value_int(self->width), il_value_int(self->height));
-        ilE_handler_fire(self->resize, &val);
-        il_value_free(val);
-        self->valid = 1;
-        return 1;
+        goto end;
     }
 
     // GL setup
@@ -430,7 +265,9 @@ static int context_resize(ilG_context *self, int w, int h)
         il_error("Unable to create framebuffer for context: %s", status_str);
         return 0;
     }
-    il_value val = il_value_vectorl(2, il_value_int(self->width), il_value_int(self->height));
+    il_value val;
+end:
+    val = il_value_vectorl(2, il_value_int(self->width), il_value_int(self->height));
     ilE_handler_fire(self->resize, &val);
     il_value_free(val);
     self->valid = 1;
@@ -444,301 +281,6 @@ static void context_message(ilG_context *self, ilG_rendid id, int type, il_value
     assert(s && r);
     s->fn(r->data, type, &data);
     il_value_free(data);
-}
-
-ilG_renderer *ilG_context_findRenderer(ilG_context *self, ilG_rendid id)
-{
-    ilG_rendid key;
-    unsigned idx;
-    IL_FIND(self->manager.rendids, key, key == id, idx);
-    if (idx < self->manager.rendids.length) {
-        return &self->manager.renderers.data[idx];
-    }
-    return NULL;
-}
-
-ilG_msgsink *ilG_context_findSink(ilG_context *self, ilG_rendid id)
-{
-    ilG_msgsink r;
-    unsigned idx;
-    IL_FIND(self->manager.sinks, r, r.id == id, idx);
-    if (idx < self->manager.sinks.length) {
-        return &self->manager.sinks.data[idx];
-    }
-    return NULL;
-}
-
-il_table *ilG_context_findStorage(ilG_context *self, ilG_rendid id)
-{
-    ilG_rendstorage r;
-    unsigned idx;
-    IL_FIND(self->manager.storages, r, r.first == id, idx);
-    if (idx < self->manager.storages.length) {
-        return &self->manager.storages.data[idx].second;
-    }
-    return NULL;
-}
-
-const char *ilG_context_findName(ilG_context *self, ilG_rendid id)
-{
-    ilG_rendname r;
-    unsigned idx;
-    IL_FIND(self->manager.namelinks, r, r.first == id, idx);
-    if (idx < self->manager.namelinks.length) {
-        return self->manager.names.data[r.second];
-    }
-    return NULL;
-}
-
-unsigned ilG_context_addRenderer(ilG_context *self, ilG_rendid id, ilG_builder builder)
-{
-    ilG_buildresult b;
-    bool res = builder.build(builder.obj, id, self, &b);
-    if (res) {
-        ilG_renderer r = (ilG_renderer) {
-            .free = b.free,
-            .children = {0,0,0},
-            .lights = {0,0,0},
-            .obj = 0,
-            .view = 0,
-            .stat = 0,
-            .data = b.obj
-        };
-        if (b.update) {
-            ilG_statrenderer s = (ilG_statrenderer) {
-                .update = b.update
-            };
-            r.stat = self->manager.statrenderers.length;
-            IL_APPEND(self->manager.statrenderers, s);
-        }
-        if (b.view) {
-            for (unsigned i = 0; i < b.num_types; i++) {
-                if (b.types[i] & ILG_MODEL) {
-                    il_error("View renderers cannot have model transformations");
-                    return UINT_MAX;
-                }
-            }
-            ilG_viewrenderer v = (ilG_viewrenderer) {
-                .update = b.view,
-                .coordsys = 0, // TODO: Select coord system
-                .types = b.types,
-                .num_types = b.num_types,
-            };
-            r.view = self->manager.viewrenderers.length;
-            IL_APPEND(self->manager.viewrenderers, v);
-        }
-        if (b.draw) {
-            ilG_objrenderer m = (ilG_objrenderer) {
-                .draw = b.draw,
-                .coordsys = 0, // TODO: Select coord system
-                .types = b.types,
-                .num_types = b.num_types
-            };
-            r.obj = self->manager.objrenderers.length;
-            IL_APPEND(self->manager.objrenderers, m);
-        }
-        IL_APPEND(self->manager.renderers, r);
-        IL_APPEND(self->manager.rendids, id);
-        return self->manager.renderers.length - 1;
-    }
-    return UINT_MAX;
-}
-
-unsigned ilG_context_addSink(ilG_context *self, ilG_rendid id, ilG_message_fn sink)
-{
-    ilG_msgsink s = {
-        .fn = sink,
-        .id = id
-    };
-    IL_APPEND(self->manager.sinks, s);
-    return self->manager.sinks.length - 1;
-}
-
-unsigned ilG_context_addChild(ilG_context *self, ilG_rendid parent, ilG_rendid child)
-{
-    ilG_renderer *r = ilG_context_findRenderer(self, parent);
-    unsigned idx;
-    ilG_rendid id;
-    IL_FIND(self->manager.rendids, id, id == child, idx);
-    if (idx < self->manager.rendids.length) {
-        IL_APPEND(r->children, idx);
-        return 1;
-    }
-    il_error("No such renderer %u", child);
-    return 0;
-}
-
-unsigned ilG_context_addCoords(ilG_context *self, ilG_rendid id, ilG_cosysid cosysid, unsigned codata)
-{
-    ilG_renderer *r = ilG_context_findRenderer(self, id);
-    ilG_objrenderer *or = &self->manager.objrenderers.data[r->obj];
-    unsigned cosys;
-    ilG_coordsys co;
-    IL_FIND(self->manager.coordsystems, co, co.id == cosysid, cosys);
-    if (or->coordsys != cosys) {
-        or->coordsys = cosys;
-        if (or->objects.length > 0) {
-            il_warning("Multiple coord systems per renderer not supported: Overwriting");
-        }
-        or->objects.length = 0;
-    }
-    IL_APPEND(or->objects, codata);
-    return or->objects.length - 1;
-}
-
-unsigned ilG_context_viewCoords(ilG_context *self, ilG_rendid id, ilG_cosysid cosys)
-{
-    ilG_renderer *r = ilG_context_findRenderer(self, id);
-    ilG_viewrenderer *vr = &self->manager.viewrenderers.data[r->view];
-    vr->coordsys = cosys;
-    return 0;
-}
-
-unsigned ilG_context_addLight(ilG_context *self, ilG_rendid id, ilG_light light)
-{
-    ilG_renderer *r = ilG_context_findRenderer(self, id);
-    IL_APPEND(r->lights, light);
-    return r->lights.length-1;
-}
-
-unsigned ilG_context_addStorage(ilG_context *self, ilG_rendid id)
-{
-    ilG_rendstorage r = {
-        .first = id,
-        .second = il_table_new()
-    };
-    IL_APPEND(self->manager.storages, r);
-    return self->manager.storages.length - 1;
-}
-
-unsigned ilG_context_addName(ilG_context *self, ilG_rendid id, const char *name)
-{
-    unsigned idx;
-    IL_FIND(self->manager.names, const char *s, strcmp(s, name) == 0, idx);
-    if (idx == self->manager.names.length) {
-        char *s = strdup(name);
-        IL_APPEND(self->manager.names, s);
-    }
-    ilG_rendname r = {
-        .first = id,
-        .second = idx
-    };
-    IL_APPEND(self->manager.namelinks, r);
-    return self->manager.namelinks.length - 1;
-}
-
-unsigned ilG_context_addCoordSys(ilG_context *self, ilG_coordsys co)
-{
-    IL_APPEND(self->manager.coordsystems, co);
-    return self->manager.coordsystems.length-1;
-}
-
-bool ilG_context_delRenderer(ilG_context *self, ilG_rendid id)
-{
-    unsigned idx;
-    ilG_rendid key;
-    IL_FIND(self->manager.rendids, key, key == id, idx);
-    if (idx < self->manager.rendids.length) {
-        IL_FASTREMOVE(self->manager.renderers, idx);
-        IL_FASTREMOVE(self->manager.rendids, idx);
-        return true;
-    }
-    return false;
-}
-
-bool ilG_context_delSink(ilG_context *self, ilG_rendid id)
-{
-    unsigned idx;
-    ilG_msgsink r;
-    IL_FIND(self->manager.sinks, r, r.id == id, idx);
-    if (idx < self->manager.sinks.length) {
-        IL_FASTREMOVE(self->manager.sinks, idx);
-        return true;
-    }
-    return false;
-}
-
-bool ilG_context_delChild(ilG_context *self, ilG_rendid parent, ilG_rendid child)
-{
-    unsigned idx;
-    ilG_rendid id;
-    ilG_renderer *par = ilG_context_findRenderer(self, parent);
-    IL_FIND(self->manager.rendids, id, id == child, idx);
-    if (idx < self->manager.rendids.length) {
-        unsigned idx2;
-        IL_FIND(par->children, id, id == idx, idx2);
-        if (idx2 < par->children.length) {
-            IL_FASTREMOVE(par->children, idx2);
-            return true;
-        }
-    }
-    return false;
-}
-
-bool ilG_context_delCoords(ilG_context *self, ilG_rendid id, unsigned cosys, unsigned codata)
-{
-    ilG_renderer *r = ilG_context_findRenderer(self, id);
-    ilG_objrenderer *or = &self->manager.objrenderers.data[r->obj];
-    unsigned idx;
-    unsigned d;
-    if (or->coordsys != cosys) {
-        return false;
-    }
-    IL_FIND(or->objects, d, d == codata, idx);
-    if (idx < or->objects.length) {
-        IL_FASTREMOVE(or->objects, idx);
-        return true;
-    }
-    return false;
-}
-
-bool ilG_context_delLight(ilG_context *self, ilG_rendid id, ilG_light light)
-{
-    ilG_renderer *r = ilG_context_findRenderer(self, id);
-    unsigned idx;
-    ilG_light val;
-    IL_FIND(r->lights, val, val.id == light.id, idx);
-    if (idx < r->lights.length) {
-        IL_FASTREMOVE(r->lights, idx);
-        return true;
-    }
-    return false;
-}
-
-bool ilG_context_delStorage(ilG_context *self, ilG_rendid id)
-{
-    unsigned idx;
-    ilG_rendstorage r;
-    IL_FIND(self->manager.storages, r, r.first == id, idx);
-    if (idx < self->manager.storages.length) {
-        IL_FASTREMOVE(self->manager.storages, idx);
-        return true;
-    }
-    return false;
-}
-
-bool ilG_context_delName(ilG_context *self, ilG_rendid id)
-{
-    unsigned idx;
-    ilG_rendname r;
-    IL_FIND(self->manager.namelinks, r, r.first == id, idx);
-    if (idx < self->manager.namelinks.length) {
-        IL_REMOVE(self->manager.namelinks, idx);
-        return true;
-    }
-    return false;
-}
-
-bool ilG_context_delCoordSys(ilG_context *self, unsigned id)
-{
-    unsigned idx;
-    ilG_coordsys co;
-    IL_FIND(self->manager.coordsystems, co, co.id == id, idx);
-    if (idx < self->manager.coordsystems.length) {
-        IL_FASTREMOVE(self->manager.coordsystems, idx);
-        return true;
-    }
-    return false;
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -776,7 +318,7 @@ static void render_renderer(ilG_context *context, ilG_renderer *par)
     }
 }
 
-static void render_frame(ilG_context *context)
+void ilG_context_renderFrame(ilG_context *context)
 {
     glViewport(0, 0, context->width, context->height);
     context->material       = NULL;
@@ -803,7 +345,7 @@ static void render_frame(ilG_context *context)
     render_renderer(context, &context->manager.renderers.data[0]);
 }
 
-static void measure_frametime(ilG_context *context)
+void ilG_context_measure(ilG_context *context)
 {
     struct timeval time, tv;
     struct ilG_frame *iter, *temp, *frame, *last;
@@ -835,7 +377,7 @@ static void measure_frametime(ilG_context *context)
 }
 
 // TODO: Find out why APIENTRY disappeared when switching to SDL
-static /*APIENTRY*/ GLvoid error_cb(GLenum source, GLenum type, GLuint id, GLenum severity,
+static GLvoid error_cb(GLenum source, GLenum type, GLuint id, GLenum severity,
                        GLsizei length, const GLchar* message, GLvoid* user)
 {
     (void)user;
@@ -889,7 +431,7 @@ static /*APIENTRY*/ GLvoid error_cb(GLenum source, GLenum type, GLuint id, GLenu
     il_logger_log(logger, lmsg);
 }
 
-static void setup_context(ilG_context *self) // main thread
+void ilG_context_setupSDLWindow(ilG_context *self) // main thread
 {
     if (self->complete) {
         il_error("Context already complete");
@@ -933,7 +475,7 @@ static void setup_context(ilG_context *self) // main thread
     SDL_SetWindowData(self->window, "context", self);
 }
 
-static void setup_glew(ilG_context *self)
+void ilG_context_setupGLEW(ilG_context *self)
 {
     glewExperimental = self->experimental? GL_TRUE : GL_FALSE; // TODO: find out why IL crashes without this
     GLenum err = glewInit();
@@ -950,7 +492,11 @@ static void setup_glew(ilG_context *self)
         il_log("OpenGL Version %s", glGetString(GL_VERSION));
     }
 #endif
+    tgl_check("GLEW setup");
+}
 
+void ilG_context_localSetup(ilG_context *self)
+{
     tgl_check("Unknown");
     if (GLEW_KHR_debug) {
         glDebugMessageCallback((GLDEBUGPROC)&error_cb, NULL);
@@ -973,15 +519,16 @@ static void setup_glew(ilG_context *self)
     self->complete = 1;
 }
 
-static void *render_thread(void *ptr)
+void *ilG_context_loop(void *ptr)
 {
     ilG_context *self = ptr;
 
     self->context = SDL_GL_CreateContext(self->window);
 
     SDL_GL_SetSwapInterval(self->vsync);
-    setup_glew(self);
-    context_resize(self, self->startWidth, self->startHeight);
+    ilG_context_setupGLEW(self);
+    ilG_context_localSetup(self);
+    ilG_context_localResize(self, self->startWidth, self->startHeight);
 
     while (self->valid) {
         // Run per-frame stuff
@@ -990,10 +537,10 @@ static void *render_thread(void *ptr)
         il_value_free(nil);
         // Process messages
         struct ilG_context_msg *msg;
-        while ((msg = consume(self->queue))) {
+        while ((msg = ilG_context_queue_consume(self->queue))) {
             switch (msg->type) {
-            case ILG_UPLOAD: context_upload(self, msg->value.upload.cb, msg->value.upload.ptr); break;
-            case ILG_RESIZE: context_resize(self, msg->value.resize[0], msg->value.resize[1]); break;
+            case ILG_UPLOAD: msg->value.upload.cb(msg->value.upload.ptr); break;
+            case ILG_RESIZE: ilG_context_localResize(self, msg->value.resize[0], msg->value.resize[1]); break;
             case ILG_STOP: goto stop;
             case ILG_MESSAGE: context_message(self, msg->value.message.node, msg->value.message.type, msg->value.message.data); break;
             case ILG_ADD_COORDS:
@@ -1018,21 +565,21 @@ static void *render_thread(void *ptr)
                 ilG_context_delLight(self, msg->value.light.parent, msg->value.light.child);
                 break;
             }
-            done_consume(self->queue);
+            ilG_context_queue_doneconsume(self->queue);
         }
         int width, height;
         SDL_GetWindowSize(self->window, &width, &height);
         if (width != self->width || height != self->height) {
-            context_resize(self, width, height);
+            ilG_context_localResize(self, width, height);
         }
         // Render
-        render_frame(self);
+        ilG_context_renderFrame(self);
         if (self->use_default_fb) {
             glViewport(0,0, self->width, self->height);
             SDL_GL_SwapWindow(self->window);
         }
         // Perform fps measuring calculations
-        measure_frametime(self);
+        ilG_context_measure(self);
     }
 
     if (!self->valid || !self->complete) {
@@ -1040,7 +587,7 @@ static void *render_thread(void *ptr)
     }
 
 stop:
-    done_consume(self->queue);
+    ilG_context_queue_doneconsume(self->queue);
     glDeleteFramebuffers(1, &self->framebuffer);
     glDeleteTextures(5, &self->fbtextures[0]);
     return NULL;
@@ -1048,11 +595,11 @@ stop:
 
 bool ilG_context_start(ilG_context *self)
 {
-    setup_context(self);
+    ilG_context_setupSDLWindow(self);
 
     self->running = true;
     // Start thread
-    int res = pthread_create(&self->thread, NULL, render_thread, self);
+    int res = pthread_create(&self->thread, NULL, ilG_context_loop, self);
     if (res) {
         il_error("pthread_create: %s", strerror(errno));
     }
@@ -1063,57 +610,7 @@ void ilG_context_stop(ilG_context *self)
 {
     struct ilG_context_msg *msg = calloc(1, sizeof(struct ilG_context_msg));
     msg->type = ILG_STOP;
-    produce(self->queue, msg);
+    ilG_context_queue_produce(self->queue, msg);
     pthread_join(self->thread, NULL);
     self->running = false;
 }
-
-/*static void tabulate(unsigned n)
-{
-    for (unsigned i = 0; i < 2*n; i++) {
-        fputc(' ', stderr);
-    }
-}
-
-void ilG_context_recursivePrint(ilG_context *self, ilG_rendid id, unsigned depth)
-{
-    tabulate(depth); fprintf(stderr, "%u:\n", id);
-    tabulate(depth+1); fprintf(stderr, "sink: %s\n", ilG_context_findSink(self, id)? "true" : "false");
-    ilG_renderer *r;
-    unsigned iter;
-    while ((r = ilG_context_iterChildren(self, id, &iter))) {
-        ilG_context_recursivePrint(self, r->id, depth+1);
-    }
-}*/
-
-/*void ilG_context_printScenegraph(ilG_context *self)
-{
-    fprintf(stderr, "storage:\n");
-    il_table_show(&self->storage);
-    fprintf(stderr, "renderers:\n");
-    ilG_rendermanager *rm = &self->manager;
-    for (unsigned i = 0; i < rm->names.length; i++) {
-        fprintf(stderr, "  %s: ", rm->names.data[i]);
-        for (unsigned j = 0; j < rm->namelinks.length; j++) {
-            if (rm->namelinks.data[j].second == i) {
-                fprintf(stderr, "%u, ", rm->namelinks.data[j].first);
-            }
-        }
-        fprintf(stderr, "\n");
-    }
-    fprintf(stderr, "  No name: ");
-    for (unsigned i = 0; i < rm->renderers.length; i++) {
-        bool has_name = false;
-        for (unsigned j = 0; j < rm->namelinks.length; j++) {
-            if (rm->namelinks.data[j].first == rm->renderers.data[i].id) {
-                has_name = true;
-            }
-        }
-        if (!has_name) {
-            fprintf(stderr, "%u, ", rm->renderers.data[i].id);
-        }
-    }
-    fprintf(stderr, "\n");
-    fprintf(stderr, "hierarchy:\n");
-    //ilG_context_recursivePrint(self, 0, 1);
-    }*/
