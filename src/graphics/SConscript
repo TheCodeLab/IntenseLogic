@@ -18,14 +18,14 @@ graphics = env.Clone()
 graphics.Append(CFLAGS="-DIL_IN_GRAPHICS", CPPPATH = [src_dir, "#tiffgl/src/tgl"], LIBS=["ilcommon","ilutil","ilmath","ilasset","ilinput"])
 
 pkg_libs = {
-    "osx":   ["sdl2", "glew", "harfbuzz", "cairo", "harfbuzz-icu", "freetype2"],
-    "arch":  ["sdl2", "glew", "gl", "harfbuzz", "harfbuzz-icu", "cairo", "freetype2"],
-    "linux": ["gl", "sdl2", "glew", "harfbuzz", "harfbuzz-icu", "cairo", "freetype2"],
-    "mingw": ["freetype2"]
+    "osx":   ["sdl2", "glew"],
+    "arch":  ["sdl2", "glew", "gl"],
+    "linux": ["gl", "sdl2", "glew"],
+    "mingw": []
 }
 
 if platform=="mingw":
-    graphics.Append(LIBS=["opengl32", "SDL2", "glew32", "glfw3", "png", "z", "harfbuzz", "harfbuzz-icu", "cairo"])
+    graphics.Append(LIBS=["opengl32", "SDL2", "glew32"])
 
 for lib in pkg_libs[platform]:
     graphics.ParseConfig("pkg-config " + lib + " --cflags --libs")
