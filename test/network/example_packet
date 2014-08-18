@@ -1,6 +1,0 @@
-04      # flags
-07      # channel
-10      # event
-00 00 00 27 # type
-68 65 6c 6c 6f 2c 20 77 6f 72 6c 64 0a # payload: "hello, world\n"
-
