@@ -6,6 +6,7 @@
 #include "util/loader.h"
 #include "version.h"
 #include "util/opt.h"
+#include "asset/node.h"
 
 struct {
     enum {
@@ -19,12 +20,15 @@ struct {
     {REQUIRED,  'i', "ignore",  "Ignores a module while loading"},
     {NO_ARG,    'h', "help",    "Prints this message and exits"},
     {NO_ARG,    'v', "version", "Prints the version and exits"},
+    {REQUIRED,  'd', "data",    "Adds a directory to look for data files"},
     {NO_ARG,      0, NULL,      NULL}
 };
 
 #ifndef DEMO_MODULES
 #define DEMO_MODULES "modules"
 #endif
+
+ilA_fs demo_fs;
 
 void demo_start();
 
@@ -38,6 +42,8 @@ int main(int argc, char **argv)
     il_opts opts = il_opt_parse(argc, argv);
     il_optslice empty = {NULL, 0};
     il_modopts *main_opts = il_opts_lookup(&opts, empty);
+
+    ilA_adddir(&demo_fs, ".", -1);
 
     for (i = 0; main_opts && i < main_opts->args.length; i++) {
         il_opt *opt = &main_opts->args.data[i];
@@ -80,6 +86,9 @@ int main(int argc, char **argv)
             printf("IntenseLogic %s\n", il_version);
             printf("Built %s\n", __DATE__);
             return 0;
+        }
+        option("d", "data") {
+            ilA_adddir(&demo_fs, arg, -1);
         }
         free(arg);
     }

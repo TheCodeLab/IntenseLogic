@@ -5,7 +5,6 @@
 
 #include "asset/mesh.h"
 #include "asset/node.h"
-#include "asset/path.h"
 #include "graphics/arrayattrib.h"
 #include "graphics/bindable.h"
 #include "graphics/context.h"
@@ -35,17 +34,10 @@ int ilG_mesh_init(ilG_mesh *mesh, const ilA_mesh* self)
     return 1;
 }
 
-ilA_mesh *ilA_mesh_parseObj(const char *filename, const char *data, size_t length);
-int ilG_mesh_fromfile(ilG_mesh *mesh, const char *name)
+ilA_mesh *ilA_mesh_parseObj(ilA_fs *fs, const char *filename, const char *data, size_t length);
+int ilG_mesh_fromfile(ilG_mesh *mesh, ilA_fs *fs, const char *name)
 {
-    size_t length;
-    void *data;
-    il_base *file = ilA_contents_chars(name, &length, &data, NULL);
-    if (!file) {
-        return 0;
-    }
-    ilA_mesh *asset = ilA_mesh_parseObj(name, data, length);
-    il_unref(file);
+    ilA_mesh *asset = ilA_mesh_loadfile(fs, name);
     int res = ilG_mesh_init(mesh, asset);
     ilA_mesh_free(asset);
     return res;

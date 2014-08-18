@@ -13,29 +13,28 @@ Import("libilmath")
 
 asset = env.Clone()
 
-asset.Append(CPPPATH = src_dir, LIBS=["ilutil", "ilcommon", "ilmath"])
+asset.Append(CPPPATH = src_dir, LIBS=["ilutil", "ilmath"])
 
 pkg_libs = {
     "osx":   ["libpng"],
     "arch":  ["libpng"],
     "linux": ["libpng"],
+    "mingw": []
 }
 
 if platform=="mingw":
     asset.Append(LIBS=["png", "z"])
-else:
-    for lib in pkg_libs[platform]:
-        asset.ParseConfig("pkg-config " + lib + " --cflags --libs")
+
+for lib in pkg_libs[platform]:
+    asset.ParseConfig("pkg-config " + lib + " --cflags --libs")
 
 sources = []
 for module in Split(inputs) :
     sources.extend(Glob(module))
 
-libilasset = asset.SharedLibrary(target = build_dir + "/" + output, 
+libilasset = asset.SharedLibrary(target = build_dir + "/" + output,
                                        source = sources)
 Depends(libilasset, libilutil)
 Depends(libilasset, libilmath)
-#Depends(libilasset, libilcommon)
 
 Return("libilasset")
-

@@ -63,22 +63,13 @@ void ilG_material_vertex(ilG_material* self, il_string *source)
 
 void ilG_material_vertex_file(ilG_material *self, const char *filename)
 {
-    size_t size;
-    void *data;
-    ilA_path *path = ilA_path_chars(filename);
-    il_base *base = ilA_lookup(ilG_shaders_iface, ilG_shaders_dir, path);
-    ilA_path_free(path);
-    if (!base) {
-        il_error("No such file %s", filename);
+    ilA_map map;
+    if (!ilA_mapfile(&ilG_shaders, &map, ILA_READ, filename, -1)) {
+        ilA_printerror(&map.err);
         return;
     }
-    data = ilA_contents(NULL, base, &size);
-    if (!data) {
-        il_error("%s is not a file", filename);
-        return;
-    }
-    ilG_material_vertex(self, il_string_bin(data, size));
-    il_unref(base);
+    ilG_material_vertex(self, il_string_bin(map.data, map.size));
+    ilA_unmapfile(&map);
 }
 
 void ilG_material_fragment(ilG_material* self, il_string *source)
@@ -91,22 +82,13 @@ void ilG_material_fragment(ilG_material* self, il_string *source)
 
 void ilG_material_fragment_file(ilG_material *self, const char *filename)
 {
-    size_t size;
-    void *data;
-    ilA_path *path = ilA_path_chars(filename);
-    il_base *base = ilA_lookup(ilG_shaders_iface, ilG_shaders_dir, path);
-    ilA_path_free(path);
-    if (!base) {
-        il_error("No such file %s", filename);
+    ilA_map map;
+    if (!ilA_mapfile(&ilG_shaders, &map, ILA_READ, filename, -1)) {
+        ilA_printerror(&map.err);
         return;
     }
-    data = ilA_contents(NULL, base, &size);
-    if (!data) {
-        il_error("%s is not a file", filename);
-        return;
-    }
-    ilG_material_fragment(self, il_string_bin(data, size));
-    il_unref(base);
+    ilG_material_fragment(self, il_string_bin(map.data, map.size));
+    ilA_unmapfile(&map);
 }
 
 
@@ -115,7 +97,7 @@ void ilG_material_name(ilG_material* self, const char* name)
     self->name = strdup(name);
 }
 
-void ilG_material_arrayAttrib(ilG_material* self, unsigned long attrib, const char *location) 
+void ilG_material_arrayAttrib(ilG_material* self, unsigned long attrib, const char *location)
 {
     self->config->attriblocs[attrib] = strdup(location);
 }
@@ -158,7 +140,7 @@ void ilG_material_bindMatrix(ilG_material* self, GLuint loc, il_mat m)
     glUniformMatrix4fv(loc, 1, GL_TRUE, m.data);
 }
 
-static void link(ilG_material *self)
+static void link_shader(ilG_material *self)
 {
     tgl_check("Unknown");
     il_log("Building shader \"%s\"", self->name);
@@ -213,6 +195,6 @@ int /*failure*/ ilG_material_link(ilG_material* self, ilG_context *ctx)
         il_error("Null material");
     }
     self->context = ctx;
-    link(self);
+    link_shader(self);
     return 0;
 }

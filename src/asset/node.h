@@ -10,69 +10,86 @@
 #define ILA_NODE_H
 
 #include <stdlib.h>
+#include <stdbool.h>
+#include <unistd.h>
 
-#include "asset/path.h"
-#include "common/base.h"
+#include "util/array.h"
 
-enum ilA_file_mode {
-    ILA_FILE_READ   = 1<<0,
-    ILA_FILE_WRITE  = 1<<1,
-    ILA_FILE_EXEC   = 1<<2
-};
-
-typedef struct ilA_file ilA_file;
-typedef struct ilA_dir ilA_dir;
-
-typedef enum ilA_file_mode (*ilA_file_mode_fn)(void *self);
-typedef void *(*ilA_file_contents_fn)(void *self, size_t *size);
-
-/** Typeclass for file operations */
-struct ilA_file {
-    il_typeclass_header;
-    ilA_file_mode_fn mode;
-    ilA_file_contents_fn contents;
-};
-
-typedef il_base *(*ilA_dir_lookup_fn)(void *self, const ilA_path *path);
-typedef il_base *(*ilA_dir_create_fn)(void *self, const ilA_path *path, const ilA_file **res);
-typedef il_base *(*ilA_dir_mkdir_fn) (void *self, const ilA_path *path, const ilA_dir **res);
-typedef void     (*ilA_dir_delete_fn)(void *self, const ilA_path *path);
-
-/** Typeclass for directory operations */
-struct ilA_dir {
-    il_typeclass_header;
-    ilA_dir_lookup_fn lookup;
-    ilA_dir_create_fn create;
-    ilA_dir_mkdir_fn mkdir;
-    ilA_dir_delete_fn del;
-};
-
-/** Creates a file object from an object that resides on the real file system */
-il_base *ilA_stdiofile      (const ilA_path *path,  enum ilA_file_mode mode,                    const ilA_file **res);
-/** Creates a directory object from a directory that resides on the real file system */
-il_base *ilA_stdiodir       (const ilA_path *path,  const ilA_dir **res);
-/** Creates a directory union from two directories
- *
- * If one of the two directories is a union directory itself, it will extend that to a 3-directory union. */
-il_base *ilA_union          (const ilA_dir  *ai,    const ilA_dir *bi, il_base *a, il_base *b,  const ilA_dir **res);
-/** Wraps a directory such that its real contents are behind a path 
- *
- * A directory with foo, bar, and baz inside of it and a prefix of /a/b/c would become /a/b/c/foo, /a/b/c/bar, and /a/b/c/baz.*/
-il_base *ilA_prefix         (const ilA_dir  *iface, il_base *dir, const ilA_path *path,         const ilA_dir **res);
-/** Looks up a node in a directory */
-il_base *ilA_lookup         (const ilA_dir  *iface, il_base *dir, const ilA_path *path);
-/** Creates a new file in a directory */
-il_base *ilA_create         (const ilA_dir  *iface, il_base *dir, const ilA_path *path,         const ilA_file **res);
-/** Creates a new directory in a directory */
-il_base *ilA_mkdir          (const ilA_dir  *iface, il_base *dir, const ilA_path *path,         const ilA_dir **res);
-/** Deletes a node in a directory */
-void     ilA_delete         (const ilA_dir  *iface, il_base *dir, const ilA_path *path);
-/** Returns the contents of a file */
-void    *ilA_contents       (const ilA_file *iface, il_base *file, size_t *size);
-/** Opens a real file and returns its contents */
-il_base *ilA_contents_path  (const ilA_path *path, size_t *size, void **data, const ilA_file **res);
-/** Opens a real file and returns its contents */
-il_base *ilA_contents_chars (const char *path, size_t *size, void **data, const ilA_file **res);
-
+#ifdef WIN32
+typedef HANDLE ilA_filehandle;
+typedef struct ilA_maphandle {
+    HANDLE fhandle, mhandle;
+} ilA_maphandle;
+typedef DWORD ilA_errno_t;
+#else
+typedef int ilA_filehandle;
+typedef int ilA_maphandle;
+typedef int ilA_dirhandle;
+typedef int ilA_errno_t;
 #endif
 
+typedef enum ilA_file_mode {
+    ILA_READ   = 1<<0,
+    ILA_WRITE  = 1<<1,
+    ILA_EXEC   = 1<<2,
+    ILA_CREATE = 1<<3,
+    ILA_RW     = ILA_READ|ILA_WRITE,
+    ILA_RWE    = ILA_RW | ILA_EXEC,
+    ILA_RWC    = ILA_RW | ILA_CREATE
+} ilA_file_mode;
+
+typedef struct ilA_error {
+    enum {
+        ILA_NOERR,
+        ILA_ERRNOERR,
+        ILA_STRERR,
+        ILA_CONSTERR
+    } type;
+    const char *func;
+    union {
+        ilA_errno_t err;
+        char *str;
+        const char *cstr;
+    } val;
+} ilA_error;
+
+typedef struct ilA_map {
+    char *name;
+    size_t namelen;
+    void *data;
+    size_t size;
+    ilA_file_mode mode;
+    ilA_maphandle h;
+    ilA_error err;
+} ilA_map;
+
+typedef struct ilA_dir {
+    char *path;
+    size_t pathlen;
+    ilA_dirhandle dir;
+} ilA_dir;
+
+typedef struct ilA_dirid {
+    unsigned id;
+} ilA_dirid;
+
+typedef struct ilA_fs {
+    ilA_dirid writedir;
+    IL_ARRAY(ilA_dir,) dirs;
+} ilA_fs;
+
+bool ilA_mapfile(ilA_fs *fs, ilA_map *map, ilA_file_mode mode, const char *name, ssize_t namelen);
+bool ilA_dir_mapfile(ilA_fs *fs, ilA_dirid id, ilA_map *map, ilA_file_mode mode, const char *name, ssize_t namelen);
+void ilA_unmapfile(ilA_map *map);
+int ilA_rawopen(ilA_fs *fs, ilA_error *err, ilA_file_mode mode, const char *name, ssize_t namelen);
+int ilA_dir_rawopen(ilA_fs *fs, ilA_dirid id, ilA_error *err, ilA_file_mode mode, const char *name, ssize_t namelen);
+ilA_dirid ilA_adddir(ilA_fs *fs, const char *path, ssize_t pathlen);
+void ilA_deldir(ilA_fs *fs, ilA_dirid id);
+ilA_dirid ilA_mkdir(ilA_fs *fs, const char *path, ssize_t pathlen);
+void ilA_rmdir(ilA_fs *fs, ilA_dirid id);
+void ilA_delete(ilA_fs *fs, const char *name, ssize_t namelen);
+void ilA_lookup(ilA_fs *fs, const char *pattern, ssize_t patlen, void (*cb)(void *user, ilA_dirid id, const char *name, size_t namelen), void *user);
+void ilA_strerror(ilA_error *err, char *buf, size_t len);
+void ilA_printerror(ilA_error *err);
+
+#endif

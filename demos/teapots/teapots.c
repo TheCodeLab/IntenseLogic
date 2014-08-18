@@ -3,6 +3,7 @@
 #include <sys/time.h>
 #include <math.h>
 
+#include "asset/node.h"
 #include "graphics/context.h"
 #include "graphics/floatspace.h"
 #include "graphics/fragdata.h"
@@ -27,6 +28,8 @@ struct teapot {
     ilG_tex tex;
     GLuint mvp_loc, imt_loc;
 };
+
+extern ilA_fs demo_fs;
 
 static void teapot_draw(void *obj, ilG_rendid id, il_mat **mats, const unsigned *objects, unsigned num_mats)
 {
@@ -97,8 +100,8 @@ ilG_builder teapot_builder()
     ilG_material_arrayAttrib(m, ILG_MESH_SPECULAR, "in_Specular");
     ilG_material_textureUnit(m, 0, "tex");
 
-    ilG_mesh_fromfile(&t->mesh, "demos/teapots/teapot.obj");
-    ilG_tex_loadfile(&t->tex, "demos/teapots/white-marble-texture.png");
+    ilG_mesh_fromfile(&t->mesh, &demo_fs, "teapot.obj");
+    ilG_tex_loadfile(&t->tex, &demo_fs, "white-marble-texture.png");
 
     return ilG_builder_wrap(t, teapot_build);
 }
@@ -123,6 +126,7 @@ static void update_camera(const il_value *data, il_value *ctx)
 
 void demo_start()
 {
+    ilA_adddir(&demo_fs, "demos/teapots/", -1);
     ilG_context *context = ilG_context_new();
     ilG_context_hint(context, ILG_CONTEXT_DEBUG_RENDER, 1);
     ilG_context_hint(context, ILG_CONTEXT_VSYNC, 1);

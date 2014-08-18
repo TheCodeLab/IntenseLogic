@@ -72,27 +72,22 @@ ilA_mesh *ilA_mesh_copy(const ilA_mesh *mesh)
     return self;
 }
 
-ilA_mesh *ilA_mesh_load(il_base *file, const ilA_file *iface)
+ilA_mesh *ilA_mesh_loadfile(ilA_fs *fs, const char *path)
 {
-    size_t size;
-    void *data = ilA_contents(iface, file, &size);
-    return ilA_mesh_loadmem("", data, size); // TODO: add a file name getter to the file typeclass
-}
-
-ilA_mesh *ilA_mesh_loadfile(const char *path)
-{
-    size_t size;
-    void *data;
-    il_base *base = ilA_contents_chars(path, &size, &data, NULL);
-    ilA_mesh *mesh = ilA_mesh_loadmem(path, data, size);
-    il_unref(base);
+    ilA_map map;
+    if (!ilA_mapfile(fs, &map, ILA_READ, path, -1)) {
+        ilA_printerror(&map.err);
+        return NULL;
+    }
+    ilA_mesh *mesh = ilA_mesh_loadmem(fs, path, map.data, map.size);
+    ilA_unmapfile(&map);
     return mesh;
 }
 
-ilA_mesh *ilA_mesh_parseObj(const char *filename, const char *data, size_t length);
-ilA_mesh *ilA_mesh_loadmem(const char *filename, const void *data, size_t length)
+ilA_mesh *ilA_mesh_parseObj(ilA_fs *fs, const char *filename, const char *data, size_t length);
+ilA_mesh *ilA_mesh_loadmem(ilA_fs *fs, const char *filename, const void *data, size_t length)
 {
-    return ilA_mesh_parseObj(filename, data, length); // TODO: Format detection
+    return ilA_mesh_parseObj(fs, filename, data, length); // TODO: Format detection
 }
 
 

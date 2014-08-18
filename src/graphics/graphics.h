@@ -4,8 +4,7 @@
 #include "common/event.h"
 #include "asset/node.h"
 
-extern il_base *ilG_shaders_dir;
-extern const ilA_dir *ilG_shaders_iface;
+extern ilA_fs ilG_shaders;
 
 void ilG_shaders_addPath(const char *path);
 

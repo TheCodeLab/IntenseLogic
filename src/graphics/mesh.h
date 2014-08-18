@@ -5,6 +5,7 @@
 
 struct ilA_mesh;
 struct ilG_context;
+struct ilA_fs;
 
 typedef struct ilG_mesh {
     GLuint vbo, vao;
@@ -24,7 +25,7 @@ enum ilG_mesh_attribs {
 };
 
 int ilG_mesh_init(ilG_mesh *mesh, const struct ilA_mesh *source);
-int ilG_mesh_fromfile(ilG_mesh *mesh, const char *name);
+int ilG_mesh_fromfile(ilG_mesh *mesh, struct ilA_fs *fs, const char *name);
 void ilG_mesh_free(ilG_mesh *mesh);
 enum ilG_mesh_attribs ilG_mesh_build(ilG_mesh *mesh, struct ilG_context *context);
 void ilG_mesh_bind(ilG_mesh *mesh);

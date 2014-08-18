@@ -16,6 +16,8 @@ enum {
 
 using namespace BouncingLights;
 
+extern ilA_fs demo_fs;
+
 void BallRenderer::free(void *ptr)
 {
     BallRenderer &self = *reinterpret_cast<BallRenderer*>(ptr);
@@ -84,7 +86,7 @@ BallRenderer::BallRenderer()
     ilG_material_arrayAttrib(m, ILG_MESH_DIFFUSE, "in_Diffuse");
     ilG_material_arrayAttrib(m, ILG_MESH_SPECULAR, "in_Specular");*/
 
-    ilG_mesh_fromfile(&mesh, "demos/bouncing-lights/sphere.obj");
+    ilG_mesh_fromfile(&mesh, &demo_fs, "demos/bouncing-lights/sphere.obj");
 }
 
 ilG_builder BallRenderer::builder()

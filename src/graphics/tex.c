@@ -3,20 +3,13 @@
 #include "asset/image.h"
 #include "util/log.h"
 
-void ilG_tex_loadfile(ilG_tex *self, const char *file)
+void ilG_tex_loadfile(ilG_tex *self, ilA_fs *fs, const char *file)
 {
-    ilA_img *img = ilA_img_loadfile(file);
+    ilA_img *img = ilA_img_loadfile(fs, file);
     if (!img) {
         return;
     }
     ilG_tex_loadimage(self, img);
-}
-
-void ilG_tex_loadasset(ilG_tex *self, const struct ilA_file *iface, void *file)
-{
-    size_t size;
-    void *contents = ilA_contents(iface, file, &size);
-    ilG_tex_loadimage(self, ilA_img_load(contents, size));
 }
 
 static GLenum getImgFormat(const ilA_img *img)

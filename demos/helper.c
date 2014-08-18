@@ -7,6 +7,8 @@
 #include "graphics/outpass.h"
 #include "graphics/tex.h"
 
+extern ilA_fs demo_fs;
+
 helper_result helper_create(helper_config *conf)
 {
     helper_result r;
@@ -20,7 +22,7 @@ helper_result helper_create(helper_config *conf)
     if (conf->sky) {
         ilA_img *imgs[6];
         for (unsigned i = 0; i < 6; i++) {
-            imgs[i] = ilA_img_loadfile(conf->skytex[i]);
+            imgs[i] = ilA_img_loadfile(&demo_fs, conf->skytex[i]);
         }
         ilG_tex tex;
         ilG_tex_loadcube(&tex, imgs);

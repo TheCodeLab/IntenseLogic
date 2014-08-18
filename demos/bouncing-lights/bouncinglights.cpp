@@ -43,6 +43,8 @@ extern "C" {
 #define ex extern "C"
 #endif
 
+extern ilA_fs demo_fs;
+
 void add_objects(BulletSpace &bs, BallRenderer &ball, ilG_handle lights, ilG_handle r, btCollisionShape *shape, unsigned num, unsigned *seedp)
 {
     for (unsigned i = 0; i < num; i++) {
@@ -89,6 +91,7 @@ static void gtick(const il_value *data, il_value *ctx)
 ex void demo_start()
 {
     ilG_shaders_addPath("demos/bouncing-lights/");
+    ilA_adddir(&demo_fs, "demos/bouncing-lights/", -1);
     //feenableexcept(FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW);
     // Create context
     helper_config c;
@@ -168,7 +171,7 @@ ex void demo_start()
     }
 
     // Create heightmap physics and render stuff
-    ilA_img *hm = ilA_img_loadfile("demos/bouncing-lights/arena-heightmap.png");
+    ilA_img *hm = ilA_img_loadfile(&demo_fs, "arena-heightmap.png");
     const unsigned height = 50;
     btHeightfieldTerrainShape heightmap_shape
         (hm->width, hm->height, hm->data, height/255.f, 0, height, 1, PHY_UCHAR, false);
@@ -188,7 +191,7 @@ ex void demo_start()
     world.setBodyScale(groundId, il_vec3_new(128, 50, 128));
     ilA_img *norm = ilA_img_height_to_normal(hm);
     ilG_tex colortex, heighttex, normaltex;
-    ilG_tex_loadfile(&colortex, "demos/bouncing-lights/terrain.png");
+    ilG_tex_loadfile(&colortex, &demo_fs, "terrain.png");
     ilG_tex_loadimage(&heighttex, hm);
     ilG_tex_loadimage(&normaltex, norm);
     ilG_handle hmr = ilG_build

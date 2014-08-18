@@ -11,15 +11,15 @@
 /** These match up with the OpenGL primitives without creating a dependency on gl.h */
 enum ilA_mesh_primitive {
     ILA_MESH_POINTS,
-    ILA_MESH_LINES, 
-    ILA_MESH_LINE_STRIP, 
-    ILA_MESH_LINE_LOOP, 
-    ILA_MESH_LINE_STRIP_ADJACENCY, 
-    ILA_MESH_LINES_ADJACENCY, 
-    ILA_MESH_TRIANGLES, 
-    ILA_MESH_TRIANGLE_STRIP, 
+    ILA_MESH_LINES,
+    ILA_MESH_LINE_STRIP,
+    ILA_MESH_LINE_LOOP,
+    ILA_MESH_LINE_STRIP_ADJACENCY,
+    ILA_MESH_LINES_ADJACENCY,
+    ILA_MESH_TRIANGLES,
+    ILA_MESH_TRIANGLE_STRIP,
     ILA_MESH_TRIANGLE_FAN,
-    ILA_MESH_TRIANGLE_STRIP_ADJACENCY, 
+    ILA_MESH_TRIANGLE_STRIP_ADJACENCY,
     ILA_MESH_TRIANGLES_ADJACENCY,
     ILA_MESH_PATCHES
 };
@@ -49,16 +49,13 @@ typedef struct ilA_mesh {
 ilA_mesh *ilA_mesh_new(enum ilA_mesh_attrib attribs, size_t vertices);
 /** Copies a mesh */
 ilA_mesh *ilA_mesh_copy(const ilA_mesh *mesh);
-/** Loads a mesh from a file */
-ilA_mesh *ilA_mesh_load(il_base *file, const ilA_file *iface);
 /** Loads a mesh from a file path */
-ilA_mesh *ilA_mesh_loadfile(const char *path);
+ilA_mesh *ilA_mesh_loadfile(ilA_fs *fs, const char *path);
 /** Loads a mesh from memory */
-ilA_mesh *ilA_mesh_loadmem(const char *filename, const void *data, size_t length);
+ilA_mesh *ilA_mesh_loadmem(ilA_fs *fs, const char *filename, const void *data, size_t length);
 /** Destroys all data associated with a mesh */
 void ilA_mesh_free(ilA_mesh *self);
 /** Creates lines out of the position and normal data of a mesh, for debugging purposes. The f paramter is a factor for how long the lines should be */
 ilA_mesh *ilA_mesh_debugLines(ilA_mesh *self, float f);
 
 #endif
-

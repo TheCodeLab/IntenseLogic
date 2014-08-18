@@ -37,6 +37,7 @@ struct obj {
     size_t num_face, face_cap;
     struct face *face;
     ilA_mtl mtl, *cur;
+    ilA_fs *fs;
 };
 
 static int parse_line(struct obj *obj, char *line, char *error)
@@ -148,14 +149,14 @@ static int parse_line(struct obj *obj, char *line, char *error)
         }
         memcpy(obj->face + obj->num_face++, &face, sizeof(struct face));
     } else if (strcmp(word, "mtllib") == 0) {
-        void *data;
-        size_t size;
         char *filename = next_word;
-        il_base *base = ilA_contents_chars(filename, &size, &data, NULL);
-        if (!base) {
+        ilA_map map;
+        if (!ilA_mapfile(obj->fs, &map, ILA_READ, filename, -1)) {
+            ilA_printerror(&map.err);
             return 0;
         }
-        ilA_mesh_parseMtl(&obj->mtl, filename, data, size);
+        ilA_mesh_parseMtl(&obj->mtl, filename, map.data, map.size);
+        ilA_unmapfile(&map);
     } else if (strcmp(word, "usemtl") == 0) {
         char *name = next_word;
         HASH_FIND(hh, &obj->mtl, name, strlen(name), obj->cur);
@@ -168,9 +169,10 @@ static int parse_line(struct obj *obj, char *line, char *error)
     return col;
 }
 
-ilA_mesh *ilA_mesh_parseObj(const char *filename, const char *data, size_t length)
+ilA_mesh *ilA_mesh_parseObj(ilA_fs *fs, const char *filename, const char *data, size_t length)
 {
     struct obj *obj = calloc(1, sizeof(struct obj));
+    obj->fs = fs;
     ilA_mesh *mesh;
     char *str = malloc(length+1), *saveptr = str, *ptr, error[1024], col_str[8];
     strncpy(str, data, length);
@@ -239,4 +241,3 @@ ilA_mesh *ilA_mesh_parseObj(const char *filename, const char *data, size_t lengt
     }
     return mesh;
 }
-

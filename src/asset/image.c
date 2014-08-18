@@ -16,7 +16,7 @@ struct read_context {
     size_t head;
 };
 
-static int compute_bpp(int channels, int depth) 
+static int compute_bpp(int channels, int depth)
 {
     return (!!(channels & ILA_IMG_R) +
             !!(channels & ILA_IMG_G) +
@@ -27,7 +27,6 @@ static int compute_bpp(int channels, int depth)
 static void png_read_fn(png_structp png_ptr, png_bytep data, png_size_t length)
 {
     struct read_context *self = (struct read_context*)png_get_io_ptr(png_ptr);
-    //printf("read %zu bytes starting at %zu\n", length, self->head);
     memcpy(data, self->data + self->head, length);
     self->head += length;
 }
@@ -40,7 +39,7 @@ static int read_png(ilA_img *self, const void *data, size_t size)
     png_infop info_ptr;
     struct read_context read_context;
     png_bytepp rows;
-        
+
     png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, (png_voidp)NULL,
         NULL, NULL);
     if (!png_ptr) {
@@ -55,13 +54,12 @@ static int read_png(ilA_img *self, const void *data, size_t size)
         return 0;
     }
 
-    //png_init_io(png_ptr, NULL);
     read_context = (struct read_context){data, size, 8};
     png_set_read_fn(png_ptr, &read_context, &png_read_fn);
     png_set_sig_bytes(png_ptr, 8);
-    png_read_png(png_ptr, info_ptr, PNG_TRANSFORM_SCALE_16 | 
+    png_read_png(png_ptr, info_ptr, PNG_TRANSFORM_SCALE_16 |
         PNG_TRANSFORM_PACKING, NULL);
-    png_get_IHDR(png_ptr, info_ptr, &self->width, &self->height, &bpp, &ctype, 
+    png_get_IHDR(png_ptr, info_ptr, &self->width, &self->height, &bpp, &ctype,
         NULL, NULL, NULL);
     rowbytes = png_get_rowbytes(png_ptr, info_ptr);
 
@@ -78,15 +76,13 @@ static int read_png(ilA_img *self, const void *data, size_t size)
     }
     self->depth = 8; // TODO: 16-bit textures
     self->bpp = compute_bpp(self->channels, 8);
-    
     self->data = calloc(rowbytes, self->width);
     rows = png_get_rows(png_ptr, info_ptr);
     for (i = 0; i < self->height; i++) {
         memcpy(self->data + rowbytes*i, rows[i], rowbytes);
     }
-
     png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
-    
+
     return 1;
 }
 
@@ -107,28 +103,16 @@ ilA_img *ilA_img_load(const void *data, size_t size)
     return NULL;
 }
 
-ilA_img *ilA_img_loadasset(const ilA_file *iface, il_base *file)
+ilA_img *ilA_img_loadfile(ilA_fs *fs, const char *name)
 {
-    size_t size;
-    void *data = ilA_contents(iface, file, &size);
-    if (!data) {
-        il_error("Unable to load file");
+    ilA_map map;
+    if (!ilA_mapfile(fs, &map, ILA_READ, name, -1)) {
+        ilA_printerror(&map.err);
         return NULL;
     }
-    return ilA_img_load(data, size);
-}
-
-ilA_img *ilA_img_loadfile(const char *name)
-{
-    const ilA_file *iface;
-    ilA_path *path = ilA_path_chars(name);
-    il_base *file = ilA_stdiofile(path, ILA_FILE_READ, &iface);
-    if (!file) {
-        il_error("No such file %s", name);
-        return NULL;
-    }
-    ilA_path_free(path);
-    return ilA_img_loadasset(iface, file);
+    ilA_img *img = ilA_img_load(map.data, map.size);
+    ilA_unmapfile(&map);
+    return img;
 }
 
 ilA_img *ilA_img_fromdata(const void *data, unsigned w, unsigned h, unsigned depth, enum ilA_imgchannels channels)

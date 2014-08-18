@@ -26,23 +26,13 @@
 #include "graphics/bindable.h"
 #include "util/opt.h"
 
-il_base *ilG_shaders_dir;
-const ilA_dir *ilG_shaders_iface;
+ilA_fs ilG_shaders;
 
 static void quit();
 
 void ilG_shaders_addPath(const char *arg)
 {
-    ilA_path *path = ilA_path_chars(arg);
-    const ilA_dir *iface;
-    il_base *base = ilA_stdiodir(path, &iface);
-    ilA_path_free(path);
-    if (ilG_shaders_dir) {
-        ilG_shaders_dir = ilA_union(ilG_shaders_iface, iface, ilG_shaders_dir, base, &ilG_shaders_iface);
-    } else {
-        ilG_shaders_dir = base;
-        ilG_shaders_iface = iface;
-    }
+    ilA_adddir(&ilG_shaders, arg, -1);
 }
 
 static void sdl_error(void *ptr, int cat, SDL_LogPriority pri, const char *msg)
@@ -128,10 +118,8 @@ void il_configure_ilgraphics(il_modopts *opts)
 
 int il_load_ilgraphics()
 {
-    if (!ilG_shaders_dir) {
-        ilA_path *path = ilA_path_chars("shaders");
-        ilG_shaders_dir = ilA_stdiodir(path, &ilG_shaders_iface);
-        ilA_path_free(path);
+    if (ilG_shaders.dirs.length < 1) {
+        ilG_shaders_addPath("shaders");
     }
     sdl_setup();
     ilE_register(ilE_shutdown, ILE_DONTCARE, ILE_MAIN, &quit, il_value_nil());

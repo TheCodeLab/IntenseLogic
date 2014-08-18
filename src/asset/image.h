@@ -32,10 +32,8 @@ enum ilA_img_interpolation {
 
 /** Loads an image from memory */
 ilA_img *ilA_img_load(const void *data, size_t size);
-/** Loads an image from a file */
-ilA_img *ilA_img_loadasset(const ilA_file *iface, il_base *file);
 /** Loads an image from a file path */
-ilA_img *ilA_img_loadfile(const char *file);
+ilA_img *ilA_img_loadfile(ilA_fs *fs, const char *file);
 /** Creates a new image from raw data */
 ilA_img *ilA_img_fromdata(const void *data, unsigned w, unsigned h, unsigned depth, enum ilA_imgchannels channels);
 /** Creates a new image without copying */
@@ -54,4 +52,3 @@ ilA_img *ilA_img_bgra_to_rgba(const ilA_img *self);
 ilA_img *ilA_img_height_to_normal(const ilA_img *self);
 
 #endif
-
