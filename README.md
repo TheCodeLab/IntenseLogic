@@ -4,27 +4,25 @@ IntenseLogic is a set of libraries for developing a game or game engine written 
 ## Libraries
 
 ### Graphics
-A 3D graphics library for rendering scenes using OpenGL, which runs on its own thread.
+A 3D graphics library for rendering scenes using OpenGL, which can run in its own thread.
 
 Supports deferred shading and custom renderers.
-
-Contains simple GUI support, including a fully featured text renderer using Cairo, HarfBuzz, and FreeType2. It is capable of correctly rendering almost any language, provided the loaded font supports it.
 
 ### Asset
 A VFS layer with importers for PNG and OBJ formats.
 
 ### Common
-Contains some stuff that the other libraries depend on, such as a container for objects placed in the world.
+Contains some stuff that the other libraries depend on.
 
 ### Util
-Some generally useful stuff (logging, uthash, macros)
+Some generally useful stuff (logging, uthash, macros).
 
 ### Math
 Contains all that stuff useful for 3D graphics: vectors (3/4d), matrices, quaternions
 
 ## Screenshots
 
-![Bouncing Lights Demo](http://i.imgur.com/CXaIVHY.png)
+![Bouncing Lights Demo](http://i.imgur.com/JhcLYPO.png)
 
 ## Documentation
 (very out of date)
@@ -40,12 +38,8 @@ List of Dependencies:
 - OpenGL 3.1
 - [SDL 2.0](http://libsdl.org/)
 - [GLEW](http://glew.sourceforge.net/)
-- [libevent2](http://libevent.org)
 - [libpng](http://libpng.org/)
 - [LuaJIT (Lua 5.1)](http://luajit.org/)
-- [HarfBuzz (with ICU)](http://www.freedesktop.org/wiki/Software/HarfBuzz/)
-- [Cairo](http://cairographics.org/)
-- [FreeType2](http://freetype.org/)
 - pthread
 
 See the Wiki for help [building](https://github.com/TheCodeLab/IntenseLogic/wiki/Building).
@@ -84,4 +78,3 @@ misrepresented as being the original software.
 
 3. This notice may not be removed or altered from any source
 distribution.
-
