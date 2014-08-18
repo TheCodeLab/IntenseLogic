@@ -2,6 +2,7 @@
 
 #include <GL/glew.h>
 #include <string.h>
+#include <stdbool.h>
 
 #include "asset/node.h"
 #include "graphics/arrayattrib.h"
@@ -22,8 +23,9 @@ struct textureunit {
 
 struct ilG_material_config {
     IL_ARRAY(struct textureunit,) texunits;
-    il_string *vertsource;
-    il_string *fragsource;
+    bool file;
+    il_string vertsource, fragsource;
+    ilA_map vertfile, fragfile;
     char* attriblocs[ILG_ARRATTR_NUMATTRS];
     char* fraglocs[ILG_FRAGDATA_NUMATTRS];
 };
@@ -36,11 +38,31 @@ void ilG_material_init(ilG_material *mtl)
     mtl->config = calloc(1, sizeof(struct ilG_material_config));
 }
 
+static void free_old_vert(struct ilG_material_config *config)
+{
+    if (config->vertsource.str && config->file) {
+        ilA_unmapfile(&config->vertfile);
+    } else if (config->vertsource.str) {
+        free(config->vertsource.str);
+    }
+    config->vertsource.str = NULL;
+}
+
+static void free_old_frag(struct ilG_material_config *config)
+{
+    if (config->fragsource.str && config->file) {
+        ilA_unmapfile(&config->fragfile);
+    } else if (config->fragsource.str) {
+        free(config->fragsource.str);
+    }
+    config->fragsource.str = NULL;
+}
+
 void ilG_material_free(ilG_material *self)
 {
     IL_FREE(self->config->texunits);
-    il_unref(self->config->fragsource);
-    il_unref(self->config->vertsource);
+    free_old_vert(self->config);
+    free_old_frag(self->config);
     for (unsigned i = 0; i < ILG_FRAGDATA_NUMATTRS; i++) {
         free(self->config->attriblocs[i]);
         free(self->config->fraglocs[i]);
@@ -52,42 +74,46 @@ void ilG_material_free(ilG_material *self)
     glDeleteProgram(self->program);
 }
 
-void ilG_material_vertex(ilG_material* self, il_string *source)
+void ilG_material_vertex(ilG_material* self, il_string source)
 {
-    if (self->config->vertsource) {
-        il_string_unref(self->config->vertsource);
-    }
-    self->config->vertsource = il_string_ref(source);
+    free_old_vert(self->config);
+    self->config->vertsource = source;
+    self->config->file = false;
 }
 
 void ilG_material_vertex_file(ilG_material *self, const char *filename)
 {
+    free_old_vert(self->config);
     ilA_map map;
     if (!ilA_mapfile(&ilG_shaders, &map, ILA_READ, filename, -1)) {
         ilA_printerror(&map.err);
+        self->config->vertsource.str = NULL;
         return;
     }
-    ilG_material_vertex(self, il_string_bin(map.data, map.size));
-    ilA_unmapfile(&map);
+    self->config->vertsource = (il_string){map.data, map.size};
+    self->config->vertfile = map;
+    self->config->file = true;
 }
 
-void ilG_material_fragment(ilG_material* self, il_string *source)
+void ilG_material_fragment(ilG_material* self, il_string source)
 {
-    if (self->config->fragsource) {
-        il_string_unref(self->config->fragsource);
-    }
-    self->config->fragsource = il_string_ref(source);
+    free_old_frag(self->config);
+    self->config->fragsource = source;
+    self->config->file = false;
 }
 
 void ilG_material_fragment_file(ilG_material *self, const char *filename)
 {
+    free_old_frag(self->config);
     ilA_map map;
     if (!ilA_mapfile(&ilG_shaders, &map, ILA_READ, filename, -1)) {
         ilA_printerror(&map.err);
+        self->config->fragsource.str = NULL;
         return;
     }
-    ilG_material_fragment(self, il_string_bin(map.data, map.size));
-    ilA_unmapfile(&map);
+    self->config->fragsource = (il_string){map.data, map.size};
+    self->config->fragfile = map;
+    self->config->file = true;
 }
 
 
@@ -143,12 +169,17 @@ static void link_shader(ilG_material *self)
 {
     tgl_check("Unknown");
     il_log("Building shader \"%s\"", self->name);
-    il_string *vs = self->config->vertsource, *fs = self->config->fragsource;
-    if (!tgl_make_shader(&self->vertshader, GL_VERTEX_SHADER, vs->data, vs->length)) {
+    il_string vs = self->config->vertsource, fs = self->config->fragsource;
+    if (!vs.str || !fs.str) {
+        il_error("No source");
         self->valid = 0;
         return;
     }
-    if (!tgl_make_shader(&self->fragshader, GL_FRAGMENT_SHADER, fs->data, fs->length)) {
+    if (!tgl_make_shader(&self->vertshader, GL_VERTEX_SHADER, vs.str, vs.len)) {
+        self->valid = 0;
+        return;
+    }
+    if (!tgl_make_shader(&self->fragshader, GL_FRAGMENT_SHADER, fs.str, fs.len)) {
         self->valid = 0;
         return;
     }
