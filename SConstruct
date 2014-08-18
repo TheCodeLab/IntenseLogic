@@ -10,8 +10,8 @@ inputs    = "*.c script/*.c"
 platform  = ARGUMENTS.get("platform", "linux")
 
 # flags
-ccflags   = "-Wall -Wextra -pedantic"
-cflags    = "-std=c99 -D_POSIX_C_SOURCE=200809"
+ccflags   = "-Wall -Wextra -pedantic -pthread"
+cflags    = "-std=c99 -D_POSIX_C_SOURCE=200809L"
 cxxflags  = "-std=c++11 -isystem-prefixbullet"
 linkflags = "-L."
 if platform == "mingw":
