@@ -5,11 +5,11 @@ src_dir   = "#src/math"
 inputs    = "*.c"
 
 Import("build_dir")
-Import("platform", "env", "libilutil")
+Import("platform", "env")
 
 ilmath = env.Clone()
 
-ilmath.Append(CPPPATH = src_dir, LIBS=["ilutil"])
+ilmath.Append(CPPPATH = src_dir, LIBS=[])
 
 sources = []
 for module in Split(inputs) :
@@ -17,9 +17,7 @@ for module in Split(inputs) :
 
 #objects = ilmath.Object(source = sources)
 
-libilmath = ilmath.SharedLibrary(target = build_dir + "/" + output, 
+libilmath = ilmath.SharedLibrary(target = build_dir + "/" + output,
                                  source = sources) #objects)
-Depends(libilmath, libilutil)
 
 Return("libilmath")
-
