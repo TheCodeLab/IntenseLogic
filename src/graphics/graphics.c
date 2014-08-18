@@ -1,26 +1,13 @@
 #include "graphics.h"
 
 #include <stdlib.h>
-#include <time.h>
-#include <sys/time.h>
-#include <GL/glew.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_video.h>
-#include <math.h>
-#include <unistd.h>
 #include <signal.h>
 
 #include "common/event.h"
-#include "math/matrix.h"
-#include "graphics/context.h"
 #include "util/log.h"
 #include "util/logger.h"
-#include "graphics/shape.h"
-#include "common/world.h"
-#include "graphics/material.h"
-#include "util/ilstring.h"
-#include "graphics/arrayattrib.h"
-#include "graphics/fragdata.h"
 #include "util/opt.h"
 
 ilA_fs ilG_shaders;
