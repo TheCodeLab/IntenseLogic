@@ -6,7 +6,6 @@
 #include "asset/mesh.h"
 #include "asset/node.h"
 #include "graphics/arrayattrib.h"
-#include "graphics/bindable.h"
 #include "graphics/context.h"
 #include "graphics/renderer.h"
 #include "tgl/tgl.h"

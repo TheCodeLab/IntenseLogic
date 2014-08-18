@@ -6,7 +6,6 @@
 #include "asset/node.h"
 #include "graphics/arrayattrib.h"
 #include "graphics/context.h"
-#include "graphics/drawable3d.h"
 #include "graphics/fragdata.h"
 #include "graphics/graphics.h"
 #include "graphics/transform.h"

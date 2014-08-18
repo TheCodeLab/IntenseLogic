@@ -13,7 +13,6 @@ extern "C" {
 #include "graphics/renderer.h"
 #include "graphics/arrayattrib.h"
 #include "graphics/fragdata.h"
-#include "graphics/bindable.h"
 #include "util/log.h"
 }
 

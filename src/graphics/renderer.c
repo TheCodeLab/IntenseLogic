@@ -5,7 +5,6 @@
 #include "graphics/context.h"
 #include "common/storage.h"
 #include "graphics/material.h"
-#include "graphics/drawable3d.h"
 #include "util/array.h"
 #include "util/log.h"
 

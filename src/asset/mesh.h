@@ -5,7 +5,6 @@
 #ifndef ILA_MESH_H
 #define ILA_MESH_H
 
-#include "common/base.h"
 #include "asset/node.h"
 
 /** These match up with the OpenGL primitives without creating a dependency on gl.h */

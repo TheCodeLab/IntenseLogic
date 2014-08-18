@@ -3,11 +3,9 @@
 #include <sys/time.h>
 
 #include "graphics/renderer.h"
-#include "graphics/bindable.h"
 #include "graphics/context.h"
 #include "graphics/transform.h"
 #include "graphics/arrayattrib.h"
-#include "graphics/drawable3d.h"
 #include "tgl/tgl.h"
 #include "util/ilassert.h"
 

@@ -1,7 +1,6 @@
 #include "heightmap.h"
 
 #include "graphics/context.h"
-#include "graphics/drawable3d.h"
 #include "graphics/material.h"
 #include "asset/mesh.h"
 #include "graphics/fragdata.h"

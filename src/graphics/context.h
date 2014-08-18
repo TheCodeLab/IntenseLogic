@@ -11,7 +11,6 @@
 #include "util/array.h"
 #include "util/list.h"
 #include "common/storage.h"
-#include "graphics/bindable.h"
 #include "input/input.h"
 #include "graphics/renderer.h"
 
@@ -105,11 +104,6 @@ typedef struct ilG_context { // **remember to update context.lua**
     /* For rendering */
     ilG_rendermanager manager;
     /* Legacy rendering */
-    struct il_positionable *positionable;
-    struct ilG_drawable3d* drawable;
-    struct ilG_material* material;
-    struct ilG_texture* texture;
-    const struct ilG_bindable *drawableb, *materialb, *textureb;
     unsigned *texunits;
     size_t num_texunits;
     /* Private */

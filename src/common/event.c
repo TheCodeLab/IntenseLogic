@@ -7,7 +7,6 @@
 #include <unistd.h>
 #include <errno.h>
 
-#include "common/base.h"
 #include "util/log.h"
 #include "util/array.h"
 #include "util/uthash.h"

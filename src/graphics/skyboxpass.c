@@ -1,7 +1,6 @@
 #include "skyboxpass.h"
 
 #include "graphics/arrayattrib.h"
-#include "graphics/bindable.h"
 #include "graphics/context.h"
 #include "graphics/fragdata.h"
 #include "graphics/material.h"

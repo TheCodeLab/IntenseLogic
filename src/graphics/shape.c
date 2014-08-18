@@ -5,7 +5,6 @@
 #include <GL/glew.h>
 
 #include "graphics/arrayattrib.h"
-#include "graphics/bindable.h"
 #include "graphics/context.h"
 #include "tgl/tgl.h"
 
@@ -182,7 +181,7 @@ ilG_shape *ilG_box(ilG_context *context)
     tgl_check("Unable to set vertex attrib pointer");
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(cube_index), cube_index, GL_STATIC_DRAW);
     tgl_check("Unable to upload index buffer data");
-    il_table_setsp(&context->storage, "shape.box", il_opaque(self, il_unref));
+    il_table_setsp(&context->storage, "shape.box", il_opaque(self, free));
     return self;
 }
 
@@ -215,7 +214,7 @@ ilG_shape *ilG_icosahedron(ilG_context *context)
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(ico_index), ico_index, GL_STATIC_DRAW);
     tgl_check("Unable to upload index buffer data");
 
-    il_table_setsp(&context->storage, "shape.icosahedron", il_opaque(self, il_unref));
+    il_table_setsp(&context->storage, "shape.icosahedron", il_opaque(self, free));
     return self;
 }
 

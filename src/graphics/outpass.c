@@ -121,9 +121,6 @@ static void out_update(void *ptr, ilG_rendid id)
         ilG_context_bindFB(context);
     }
 
-    context->material = NULL;
-    context->materialb = NULL;
-
     SDL_GL_SwapWindow(context->window);
     tgl_check("outpass");
 }

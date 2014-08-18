@@ -2,9 +2,7 @@
 
 #include "common/world.h"
 #include "graphics/arrayattrib.h"
-#include "graphics/bindable.h"
 #include "graphics/context.h"
-#include "graphics/drawable3d.h"
 #include "graphics/material.h"
 #include "graphics/renderer.h"
 #include "tgl/tgl.h"

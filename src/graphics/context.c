@@ -321,13 +321,6 @@ static void render_renderer(ilG_context *context, ilG_renderer *par)
 void ilG_context_renderFrame(ilG_context *context)
 {
     glViewport(0, 0, context->width, context->height);
-    context->material       = NULL;
-    context->materialb      = NULL;
-    context->drawable       = NULL;
-    context->drawableb      = NULL;
-    context->texture        = NULL;
-    context->textureb       = NULL;
-    context->positionable   = NULL;
 
     il_debug("Begin render");
     ilG_context_bindFB(context);
