@@ -80,11 +80,9 @@ libilinput = SConscript("src/input/SConscript", env=env, duplicate = 0, variant_
 Export("libilinput")
 libilgraphics = SConscript("src/graphics/SConscript", env=env, duplicate = 0, variant_dir=build_dir+"/obj/graphics")
 Export("libilgraphics")
-libilnetwork = SConscript("src/network/SConscript", env=env, duplicate = 0, variant_dir=build_dir+"/obj/network")
-Export("libilnetwork")
 libillua = SConscript("src/lua/SConscript", env=env, duplicate = 0, variant_dir=build_dir+"/obj/lua")
 Export("libillua")
 SConscript("test/math/SConscript", env=env, duplicate = 0, variant_dir=build_dir+"/obj/test/math")
 SConscript("demos/SConscript", env=env, duplicate = 0, variant_dir=build_dir+"/obj/demos")
 
-Default(libilmath, libilnetwork, libilutil, libilcommon, libilgraphics, libilasset, libilinput, libillua)
+Default(libilmath, libilutil, libilcommon, libilgraphics, libilasset, libilinput, libillua)
