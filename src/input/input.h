@@ -1,7 +1,7 @@
 #ifndef ILI_INPUT_H
 #define ILI_INPUT_H
 
-#include "common/event.h"
+#include "util/event.h"
 
 /** Key mapping table.
  * Most of these were lifted off of GFLW so they wouldn't have to be arbitrarily assigned and remapped. */

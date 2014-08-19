@@ -101,16 +101,14 @@ int main(int argc, char **argv)
         il_add_module_path(DEMO_MODULES);
     }
 
-#define dep(n) if (il_load_module(n, &opts)) {                         \
-        fprintf(stderr, "Base module " n " failed to load. Exiting.\n"); \
-        return 1; \
-    }
-    dep("ilutil");
-    dep("ilcommon");
-    dep("ilasset");
-    dep("ilinput");
-    dep("ilmath");
-    dep("ilgraphics");
+#define dep(n) void il_load_##n(); \
+    il_load_##n();
+    dep(ilutil);
+    dep(ilcommon);
+    dep(ilasset);
+    dep(ilinput);
+    dep(ilmath);
+    dep(ilgraphics);
 
     il_load_module_paths(&opts);
 

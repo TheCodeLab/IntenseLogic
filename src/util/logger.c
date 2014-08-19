@@ -6,15 +6,7 @@
 #include <assert.h>
 
 #include "util/array.h"
-#define IL_DLSYM_LOADER
-#include "loader.h"
-
-#define new_args(f) f(const char*, name)
-il_gen_symbol("ilcommon", NULL, struct ilE_handler*, ilE_handler_new_with_name, new_args)
-#define des_args(f) f(struct ilE_handler*, self)
-il_gen_noret_symbol("ilcommon", ilE_handler_destroy, des_args)
-#define fire_args(f) f(struct ilE_handler*, self), f(size_t, size), f(const void *, data)
-il_gen_noret_symbol("ilcommon", ilE_handler_fire, fire_args)
+#include "util/event.h"
 
 struct forward {
     il_logger *logger;
@@ -166,7 +158,9 @@ void il_logger_log(il_logger *self, il_logmsg *msg)
         il_logmsg_destroy(msg);
         return;
     }
-    ilE_handler_fire(self->handler, sizeof(il_logmsg), msg);
+    il_storage_void sv = {msg, NULL};
+    il_value v = il_value_opaque(sv);
+    ilE_handler_fire(self->handler, &v);
     size_t i;
     for (i = 0; i < self->forwards.length; i++) {
         if (il_logmsg_isLevel(msg, self->forwards.data[i].filter)) {

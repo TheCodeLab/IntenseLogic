@@ -1,6 +1,6 @@
 #include <SDL2/SDL_events.h>
 
-#include "common/event.h"
+#include "util/event.h"
 #include "graphics/context.h"
 
 static int getkey(ilI_backend *self, enum ilI_key key)

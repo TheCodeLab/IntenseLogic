@@ -6,7 +6,7 @@
 #include <assert.h>
 #include <limits.h>
 
-#include "common/event.h"
+#include "util/event.h"
 #include "common/storage.h"
 #include "graphics/graphics.h"
 #include "graphics/transform.h"
