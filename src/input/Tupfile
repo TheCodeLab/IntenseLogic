@@ -1,0 +1,6 @@
+include_rules
+
+CCFLAGS += -I.
+
+: foreach *.c |> !cc |>
+: |> !ar |> $(TOP)/libilinput.a $(TOP)/<libs>

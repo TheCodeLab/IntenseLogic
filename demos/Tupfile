@@ -1,0 +1,10 @@
+include_rules
+
+CCFLAGS += -I.
+CXXFLAGS += `pkg-config bullet --cflags`
+LDFLAGS += `pkg-config bullet glew sdl2 --libs` -lilgraphics -lilcommon -lilasset -lilmath -lilinput -lilutil -ldl -lpng -lz
+
+: foreach *.c |> !cc |>
+: foreach bouncing-lights/*.cpp |> !cxx |>
+
+: | $(TOP)/<libs> |> !ld |> $(TOP)/bouncing_lights

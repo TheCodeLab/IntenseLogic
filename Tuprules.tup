@@ -1,0 +1,48 @@
+.gitignore
+
+ifdef CXX
+CXX = @(CXX)
+else
+CXX = clang++
+endif
+
+ifdef CC
+CC = @(CC)
+else
+CC = clang
+endif
+
+ifdef LD
+LD = @(LD)
+else
+LD = $(CXX)
+endif
+
+ifdef AR
+AR = @(AR)
+else
+AR = ar
+endif
+
+TOP = $(TUP_CWD)
+
+CCFLAGS += -Wall -Wextra -pedantic -fPIC -I$(TUP_CWD)/src @(CCFLAGS)
+
+CXXFLAGS += -std=c++11 @(CXXFLAGS)
+
+ifeq ($(CXX),clang++)
+  CXXFLAGS += -fcolor-diagnostics
+endif
+
+CFLAGS += -std=c99 -D_POSIX_C_SOURCE=200809L @(CFLAGS)
+
+#ifeq ($(CC),clang)
+#  CFLAGS += -fcolor-diagonstics
+#endif
+
+LDFLAGS += -pthread -L$(TOP) -Wl,-rpath $(TOP)
+
+!cxx = |> ^o C++ %f^ $(CXX) $(CXXFLAGS) $(CCFLAGS) -c %f -o %o |> %B.o | $(TOP)/<objs>
+!cc = |> ^o C %f^ $(CC) $(CFLAGS) $(CCFLAGS) -c %f -o %o |> %B.o | $(TOP)/<objs>
+!ld = | $(TOP)/<objs> |> ^o LINK %o^ $(LD) %<objs> $(LDFLAGS) -o %o |>
+!ar = | $(TOP)/<objs> |> ^o LINK %o^ $(AR) rcs %o %<objs> |>
