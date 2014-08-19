@@ -38,7 +38,6 @@ int main(int argc, char **argv)
 {
     int has_modules = 0;
     size_t i;
-    void (*quit)();
     il_opts opts = il_opt_parse(argc, argv);
     il_optslice empty = {NULL, 0};
     il_modopts *main_opts = il_opts_lookup(&opts, empty);
@@ -116,8 +115,8 @@ int main(int argc, char **argv)
 
     demo_start();
 
-    quit = (void(*)())il_get_symbol("ilcommon", "ilE_quit");
-    quit();
+    void ilE_quit();
+    ilE_quit();
 
     return 0;
 }

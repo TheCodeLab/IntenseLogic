@@ -3,4 +3,4 @@ include_rules
 CCFLAGS += -I.
 
 : foreach *.c |> !cc |>
-: |> !ar |> $(TOP)/libilasset.a $(TOP)/<libs>
+: *.o |> !ar |> $(TOP)/libilasset.a $(TOP)/<libs>
