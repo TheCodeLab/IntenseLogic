@@ -1,3 +1,0 @@
-CONFIG_CCFLAGS=-g -O0 
-#-fsanitize=address
-CONFIG_LDFLAGS=-fsanitize=address
