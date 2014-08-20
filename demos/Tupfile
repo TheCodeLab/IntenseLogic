@@ -2,5 +2,5 @@ include_rules
 
 CCFLAGS += -I.
 
-: foreach *.c |> !cc |>
+: foreach *.c | $(TOP)/src/version.h |> !cc |>
 : *.o |> !ar |> $(TOP)/libdemo.a $(TOP)/<libs>

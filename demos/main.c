@@ -83,7 +83,8 @@ int main(int argc, char **argv)
         }
         option("v", "version") {
             printf("IntenseLogic %s\n", il_version);
-            printf("Built %s\n", __DATE__);
+            printf("Commit: %s\n", il_commit);
+            printf("Built: %s\n", __DATE__);
             return 0;
         }
         option("d", "data") {
