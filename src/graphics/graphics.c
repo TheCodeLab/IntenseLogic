@@ -75,9 +75,9 @@ static void sdl_setup()
     ilG_registerSdlInputBackend();
 }
 
-const char **il_preload_ilgraphics()
+const char *const *il_preload_ilgraphics()
 {
-    static const char *deps[] = {
+    static const char *const deps[] = {
         "ilcommon",
         "ilutil",
         NULL

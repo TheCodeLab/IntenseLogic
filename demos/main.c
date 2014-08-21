@@ -8,13 +8,14 @@
 #include "util/opt.h"
 #include "asset/node.h"
 
-struct {
+const struct {
     enum {
         NO_ARG,
         REQUIRED,
         OPTIONAL
     } arg;
-    char s, *l, *h;
+    char s;
+    const char *l, *h;
 } help[] = {
     {REQUIRED,  'm', "modules", "Adds a directory to look for modules"},
     {REQUIRED,  'i', "ignore",  "Ignores a module while loading"},
@@ -61,7 +62,7 @@ int main(int argc, char **argv)
             printf("Each module may have its own options, see relavent documentation for those.\n\n");
             printf("Options:\n");
             for (i = 0; help[i].l; i++) {
-                static const char *arg_strs[] = {
+                static const char *const arg_strs[] = {
                     "",
                     "[=arg]",
                     "=arg"

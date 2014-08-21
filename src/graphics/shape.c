@@ -125,7 +125,7 @@ static const GLfloat ico[] = {
     -ico_t,  0,  1,
 };
 #undef ico_t
-static short ico_index[] = {
+static const short ico_index[] = {
     0, 11, 5,
     0, 5, 1,
     0, 1, 7,

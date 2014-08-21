@@ -2,9 +2,9 @@
 
 void il_logger_init();
 
-const char **il_preload_ilutil() // TODO: Make this a soft dependency
+const char *const *il_preload_ilutil() // TODO: Make this a soft dependency
 {
-    static const char *deps[] = {
+    static const char *const deps[] = {
         "ilcommon",
         NULL
     };

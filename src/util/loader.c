@@ -257,7 +257,7 @@ int il_load_module(const char *name, il_opts *opts)
 
     il_preload_fn deps = (il_preload_fn)get_symbol(mod, preload_name);
     if (deps) {
-        const char **mods = deps();
+        const char *const *mods = deps();
         for (i = 0; mods[i]; i++) {
             if (il_load_module(mods[i], opts)) {
                 fprintf(stderr, "*** Failed to load module %s: Dependency %s failed to load\n", path, mods[i]);

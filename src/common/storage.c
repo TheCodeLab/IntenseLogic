@@ -614,4 +614,3 @@ void il_table_show(il_table *t)
     show_table(t, 0);
     fputc('\n', stderr);
 }
-

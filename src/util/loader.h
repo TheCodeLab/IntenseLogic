@@ -18,7 +18,7 @@ typedef void *il_func;
 /** A pointer to the symbol used to indicate dependencies of a module.
  * @return An array of dependencies.
  */
-typedef const char** (*il_preload_fn)();
+typedef const char *const *(*il_preload_fn)();
 
 /** A pointer to the symbol used to handle command-line arguments.
  */
@@ -30,7 +30,7 @@ typedef void (*il_configure_fn)(il_modopts *opts);
  */
 typedef int (*il_load_fn)();
 
-/** Called after all modules have been loaded 
+/** Called after all modules have been loaded
  */
 typedef void (*il_postload_fn)();
 
@@ -115,8 +115,8 @@ static il_func il_get_symbol(const char *module, const char *name)
 il_func il_get_symbol(const char *module, const char *name);
 #endif
 
-#define il_gen_arglist(a,b) a b 
-#define il_gen_calllist(a,b) b 
+#define il_gen_arglist(a,b) a b
+#define il_gen_calllist(a,b) b
 
 #define il_gen_noret_symbol(mod, name, args) \
     static void name(args(il_gen_arglist)) \
@@ -154,4 +154,3 @@ il_func il_get_symbol(const char *module, const char *name);
 const char *il_module_iterate(void **saveptr);
 
 #endif
-
