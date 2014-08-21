@@ -2,7 +2,6 @@
 
 #include <stdarg.h>
 
-#include "util/alloc.h"
 #include "util/uthash.h"
 #include "util/logger.h"
 
@@ -32,4 +31,3 @@ void il_log_real(const char *file, int line, const char *func, unsigned level, c
     il_logmsg_setBtFile(msg, 0, file, line, func);
     il_logger_log(logger, msg);
 }
-

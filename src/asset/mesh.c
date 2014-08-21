@@ -3,35 +3,29 @@
 #include <stdlib.h>
 
 #include "util/ilassert.h"
-#include "util/alloc.h"
-
-static il_allocator *aligned_16;
 
 ilA_mesh *ilA_mesh_new(enum ilA_mesh_attrib attribs, size_t vertices)
 {
     ilA_mesh *self = calloc(1, sizeof(ilA_mesh));
 
-    if (!aligned_16) {
-        aligned_16 = il_allocator_aligned(&il_default_alloc, 16);
-    }
     self->num_vertices = vertices;
     if (attribs & ILA_MESH_POSITION) {
-        self->position = il_alloc(aligned_16, sizeof(float) * 4 * vertices);
+        self->position = calloc(vertices, sizeof(float) * 4);
     }
     if (attribs & ILA_MESH_TEXCOORD) {
-        self->texcoord = il_alloc(aligned_16, sizeof(float) * 4 * vertices);
+        self->texcoord = calloc(vertices, sizeof(float) * 4);
     }
     if (attribs & ILA_MESH_NORMAL) {
-        self->normal = il_alloc(aligned_16, sizeof(float) * 4 * vertices);
+        self->normal = calloc(vertices, sizeof(float) * 4);
     }
     if (attribs & ILA_MESH_AMBIENT) {
-        self->ambient = il_alloc(aligned_16, sizeof(unsigned char) * 4 * vertices);
+        self->ambient = calloc(vertices, sizeof(unsigned char) * 4);
     }
     if (attribs & ILA_MESH_DIFFUSE) {
-        self->diffuse = il_alloc(aligned_16, sizeof(unsigned char) * 4 * vertices);
+        self->diffuse = calloc(vertices, sizeof(unsigned char) * 4);
     }
     if (attribs & ILA_MESH_SPECULAR) {
-        self->specular = il_alloc(aligned_16, sizeof(unsigned char) * 4 * vertices);
+        self->specular = calloc(vertices, sizeof(unsigned char) * 4);
     }
 
     return self;
@@ -43,30 +37,31 @@ ilA_mesh *ilA_mesh_copy(const ilA_mesh *mesh)
     self->mode = mesh->mode;
     self->num_vertices = mesh->num_vertices;
     self->texcoord_size = mesh->texcoord_size;
+    size_t nv = self->num_vertices;
 
     if (mesh->position) {
-        self->position = il_alloc(aligned_16, sizeof(float[4]) * self->num_vertices);
-        memcpy(self->position, mesh->position, sizeof(float[4]) * self->num_vertices);
+        self->position = calloc(nv, sizeof(float[4]));
+        memcpy(self->position, mesh->position, sizeof(float[4]) * nv);
     }
     if (mesh->texcoord) {
-        self->texcoord = il_alloc(aligned_16, sizeof(float[4]) * self->num_vertices);
-        memcpy(self->texcoord, mesh->texcoord, sizeof(float[4]) * self->num_vertices);
+        self->texcoord = calloc(nv, sizeof(float[4]));
+        memcpy(self->texcoord, mesh->texcoord, sizeof(float[4]) * nv);
     }
     if (mesh->normal) {
-        self->normal = il_alloc(aligned_16, sizeof(float[4]) * self->num_vertices);
-        memcpy(self->normal, mesh->normal, sizeof(float[4]) * self->num_vertices);
+        self->normal = calloc(nv, sizeof(float[4]));
+        memcpy(self->normal, mesh->normal, sizeof(float[4]) * nv);
     }
     if (mesh->ambient) {
-        self->ambient = il_alloc(aligned_16, sizeof(unsigned char[4]) * self->num_vertices);
-        memcpy(self->ambient, mesh->ambient, sizeof(unsigned char[4]) * self->num_vertices);
+        self->ambient = calloc(nv, sizeof(unsigned char[4]));
+        memcpy(self->ambient, mesh->ambient, sizeof(unsigned char[4]) * nv);
     }
     if (mesh->diffuse) {
-        self->diffuse = il_alloc(aligned_16, sizeof(unsigned char[4]) * self->num_vertices);
-        memcpy(self->diffuse, mesh->diffuse, sizeof(unsigned char[4]) * self->num_vertices);
+        self->diffuse = calloc(nv, sizeof(unsigned char[4]));
+        memcpy(self->diffuse, mesh->diffuse, sizeof(unsigned char[4]) * nv);
     }
     if (mesh->specular) {
-        self->specular = il_alloc(aligned_16, sizeof(unsigned char[4]) * self->num_vertices);
-        memcpy(self->specular, mesh->specular, sizeof(unsigned char[4]) * self->num_vertices);
+        self->specular = calloc(nv, sizeof(unsigned char[4]));
+        memcpy(self->specular, mesh->specular, sizeof(unsigned char[4]) * nv);
     }
 
     return self;
@@ -94,22 +89,22 @@ ilA_mesh *ilA_mesh_loadmem(ilA_fs *fs, const char *filename, const void *data, s
 void ilA_mesh_free(ilA_mesh *self)
 {
     if (self->position) {
-        il_free(aligned_16, self->position);
+        free(self->position);
     }
     if (self->texcoord) {
-        il_free(aligned_16, self->texcoord);
+        free(self->texcoord);
     }
     if (self->normal) {
-        il_free(aligned_16, self->normal);
+        free(self->normal);
     }
     if (self->ambient) {
-        il_free(aligned_16, self->ambient);
+        free(self->ambient);
     }
     if (self->diffuse) {
-        il_free(aligned_16, self->diffuse);
+        free(self->diffuse);
     }
     if (self->specular) {
-        il_free(aligned_16, self->specular);
+        free(self->specular);
     }
     free(self);
 }
@@ -130,4 +125,3 @@ ilA_mesh *ilA_mesh_debugLines(ilA_mesh *self, float f)
     }
     return mesh;
 }
-
