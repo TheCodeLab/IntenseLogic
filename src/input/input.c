@@ -4,7 +4,6 @@
 
 int il_load_ilinput()
 {
-    ilI_handler_init(&ilI_globalHandler);
     return 0;
 }
 
@@ -35,29 +34,12 @@ char *ilI_backend_getName(int input)
     return strdup(backends.data[input]->name);
 }
 
-static void forward(const il_value *data, il_value *user)
-{
-    ilE_handler *parent = il_value_tomvoid(user);
-    ilE_handler_fire(parent, data);
-}
-
 void ilI_handler_init(ilI_handler *self)
 {
+    memset(self, 0, sizeof(ilI_handler));
     self->button        = ilE_handler_new_with_name("il.input.button");
     self->character     = ilE_handler_new_with_name("il.input.caracter");
     self->mousemove     = ilE_handler_new_with_name("il.input.mousemove");
     self->mouseenter    = ilE_handler_new_with_name("il.input.mouseenter");
     self->mousescroll   = ilE_handler_new_with_name("il.input.mousescroll");
-    if (self != &ilI_globalHandler) {
-#define fwd(from, to) ilE_register(from, ILE_AFTER, ILE_ANY, forward, il_vopaque(ilI_globalHandler.to, NULL))
-        fwd(self->button,       button);
-        fwd(self->character,    character);
-        fwd(self->mousemove,    mousemove);
-        fwd(self->mouseenter,   mouseenter);
-        fwd(self->mousescroll,  mousescroll);
-#undef fwd
-    }
 }
-
-ilI_handler ilI_globalHandler;
-

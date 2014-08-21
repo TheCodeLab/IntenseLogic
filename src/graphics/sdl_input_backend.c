@@ -14,18 +14,17 @@ static int getkey(ilI_backend *self, enum ilI_key key)
     if (key < 768) {
         return 0 != (SDL_GetMouseState(NULL,NULL) & 1<<(key - 512));
     }
-    
+
     return 0;
 }
 
-static void handle_windowevent(SDL_Event *ev)
+static void handle_windowevent(ilG_context *context, SDL_Event *ev)
 {
-    ilG_context *context = SDL_GetWindowData(SDL_GetWindowFromID(ev->window.windowID), "context");
     switch (ev->window.event) {
     case SDL_WINDOWEVENT_RESIZED:
         ilG_context_resize(context, ev->window.data1, ev->window.data2);
         break;
-    case SDL_WINDOWEVENT_CLOSE: 
+    case SDL_WINDOWEVENT_CLOSE:
         {
             il_value nil = il_value_nil();
             ilE_handler_fire(context->close, &nil);
@@ -35,15 +34,8 @@ static void handle_windowevent(SDL_Event *ev)
     }
 }
 
-static void handle_keyboardevent(SDL_Event *ev)
+static void handle_keyboardevent(ilG_context *context, SDL_Event *ev)
 {
-    ilG_context *context = SDL_GetWindowData(SDL_GetWindowFromID(ev->window.windowID), "context");
-    ilI_handler *handler;
-    if (context) {
-        handler = &context->handler;
-    } else {
-        handler = &ilI_globalHandler;
-    }
     il_value v = il_value_vectorl(6,
         il_value_int(ev->key.keysym.sym),
         il_value_bool(ev->type == SDL_KEYDOWN),
@@ -52,19 +44,12 @@ static void handle_keyboardevent(SDL_Event *ev)
         il_value_int(ev->key.keysym.mod),
         il_vopaque(context, NULL)
     );
-    ilE_handler_fire(handler->button, &v);
+    ilE_handler_fire(context->handler.button, &v);
     il_value_free(v);
 }
 
-static void handle_mousemoveevent(SDL_Event *ev)
+static void handle_mousemoveevent(ilG_context *context, SDL_Event *ev)
 {
-    ilG_context *context = SDL_GetWindowData(SDL_GetWindowFromID(ev->window.windowID), "context");
-    ilI_handler *handler;
-    if (context) {
-        handler = &context->handler;
-    } else {
-        handler = &ilI_globalHandler;
-    }
 #define i il_value_int
     il_value v = il_value_vectorl(7,
         i(ev->motion.x),    i(ev->motion.y),
@@ -74,19 +59,12 @@ static void handle_mousemoveevent(SDL_Event *ev)
         il_vopaque(context, NULL)
     );
 #undef i
-    ilE_handler_fire(handler->mousemove, &v);
+    ilE_handler_fire(context->handler.mousemove, &v);
     il_value_free(v);
 }
 
-static void handle_mousebutton(SDL_Event *ev)
+static void handle_mousebutton(ilG_context *context, SDL_Event *ev)
 {
-    ilG_context *context = SDL_GetWindowData(SDL_GetWindowFromID(ev->window.windowID), "context");
-    ilI_handler *handler;
-    if (context) {
-        handler = &context->handler;
-    } else {
-        handler = &ilI_globalHandler;
-    }
     il_value v = il_value_vectorl(6,
         il_value_int(ev->button.button + 512),
         il_value_bool(ev->button.state == SDL_PRESSED),
@@ -95,40 +73,33 @@ static void handle_mousebutton(SDL_Event *ev)
         il_value_int(ev->button.y),
         il_vopaque(context, NULL)
     );
-    ilE_handler_fire(handler->button, &v);
+    ilE_handler_fire(context->handler.button, &v);
     il_value_free(v);
 }
 
-static void handle_mousewheel(SDL_Event *ev)
+static void handle_mousewheel(ilG_context *context, SDL_Event *ev)
 {
-    ilG_context *context = SDL_GetWindowData(SDL_GetWindowFromID(ev->window.windowID), "context");
-    ilI_handler *handler;
-    if (context) {
-        handler = &context->handler;
-    } else {
-        handler = &ilI_globalHandler;
-    }
     il_value v = il_value_vectorl(3,
         il_value_int(ev->wheel.x),
         il_value_int(ev->wheel.y),
         il_vopaque(context, NULL)
     );
-    ilE_handler_fire(handler->mousescroll, &v);
+    ilE_handler_fire(context->handler.mousescroll, &v);
     il_value_free(v);
 }
 
-void ilG_pollSDLEvents()
+void ilG_pollSDLEvents(ilG_context *context)
 {
     SDL_Event ev;
     while (SDL_PollEvent(&ev)) {
         switch (ev.type) {
-        case SDL_WINDOWEVENT: handle_windowevent(&ev); break;
+        case SDL_WINDOWEVENT: handle_windowevent(context, &ev); break;
         case SDL_KEYDOWN:
-        case SDL_KEYUP: handle_keyboardevent(&ev); break;
-        case SDL_MOUSEMOTION: handle_mousemoveevent(&ev); break;
+        case SDL_KEYUP: handle_keyboardevent(context, &ev); break;
+        case SDL_MOUSEMOTION: handle_mousemoveevent(context, &ev); break;
         case SDL_MOUSEBUTTONUP:
-        case SDL_MOUSEBUTTONDOWN: handle_mousebutton(&ev); break;
-        case SDL_MOUSEWHEEL: handle_mousewheel(&ev); break;
+        case SDL_MOUSEBUTTONDOWN: handle_mousebutton(context, &ev); break;
+        case SDL_MOUSEWHEEL: handle_mousewheel(context, &ev); break;
         }
     }
 }
