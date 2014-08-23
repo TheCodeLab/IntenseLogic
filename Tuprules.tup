@@ -40,7 +40,7 @@ CFLAGS += -std=c99 -D_POSIX_C_SOURCE=200809L @(CFLAGS)
 #  CFLAGS += -fcolor-diagonstics
 #endif
 
-LDFLAGS += -pthread -L$(TOP) -Wl,-rpath $(TOP) @(LDFLAGS)
+LDFLAGS += -pthread -L$(TOP) -L$(TOP)/tiffgl @(LDFLAGS)
 
 !cxx = |> ^o C++ %f^ $(CXX) $(CXXFLAGS) $(CCFLAGS) -c %f -o %o |> %B.o | $(TOP)/<objs>
 !cc = |> ^o C %f^ $(CC) $(CFLAGS) $(CCFLAGS) -c %f -o %o |> %B.o | $(TOP)/<objs>
