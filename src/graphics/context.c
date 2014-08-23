@@ -75,7 +75,14 @@ void ilG_context_queue_doneconsume(ilG_context_queue *queue)
 
 ilG_context *ilG_context_new()
 {
-    ilG_context *self = calloc(1, sizeof(ilG_context));
+    ilG_context *self = malloc(sizeof(ilG_context));
+    ilG_context_init(self);
+    return self;
+}
+
+void ilG_context_init(ilG_context *self)
+{
+    memset(self, 0, sizeof(ilG_context));
     self->contextMajor = 3;
 #ifdef __APPLE__
     self->contextMinor = 2;
@@ -125,7 +132,6 @@ ilG_context *ilG_context_new()
         .id = 0,
         .context = self
     };
-    return self;
 }
 
 void ilG_context_hint(ilG_context *self, enum ilG_context_hint hint, int param)
@@ -185,7 +191,6 @@ void ilG_context_free(ilG_context *self)
 
     SDL_GL_DeleteContext(self->context);
     SDL_DestroyWindow(self->window);
-    free(self);
 }
 
 void ilG_context_bindFB(ilG_context *self)

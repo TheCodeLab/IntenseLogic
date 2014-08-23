@@ -134,6 +134,7 @@ typedef struct ilG_context { // **remember to update context.lua**
 } ilG_context;
 
 ilG_context *ilG_context_new();
+void ilG_context_init(ilG_context *context);
 /** Destroys the window, associated GL context, and all owned memory */
 void ilG_context_free(ilG_context *self);
 
