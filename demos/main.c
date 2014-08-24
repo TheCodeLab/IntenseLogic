@@ -117,8 +117,8 @@ int main(int argc, char **argv)
 
     demo_start();
 
-    void ilE_quit();
-    ilE_quit();
+    void ilG_quit();
+    ilG_quit();
 
     return 0;
 }

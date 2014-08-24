@@ -14,14 +14,7 @@
 
 char *strdup(const char*);
 
-static void ilE_handler_fire_forced(ilE_handler *self, const il_value *data);
-
-struct ilE_event {
-    ilE_handler *handler;
-    il_value data;
-};
-
-struct callback {
+struct ilE_handler_callback {
     ilE_callback callback;
     int priority;
     enum ilE_threading threading;
@@ -30,18 +23,17 @@ struct callback {
     il_value ctx;
 };
 
-struct ilE_handler {
-    IL_ARRAY(struct callback, callback_array) callbacks;
-    struct event *ev;
-    char name[128];
-    int cur_id;
-};
-
 ilE_handler* ilE_handler_new()
 {
     ilE_handler* h = calloc(1, sizeof(ilE_handler));
-    sprintf(h->name, "Normal Handler");
+    ilE_handler_init(h);
     return h;
+}
+
+void ilE_handler_init(ilE_handler *self)
+{
+    memset(self, 0, sizeof(ilE_handler));
+    sprintf(self->name, "Handler %p", (void*)self);
 }
 
 ilE_handler *ilE_handler_new_with_name(const char *name)
@@ -51,13 +43,15 @@ ilE_handler *ilE_handler_new_with_name(const char *name)
     return h;
 }
 
+void ilE_handler_init_with_name(ilE_handler *self, const char *name)
+{
+    ilE_handler_init(self);
+    ilE_handler_name(self, name);
+}
+
 void ilE_handler_destroy(ilE_handler *self)
 {
-    if (self->callbacks.length > 0) {
-        il_warning("%zu callbacks still registered for %s <%p>", self->callbacks.length, self->name, self);
-    }
     IL_FREE(self->callbacks);
-    free(self);
 }
 
 const char *ilE_handler_getName(const ilE_handler *self)
@@ -70,7 +64,7 @@ void ilE_handler_name(ilE_handler *self, const char *name)
     strcpy(self->name, name);
 }
 
-static void ilE_handler_fire_forced(ilE_handler *self, const il_value *data)
+void ilE_handler_fire(ilE_handler *self, const il_value *data)
 {
     unsigned i;
     il_debug("Dispatch: %s <%p> (data: %p)", self->name, self, data); // TODO: Print contents of data
@@ -81,14 +75,15 @@ static void ilE_handler_fire_forced(ilE_handler *self, const il_value *data)
     }
 }
 
-void ilE_handler_fire(ilE_handler *self, const il_value *data)
+void ilE_handler_fire_once(ilE_handler *self, const il_value *data)
 {
-    ilE_handler_fire_forced(self, data);
+    ilE_handler_fire(self, data);
+    ilE_handler_destroy(self);
 }
 
 int ilE_register_real(ilE_handler* self, const char *name, int priority, enum ilE_threading threads, ilE_callback callback, il_value ctx)
 {
-    struct callback cb;
+    struct ilE_handler_callback cb;
     unsigned i;
 
     cb.callback = callback;
@@ -120,46 +115,12 @@ void ilE_unregister(ilE_handler *self, int handle)
     il_error("No callback %i in handler %s <%p>", handle, self->name, self);
 }
 
-static void shutdownCallbacks(const il_value *data, il_value *ctx)
-{
-    (void)data, (void)ctx;
-    il_value nil = il_value_nil();
-    ilE_handler_fire(ilE_shutdownCallbacks, &nil);
-}
-
-static void shutdownHandlers(const il_value *data, il_value *ctx)
-{
-    (void)data, (void)ctx;
-    il_value nil = il_value_nil();
-    ilE_handler_fire(ilE_shutdownHandlers, &nil);
-}
-
-static int shutdownCallbacks_id, shutdownHandlers_id;
-
-void ilE_init()
-{
-    ilE_shutdown = ilE_handler_new_with_name("il.event.shutdown");
-    shutdownCallbacks_id = ilE_register(ilE_shutdown, ILE_AFTER, ILE_ANY, shutdownCallbacks, il_value_nil());
-    ilE_shutdownCallbacks = ilE_handler_new_with_name("il.event.shutdownCallbacks");
-    shutdownCallbacks_id = ilE_register(ilE_shutdownCallbacks, ILE_AFTER, ILE_ANY, shutdownHandlers, il_value_nil());
-    ilE_shutdownHandlers = ilE_handler_new_with_name("il.event.shutdownHandlers");
-}
-
-void ilE_quit()
-{
-    ilE_unregister(ilE_shutdown, shutdownCallbacks_id);
-    ilE_unregister(ilE_shutdownCallbacks, shutdownHandlers_id);
-    ilE_handler_destroy(ilE_shutdown);
-    ilE_handler_destroy(ilE_shutdownCallbacks);
-    ilE_handler_destroy(ilE_shutdownHandlers);
-}
-
 void ilE_dump(ilE_handler *self)
 {
     size_t i;
     fprintf(stderr, "Registry dump of handler %s <%p>:\n", self->name, (void*)self);
     for (i = 0; i < self->callbacks.length; i++) {
-        struct callback *cb = &self->callbacks.data[i];
+        struct ilE_handler_callback *cb = &self->callbacks.data[i];
         char threading_str[64];
         switch (cb->threading) {
 #define t2s(n) case ILE_##n: strcpy(threading_str, #n); break
@@ -173,7 +134,3 @@ void ilE_dump(ilE_handler *self)
         fprintf(stderr, "\t%s <%p> priority:%i threading:%s ctx<%p>\n", cb->name, (void*)cb->callback, cb->priority, threading_str, &cb->ctx);// TODO: Print contents of ctx
     }
 }
-
-ilE_handler *ilE_shutdown;
-ilE_handler *ilE_shutdownCallbacks;
-ilE_handler *ilE_shutdownHandlers;

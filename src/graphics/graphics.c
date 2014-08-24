@@ -12,8 +12,6 @@
 
 ilA_fs ilG_shaders;
 
-static void quit();
-
 void ilG_shaders_addPath(const char *arg)
 {
     ilA_adddir(&ilG_shaders, arg, -1);
@@ -106,13 +104,11 @@ int il_load_ilgraphics()
         ilG_shaders_addPath("shaders");
     }
     sdl_setup();
-    ilE_register(ilE_shutdown, ILE_DONTCARE, ILE_MAIN, &quit, il_value_nil());
     return 0;
 }
 
-static void quit(const il_value *data, il_value *ctx)
+void ilG_quit()
 {
-    (void)data, (void)ctx;
     SDL_VideoQuit();
     SDL_Quit();
 }

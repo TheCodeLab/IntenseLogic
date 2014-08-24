@@ -7,5 +7,6 @@
 extern ilA_fs ilG_shaders;
 
 void ilG_shaders_addPath(const char *path);
+void ilG_quit();
 
 #endif

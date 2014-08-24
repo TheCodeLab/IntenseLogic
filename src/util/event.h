@@ -30,7 +30,12 @@
 
 #include "common/storage.h"
 
-typedef struct ilE_handler ilE_handler;
+struct ilE_handler_callback;
+typedef struct ilE_handler {
+    IL_ARRAY(struct ilE_handler_callback, callback_array) callbacks;
+    char name[128];
+    int cur_id;
+} ilE_handler;
 
 /*! The behaviour when registering an event hook, on how important it is
  * @see ilE_register */
@@ -53,8 +58,10 @@ typedef void(*ilE_callback)(const il_value *data, il_value *ctx);
 
 /*! Creates a normal handler which is only fired by the user. */
 ilE_handler *ilE_handler_new();
+void ilE_handler_init(ilE_handler *self);
 /*! Combination of ilE_handler_new() and ilE_handler_name(). */
 ilE_handler *ilE_handler_new_with_name(const char *name);
+void ilE_handler_init_with_name(ilE_handler *self, const char *name);
 /*! Destroy a handler. Make sure all callbacks have been cleaned up first! */
 void ilE_handler_destroy(ilE_handler *self);
 
@@ -66,6 +73,8 @@ void ilE_handler_name(ilE_handler *self, const char *name);
 
 /*! Fires an event for a handler immediately, using no copies. */
 void ilE_handler_fire(ilE_handler *self, const il_value *data);
+/*! Fires an event for a handler immediately and then destroys the handler */
+void ilE_handler_fire_once(ilE_handler *self, const il_value *data);
 
 /*! Registers a handler for a given event.
  * @param name A string name used for introspection, such as debugging
@@ -80,12 +89,5 @@ void ilE_unregister(ilE_handler *self, int handle);
 /*! Dumps a list of all the callbacks currently set to stderr.
  * Uses the naming information provided by the other functions. */
 void ilE_dump(ilE_handler *self);
-
-/*! Called to shutdown the engine. */
-extern ilE_handler *ilE_shutdown;
-/*! Called to destroy all callbacks currently registered, except for those registered to this one and the shutdownHandlers event. */
-extern ilE_handler *ilE_shutdownCallbacks;
-/*! Called to destroy all handlers except for this one. */
-extern ilE_handler *ilE_shutdownHandlers;
 
 #endif
