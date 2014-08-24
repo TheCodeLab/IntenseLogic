@@ -3,16 +3,26 @@
 #include <stdio.h>
 #include <string.h>
 
+extern "C" {
 #include "util/loader.h"
 #include "util/opt.h"
 
+void ilG_quit();
+void il_load_ilutil();
+void il_load_ilgraphics();
+void il_configure_ilgraphics(il_modopts*);
+}
+
+enum argtype {
+    NO_ARG,
+    REQUIRED,
+    OPTIONAL
+};
+
 struct {
-    enum {
-        NO_ARG,
-        REQUIRED,
-        OPTIONAL
-    } arg;
-    char s, *l, *h;
+    enum argtype arg;
+    char s;
+    const char *l, *h;
 } help[] = {
     {REQUIRED,  'm', "modules", "Adds a directory to look for modules"},
     {REQUIRED,  'i', "ignore",  "Ignores a module while loading"},
@@ -29,12 +39,12 @@ int main(int argc, char **argv)
     size_t i;
     void (*quit)();
     il_opts opts = il_opt_parse(argc, argv);
-    il_modopts *main_opts = il_opts_lookup(&opts, "");
+    il_modopts *main_opts = il_opts_lookup(&opts, const_cast<char*>(""));
 
     for (i = 0; main_opts && i < main_opts->args.length; i++) {
         il_opt *opt = &main_opts->args.data[i];
         char *arg = strndup(opt->arg.str, opt->arg.len);
-#define option(s, l) if (il_string_cmp(opt->name, il_string_new(s)) || il_string_cmp(opt->name, il_string_new(l)))
+#define option(s, l) if (il_string_cmp(opt->name, il_string_new(const_cast<char*>(s))) || il_string_cmp(opt->name, il_string_new(const_cast<char*>(l))))
         option("m", "modules") {
             il_add_module_path(arg);
             has_modules = 1;
@@ -80,11 +90,7 @@ int main(int argc, char **argv)
     fprintf(stderr, "MAIN: IntenseLogic\n");
     fprintf(stderr, "MAIN: Built %s\n", __DATE__);
 
-    void il_load_ilutil();
-    void il_load_ilgraphics();
-    void il_configure_ilgraphics(il_modopts*);
-
-    il_modopts *graphics_opts = il_opts_lookup(&opts, "ilgraphics");
+    il_modopts *graphics_opts = il_opts_lookup(&opts, const_cast<char*>("ilgraphics"));
     if (graphics_opts) {
         il_configure_ilgraphics(graphics_opts);
     }
@@ -103,7 +109,6 @@ int main(int argc, char **argv)
     // TODO: Example of setting up graphics
     //
 
-    void ilG_quit();
     ilG_quit();
 
     return 0;

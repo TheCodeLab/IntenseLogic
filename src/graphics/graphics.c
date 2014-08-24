@@ -91,7 +91,7 @@ void il_configure_ilgraphics(il_modopts *opts)
     for (unsigned i = 0; i < opts->args.length; i++) {
         il_opt *opt = &opts->args.data[i];
         char *arg = strndup(opt->arg.str, opt->arg.len);
-#define option(l) if (il_opts_cmp(opt->name, il_optslice_s(l)))
+#define option(l) if (il_string_cmp(opt->name, il_string_new(l)))
         option("shaders") {
             ilG_shaders_addPath(arg);
         }

@@ -268,7 +268,7 @@ int il_load_module(const char *name, il_opts *opts)
 
     il_configure_fn config = (il_configure_fn)get_symbol(mod, config_name);
     if (config) {
-        il_modopts *modopts = il_opts_lookup(opts, il_optslice_s(sname));
+        il_modopts *modopts = il_opts_lookup(opts, sname);
         if (modopts) {
             config(modopts);
         }
