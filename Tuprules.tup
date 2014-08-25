@@ -26,21 +26,21 @@ endif
 
 TOP = $(TUP_CWD)
 
-CCFLAGS += -Wall -Wextra -pedantic -I$(TUP_CWD)/src -I$(TUP_CWD)/tiffgl/src @(CCFLAGS)
+CCFLAGS = -Wall -Wextra -pedantic -I$(TUP_CWD)/src -I$(TUP_CWD)/tiffgl/src @(CCFLAGS)
 
-CXXFLAGS += -std=c++11 @(CXXFLAGS)
+CXXFLAGS = -std=c++11 @(CXXFLAGS)
 
 ifeq ($(CXX),clang++)
   CXXFLAGS += -fcolor-diagnostics
 endif
 
-CFLAGS += -std=c99 -D_POSIX_C_SOURCE=200809L @(CFLAGS)
+CFLAGS = -std=c99 -D_POSIX_C_SOURCE=200809L @(CFLAGS)
 
 #ifeq ($(CC),clang)
 #  CFLAGS += -fcolor-diagonstics
 #endif
 
-LDFLAGS += -pthread -L$(TOP) -L$(TOP)/tiffgl @(LDFLAGS)
+LDFLAGS = -pthread -L$(TOP) -L$(TOP)/tiffgl @(LDFLAGS)
 
 !cxx = |> ^o C++ %f^ $(CXX) $(CXXFLAGS) $(CCFLAGS) -c %f -o %o |> %B.o | $(TOP)/<objs>
 !cc = |> ^o C %f^ $(CC) $(CFLAGS) $(CCFLAGS) -c %f -o %o |> %B.o | $(TOP)/<objs>
