@@ -101,6 +101,7 @@ void ilG_context_init(ilG_context *self)
     self->close     = ilE_handler_new_with_name("il.graphics.context.close");
     self->destroy   = ilE_handler_new_with_name("il.graphics.context.destroy");
     ilI_handler_init(&self->handler);
+    tgl_fbo_init(&self->fb);
     self->queue = calloc(1, sizeof(struct ilG_context_queue));
     ilG_context_queue_init(self->queue);
     ilG_context_addRenderer(self, 0, ilG_builder_wrap(NULL, ilG_context_build));
@@ -195,7 +196,14 @@ void ilG_context_free(ilG_context *self)
 
 void ilG_context_bindFB(ilG_context *self)
 {
-    if (self->use_default_fb) {
+    static const unsigned order[] = {
+        ILG_CONTEXT_ACCUM,
+        ILG_CONTEXT_NORMAL,
+        ILG_CONTEXT_DIFFUSE,
+        ILG_CONTEXT_SPECULAR
+    };
+    tgl_fbo_bind_with(&self->fb, TGL_FBO_WRITE, 4, order);
+    /*if (self->use_default_fb) {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     } else {
         static const GLenum drawbufs[] = {
@@ -206,13 +214,17 @@ void ilG_context_bindFB(ilG_context *self)
         };
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, self->framebuffer);
         glDrawBuffers(4, &drawbufs[0]);
-    }
+        }*/
 }
 
 void ilG_context_bind_for_outpass(ilG_context *self)
 {
-    glBindFramebuffer(GL_READ_FRAMEBUFFER, self->framebuffer);
-    glReadBuffer(GL_COLOR_ATTACHMENT0);
+    static const unsigned order[] = {
+        ILG_CONTEXT_ACCUM
+    };
+    tgl_fbo_bind_with(&self->fb, TGL_FBO_READ, 1, order);
+    /*glBindFramebuffer(GL_READ_FRAMEBUFFER, self->framebuffer);
+      glReadBuffer(GL_COLOR_ATTACHMENT0);*/
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -226,12 +238,12 @@ int ilG_context_localResize(ilG_context *self, int w, int h)
         goto end;
     }
 
-    // GL setup
-    glDepthFunc(GL_LESS);
-    glEnable(GL_DEPTH_TEST);
+    if (!tgl_fbo_build(&self->fb, w, h)) {
+        return 0;
+    }
     tgl_check("Error setting up screen");
 
-    glBindFramebuffer(GL_FRAMEBUFFER, self->framebuffer);
+    /*glBindFramebuffer(GL_FRAMEBUFFER, self->framebuffer);
     glBindTexture(GL_TEXTURE_RECTANGLE, self->fbtextures[ILG_CONTEXT_DEPTH]);
     glTexImage2D(GL_TEXTURE_RECTANGLE, 0, GL_DEPTH_COMPONENT, w, h, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_RECTANGLE, self->fbtextures[ILG_CONTEXT_DEPTH], 0);
@@ -269,7 +281,7 @@ int ilG_context_localResize(ilG_context *self, int w, int h)
         }
         il_error("Unable to create framebuffer for context: %s", status_str);
         return 0;
-    }
+        }*/
     il_value val;
 end:
     val = il_value_vectorl(2, il_value_int(self->width), il_value_int(self->height));
@@ -334,10 +346,10 @@ void ilG_context_renderFrame(ilG_context *context)
     } else {
         glClearColor(0, 0, 0, 1.0);
     }
-    tgl_check("glClearColor");
     glClearDepth(1.0);
-    tgl_check("glClearDepth");
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glDepthFunc(GL_LESS);
+    glEnable(GL_DEPTH_TEST);
 
     // asserts that first renderer is the context itself
     render_renderer(context, &context->manager.renderers.data[0]);
@@ -510,8 +522,12 @@ void ilG_context_localSetup(ilG_context *self)
     self->texunits = calloc(sizeof(unsigned), num_texunits);
     self->num_texunits = num_texunits;
     if (!self->use_default_fb) {
-        glGenFramebuffers(1, &self->framebuffer);
-        glGenTextures(5, &self->fbtextures[0]);
+        tgl_fbo_numTargets(&self->fb, ILG_CONTEXT_NUMATTACHMENTS);
+        tgl_fbo_texture(&self->fb, ILG_CONTEXT_DEPTH, GL_TEXTURE_RECTANGLE, GL_DEPTH_COMPONENT, GL_DEPTH_ATTACHMENT);
+        tgl_fbo_texture(&self->fb, ILG_CONTEXT_ACCUM, GL_TEXTURE_RECTANGLE, GL_RGBA, GL_COLOR_ATTACHMENT0);
+        tgl_fbo_texture(&self->fb, ILG_CONTEXT_NORMAL, GL_TEXTURE_RECTANGLE, GL_RGB, GL_COLOR_ATTACHMENT1);
+        tgl_fbo_texture(&self->fb, ILG_CONTEXT_DIFFUSE, GL_TEXTURE_RECTANGLE, GL_RGB, GL_COLOR_ATTACHMENT2);
+        tgl_fbo_texture(&self->fb, ILG_CONTEXT_SPECULAR, GL_TEXTURE_RECTANGLE, GL_RGBA, GL_COLOR_ATTACHMENT3);
         tgl_check("Unable to generate framebuffer");
     }
     self->complete = 1;
@@ -586,8 +602,7 @@ void *ilG_context_loop(void *ptr)
 
 stop:
     ilG_context_queue_doneconsume(self->queue);
-    glDeleteFramebuffers(1, &self->framebuffer);
-    glDeleteTextures(5, &self->fbtextures[0]);
+    tgl_fbo_free(&self->fb);
     return NULL;
 }
 

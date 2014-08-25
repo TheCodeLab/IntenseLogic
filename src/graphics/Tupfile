@@ -1,6 +1,6 @@
 include_rules
 
-CCFLAGS += -I. -I$(TOP)/tiffgl/src
+CCFLAGS += -I.
 
 : foreach *.c |> !cc |>
 : *.o |> !ar |> $(TOP)/libilgraphics.a $(TOP)/<libs>

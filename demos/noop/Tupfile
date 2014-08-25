@@ -1,7 +1,7 @@
 include_rules
 
 CCFLAGS += -I. -I..
-LDFLAGS += `pkg-config glew sdl2 --libs` -ldemo -lilgraphics -lilcommon -lilasset -lilmath -lilinput -lilutil -ldl -lpng -lz
+LDFLAGS += `pkg-config glew sdl2 --libs` -ldemo -lilgraphics -ltgl -lilcommon -lilasset -lilmath -lilinput -lilutil -ldl -lpng -lz
 
 : foreach *.c |> !cc |>
-: foreach *.o | $(TOP)/<libs> |> !ld |> $(TOP)/noop
+: foreach *.o | $(TOP)/<libs> $(TOP)/tiffgl/libtgl.a |> !ld |> $(TOP)/noop

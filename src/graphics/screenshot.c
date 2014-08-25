@@ -21,7 +21,7 @@ static void grabber_update(void *obj, ilG_rendid id)
     ilG_grabber *self = obj;
     size_t size = self->context->width * self->context->height * 3;
     void *buf = malloc(size);
-    glBindTexture(GL_TEXTURE_RECTANGLE, self->context->fbtextures[ILG_CONTEXT_ACCUM]);
+    glBindTexture(GL_TEXTURE_RECTANGLE, tgl_fbo_getTex(&self->context->fb, ILG_CONTEXT_ACCUM));
     glGetTexImage(GL_TEXTURE_RECTANGLE, 0, GL_RGB, GL_UNSIGNED_BYTE, buf);
     ilA_img *img = ilA_img_frombuf(buf, self->context->width, self->context->height, 0, ILA_IMG_RGB);
     self->cb(img, self->user);

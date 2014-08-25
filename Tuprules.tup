@@ -26,7 +26,7 @@ endif
 
 TOP = $(TUP_CWD)
 
-CCFLAGS += -Wall -Wextra -pedantic -I$(TUP_CWD)/src @(CCFLAGS)
+CCFLAGS += -Wall -Wextra -pedantic -I$(TUP_CWD)/src -I$(TUP_CWD)/tiffgl/src @(CCFLAGS)
 
 CXXFLAGS += -std=c++11 @(CXXFLAGS)
 

@@ -13,6 +13,7 @@
 #include "common/storage.h"
 #include "input/input.h"
 #include "graphics/renderer.h"
+#include "tgl/tgl.h"
 
 struct ilG_stage;
 
@@ -108,7 +109,7 @@ typedef struct ilG_context { // **remember to update context.lua**
     size_t num_texunits;
     /* Private */
     bool valid;
-    GLuint fbtextures[ILG_CONTEXT_NUMATTACHMENTS], framebuffer;
+    tgl_fbo fb;
     int tick_id;
     size_t num_active;
     struct ilG_context_queue *queue;

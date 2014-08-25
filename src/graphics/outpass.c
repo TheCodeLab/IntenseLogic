@@ -6,7 +6,6 @@
 #include "graphics/arrayattrib.h"
 #include "graphics/context.h"
 #include "graphics/fragdata.h"
-#include "graphics/framebuffer.h"
 #include "graphics/material.h"
 #include "graphics/renderer.h"
 #include "tgl/tgl.h"
@@ -15,7 +14,7 @@ typedef struct ilG_out {
     ilG_context *context;
     ilG_material material;
     ilG_material horizblur, vertblur;
-    ilG_fbo *front, *result;
+    tgl_fbo front, result;
     GLuint vao, vbo, size_loc;
     unsigned w, h;
     int which;
@@ -27,8 +26,8 @@ static void out_free(void *ptr)
     ilG_material_free(&self->material);
     ilG_material_free(&self->horizblur);
     ilG_material_free(&self->vertblur);
-    ilG_fbo_free(self->front);
-    ilG_fbo_free(self->result);
+    tgl_fbo_free(&self->front);
+    tgl_fbo_free(&self->result);
     glDeleteBuffers(1, &self->vao);
     glDeleteBuffers(1, &self->vbo);
     free(self);
@@ -61,7 +60,8 @@ static void out_update(void *ptr, ilG_rendid id)
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_RECTANGLE, context->fbtextures[self->which]); // bind the framebuffer we want to display
+    // bind the framebuffer we want to display
+    glBindTexture(GL_TEXTURE_RECTANGLE, tgl_fbo_getTex(&context->fb, self->which));
     tgl_check("Error setting up for post processing");
 
     self->w = context->width;
@@ -79,7 +79,7 @@ static void out_update(void *ptr, ilG_rendid id)
             self->w = w; self->h = h;
 
             // Into the front buffer,
-            ilG_fbo_bind(self->front, ILG_FBO_WRITE);
+            tgl_fbo_bind(&self->front, TGL_FBO_WRITE);
             // from the context,
             ilG_context_bind_for_outpass(context);
             // downscale.
@@ -91,9 +91,9 @@ static void out_update(void *ptr, ilG_rendid id)
 
             // From the front buffer,
             glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_RECTANGLE, ilG_fbo_getTex(self->front, 0));
+            glBindTexture(GL_TEXTURE_RECTANGLE, tgl_fbo_getTex(&self->front, 0));
             // into the result buffer,
-            ilG_fbo_bind(self->result, ILG_FBO_RW);
+            tgl_fbo_bind(&self->result, TGL_FBO_RW);
             glViewport(0,0, w,h);
             // do a horizontal blur.
             ilG_material_bind(&self->horizblur);
@@ -109,7 +109,7 @@ static void out_update(void *ptr, ilG_rendid id)
             glBlendFunc(GL_ONE, GL_ONE);
             // from the result buffer,
             glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_RECTANGLE, ilG_fbo_getTex(self->result, 0));
+            glBindTexture(GL_TEXTURE_RECTANGLE, tgl_fbo_getTex(&self->result, 0));
             // do a vertical blur.
             ilG_material_bind(&self->vertblur);
             glUniform2f(self->size_loc, self->w, self->h);
@@ -125,16 +125,36 @@ static void out_update(void *ptr, ilG_rendid id)
     tgl_check("outpass");
 }
 
+static void out_resize(const il_value *data, il_value *ctx)
+{
+    ilG_out *self = il_value_tomvoid(ctx);
+    const il_vector *vec = il_value_tovec(data);
+    unsigned w = il_vector_geti(vec, 0);
+    unsigned h = il_vector_geti(vec, 1);
+    tgl_fbo_build(&self->front, w, h);
+    tgl_fbo_build(&self->result, w, h);
+}
+
 static bool out_build(void *ptr, ilG_rendid id, ilG_context *context, ilG_buildresult *out)
 {
     (void)id;
     ilG_out *self = ptr;
     self->context = context;
     if (context->hdr) {
-        if (ilG_fbo_build(self->front, context)) {
+        tgl_fbo *f;
+
+        f = &self->front;
+        tgl_fbo_numTargets(f, 1);
+        tgl_fbo_texture(f, 0, GL_TEXTURE_RECTANGLE, GL_RGB, GL_COLOR_ATTACHMENT0);
+
+        f = &self->result;
+        tgl_fbo_numTargets(f, 1);
+        tgl_fbo_texture(f, 0, GL_TEXTURE_RECTANGLE, GL_RGB, GL_COLOR_ATTACHMENT0);
+
+        if (!tgl_fbo_build(&self->front, context->width, context->height)) {
             return false;
         }
-        if (ilG_fbo_build(self->result, context)) {
+        if (!tgl_fbo_build(&self->result, context->width, context->height)) {
             return false;
         }
         if (ilG_material_link(&self->horizblur, context)) {
@@ -143,6 +163,9 @@ static bool out_build(void *ptr, ilG_rendid id, ilG_context *context, ilG_buildr
         if (ilG_material_link(&self->vertblur, context)) {
             return false;
         }
+
+        il_storage_void sv = {self, NULL};
+        ilE_register(context->resize, ILE_DONTCARE, ILE_ANY, out_resize, il_value_opaque(sv));
     }
     ilG_material_fragment_file(&self->material, context->hdr? "hdr.frag" : "post.frag");
     if (ilG_material_link(&self->material, context)) {
@@ -184,17 +207,8 @@ ilG_builder ilG_out_builder()
     ilG_out *self = calloc(1, sizeof(ilG_out));
     ilG_material *m;
 
-    ilG_fbo *f = self->front = ilG_fbo_new();
-    ilG_fbo_numTargets(f, 1);
-    ilG_fbo_name(f, ilG_fbo_self, "Blur Front Buffer");
-    ilG_fbo_size_rel(f, 0, 1.0, 1.0);
-    ilG_fbo_texture(f, 0, GL_TEXTURE_RECTANGLE, GL_RGB, GL_COLOR_ATTACHMENT0);
-
-    f = self->result = ilG_fbo_new();
-    ilG_fbo_numTargets(f, 1);
-    ilG_fbo_name(f, ilG_fbo_self, "Horizontal Result Buffer");
-    ilG_fbo_size_rel(f, 0, 1.0, 1.0);
-    ilG_fbo_texture(f, 0, GL_TEXTURE_RECTANGLE, GL_RGB, GL_COLOR_ATTACHMENT0);
+    tgl_fbo_init(&self->front);
+    tgl_fbo_init(&self->result);
 
     ilG_material_init(&self->horizblur);
     ilG_material_init(&self->vertblur);
