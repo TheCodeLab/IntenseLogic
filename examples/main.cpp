@@ -6,6 +6,7 @@
 extern "C" {
 #include "util/loader.h"
 #include "util/opt.h"
+#include "util/version.h"
 
 void ilG_quit();
 void il_load_ilutil();
@@ -53,7 +54,7 @@ int main(int argc, char **argv)
             il_ignore_module(arg);
         }
         option("h", "help") {
-            printf("IntenseLogic\n");
+            printf("IntenseLogic %s\n", il_version);
             printf("Usage: %s [OPTIONS]\n\n", argv[0]);
             printf("Each module may have its own options, see relavent documentation for those.\n\n");
             printf("Options:\n");
@@ -79,16 +80,17 @@ int main(int argc, char **argv)
             return 0;
         }
         option("v", "version") {
-            printf("IntenseLogic\n");
-            printf("Built %s\n", __DATE__);
+            printf("IntenseLogic %s\n", il_version);
+            printf("Commit: %s\n", il_commit);
+            printf("Built %s\n", il_build_date);
             return 0;
         }
         free(arg);
     }
 
     fprintf(stderr, "MAIN: Initializing engine.\n");
-    fprintf(stderr, "MAIN: IntenseLogic\n");
-    fprintf(stderr, "MAIN: Built %s\n", __DATE__);
+    fprintf(stderr, "MAIN: IntenseLogic %s\n", il_version);
+    fprintf(stderr, "MAIN: Built %s\n", il_build_date);
 
     il_modopts *graphics_opts = il_opts_lookup(&opts, const_cast<char*>("ilgraphics"));
     if (graphics_opts) {

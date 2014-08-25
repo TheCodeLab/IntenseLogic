@@ -1,3 +1,0 @@
-include_rules
-
-: |> ^c Generating version.h^ sh gen_version.sh > %o |> version.h

@@ -4,7 +4,7 @@
 #include <string.h>
 
 #include "util/loader.h"
-#include "version.h"
+#include "util/version.h"
 #include "util/opt.h"
 #include "asset/node.h"
 
@@ -70,7 +70,7 @@ int main(int argc, char **argv)
         option("v", "version") {
             printf("IntenseLogic %s\n", il_version);
             printf("Commit: %s\n", il_commit);
-            printf("Built: %s\n", __DATE__);
+            printf("Built: %s\n", il_build_date);
             return 0;
         }
         option("d", "data") {
@@ -81,7 +81,8 @@ int main(int argc, char **argv)
 
     fprintf(stderr, "MAIN: Initializing engine.\n");
     fprintf(stderr, "MAIN: IntenseLogic %s\n", il_version);
-    fprintf(stderr, "MAIN: Built %s\n", __DATE__);
+    fprintf(stderr, "MAIN: IL Commit: %s\n", il_commit);
+    fprintf(stderr, "MAIN: Built %s\n", il_build_date);
 
     void il_load_ilutil();
     void il_load_ilgraphics();
