@@ -203,18 +203,6 @@ void ilG_context_bindFB(ilG_context *self)
         ILG_CONTEXT_SPECULAR
     };
     tgl_fbo_bind_with(&self->fb, TGL_FBO_WRITE, 4, order);
-    /*if (self->use_default_fb) {
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    } else {
-        static const GLenum drawbufs[] = {
-            GL_COLOR_ATTACHMENT0,   // accumulation
-            GL_COLOR_ATTACHMENT1,   // normal
-            GL_COLOR_ATTACHMENT2,   // diffuse
-            GL_COLOR_ATTACHMENT3    // specular
-        };
-        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, self->framebuffer);
-        glDrawBuffers(4, &drawbufs[0]);
-        }*/
 }
 
 void ilG_context_bind_for_outpass(ilG_context *self)
@@ -223,8 +211,6 @@ void ilG_context_bind_for_outpass(ilG_context *self)
         ILG_CONTEXT_ACCUM
     };
     tgl_fbo_bind_with(&self->fb, TGL_FBO_READ, 1, order);
-    /*glBindFramebuffer(GL_READ_FRAMEBUFFER, self->framebuffer);
-      glReadBuffer(GL_COLOR_ATTACHMENT0);*/
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -234,8 +220,15 @@ int ilG_context_localResize(ilG_context *self, int w, int h)
 {
     self->width = w;
     self->height = h;
+
+    il_value val;
+    val = il_value_vectorl(2, il_value_int(self->width), il_value_int(self->height));
+    ilE_handler_fire(self->resize, &val);
+    il_value_free(val);
+
     if (self->use_default_fb) {
-        goto end;
+        self->valid = 1;
+        return 1;
     }
 
     if (!tgl_fbo_build(&self->fb, w, h)) {
@@ -243,50 +236,6 @@ int ilG_context_localResize(ilG_context *self, int w, int h)
     }
     tgl_check("Error setting up screen");
 
-    /*glBindFramebuffer(GL_FRAMEBUFFER, self->framebuffer);
-    glBindTexture(GL_TEXTURE_RECTANGLE, self->fbtextures[ILG_CONTEXT_DEPTH]);
-    glTexImage2D(GL_TEXTURE_RECTANGLE, 0, GL_DEPTH_COMPONENT, w, h, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_RECTANGLE, self->fbtextures[ILG_CONTEXT_DEPTH], 0);
-    tgl_check("Unable to create depth buffer");
-    glBindTexture(GL_TEXTURE_RECTANGLE, self->fbtextures[ILG_CONTEXT_ACCUM]);
-    glTexImage2D(GL_TEXTURE_RECTANGLE, 0, GL_RGBA, w, h, 0, GL_RGBA, self->hdr? GL_FLOAT : GL_UNSIGNED_BYTE, NULL);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_RECTANGLE, self->fbtextures[ILG_CONTEXT_ACCUM], 0);
-    tgl_check("Unable to create accumulation buffer");
-    glBindTexture(GL_TEXTURE_RECTANGLE, self->fbtextures[ILG_CONTEXT_NORMAL]);
-    glTexImage2D(GL_TEXTURE_RECTANGLE, 0, GL_RGB, w, h, 0, GL_RGB, GL_FLOAT, NULL);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_RECTANGLE, self->fbtextures[ILG_CONTEXT_NORMAL], 0);
-    tgl_check("Unable to create normal buffer");
-    glBindTexture(GL_TEXTURE_RECTANGLE, self->fbtextures[ILG_CONTEXT_DIFFUSE]);
-    glTexImage2D(GL_TEXTURE_RECTANGLE, 0, GL_RGB, w, h, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_RECTANGLE, self->fbtextures[ILG_CONTEXT_DIFFUSE], 0);
-    tgl_check("Unable to create diffuse buffer");
-    glBindTexture(GL_TEXTURE_RECTANGLE, self->fbtextures[ILG_CONTEXT_SPECULAR]);
-    glTexImage2D(GL_TEXTURE_RECTANGLE, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_RECTANGLE, self->fbtextures[ILG_CONTEXT_SPECULAR], 0);
-    tgl_check("Unable to create specular buffer");
-    // completeness testing
-    GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-    if (status != GL_FRAMEBUFFER_COMPLETE) {
-        const char *status_str;
-        switch(status) {
-            case GL_FRAMEBUFFER_UNDEFINED:                      status_str = "GL_FRAMEBUFFER_UNDEFINED";                        break;
-            case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT:          status_str = "GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT";            break;
-            case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:  status_str = "GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT";    break;
-            case GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER:         status_str = "GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER";           break;
-            case GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER:         status_str = "GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER";           break;
-            case GL_FRAMEBUFFER_UNSUPPORTED:                    status_str = "GL_FRAMEBUFFER_UNSUPPORTED";                      break;
-            case GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE:         status_str = "GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE";           break;
-            case GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS:       status_str = "GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS";         break;
-            default:                                            status_str = "???";                                             break;
-        }
-        il_error("Unable to create framebuffer for context: %s", status_str);
-        return 0;
-        }*/
-    il_value val;
-end:
-    val = il_value_vectorl(2, il_value_int(self->width), il_value_int(self->height));
-    ilE_handler_fire(self->resize, &val);
-    il_value_free(val);
     self->valid = 1;
     return 1;
 }
@@ -481,7 +430,6 @@ void ilG_context_setupSDLWindow(ilG_context *self) // main thread
     }
     self->width = self->startWidth;
     self->height = self->startHeight;
-    //ilG_registerInputBackend(self);
     SDL_SetWindowData(self->window, "context", self);
 }
 
