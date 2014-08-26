@@ -70,6 +70,8 @@ enum ilG_context_hint {
     ILG_CONTEXT_DEBUG_RENDER,
     /** Enable vsync */
     ILG_CONTEXT_VSYNC,
+    /** Enable Multisampled Anti-aliasing */
+    ILG_CONTEXT_MSAA,
 };
 
 /** A linked list node for keeping track of the current framerate */
@@ -132,6 +134,7 @@ typedef struct ilG_context { // **remember to update context.lua**
     bool debug_render;
     char *initialTitle;
     bool vsync;
+    bool msaa;
 } ilG_context;
 
 ilG_context *ilG_context_new();

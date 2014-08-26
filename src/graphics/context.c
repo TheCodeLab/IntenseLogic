@@ -137,21 +137,22 @@ void ilG_context_init(ilG_context *self)
 
 void ilG_context_hint(ilG_context *self, enum ilG_context_hint hint, int param)
 {
-#define HINT(v, f) case v: self->f = param; break;
+#define HINT(v, f) case v: self->f = param; break
     switch (hint) {
-        HINT(ILG_CONTEXT_MAJOR, contextMajor)
-        HINT(ILG_CONTEXT_MINOR, contextMinor)
-        HINT(ILG_CONTEXT_FORWARD_COMPAT, forwardCompat)
-        HINT(ILG_CONTEXT_PROFILE, profile)
-        HINT(ILG_CONTEXT_DEBUG_CONTEXT, debug_context)
-        HINT(ILG_CONTEXT_EXPERIMENTAL, experimental)
-        HINT(ILG_CONTEXT_WIDTH, startWidth)
-        HINT(ILG_CONTEXT_HEIGHT, startHeight)
-        HINT(ILG_CONTEXT_HDR, hdr)
-        HINT(ILG_CONTEXT_USE_DEFAULT_FB, use_default_fb)
-        HINT(ILG_CONTEXT_DEBUG_RENDER, debug_render)
+        HINT(ILG_CONTEXT_MAJOR, contextMajor);
+        HINT(ILG_CONTEXT_MINOR, contextMinor);
+        HINT(ILG_CONTEXT_FORWARD_COMPAT, forwardCompat);
+        HINT(ILG_CONTEXT_PROFILE, profile);
+        HINT(ILG_CONTEXT_DEBUG_CONTEXT, debug_context);
+        HINT(ILG_CONTEXT_EXPERIMENTAL, experimental);
+        HINT(ILG_CONTEXT_WIDTH, startWidth);
+        HINT(ILG_CONTEXT_HEIGHT, startHeight);
+        HINT(ILG_CONTEXT_HDR, hdr);
+        HINT(ILG_CONTEXT_USE_DEFAULT_FB, use_default_fb);
+        HINT(ILG_CONTEXT_DEBUG_RENDER, debug_render);
         HINT(ILG_CONTEXT_VSYNC, vsync);
-        default:
+        HINT(ILG_CONTEXT_MSAA, msaa);
+    default:
         il_error("Invalid hint");
     }
 }
