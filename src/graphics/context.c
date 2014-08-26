@@ -184,7 +184,6 @@ void ilG_context_free(ilG_context *self)
     IL_FREE(self->manager.names);
     IL_FREE(self->manager.coordsystems);
 
-    free(self->texunits);
     ilE_unregister(self->tick, self->tick_id);
     ilE_handler_destroy(self->tick);
     ilE_handler_destroy(self->resize);
@@ -465,11 +464,6 @@ void ilG_context_localSetup(ilG_context *self)
     } else {
         il_log("KHR_debug missing");
     }
-    GLint num_texunits;
-    glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &num_texunits);
-    tgl_check("glGetIntegerv");
-    self->texunits = calloc(sizeof(unsigned), num_texunits);
-    self->num_texunits = num_texunits;
     if (!self->use_default_fb) {
         tgl_fbo_numTargets(&self->fb, ILG_CONTEXT_NUMATTACHMENTS);
         tgl_fbo_texture(&self->fb, ILG_CONTEXT_DEPTH, GL_TEXTURE_RECTANGLE, GL_DEPTH_COMPONENT, GL_DEPTH_ATTACHMENT);

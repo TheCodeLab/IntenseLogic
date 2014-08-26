@@ -106,9 +106,6 @@ typedef struct ilG_context { // **remember to update context.lua**
     ilG_handle root;
     /* For rendering */
     ilG_rendermanager manager;
-    /* Legacy rendering */
-    unsigned *texunits;
-    size_t num_texunits;
     /* Private */
     bool valid;
     tgl_fbo fb;
