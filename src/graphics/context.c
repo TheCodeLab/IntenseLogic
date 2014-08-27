@@ -405,6 +405,8 @@ void ilG_context_setupSDLWindow(ilG_context *self) // main thread
     SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
     SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
     SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
+    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, self->msaa != 0);
+    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, self->msaa);
     switch (self->profile) {
         case ILG_CONTEXT_NONE:
         break;
@@ -465,12 +467,20 @@ void ilG_context_localSetup(ilG_context *self)
         il_log("KHR_debug missing");
     }
     if (!self->use_default_fb) {
+        GLenum type = self->msaa? GL_TEXTURE_2D_MULTISAMPLE : GL_TEXTURE_RECTANGLE;
         tgl_fbo_numTargets(&self->fb, ILG_CONTEXT_NUMATTACHMENTS);
-        tgl_fbo_texture(&self->fb, ILG_CONTEXT_DEPTH, GL_TEXTURE_RECTANGLE, GL_DEPTH_COMPONENT, GL_DEPTH_ATTACHMENT);
-        tgl_fbo_texture(&self->fb, ILG_CONTEXT_ACCUM, GL_TEXTURE_RECTANGLE, GL_RGBA, GL_COLOR_ATTACHMENT0);
-        tgl_fbo_texture(&self->fb, ILG_CONTEXT_NORMAL, GL_TEXTURE_RECTANGLE, GL_RGB, GL_COLOR_ATTACHMENT1);
-        tgl_fbo_texture(&self->fb, ILG_CONTEXT_DIFFUSE, GL_TEXTURE_RECTANGLE, GL_RGB, GL_COLOR_ATTACHMENT2);
-        tgl_fbo_texture(&self->fb, ILG_CONTEXT_SPECULAR, GL_TEXTURE_RECTANGLE, GL_RGBA, GL_COLOR_ATTACHMENT3);
+        tgl_fbo_texture(&self->fb, ILG_CONTEXT_DEPTH, type, GL_DEPTH_COMPONENT, GL_DEPTH_COMPONENT, GL_DEPTH_ATTACHMENT);
+        tgl_fbo_texture(&self->fb, ILG_CONTEXT_ACCUM, type, GL_RGBA8, GL_RGBA, GL_COLOR_ATTACHMENT0);
+        tgl_fbo_texture(&self->fb, ILG_CONTEXT_NORMAL, type, GL_RGB8, GL_RGB, GL_COLOR_ATTACHMENT1);
+        tgl_fbo_texture(&self->fb, ILG_CONTEXT_DIFFUSE, type, GL_RGB8, GL_RGB, GL_COLOR_ATTACHMENT2);
+        tgl_fbo_texture(&self->fb, ILG_CONTEXT_SPECULAR, type, GL_RGBA8, GL_RGBA, GL_COLOR_ATTACHMENT3);
+        if (self->msaa) {
+            tgl_fbo_multisample(&self->fb, ILG_CONTEXT_DEPTH, self->msaa, false);
+            tgl_fbo_multisample(&self->fb, ILG_CONTEXT_ACCUM, self->msaa, false);
+            tgl_fbo_multisample(&self->fb, ILG_CONTEXT_NORMAL, self->msaa, false);
+            tgl_fbo_multisample(&self->fb, ILG_CONTEXT_DIFFUSE, self->msaa, false);
+            tgl_fbo_multisample(&self->fb, ILG_CONTEXT_SPECULAR, self->msaa, false);
+        }
         tgl_check("Unable to generate framebuffer");
     }
     self->complete = 1;

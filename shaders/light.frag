@@ -1,5 +1,7 @@
 #version 140
 
+#extension ARB_sample_shading: enable
+
 uniform vec3 color;
 uniform float radius;
 uniform sampler2DRect depth;
@@ -46,20 +48,30 @@ vec3 get_lightpos()
     return res.xyz / res.w;
 }
 
+vec4 my_sample(sampler2DRect s, ivec2 uv)
+{
+#ifdef ARB_sample_shading
+    return texelFetch(s, uv, gl_SampleID);
+#else
+    return texelFetch(s, uv);
+#endif
+}
+
 void main()
 {
+    ivec2 fc = ivec2(gl_FragCoord.xy - vec2(.5));
     // gl_FragCoord is from (.5, .5) to (w - .5, h - .5), depth texture is 0..1, feep's function wants (0,0,-1)..(1,1,1)
-    vec3 pos = screen_to_world(vec3(gl_FragCoord.xy / size, texture(depth, gl_FragCoord.xy).x) * 2 - 1);
+    vec3 pos = screen_to_world(vec3(gl_FragCoord.xy / size, my_sample(depth, fc).x) * 2 - 1);
     vec3 lightpos = get_lightpos();
     vec3 lightdir = normalize(lightpos - pos);
-    vec3 norm = texture(normal, gl_FragCoord.xy).xyz * vec3(2) - vec3(1);
+    vec3 norm = my_sample(normal, fc).xyz * vec3(2) - vec3(1);
     float dist = length(lightpos - pos) / radius;
     float daf = max(0, 1 - dist);
 
     vec3 col = vec3(0);
-    vec3 diffuse = texture(diffuse, gl_FragCoord.xy).xyz;
+    vec3 diffuse = my_sample(diffuse, fc).xyz;
     col += diffuse * vec3(max(0, dot(lightdir, norm)));
-    vec4 spec = texture(specular, gl_FragCoord.xy);
+    vec4 spec = my_sample(specular, fc);
     vec3 reflection = normalize(reflect(norm, lightdir));
     vec3 viewer = normalize(-pos); // camera space
     col += spec.xyz * pow(max(0, dot(reflection, viewer)), spec.w * 255);

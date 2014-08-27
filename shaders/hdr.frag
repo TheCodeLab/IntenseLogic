@@ -16,4 +16,3 @@ void main() {
     col *= YD;
     color = col;
 }
-

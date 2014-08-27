@@ -12,34 +12,93 @@
 
 typedef struct ilG_out {
     ilG_context *context;
-    ilG_material material;
-    ilG_material horizblur, vertblur;
+    ilG_material tonemap, horizblur, vertblur;
     tgl_fbo front, result;
-    GLuint vao, vbo, size_loc;
+    tgl_quad quad;
+    tgl_vao vao;
+    GLuint size_loc;
     unsigned w, h;
     int which;
 } ilG_out;
 
+enum {
+    OUT_POSITION
+};
+
 static void out_free(void *ptr)
 {
     ilG_out *self = ptr;
-    ilG_material_free(&self->material);
+    ilG_material_free(&self->tonemap);
     ilG_material_free(&self->horizblur);
     ilG_material_free(&self->vertblur);
     tgl_fbo_free(&self->front);
     tgl_fbo_free(&self->result);
-    glDeleteBuffers(1, &self->vao);
-    glDeleteBuffers(1, &self->vbo);
+    tgl_quad_free(&self->quad);
+    tgl_vao_free(&self->vao);
     free(self);
 }
 
-static void fullscreenTexture(ilG_out *self)
+static void out_bloom(ilG_out *self)
 {
-    tgl_check("Unknown");
-    glBindVertexArray(self->vao);
-    glBindBuffer(GL_ARRAY_BUFFER, self->vbo);
-    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-    tgl_check("Error drawing fullscreen quad");
+    ilG_context *context = self->context;
+    unsigned i;
+    int swapped = 0;
+
+    tgl_vao_bind(&self->vao);
+
+    glActiveTexture(GL_TEXTURE0);
+    // bind the framebuffer we want to display
+    tgl_fbo_bindTex(&context->fb, self->which);
+    ilG_material_bind(&self->tonemap);
+    glUniform2f(self->size_loc, self->w, self->h);
+    tgl_quad_draw_once(&self->quad);
+
+    for (i = 0; i < 4; i++) {
+        unsigned w = context->width / (1<<i),
+            h = context->height / (1<<i);
+        self->w = w; self->h = h;
+
+        // Into the front buffer,
+        tgl_fbo_bind(&self->front, TGL_FBO_WRITE);
+        // from the context,
+        ilG_context_bind_for_outpass(context);
+        // downscale.
+        glBlitFramebuffer(0,0, context->width,context->height,
+                          0,0, w,h,
+                          GL_COLOR_BUFFER_BIT,
+                          GL_LINEAR);
+        tgl_check("Blit failed");
+
+        // From the front buffer,
+        glActiveTexture(GL_TEXTURE0);
+        tgl_fbo_bindTex(&self->front, 0);
+        // into the result buffer,
+        tgl_fbo_bind(&self->result, TGL_FBO_RW);
+        glViewport(0,0, w,h);
+        // do a horizontal blur.
+        ilG_material_bind(&self->horizblur);
+        glUniform2f(self->size_loc, self->w, self->h);
+        tgl_quad_draw_once(&self->quad);
+
+        // Into the screen,
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glViewport(0, 0, context->width, context->height);
+        // blend,
+        glEnable(GL_BLEND);
+        // additively,
+        glBlendFunc(GL_ONE, GL_ONE);
+        // from the result buffer,
+        glActiveTexture(GL_TEXTURE0);
+        tgl_fbo_bindTex(&self->result, 0);
+        // do a vertical blur.
+        ilG_material_bind(&self->vertblur);
+        glUniform2f(self->size_loc, self->w, self->h);
+        tgl_quad_draw_once(&self->quad);
+        glDisable(GL_BLEND);
+
+        swapped = !swapped;
+    }
+    ilG_context_bindFB(context);
 }
 
 static void out_update(void *ptr, ilG_rendid id)
@@ -59,66 +118,21 @@ static void out_update(void *ptr, ilG_rendid id)
     glClear(GL_COLOR_BUFFER_BIT);
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
-    glActiveTexture(GL_TEXTURE0);
-    // bind the framebuffer we want to display
-    glBindTexture(GL_TEXTURE_RECTANGLE, tgl_fbo_getTex(&context->fb, self->which));
-    tgl_check("Error setting up for post processing");
 
+    tgl_check("Error setting up for post processing");
     self->w = context->width;
     self->h = context->height;
-    ilG_material_bind(&self->material);
-    glUniform2f(self->size_loc, self->w, self->h);
-    fullscreenTexture(self);
 
     if (context->hdr) {
-        unsigned i;
-        int swapped = 0;
-        for (i = 0; i < 4; i++) {
-            unsigned w = context->width / (1<<i),
-                     h = context->height / (1<<i);
-            self->w = w; self->h = h;
-
-            // Into the front buffer,
-            tgl_fbo_bind(&self->front, TGL_FBO_WRITE);
-            // from the context,
-            ilG_context_bind_for_outpass(context);
-            // downscale.
-            glBlitFramebuffer(0,0, context->width,context->height,
-                              0,0, w,h,
-                              GL_COLOR_BUFFER_BIT,
-                              GL_LINEAR);
-            tgl_check("Blit failed");
-
-            // From the front buffer,
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_RECTANGLE, tgl_fbo_getTex(&self->front, 0));
-            // into the result buffer,
-            tgl_fbo_bind(&self->result, TGL_FBO_RW);
-            glViewport(0,0, w,h);
-            // do a horizontal blur.
-            ilG_material_bind(&self->horizblur);
-            glUniform2f(self->size_loc, self->w, self->h);
-            fullscreenTexture(self);
-
-            // Into the screen,
-            glBindFramebuffer(GL_FRAMEBUFFER, 0);
-            glViewport(0, 0, context->width, context->height);
-            // blend,
-            glEnable(GL_BLEND);
-            // additively,
-            glBlendFunc(GL_ONE, GL_ONE);
-            // from the result buffer,
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_RECTANGLE, tgl_fbo_getTex(&self->result, 0));
-            // do a vertical blur.
-            ilG_material_bind(&self->vertblur);
-            glUniform2f(self->size_loc, self->w, self->h);
-            fullscreenTexture(self);
-            glDisable(GL_BLEND);
-
-            swapped = !swapped;
-        }
-        ilG_context_bindFB(context);
+        out_bloom(self);
+    } else {
+        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+        ilG_context_bind_for_outpass(context);
+        unsigned w = context->width, h = context->height;
+        glBlitFramebuffer(0,0, w,h,
+                          0,0, w,h,
+                          GL_COLOR_BUFFER_BIT,
+                          GL_NEAREST);
     }
 
     SDL_GL_SwapWindow(context->window);
@@ -142,15 +156,20 @@ static bool out_build(void *ptr, ilG_rendid id, ilG_context *context, ilG_buildr
     self->context = context;
     if (context->hdr) {
         tgl_fbo *f;
+        GLenum fmt = context->msaa? GL_TEXTURE_2D_MULTISAMPLE : GL_TEXTURE_RECTANGLE;
 
         f = &self->front;
         tgl_fbo_numTargets(f, 1);
-        tgl_fbo_texture(f, 0, GL_TEXTURE_RECTANGLE, GL_RGB, GL_COLOR_ATTACHMENT0);
+        tgl_fbo_texture(f, 0, fmt, GL_RGB8, GL_RGB, GL_COLOR_ATTACHMENT0);
 
         f = &self->result;
         tgl_fbo_numTargets(f, 1);
-        tgl_fbo_texture(f, 0, GL_TEXTURE_RECTANGLE, GL_RGB, GL_COLOR_ATTACHMENT0);
+        tgl_fbo_texture(f, 0, fmt, GL_RGB8, GL_RGB, GL_COLOR_ATTACHMENT0);
 
+        if (context->msaa) {
+            tgl_fbo_multisample(&self->front, 0, context->msaa, false);
+            tgl_fbo_multisample(&self->result, 0, context->msaa, false);
+        }
         if (!tgl_fbo_build(&self->front, context->width, context->height)) {
             return false;
         }
@@ -163,32 +182,18 @@ static bool out_build(void *ptr, ilG_rendid id, ilG_context *context, ilG_buildr
         if (ilG_material_link(&self->vertblur, context)) {
             return false;
         }
+        if (ilG_material_link(&self->tonemap, context)) {
+            return false;
+        }
+        tgl_vao_init(&self->vao);
+        tgl_vao_bind(&self->vao);
+        tgl_quad_init(&self->quad, OUT_POSITION);
+        self->size_loc = ilG_material_getLoc(&self->tonemap, "size");
+
 
         il_storage_void sv = {self, NULL};
         ilE_register(context->resize, ILE_DONTCARE, ILE_ANY, out_resize, il_value_opaque(sv));
     }
-    ilG_material_fragment_file(&self->material, context->hdr? "hdr.frag" : "post.frag");
-    if (ilG_material_link(&self->material, context)) {
-        return false;
-    }
-    self->size_loc = ilG_material_getLoc(&self->material, "size");
-    static const float data[] = {
-        0, 0,
-        0, 1,
-        1, 1,
-        1, 0
-    };
-    tgl_check("Unknown");
-    glGenVertexArrays(1, &self->vao);
-    glBindVertexArray(self->vao);
-    glGenBuffers(1, &self->vbo);
-    glBindBuffer(GL_ARRAY_BUFFER, self->vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(data), &data, GL_STATIC_DRAW);
-    glVertexAttribPointer(ILG_ARRATTR_POSITION, 2, GL_FLOAT, GL_FALSE, 0, NULL);
-    glVertexAttribPointer(ILG_ARRATTR_TEXCOORD, 2, GL_FLOAT, GL_FALSE, 0, NULL);
-    glEnableVertexAttribArray(ILG_ARRATTR_POSITION);
-    glEnableVertexAttribArray(ILG_ARRATTR_TEXCOORD);
-    tgl_check("Failed to upload quad");
 
     *out = (ilG_buildresult) {
         .free = out_free,
@@ -212,31 +217,29 @@ ilG_builder ilG_out_builder()
 
     ilG_material_init(&self->horizblur);
     ilG_material_init(&self->vertblur);
-    ilG_material_init(&self->material);
+    ilG_material_init(&self->tonemap);
 
     m = &self->horizblur;
     ilG_material_vertex_file(m, "post.vert");
+    ilG_material_fragment_file(m, "horizblur.frag");
     ilG_material_name(m, "Horizontal Blur Shader");
-    ilG_material_arrayAttrib(m, ILG_ARRATTR_POSITION, "in_Position");
-    ilG_material_arrayAttrib(m, ILG_ARRATTR_TEXCOORD, "in_Texcoord");
+    ilG_material_arrayAttrib(m, OUT_POSITION, "in_Texcoord");
     ilG_material_fragData(m, 0, "out_Color");
     ilG_material_textureUnit(m, 0, "tex");
-    ilG_material_fragment_file(m, "horizblur.frag");
 
     m = &self->vertblur;
     ilG_material_vertex_file(m, "post.vert");
+    ilG_material_fragment_file(m, "vertblur.frag");
     ilG_material_name(m, "Vertical Blur Shader");
-    ilG_material_arrayAttrib(m, ILG_ARRATTR_POSITION, "in_Position");
-    ilG_material_arrayAttrib(m, ILG_ARRATTR_TEXCOORD, "in_Texcoord");
+    ilG_material_arrayAttrib(m, OUT_POSITION, "in_Texcoord");
     ilG_material_fragData(m, 0, "out_Color");
     ilG_material_textureUnit(m, 0, "tex");
-    ilG_material_fragment_file(m, "vertblur.frag");
 
-    m = &self->material;
+    m = &self->tonemap;
     ilG_material_vertex_file(m, "post.vert");
+    ilG_material_fragment_file(m, "hdr.frag");
     ilG_material_name(m, "Tone Mapping Shader");
-    ilG_material_arrayAttrib(m, ILG_ARRATTR_POSITION, "in_Position");
-    ilG_material_arrayAttrib(m, ILG_ARRATTR_TEXCOORD, "in_Texcoord");
+    ilG_material_arrayAttrib(m, OUT_POSITION, "in_Texcoord");
     ilG_material_textureUnit(m, 0, "tex");
 
     tgl_check("Failed to build vbo");

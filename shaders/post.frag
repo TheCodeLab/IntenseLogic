@@ -9,4 +9,3 @@ void main()
 {
     color = texture(tex, texcoord * size).xyz;
 }
-

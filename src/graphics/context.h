@@ -70,7 +70,8 @@ enum ilG_context_hint {
     ILG_CONTEXT_DEBUG_RENDER,
     /** Enable vsync */
     ILG_CONTEXT_VSYNC,
-    /** Enable Multisampled Anti-aliasing */
+    /** Enable Multisampled Anti-aliasing.
+     * Defaults to 0 (disabled). Value indicates number of samples, should be power of four */
     ILG_CONTEXT_MSAA,
 };
 

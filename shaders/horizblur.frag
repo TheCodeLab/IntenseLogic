@@ -20,4 +20,3 @@ void main()
     }
     out_Color = sum;
 }
-

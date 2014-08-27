@@ -46,13 +46,13 @@ static void lights_draw(void *ptr, ilG_rendid id, il_mat **mats, const unsigned 
     ilG_context *context = self->context;
     ilG_material_bind(&self->material);
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_RECTANGLE, tgl_fbo_getTex(&context->fb, ILG_CONTEXT_DEPTH));
+    tgl_fbo_bindTex(&context->fb, ILG_CONTEXT_DEPTH);
     glActiveTexture(GL_TEXTURE0 + 1);
-    glBindTexture(GL_TEXTURE_RECTANGLE, tgl_fbo_getTex(&context->fb, ILG_CONTEXT_NORMAL));
+    tgl_fbo_bindTex(&context->fb, ILG_CONTEXT_NORMAL);
     glActiveTexture(GL_TEXTURE0 + 2);
-    glBindTexture(GL_TEXTURE_RECTANGLE, tgl_fbo_getTex(&context->fb, ILG_CONTEXT_DIFFUSE));
+    tgl_fbo_bindTex(&context->fb, ILG_CONTEXT_DIFFUSE);
     glActiveTexture(GL_TEXTURE0 + 3);
-    glBindTexture(GL_TEXTURE_RECTANGLE, tgl_fbo_getTex(&context->fb, ILG_CONTEXT_SPECULAR));
+    tgl_fbo_bindTex(&context->fb, ILG_CONTEXT_SPECULAR);
     glEnable(GL_BLEND);
     glDisable(GL_DEPTH_TEST);
     glBlendFunc(GL_ONE, GL_ONE);
