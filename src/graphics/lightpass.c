@@ -94,6 +94,9 @@ static bool lights_build(void *ptr, ilG_rendid id, ilG_context *context, ilG_bui
 {
     (void)id;
     ilG_lights *self = ptr;
+
+    ilG_material_fragment_file(&self->material, context->msaa? "light_msaa.frag" : "light.frag");
+
     self->context = context;
     if (ilG_material_link(&self->material, context)) {
         return false;
@@ -146,7 +149,6 @@ ilG_builder ilG_pointlight_builder()
     ilG_material *mtl = &self->material;
     self->type = ILG_POINT;
     ilG_material_vertex_file(mtl, "light.vert");
-    ilG_material_fragment_file(mtl, "light.frag");
     ilG_material_name(mtl, "Deferred Point Shader");
     return ilG_builder_wrap(self, lights_build);
 }
@@ -157,7 +159,6 @@ ilG_builder ilG_sunlight_builder()
     ilG_material *mtl = &self->material;
     self->type = ILG_SUN;
     ilG_material_vertex_file(mtl, "id2d.vert");
-    ilG_material_fragment_file(mtl, "light.frag");
     ilG_material_name(mtl, "Deferred Sunlight Shader");
     return ilG_builder_wrap(self, lights_build);
 }

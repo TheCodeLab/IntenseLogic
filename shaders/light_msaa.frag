@@ -1,11 +1,14 @@
 #version 140
 
+#extension GL_ARB_texture_multisample: enable
+#extension GL_ARB_sample_shading: enable
+
 uniform vec3 color;
 uniform float radius;
-uniform sampler2DRect depth;
-uniform sampler2DRect normal;
-uniform sampler2DRect diffuse;
-uniform sampler2DRect specular;
+uniform sampler2DMS depth;
+uniform sampler2DMS normal;
+uniform sampler2DMS diffuse;
+uniform sampler2DMS specular;
 uniform mat4 mv;
 uniform mat4 ivp;
 uniform vec2 size;
@@ -46,9 +49,9 @@ vec3 get_lightpos()
     return res.xyz / res.w;
 }
 
-vec4 my_sample(sampler2DRect s, ivec2 uv)
+vec4 my_sample(sampler2DMS s, ivec2 uv)
 {
-    return texture(s, uv);
+    return texelFetch(s, uv, gl_SampleID);
 }
 
 void main()
