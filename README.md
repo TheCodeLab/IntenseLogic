@@ -31,7 +31,7 @@ Contains all that stuff useful for 3D graphics: vectors (3/4d), matrices, quater
 - [Lua API Documentation](https://lymiahugs.com/~tiffany/il/doc/index.html)
 
 ## Building
-Compile using [SCons](http://scons.org/).
+Compile using [Tup](http://gittup.org/tup/).
 
 List of Dependencies:
 
