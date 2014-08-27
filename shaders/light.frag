@@ -1,13 +1,13 @@
 #version 140
 
-#extension ARB_sample_shading: enable
+#extension GL_ARB_sample_shading: enable
 
 uniform vec3 color;
 uniform float radius;
-uniform sampler2DRect depth;
-uniform sampler2DRect normal;
-uniform sampler2DRect diffuse;
-uniform sampler2DRect specular;
+uniform sampler2D depth;
+uniform sampler2D normal;
+uniform sampler2D diffuse;
+uniform sampler2D specular;
 uniform mat4 mv;
 uniform mat4 ivp;
 uniform vec2 size;
@@ -48,9 +48,9 @@ vec3 get_lightpos()
     return res.xyz / res.w;
 }
 
-vec4 my_sample(sampler2DRect s, ivec2 uv)
+vec4 my_sample(sampler2D s, ivec2 uv)
 {
-#ifdef ARB_sample_shading
+#ifdef GL_ARB_sample_shading
     return texelFetch(s, uv, gl_SampleID);
 #else
     return texelFetch(s, uv);
