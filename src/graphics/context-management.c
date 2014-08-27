@@ -86,16 +86,19 @@ unsigned ilG_context_addRenderer(ilG_context *self, ilG_rendid id, ilG_builder b
 {
     ilG_buildresult b;
     bool res = builder.build(builder.obj, id, self, &b);
+    ilG_renderer r = (ilG_renderer) {
+        .free = NULL,
+        .children = {0,0,0},
+        .lights = {0,0,0},
+        .obj = 0,
+        .view = 0,
+        .stat = 0,
+        .data = NULL
+    };
+
     if (res) {
-        ilG_renderer r = (ilG_renderer) {
-            .free = b.free,
-            .children = {0,0,0},
-            .lights = {0,0,0},
-            .obj = 0,
-            .view = 0,
-            .stat = 0,
-            .data = b.obj
-        };
+        r.free = b.free;
+        r.data = b.obj;
         if (b.update) {
             ilG_statrenderer s = (ilG_statrenderer) {
                 .update = b.update
@@ -129,11 +132,10 @@ unsigned ilG_context_addRenderer(ilG_context *self, ilG_rendid id, ilG_builder b
             r.obj = self->manager.objrenderers.length;
             IL_APPEND(self->manager.objrenderers, m);
         }
-        IL_APPEND(self->manager.renderers, r);
-        IL_APPEND(self->manager.rendids, id);
-        return self->manager.renderers.length - 1;
     }
-    return UINT_MAX;
+    IL_APPEND(self->manager.renderers, r);
+    IL_APPEND(self->manager.rendids, id);
+    return self->manager.renderers.length - 1;
 }
 
 unsigned ilG_context_addSink(ilG_context *self, ilG_rendid id, ilG_message_fn sink)

@@ -226,5 +226,5 @@ int /*failure*/ ilG_material_link(ilG_material* self, ilG_context *ctx)
     }
     self->context = ctx;
     link_shader(self);
-    return 0;
+    return !self->valid;
 }
