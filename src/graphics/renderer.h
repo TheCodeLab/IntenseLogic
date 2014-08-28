@@ -1,7 +1,8 @@
 #ifndef ILG_RENDERER_H
 #define ILG_RENDERER_H
 
-#include "common/world.h"
+#include "util/storage.h"
+#include "math/matrix.h"
 
 struct ilG_material;
 struct ilG_drawable3d;

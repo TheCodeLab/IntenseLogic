@@ -3,23 +3,47 @@
 
 #include <pthread.h>
 
-#include "common/world.h"
 #include "graphics/renderer.h"
 #include "math/matrix.h"
+#include "math/vector.h"
 
 struct ilG_context;
 
-typedef struct ilG_floatspace {
-    il_world *world;
-    il_positionable camera;
+typedef struct ilG_floatspace ilG_floatspace;
+
+typedef struct il_pos {
+    ilG_floatspace *space;
+    size_t id;
+} il_pos;
+
+struct ilG_floatspace {
+    IL_ARRAY(il_vec3,) positions;
+    IL_ARRAY(il_quat,) rotations;
+    IL_ARRAY(il_vec3,) sizes;
+    IL_ARRAY(il_vec3,) velocities;
+    IL_ARRAY(size_t,) free_list;
+    il_pos camera;
     il_mat projection;
     unsigned id;
     pthread_mutex_t mtx;
-} ilG_floatspace;
+};
 
-ilG_floatspace *ilG_floatspace_new(il_world *world);
+il_pos il_pos_new(ilG_floatspace *self);
+void il_pos_destroy(il_pos self);
+il_vec3 il_pos_getPosition(const il_pos *self);
+il_quat il_pos_getRotation(const il_pos *self);
+il_vec3 il_pos_getSize(const il_pos *self);
+il_vec3 il_pos_getVelocity(const il_pos *self);
+void il_pos_setPosition(il_pos *self, il_vec3 pos);
+void il_pos_setRotation(il_pos *self, il_quat rot);
+void il_pos_setSize(il_pos *self, il_vec3 size);
+void il_pos_setVelocity(il_pos *self, il_vec3 vel);
+
+ilG_floatspace *ilG_floatspace_new();
+void ilG_floatspace_init(ilG_floatspace *self, size_t prealloc);
+void ilG_floatspace_free(ilG_floatspace *self);
 void ilG_floatspace_build(ilG_floatspace *self, struct ilG_context *context);
-void ilG_floatspace_addPos(ilG_floatspace *self, ilG_handle r, il_positionable p);
-void ilG_floatspace_delPos(ilG_floatspace *self, ilG_handle r, il_positionable p);
+void ilG_floatspace_addPos(ilG_floatspace *self, ilG_handle r, il_pos p);
+void ilG_floatspace_delPos(ilG_floatspace *self, ilG_handle r, il_pos p);
 
 #endif

@@ -146,8 +146,8 @@ static void update_camera(const il_value *data, il_value *ctx)
     v.y = 0;
     v.z = cosf(delta * M_PI * 2) * 5;
     il_quat q = il_quat_fromAxisAngle(0, 1, 0, delta * M_PI * 2);
-    il_positionable_setPosition(&fs->camera, v);
-    il_positionable_setRotation(&fs->camera, q);
+    il_pos_setPosition(&fs->camera, v);
+    il_pos_setRotation(&fs->camera, q);
 }
 
 void demo_start()
@@ -163,16 +163,17 @@ void demo_start()
     ilG_handle_addRenderer(context->root, geom);
     ilG_handle_addRenderer(context->root, out);
 
-    ilG_floatspace *fs = ilG_floatspace_new(il_world_new(10));
-    ilG_floatspace_build(fs, context);
-    fs->projection = il_mat_perspective(M_PI / 4.0, 4.0/3, .5, 200);
+    ilG_floatspace fs;
+    ilG_floatspace_init(&fs, 1);
+    ilG_floatspace_build(&fs, context);
+    fs.projection = il_mat_perspective(M_PI / 4.0, 4.0/3, .5, 200);
 
-    il_positionable_setPosition(&fs->camera, il_vec3_new(0, 0, 5));
+    il_pos_setPosition(&fs.camera, il_vec3_new(0, 0, 5));
 
-    il_positionable boxp = il_positionable_new(fs->world);
-    ilG_floatspace_addPos(fs, box, boxp);
+    il_pos boxp = il_pos_new(&fs);
+    ilG_floatspace_addPos(&fs, box, boxp);
 
-    il_storage_void sv = {fs, NULL};
+    il_storage_void sv = {&fs, NULL};
     ilE_register(context->tick, ILE_DONTCARE, ILE_ANY, update_camera, il_value_opaque(sv));
 
     ilG_context_rename(context, "Box Demo");

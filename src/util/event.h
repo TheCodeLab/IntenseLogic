@@ -28,7 +28,7 @@
 #include <stddef.h>
 #include <sys/time.h>
 
-#include "common/storage.h"
+#include "util/storage.h"
 
 struct ilE_handler_callback;
 typedef struct ilE_handler {

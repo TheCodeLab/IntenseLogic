@@ -10,7 +10,7 @@
 
 #include "util/array.h"
 #include "util/list.h"
-#include "common/storage.h"
+#include "util/storage.h"
 #include "input/input.h"
 #include "graphics/renderer.h"
 #include "tgl/tgl.h"

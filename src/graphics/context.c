@@ -7,7 +7,7 @@
 #include <limits.h>
 
 #include "util/event.h"
-#include "common/storage.h"
+#include "util/storage.h"
 #include "graphics/graphics.h"
 #include "graphics/transform.h"
 #include "input/input.h"

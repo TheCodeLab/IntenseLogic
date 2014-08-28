@@ -1,6 +1,0 @@
-include_rules
-
-CCFLAGS += -I.
-
-: foreach *.c |> !cc |>
-: *.o |> !ar |> $(TOP)/libilcommon.a $(TOP)/<libs>

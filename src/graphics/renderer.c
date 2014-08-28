@@ -3,7 +3,7 @@
 #include <stdbool.h>
 
 #include "graphics/context.h"
-#include "common/storage.h"
+#include "util/storage.h"
 #include "graphics/material.h"
 #include "util/array.h"
 #include "util/log.h"

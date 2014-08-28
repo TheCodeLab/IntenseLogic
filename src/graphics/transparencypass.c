@@ -1,13 +1,8 @@
 #include "transparencypass.h"
 
-#include "common/world.h"
-#include "graphics/arrayattrib.h"
 #include "graphics/context.h"
-#include "graphics/material.h"
 #include "graphics/renderer.h"
 #include "tgl/tgl.h"
-#include "util/array.h"
-#include "util/log.h"
 
 static void trans_free(void *ptr)
 {
