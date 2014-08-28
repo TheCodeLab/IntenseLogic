@@ -6,43 +6,55 @@ IntenseLogic is a set of libraries for developing a game or game engine written 
 ### Graphics
 A 3D graphics library for rendering scenes using OpenGL, which can run in its own thread.
 
-Supports deferred shading and custom renderers.
+Supports deferred shading, HDR, MSAA, and has very good performance as well as a model which maps well to the GPU.
+Can be extended with custom renderer types and custom coordinate systems
+(Only single precision floating point is provided but it is not hard to implement double precision or fixed point.)
 
 ### Asset
 A VFS layer with importers for PNG and OBJ formats.
-
-### Common
-Contains some stuff that the other libraries depend on.
+Uses mmap or MapViewOfFile to map files into memory, rather than copying them a la stdio.
 
 ### Util
-Some generally useful stuff (logging, uthash, macros).
+- Data structures: vectors, linked lists, hash tables from uthash
+- Third party code: uthash
+- Plugin loader
+- Event hook system
+- Command line option parsing
+- Logging system with multiple sinks
 
 ### Math
-Contains all that stuff useful for 3D graphics: vectors (3/4d), matrices, quaternions
+Contains useful 3D graphics math: 3d/4d vectors, matrices, and quaternions.
 
 ## Screenshots
 
 ![Bouncing Lights Demo](http://i.imgur.com/JhcLYPO.png)
 
 ## Documentation
+
 (very out of date)
 
 - [C API Documentation](https://lymiahugs.com/~tiffany/il/api/index.html)
-- [Lua API Documentation](https://lymiahugs.com/~tiffany/il/doc/index.html)
 
 ## Building
-Compile using [Tup](http://gittup.org/tup/).
+Build system based on tup [Tup](http://gittup.org/tup/).
 
-List of Dependencies:
+### Dependencies
 
 - OpenGL 3.1
+- [tiffgl](https://github.com/tiffany352/tiffgl) (provided as submodule)
 - [SDL 2.0](http://libsdl.org/)
 - [GLEW](http://glew.sourceforge.net/)
 - [libpng](http://libpng.org/)
-- [LuaJIT (Lua 5.1)](http://luajit.org/)
 - pthread
 
-See the Wiki for help [building](https://github.com/TheCodeLab/IntenseLogic/wiki/Building).
+### Building
+
+    git submodule update --init --recursive
+    git pull --recurse-submodules
+    tup init
+    tup
+
+See the Wiki for full and detailed [build instructions](https://github.com/TheCodeLab/IntenseLogic/wiki/Building).
 
 ## Contact
 
@@ -58,7 +70,7 @@ See the Wiki for help [building](https://github.com/TheCodeLab/IntenseLogic/wiki
 [`@tiffany_public`](https://twitter.com/tiffany_public)
 
 ## License
-Copyright (c) 2012 Intense Logic Development Team
+Copyright (c) 2012 IntenseLogic Development Team
 
 This software is provided 'as-is', without any express or implied
 warranty. In no event will the authors be held liable for any damages
