@@ -21,17 +21,16 @@ struct s_key {
 static void *s_hash_data(il_value *v, size_t *size)
 {
     switch (v->tag) {
-        case IL_INVALID:
-        case IL_NIL:
-        case IL_TRUE:
-        case IL_FALSE:  *size = sizeof(enum il_storagetype);    return &v->tag;
-        case IL_VOID:   *size = sizeof(void*);                  return &v->val.svoid.data;
-        case IL_STRING: *size = strlen(v->val.string);          return v->val.string;
-        case IL_INT:    *size = sizeof(int);                    return &v->val.sint;
-        case IL_FLOAT:  *size = sizeof(float);                  return &v->val.sfloat;
-        case IL_TABLE:  // cannot be keys because I am lazy
-        case IL_VECTOR:
-        case IL_LUA:    return NULL;
+    case IL_INVALID:
+    case IL_NIL:
+    case IL_TRUE:
+    case IL_FALSE:  *size = sizeof(enum il_storagetype);    return &v->tag;
+    case IL_VOID:   *size = sizeof(void*);                  return &v->val.svoid.data;
+    case IL_STRING: *size = strlen(v->val.string);          return v->val.string;
+    case IL_INT:    *size = sizeof(int);                    return &v->val.sint;
+    case IL_FLOAT:  *size = sizeof(float);                  return &v->val.sfloat;
+    case IL_TABLE:  // cannot be keys because I am lazy
+    case IL_VECTOR: return NULL;
     }
 }
 
@@ -415,24 +414,23 @@ il_value il_value_vectorl(size_t num, ...)
 il_value il_value_copy(il_value *v)
 {
     switch (v->tag) {
-        case IL_VOID:
+    case IL_VOID:
         if (v->val.svoid.dtor) {
             il_error("Cannot copy opaque values with destructors");
             return il_value_nil();
         }
-        case IL_INVALID:
-        case IL_NIL:
-        case IL_TRUE:
-        case IL_FALSE:
+    case IL_INVALID:
+    case IL_NIL:
+    case IL_TRUE:
+    case IL_FALSE:
         return *v;
-        case IL_STRING:
+    case IL_STRING:
         return il_value_string(v->val.string);
-        case IL_INT:
-        case IL_FLOAT:
+    case IL_INT:
+    case IL_FLOAT:
         return *v;
-        case IL_TABLE:
-        case IL_VECTOR:
-        case IL_LUA:
+    case IL_TABLE:
+    case IL_VECTOR:
         il_error("Copying of %s is not yet implemented", il_value_strwhich(v));
         return il_value_nil();
     }
@@ -441,29 +439,28 @@ il_value il_value_copy(il_value *v)
 void il_value_free(il_value v)
 {
     switch (v.tag) {
-        case IL_VOID:   if (v.val.svoid.dtor) v.val.svoid.dtor(v.val.svoid.data); return;
-        case IL_STRING: free(v.val.string); return;
-        case IL_TABLE:  il_table_free(v.val.table); return;
-        case IL_VECTOR: il_vector_free(&v.val.vector); return;
-        default: return;
+    case IL_VOID:   if (v.val.svoid.dtor) v.val.svoid.dtor(v.val.svoid.data); return;
+    case IL_STRING: free(v.val.string); return;
+    case IL_TABLE:  il_table_free(v.val.table); return;
+    case IL_VECTOR: il_vector_free(&v.val.vector); return;
+    default: return;
     }
 }
 
 const char *il_value_strwhich(const il_value *v)
 {
     switch (v->tag) {
-        case IL_INVALID:    return "invalid";
-        case IL_NIL:        return "nil";
-        case IL_TRUE:
-        case IL_FALSE:      return "bool";
-        case IL_VOID:       return "void";
-        case IL_STRING:     return "string";
-        case IL_INT:        return "int";
-        case IL_FLOAT:      return "float";
-        case IL_TABLE:      return "table";
-        case IL_VECTOR:     return "vector";
-        case IL_LUA:        return "lua";
-        default:            return "garbage";
+    case IL_INVALID:    return "invalid";
+    case IL_NIL:        return "nil";
+    case IL_TRUE:
+    case IL_FALSE:      return "bool";
+    case IL_VOID:       return "void";
+    case IL_STRING:     return "string";
+    case IL_INT:        return "int";
+    case IL_FLOAT:      return "float";
+    case IL_TABLE:      return "table";
+    case IL_VECTOR:     return "vector";
+    default:            return "garbage";
     }
 }
 
@@ -567,7 +564,6 @@ static void show(il_value *v, unsigned indent)
         case IL_NIL:
         case IL_TRUE:
         case IL_FALSE:
-        case IL_LUA:
         fprintf(stderr, "%s", il_value_strwhich(v));
         break;
         case IL_VOID:

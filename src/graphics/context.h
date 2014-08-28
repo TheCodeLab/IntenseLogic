@@ -90,7 +90,7 @@ struct ilG_context;
  * - Public members, which can be accessed at any time.
  * - Semi-public members, which should only be accessed by functions run on the rendering thread.
  * - Members used for hints at thread startup (window title, GL version). */
-typedef struct ilG_context { // **remember to update context.lua**
+typedef struct ilG_context {
     /* Public members */
     il_table storage;
     int width, height;

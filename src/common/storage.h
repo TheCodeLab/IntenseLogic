@@ -17,7 +17,6 @@ enum il_storagetype {
     IL_FLOAT,               /**< C float type */
     IL_TABLE,               /**< Nested key-value storage */
     IL_VECTOR,
-    IL_LUA,                 /**< The value is the result of luaL_ref() */
 };
 
 typedef struct il_storage_void {
@@ -46,7 +45,6 @@ typedef struct il_value {
         float sfloat;
         il_table table;
         il_vector vector;
-        int lua;
     } val;
 } il_value;
 
