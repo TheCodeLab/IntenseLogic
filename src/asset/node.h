@@ -1,9 +1,5 @@
 /** @file node.h
  * @brief VFS code
- *
- * All the operations have their parameters setup as follows:
- *
- *      {iface} {obj} [path] [out size, out data] ... [result iface]
  */
 
 #ifndef ILA_NODE_H
