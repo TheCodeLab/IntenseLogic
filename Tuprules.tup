@@ -21,7 +21,19 @@ endif
 ifdef AR
 AR = @(AR)
 else
-AR = ar
+AR = ar rcs
+endif
+
+ifdef PKG_CONFIG
+PKG_CONFIG = @(PKG_CONFIG)
+else
+PKG_CONFIG = pkg-config
+endif
+
+ifdef PROG_SUFFIX
+PROG_SUFFIX = @(PROG_SUFFIX)
+else
+PROG_SUFFIX =
 endif
 
 TOP = $(TUP_CWD)
@@ -45,4 +57,4 @@ LDFLAGS = -pthread -L$(TOP) -L$(TOP)/tiffgl @(LDFLAGS)
 !cxx = |> ^o C++ %f^ $(CXX) $(CXXFLAGS) $(CCFLAGS) -c %f -o %o |> %B.o | $(TOP)/<objs>
 !cc = |> ^o C %f^ $(CC) $(CFLAGS) $(CCFLAGS) -c %f -o %o |> %B.o | $(TOP)/<objs>
 !ld = |> ^o LINK %o^ $(LD) %f $(LDFLAGS) -o %o |>
-!ar = |> ^o LINK %o^ $(AR) rcs %o %f |>
+!ar = |> ^o LINK %o^ $(AR) %o %f |>
