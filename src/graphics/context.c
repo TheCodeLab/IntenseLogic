@@ -374,19 +374,20 @@ static GLvoid error_cb(GLenum source, GLenum type, GLuint id, GLenum severity,
     }
 
     char source_buf[64];
-    snprintf(source_buf, 64, "OpenGL%s", ssource);
+    size_t source_len = snprintf(source_buf, 64, "OpenGL%s", ssource);
 
     const char *msg_fmt = "%s%s #%u: %s";
     size_t len = snprintf(NULL, 0, msg_fmt, sseverity, stype, id, msg);
     char msg_buf[len+1];
     snprintf(msg_buf, len+1, msg_fmt, sseverity, stype, id, msg);
 
-    il_logmsg *lmsg = il_logmsg_new(1);
-    il_logmsg_setLevel(lmsg, IL_NOTIFY);
-    il_logmsg_copyMessage(lmsg, msg_buf);
-    il_logmsg_copyBtString(lmsg, 0, source_buf);
+    il_logmsg lmsg;
+    memset(&lmsg, 0, sizeof(il_logmsg));
+    lmsg.level = IL_NOTIFY;
+    lmsg.msg = il_string_bin(msg_buf, len);
+    lmsg.func = il_string_bin(source_buf, source_len);
 
-    il_logger *logger = il_logger_stderr; // TODO
+    il_logger *logger = &il_logger_stderr; // TODO
     il_logger_log(logger, lmsg);
 }
 

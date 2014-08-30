@@ -17,7 +17,7 @@ void ilG_shaders_addPath(const char *arg)
     ilA_adddir(&ilG_shaders, arg, -1);
 }
 
-static void sdl_error(void *ptr, int cat, SDL_LogPriority pri, const char *msg)
+static void sdl_error(void *ptr, int cat, SDL_LogPriority pri, const char *reason)
 {
     (void)ptr;
     const char *scat;
@@ -48,13 +48,14 @@ static void sdl_error(void *ptr, int cat, SDL_LogPriority pri, const char *msg)
         level = 3;
 #undef C
     }
-    il_logmsg *log = il_logmsg_new(1);
-    il_logmsg_setLevel(log, level);
-    char buf[64];
-    sprintf(buf, "SDL %s error", scat);
-    il_logmsg_copyMessage(log, msg);
-    il_logmsg_copyBtString(log, 0, buf);
-    il_logger_log(il_logger_stderr, log); // TODO: Log to appropriate location
+    il_logmsg log;
+    memset(&log, 0, sizeof(il_logmsg));
+    char msg_str[64];
+    sprintf(msg_str, "SDL %s error", scat);
+    log.level = level;
+    log.msg = il_string_new(msg_str);
+    log.reason = il_string_new((char*)reason);
+    il_logger_log(&il_logger_stderr, log); // TODO: Log to appropriate location
 }
 
 void ilG_registerSdlInputBackend();
