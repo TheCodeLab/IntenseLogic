@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include "util/loader.h"
+#include "util/log.h"
 #include "util/version.h"
 #include "util/opt.h"
 #include "asset/node.h"
@@ -84,10 +85,10 @@ int main(int argc, char **argv)
         free(arg);
     }
 
-    fprintf(stderr, "MAIN: Initializing engine.\n");
-    fprintf(stderr, "MAIN: IntenseLogic %s\n", il_version);
-    fprintf(stderr, "MAIN: IL Commit: %s\n", il_commit);
-    fprintf(stderr, "MAIN: Built %s\n", il_build_date);
+    il_log("Initializing engine.");
+    il_log("IntenseLogic %s", il_version);
+    il_log("IL Commit: %s", il_commit);
+    il_log("Built %s", il_build_date);
 
     void il_load_ilgraphics();
     il_load_ilgraphics();

@@ -5,6 +5,7 @@
 
 #include "util/version.h"
 #include "util/loader.h"
+#include "util/log.h"
 #include "util/opt.h"
 #include "graphics/graphics.h"
 
@@ -83,9 +84,9 @@ int main(int argc, char **argv)
         free(arg);
     }
 
-    fprintf(stderr, "MAIN: Initializing engine.\n");
-    fprintf(stderr, "MAIN: IntenseLogic %s\n", il_version);
-    fprintf(stderr, "MAIN: Built %s\n", __DATE__);
+    il_log("Initializing engine.");
+    il_log("IntenseLogic %s", il_version);
+    il_log("Built %s", __DATE__);
 
     void il_load_ilgraphics();
     il_load_ilgraphics();
