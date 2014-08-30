@@ -17,6 +17,11 @@ typedef struct ilA_maphandle {
     HANDLE fhandle, mhandle;
 } ilA_maphandle;
 typedef DWORD ilA_errno_t;
+#elif __APPLE__
+typedef int ilA_filehandle;
+typedef int ilA_maphandle;
+typedef char *ilA_dirhandle;
+typedef int ilA_errno_t;
 #else
 typedef int ilA_filehandle;
 typedef int ilA_maphandle;

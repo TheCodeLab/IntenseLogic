@@ -39,6 +39,10 @@ static bool node_test(ilA_error *err,
     (void)namelen;
 #ifdef WIN32
 
+#elif __APPLE__
+    char fullpath[strlen(dir) + 1 + namelen + 1];
+    snprintf(fullpath, sizeof(fullpath), "%s/%s", dir, name);
+    errno_check(*err, access(fullpath, F_OK));
 #else
     errno_check(*err, faccessat(dir, name, F_OK, AT_EACCESS));
 #endif
@@ -106,7 +110,13 @@ static bool node_open(ilA_filehandle *handle,
     if (mode & ILA_CREATE) {
         oflag |= O_CREAT;
     }
+#ifdef __APPLE__
+    char fullpath[strlen(dir) + 1 + namelen + 1];
+    snprintf(fullpath, sizeof(fullpath), "%s/%s", dir, name);
+    *handle = open(fullpath, oflag);
+#else
     *handle = openat(dir, name, oflag);
+#endif
     errno_check2(*err, "openat", !*handle);
 #endif
     return true;
@@ -253,6 +263,8 @@ ilA_dirid ilA_adddir(ilA_fs *fs, const char *path, ssize_t pathlen)
     }
     d.pathlen = (size_t)pathlen;
 #ifdef WIN32
+#elif __APPLE__
+    d.dir = strdup(path);
 #else
     d.dir = open(path, O_DIRECTORY);
 #endif
@@ -263,6 +275,9 @@ ilA_dirid ilA_adddir(ilA_fs *fs, const char *path, ssize_t pathlen)
 void ilA_deldir(ilA_fs *fs, ilA_dirid id)
 {
 #ifdef WIN32
+
+#elif __APPLE__
+    free(fs->dirs.data[id.id].dir);
 #else
     close(fs->dirs.data[id.id].dir);
 #endif
