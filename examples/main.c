@@ -6,6 +6,7 @@
 #include "util/version.h"
 #include "util/loader.h"
 #include "util/opt.h"
+#include "graphics/graphics.h"
 
 struct {
     enum {
@@ -19,6 +20,7 @@ struct {
     {REQUIRED,  'i', "ignore",  "Ignores a module while loading"},
     {NO_ARG,    'h', "help",    "Prints this message and exits"},
     {NO_ARG,    'v', "version", "Prints the version and exits"},
+    {REQUIRED,  's', "shaders", "Adds a directory to look for shaders"},
     {NO_ARG,      0, NULL,      NULL}
 };
 
@@ -75,6 +77,9 @@ int main(int argc, char **argv)
             printf("Built %s\n", il_build_date);
             return 0;
         }
+        option("s", "shaders") {
+            ilG_shaders_addPath(arg);
+        }
         free(arg);
     }
 
@@ -83,12 +88,6 @@ int main(int argc, char **argv)
     fprintf(stderr, "MAIN: Built %s\n", __DATE__);
 
     void il_load_ilgraphics();
-    void il_configure_ilgraphics(il_modopts*);
-
-    il_modopts *graphics_opts = il_opts_lookup(&opts, "ilgraphics");
-    if (graphics_opts) {
-        il_configure_ilgraphics(graphics_opts);
-    }
     il_load_ilgraphics();
 
     if (!has_modules) {

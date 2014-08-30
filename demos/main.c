@@ -7,6 +7,7 @@
 #include "util/version.h"
 #include "util/opt.h"
 #include "asset/node.h"
+#include "graphics/graphics.h"
 
 const struct {
     enum {
@@ -20,6 +21,7 @@ const struct {
     {NO_ARG,    'h', "help",    "Prints this message and exits"},
     {NO_ARG,    'v', "version", "Prints the version and exits"},
     {REQUIRED,  'd', "data",    "Adds a directory to look for data files"},
+    {REQUIRED,  's', "shaders", "Adds a directory to look for GLSL shaders"},
     {NO_ARG,      0, NULL,      NULL}
 };
 
@@ -76,6 +78,9 @@ int main(int argc, char **argv)
         option("d", "data") {
             ilA_adddir(&demo_fs, arg, -1);
         }
+        option("s", "shaders") {
+            ilG_shaders_addPath(arg);
+        }
         free(arg);
     }
 
@@ -85,12 +90,6 @@ int main(int argc, char **argv)
     fprintf(stderr, "MAIN: Built %s\n", il_build_date);
 
     void il_load_ilgraphics();
-    void il_configure_ilgraphics(il_modopts *);
-
-    il_modopts *graphics_opts = il_opts_lookup(&opts, "ilgraphics");
-    if (graphics_opts) {
-        il_configure_ilgraphics(graphics_opts);
-    }
     il_load_ilgraphics();
 
     demo_start();
