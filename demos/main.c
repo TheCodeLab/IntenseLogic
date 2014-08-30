@@ -84,7 +84,6 @@ int main(int argc, char **argv)
     fprintf(stderr, "MAIN: IL Commit: %s\n", il_commit);
     fprintf(stderr, "MAIN: Built %s\n", il_build_date);
 
-    void il_load_ilutil();
     void il_load_ilgraphics();
     void il_configure_ilgraphics(il_modopts *);
 
@@ -92,7 +91,6 @@ int main(int argc, char **argv)
     if (graphics_opts) {
         il_configure_ilgraphics(graphics_opts);
     }
-    il_load_ilutil();
     il_load_ilgraphics();
 
     demo_start();

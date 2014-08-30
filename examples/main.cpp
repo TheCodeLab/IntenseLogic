@@ -9,7 +9,6 @@ extern "C" {
 #include "util/version.h"
 
 void ilG_quit();
-void il_load_ilutil();
 void il_load_ilgraphics();
 void il_configure_ilgraphics(il_modopts*);
 }
@@ -96,7 +95,6 @@ int main(int argc, char **argv)
     if (graphics_opts) {
         il_configure_ilgraphics(graphics_opts);
     }
-    il_load_ilutil();
     il_load_ilgraphics();
 
     if (!has_modules) {

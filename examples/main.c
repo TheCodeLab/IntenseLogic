@@ -82,7 +82,6 @@ int main(int argc, char **argv)
     fprintf(stderr, "MAIN: IntenseLogic %s\n", il_version);
     fprintf(stderr, "MAIN: Built %s\n", __DATE__);
 
-    void il_load_ilutil();
     void il_load_ilgraphics();
     void il_configure_ilgraphics(il_modopts*);
 
@@ -90,7 +89,6 @@ int main(int argc, char **argv)
     if (graphics_opts) {
         il_configure_ilgraphics(graphics_opts);
     }
-    il_load_ilutil();
     il_load_ilgraphics();
 
     if (!has_modules) {

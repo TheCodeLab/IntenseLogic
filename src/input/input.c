@@ -2,11 +2,6 @@
 
 #include "util/array.h"
 
-int il_load_ilinput()
-{
-    return 0;
-}
-
 IL_ARRAY(ilI_backend*,) backends;
 
 int ilI_getKey(enum ilI_key key, int *input)

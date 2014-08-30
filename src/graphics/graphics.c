@@ -74,16 +74,6 @@ static void sdl_setup()
     ilG_registerSdlInputBackend();
 }
 
-const char *const *il_preload_ilgraphics()
-{
-    static const char *const deps[] = {
-        "ilcommon",
-        "ilutil",
-        NULL
-    };
-    return deps;
-}
-
 void il_configure_ilgraphics(il_modopts *opts)
 {
     if (!opts) {
