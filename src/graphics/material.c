@@ -184,12 +184,19 @@ static void link_shader(ilG_material *self)
         return;
     }
     self->program = glCreateProgram();
-    /*if (GLEW_KHR_debug) {
+    if (GLEW_KHR_debug && self->name) {
+        if (self->config->file) {
+            glObjectLabel(GL_SHADER,
+                          self->vertshader,
+                          self->config->vertfile.namelen,
+                          self->config->vertfile.name);
+            glObjectLabel(GL_SHADER,
+                          self->fragshader,
+                          self->config->fragfile.namelen,
+                          self->config->fragfile.name);
+        }
         glObjectLabel(GL_PROGRAM, self->program, strlen(self->name), self->name);
-        char buf[1024];
-        glGetObjectLabel(GL_PROGRAM, self->program, 1024, NULL, buf);
-        printf("Program %u labelled %s\n", self->program, buf);
-    }*/
+    }
     glAttachShader(self->program, self->vertshader);
     glAttachShader(self->program, self->fragshader);
     tgl_check("glAttachShader");
