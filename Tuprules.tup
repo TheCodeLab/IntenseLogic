@@ -39,7 +39,7 @@ endif
 ifdef LOADER
 LOADER = @(LOADER)
 else
-LOADER = GLEW
+LOADER = EPOXY
 endif
 
 TOP = $(TUP_CWD)
