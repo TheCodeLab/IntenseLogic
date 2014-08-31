@@ -1,8 +1,9 @@
 #ifndef BALL_H
 #define BALL_H
 
-#include <GL/glew.h>
 #include <unordered_map>
+
+#include "tgl/tgl.h"
 
 extern "C" {
 #include "graphics/material.h"

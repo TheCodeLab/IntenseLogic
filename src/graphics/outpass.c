@@ -1,14 +1,11 @@
 #include "outpass.h"
 
-#include <GL/glew.h>
-#include <GLFW/glfw3.h>
-
+#include "tgl/tgl.h"
 #include "graphics/arrayattrib.h"
 #include "graphics/context.h"
 #include "graphics/fragdata.h"
 #include "graphics/material.h"
 #include "graphics/renderer.h"
-#include "tgl/tgl.h"
 
 typedef struct ilG_out {
     ilG_context *context;

@@ -2,11 +2,9 @@
 
 #include <stdlib.h>
 
-#include <GL/glew.h>
-
+#include "tgl/tgl.h"
 #include "graphics/arrayattrib.h"
 #include "graphics/context.h"
-#include "tgl/tgl.h"
 
 struct ilG_shape {
     ilG_handle handle;

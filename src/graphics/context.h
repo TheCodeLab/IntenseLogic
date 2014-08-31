@@ -2,18 +2,17 @@
 #define ILG_CONTEXT_H
 
 #include <stdlib.h>
-#include <GL/glew.h>
 #include <SDL2/SDL_video.h>
 #include <sys/time.h>
 #include <pthread.h>
 #include <stdbool.h>
 
+#include "tgl/tgl.h"
 #include "util/array.h"
 #include "util/list.h"
 #include "util/storage.h"
 #include "input/input.h"
 #include "graphics/renderer.h"
-#include "tgl/tgl.h"
 
 struct ilG_stage;
 
@@ -215,6 +214,7 @@ void ilG_context_renderFrame(ilG_context *context);
 void *ilG_context_loop(void *context);
 void ilG_context_setupSDLWindow(ilG_context *context);
 void ilG_context_setupGLEW(ilG_context *context);
+void ilG_context_setupEpoxy(ilG_context *context);
 void ilG_context_localSetup(ilG_context *context);
 void ilG_context_measure(ilG_context *context);
 bool ilG_context_build(void *obj, ilG_rendid id, ilG_context *context, ilG_buildresult *out);

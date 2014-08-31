@@ -1,7 +1,7 @@
 #ifndef ILG_MESH_H
 #define ILG_MESH_H
 
-#include <GL/glew.h>
+#include "tgl/gl.h"
 
 struct ilA_mesh;
 struct ilG_context;

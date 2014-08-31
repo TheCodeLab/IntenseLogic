@@ -436,6 +436,7 @@ void ilG_context_setupSDLWindow(ilG_context *self) // main thread
     SDL_SetWindowData(self->window, "context", self);
 }
 
+#ifdef TGL_USE_GLEW
 void ilG_context_setupGLEW(ilG_context *self)
 {
     glewExperimental = self->experimental? GL_TRUE : GL_FALSE; // TODO: find out why IL crashes without this
@@ -446,20 +447,34 @@ void ilG_context_setupGLEW(ilG_context *self)
     }
     il_log("Using GLEW %s", glewGetString(GLEW_VERSION));
 
-#ifndef __APPLE__
+# ifdef __APPLE__
+    if (!GLEW_VERSION_3_2) {
+# else
     if (!GLEW_VERSION_3_1) {
+# endif
         il_error("GL version 3.1 is required, you have %s: crashes are on you", glGetString(GL_VERSION));
     } else {
         il_log("OpenGL Version %s", glGetString(GL_VERSION));
     }
-#endif
     tgl_check("GLEW setup");
 }
+#endif
+
+#ifdef TGL_USE_EPOXY
+void ilG_context_setupEpoxy(ilG_context *self)
+{
+    (void)self;
+    if (epoxy_gl_version() < 31) {
+        il_error("GL version 3.1 is required: a crash is likely");
+    }
+    il_log("OpenGL Version %s", glGetString(GL_VERSION));
+}
+#endif
 
 void ilG_context_localSetup(ilG_context *self)
 {
     tgl_check("Unknown");
-    if (GLEW_KHR_debug) {
+    if (TGL_EXTENSION(KHR_debug)) {
         glDebugMessageCallback((GLDEBUGPROC)&error_cb, NULL);
         glEnable(GL_DEBUG_OUTPUT);
         il_log("KHR_debug present, enabling advanced errors");
@@ -494,7 +509,11 @@ void *ilG_context_loop(void *ptr)
     self->context = SDL_GL_CreateContext(self->window);
 
     SDL_GL_SetSwapInterval(self->vsync);
+#ifdef TGL_USE_GLEW
     ilG_context_setupGLEW(self);
+#elif defined(TGL_USE_EPOXY)
+    ilG_context_setupEpoxy(self);
+#endif
     ilG_context_localSetup(self);
     ilG_context_localResize(self, self->startWidth, self->startHeight);
 

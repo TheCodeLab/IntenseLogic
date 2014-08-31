@@ -1,9 +1,9 @@
 #ifndef ILG_MATERIAL_H
 #define ILG_MATERIAL_H
 
-#include <GL/glew.h>
 #include <stdbool.h>
 
+#include "tgl/gl.h"
 #include "util/ilstring.h"
 #include "math/matrix.h"
 

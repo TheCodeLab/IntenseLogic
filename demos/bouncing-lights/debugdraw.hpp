@@ -1,7 +1,8 @@
 #include <btBulletDynamicsCommon.h>
 #include <LinearMath/btIDebugDraw.h>
 #include <vector>
-#include <GL/glew.h>
+
+#include "tgl/tgl.h"
 
 extern "C" {
 #include "graphics/context.h"

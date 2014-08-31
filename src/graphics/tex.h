@@ -1,8 +1,9 @@
 #ifndef ILG_TEX_H
 #define ILG_TEX_H
 
-#include <GL/glew.h>
 #include <stdbool.h>
+
+#include "tgl/gl.h"
 
 struct ilG_context;
 struct ilA_file;

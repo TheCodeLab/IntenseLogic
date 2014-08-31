@@ -3,7 +3,6 @@
 #include <BulletDynamics/Character/btKinematicCharacterController.h>
 #include <BulletCollision/CollisionDispatch/btGhostObject.h>
 #include <BulletCollision/CollisionDispatch/btCollisionObject.h>
-#include <GL/glew.h>
 #include <SDL2/SDL.h>
 
 #include <iostream>
@@ -11,6 +10,7 @@
 #include <ctime>
 #include <math.h>
 
+#include "tgl/tgl.h"
 #include "debugdraw.hpp"
 #include "bulletspace.hpp"
 #include "ball.hpp"
@@ -19,7 +19,6 @@ using namespace std;
 using namespace BouncingLights;
 
 extern "C" {
-#include <GL/glew.h>
 #include "asset/image.h"
 #include "graphics/transform.h"
 #include "math/matrix.h"

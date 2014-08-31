@@ -1,16 +1,15 @@
 #include "material.h"
 
-#include <GL/glew.h>
 #include <string.h>
 #include <stdbool.h>
 
+#include "tgl/tgl.h"
 #include "asset/node.h"
 #include "graphics/arrayattrib.h"
 #include "graphics/context.h"
 #include "graphics/fragdata.h"
 #include "graphics/graphics.h"
 #include "graphics/transform.h"
-#include "tgl/tgl.h"
 #include "util/array.h"
 #include "util/ilassert.h"
 #include "util/log.h"
@@ -184,7 +183,7 @@ static void link_shader(ilG_material *self)
         return;
     }
     self->program = glCreateProgram();
-    if (GLEW_KHR_debug && self->name) {
+    if (TGL_EXTENSION(KHR_debug) && self->name) {
         if (self->config->file) {
             glObjectLabel(GL_SHADER,
                           self->vertshader,
