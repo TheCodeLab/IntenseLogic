@@ -79,8 +79,8 @@ typedef struct ilA_fs {
     IL_ARRAY(ilA_dir,) dirs;
 } ilA_fs;
 
-bool ilA_mapfile(ilA_fs *fs, ilA_map *map, ilA_file_mode mode, const char *name, ssize_t namelen);
-bool ilA_dir_mapfile(ilA_fs *fs, ilA_dirid id, ilA_map *map, ilA_file_mode mode, const char *name, ssize_t namelen);
+bool __attribute__((warn_unused_result)) ilA_mapfile(ilA_fs *fs, ilA_map *map, ilA_file_mode mode, const char *name, ssize_t namelen);
+bool __attribute__((warn_unused_result)) ilA_dir_mapfile(ilA_fs *fs, ilA_dirid id, ilA_map *map, ilA_file_mode mode, const char *name, ssize_t namelen);
 void ilA_unmapfile(ilA_map *map);
 int ilA_rawopen(ilA_fs *fs, ilA_error *err, ilA_file_mode mode, const char *name, ssize_t namelen);
 int ilA_dir_rawopen(ilA_fs *fs, ilA_dirid id, ilA_error *err, ilA_file_mode mode, const char *name, ssize_t namelen);

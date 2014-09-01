@@ -31,6 +31,6 @@ void ilG_material_textureUnit(ilG_material*, unsigned long type, const char *loc
 GLuint ilG_material_getLoc(ilG_material*, const char *location);
 void ilG_material_bind(ilG_material*);
 void ilG_material_bindMatrix(ilG_material*, GLuint loc, il_mat m);
-int /*failure*/ ilG_material_link(ilG_material*, struct ilG_context *ctx);
+int /*failure*/ __attribute__((warn_unused_result)) ilG_material_link(ilG_material*, struct ilG_context *ctx);
 
 #endif
