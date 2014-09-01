@@ -253,6 +253,20 @@ bool ilG_context_delRenderer(ilG_context *self, ilG_rendid id)
     ilG_rendid key;
     IL_FIND(self->manager.rendids, key, key == id, idx);
     if (idx < self->manager.rendids.length) {
+        ilG_renderer *r = &self->manager.renderers.data[idx];
+        r->free(r->data);
+        IL_FREE(r->children);
+        IL_FREE(r->lights);
+        if (r->obj) {
+            ilG_objrenderer *or = &self->manager.objrenderers.data[r->obj];
+            free(or->types);
+            IL_FREE(or->objects);
+        }
+        if (r->view) {
+            ilG_viewrenderer *vr = &self->manager.viewrenderers.data[r->view];
+            free(vr->types);
+        }
+        // TODO: Stop leaking {obj,view,stat}renderer memory in array, use freelist or something
         IL_FASTREMOVE(self->manager.renderers, idx);
         IL_FASTREMOVE(self->manager.rendids, idx);
         return true;

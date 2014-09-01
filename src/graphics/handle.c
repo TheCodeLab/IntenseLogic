@@ -3,6 +3,25 @@
 #include "graphics/context.h"
 #include "graphics/context-internal.h"
 
+static void handle_destroy(void *ptr)
+{
+    ilG_handle *self = ptr;
+    ilG_context_delRenderer(self->context, self->id);
+    free(self);
+}
+
+void ilG_handle_destroy(ilG_handle self)
+{
+    ilG_handle *ctx = calloc(1, sizeof(ilG_handle));
+    *ctx = self;
+    ilG_context_upload(self.context, handle_destroy, ctx);
+}
+
+bool ilG_handle_ready(ilG_handle self);
+il_table *ilG_handle_storage(ilG_handle self);
+const char *ilG_handle_getName(ilG_handle self);
+const char *ilG_handle_getError(ilG_handle self);
+
 void ilG_handle_addCoords(ilG_handle self, unsigned cosys, unsigned codata)
 {
     struct ilG_context_msg *msg = calloc(1, sizeof(struct ilG_context_msg));
