@@ -174,7 +174,7 @@ void demo_start()
     ilG_floatspace_addPos(&fs, box, boxp);
 
     il_storage_void sv = {&fs, NULL};
-    ilE_register(context->tick, ILE_DONTCARE, ILE_ANY, update_camera, il_value_opaque(sv));
+    ilE_register(&context->tick, ILE_DONTCARE, ILE_ANY, update_camera, il_value_opaque(sv));
 
     ilG_context_rename(context, "Box Demo");
     ilG_context_start(context);
@@ -185,7 +185,7 @@ void demo_start()
             switch (ev.type) {
             case SDL_QUIT:
                 il_log("Stopping");
-                ilG_context_stop(context);
+                ilG_context_end(context);
                 return;
             }
         }

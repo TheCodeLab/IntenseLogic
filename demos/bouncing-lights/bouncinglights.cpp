@@ -211,7 +211,7 @@ ex void demo_start()
     il_storage_void sv;
     sv.data = &ctx;
     sv.dtor = NULL;
-    ilE_register(context->tick, ILE_DONTCARE, ILE_ANY, gtick, il_value_opaque(sv));
+    ilE_register(&context->tick, ILE_DONTCARE, ILE_ANY, gtick, il_value_opaque(sv));
 
     ilG_context_start(context);
 
@@ -223,7 +223,7 @@ ex void demo_start()
             switch (ev.type) {
             case SDL_QUIT:
                 il_log("Stopping");
-                ilG_context_stop(context);
+                ilG_context_end(context);
                 return;
             case SDL_MOUSEMOTION:
                 if (ev.motion.state & SDL_BUTTON_LMASK) {

@@ -27,7 +27,7 @@ static void handle_windowevent(ilG_context *context, SDL_Event *ev)
     case SDL_WINDOWEVENT_CLOSE:
         {
             il_value nil = il_value_nil();
-            ilE_handler_fire(context->close, &nil);
+            ilE_handler_fire(&context->close, &nil);
             il_value_free(nil);
             break;
         }

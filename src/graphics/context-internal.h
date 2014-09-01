@@ -11,6 +11,7 @@ typedef struct ilG_context_msg {
         ILG_UPLOAD,
         ILG_RESIZE,
         ILG_STOP,
+        ILG_END,
         ILG_MESSAGE,
         ILG_ADD_COORDS,
         ILG_DEL_COORDS,

@@ -96,10 +96,10 @@ void ilG_context_init(ilG_context *self)
     self->startHeight = 600;
     self->vsync = 1;
     self->initialTitle = "IntenseLogic";
-    self->tick      = ilE_handler_new_with_name("il.graphics.context.tick");
-    self->resize    = ilE_handler_new_with_name("il.graphics.context.resize");
-    self->close     = ilE_handler_new_with_name("il.graphics.context.close");
-    self->destroy   = ilE_handler_new_with_name("il.graphics.context.destroy");
+    ilE_handler_init_with_name(&self->tick,    "il.graphics.context.tick");
+    ilE_handler_init_with_name(&self->resize,  "il.graphics.context.resize");
+    ilE_handler_init_with_name(&self->close,   "il.graphics.context.close");
+    ilE_handler_init_with_name(&self->destroy, "il.graphics.context.destroy");
     ilI_handler_init(&self->handler);
     tgl_fbo_init(&self->fb);
     self->queue = calloc(1, sizeof(struct ilG_context_queue));
@@ -163,31 +163,26 @@ void ilG_context_free(ilG_context *self)
     self->complete = 0;
 
     il_value nil = il_value_nil();
-    ilE_handler_fire(self->destroy, &nil);
+    ilE_handler_fire_once(&self->destroy, &nil);
     il_value_free(nil);
 
-    for (unsigned i = 0; i < self->manager.renderers.length; i++) {
-        ilG_renderer *r = &self->manager.renderers.data[i];
-        r->free(r->data);
+    // public members
+    il_table_free(self->storage);
+    struct ilG_frame *elt, *tmp;
+    IL_LIST_ITER(self->frames_head, ll, elt, tmp) {
+        free(elt);
     }
-    for (unsigned i = 0; i < self->manager.names.length; i++) {
-        free(self->manager.names.data[i]);
-    }
-    for (unsigned i = 0; i < self->manager.coordsystems.length; i++) {
-        ilG_coordsys *c = &self->manager.coordsystems.data[i];
-        c->free(c->obj);
-    }
-    IL_FREE(self->manager.renderers);
-    IL_FREE(self->manager.sinks);
-    IL_FREE(self->manager.storages);
-    IL_FREE(self->manager.namelinks);
-    IL_FREE(self->manager.names);
-    IL_FREE(self->manager.coordsystems);
+    free(self->title);
+    ilE_handler_destroy(&self->tick);
+    ilE_handler_destroy(&self->resize);
+    ilE_handler_destroy(&self->close);
+    // destroy was already freed
+    // TODO: Free or remove the input handler
 
-    ilE_unregister(self->tick, self->tick_id);
-    ilE_handler_destroy(self->tick);
-    ilE_handler_destroy(self->resize);
-    ilE_handler_destroy(self->close);
+    ilG_rendermanager_free(&self->manager);
+
+    // private members
+    tgl_fbo_free(&self->fb);
     ilG_context_queue_free(self->queue);
 
     SDL_GL_DeleteContext(self->context);
@@ -223,7 +218,7 @@ int ilG_context_localResize(ilG_context *self, int w, int h)
 
     il_value val;
     val = il_value_vectorl(2, il_value_int(self->width), il_value_int(self->height));
-    ilE_handler_fire(self->resize, &val);
+    ilE_handler_fire(&self->resize, &val);
     il_value_free(val);
 
     if (self->use_default_fb) {
@@ -520,7 +515,7 @@ void *ilG_context_loop(void *ptr)
     while (self->valid) {
         // Run per-frame stuff
         il_value nil = il_value_nil();
-        ilE_handler_fire(self->tick, &nil);
+        ilE_handler_fire(&self->tick, &nil);
         il_value_free(nil);
         // Process messages
         struct ilG_context_msg *msg;
@@ -529,6 +524,7 @@ void *ilG_context_loop(void *ptr)
             case ILG_UPLOAD: msg->value.upload.cb(msg->value.upload.ptr); break;
             case ILG_RESIZE: ilG_context_localResize(self, msg->value.resize[0], msg->value.resize[1]); break;
             case ILG_STOP: goto stop;
+            case ILG_END: goto end;
             case ILG_MESSAGE: context_message(self, msg->value.message.node, msg->value.message.type, msg->value.message.data); break;
             case ILG_ADD_COORDS:
                 ilG_context_addCoords(self, msg->value.coords.parent, msg->value.coords.cosys, msg->value.coords.codata);
@@ -575,7 +571,11 @@ void *ilG_context_loop(void *ptr)
 
 stop:
     ilG_context_queue_doneconsume(self->queue);
-    tgl_fbo_free(&self->fb);
+    self->running = false;
+    return NULL;
+end:
+    self->running = false;
+    ilG_context_free(self);
     return NULL;
 }
 
@@ -598,5 +598,12 @@ void ilG_context_stop(ilG_context *self)
     msg->type = ILG_STOP;
     ilG_context_queue_produce(self->queue, msg);
     pthread_join(self->thread, NULL);
-    self->running = false;
+}
+
+void ilG_context_end(ilG_context *self)
+{
+    ilG_context_msg *msg = calloc(1, sizeof(ilG_context_msg));
+    msg->type = ILG_END;
+    ilG_context_queue_produce(self->queue, msg);
+    pthread_join(self->thread, NULL);
 }

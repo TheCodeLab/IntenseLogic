@@ -189,7 +189,7 @@ static bool out_build(void *ptr, ilG_rendid id, ilG_context *context, ilG_buildr
 
 
         il_storage_void sv = {self, NULL};
-        ilE_register(context->resize, ILE_DONTCARE, ILE_ANY, out_resize, il_value_opaque(sv));
+        ilE_register(&context->resize, ILE_DONTCARE, ILE_ANY, out_resize, il_value_opaque(sv));
     }
 
     *out = (ilG_buildresult) {

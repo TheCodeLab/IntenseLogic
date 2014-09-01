@@ -97,6 +97,7 @@ struct ilG_renderer {
 
 il_pair(ilG_rendstorage,ilG_rendid, il_table);
 il_pair(ilG_rendname,   ilG_rendid, unsigned);
+il_pair(ilG_error,      ilG_rendid, char*);
 
 typedef struct ilG_rendermanager {
     IL_ARRAY(ilG_renderer,)     renderers;
@@ -109,9 +110,12 @@ typedef struct ilG_rendermanager {
     IL_ARRAY(ilG_rendname,)     namelinks;
     IL_ARRAY(char*,)            names;
     IL_ARRAY(ilG_coordsys,)     coordsystems;
+    IL_ARRAY(ilG_error,)        failed;
     ilG_rendid curid;
     ilG_cosysid cursysid;
 } ilG_rendermanager;
+
+void ilG_rendermanager_free(ilG_rendermanager *rm);
 
 typedef struct ilG_legacy ilG_legacy;
 #define ilG_legacy_builder(p) ilG_builder_wrap(p, ilG_legacy_build)

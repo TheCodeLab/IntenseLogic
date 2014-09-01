@@ -14,8 +14,6 @@
 #include "input/input.h"
 #include "graphics/renderer.h"
 
-struct ilG_stage;
-
 enum ilG_context_attachments {
     ILG_CONTEXT_DEPTH,
     ILG_CONTEXT_ACCUM,
@@ -98,10 +96,10 @@ typedef struct ilG_context {
                    frames_average;
     size_t num_frames;
     char *title;
-    ilE_handler *tick,
-                *resize,
-                *close,
-                *destroy;
+    ilE_handler tick,
+                resize,
+                close,
+                destroy;
     ilI_handler handler;
     ilG_handle root;
     /* For rendering */
@@ -115,9 +113,8 @@ typedef struct ilG_context {
     SDL_Window *window;
     SDL_GLContext context;
     pthread_t thread;
-    bool running;
+    bool running, complete;
     /* Creation parameters */
-    bool complete;
     int contextMajor;
     int contextMinor;
     bool forwardCompat;
@@ -147,6 +144,8 @@ void ilG_context_hint(ilG_context *self, enum ilG_context_hint hint, int param);
 bool ilG_context_start(ilG_context* self);
 /** Stops the render thread. Blocks. */
 void ilG_context_stop(ilG_context *self);
+/** Destroys the context and stops the render thread. Blocks. */
+void ilG_context_end(ilG_context *self);
 
 /* External calls */
 /** Calls a function at the beginning of the frame on the context thread, usually for building VBOs */
