@@ -58,6 +58,11 @@ static bool heightmap_build(void *ptr, ilG_rendid id, ilG_context *context, ilG_
     self->mvp = ilG_material_getLoc(&self->shader, "mvp");
     self->imt = ilG_material_getLoc(&self->shader, "imt");
     self->size = ilG_material_getLoc(&self->shader, "size");
+    if (!ilG_mesh_init(&self->mesh, self->source)) {
+        ilA_mesh_free(self->source);
+        return false;
+    }
+    ilA_mesh_free(self->source);
     if (ILG_MESH_ERROR & ilG_mesh_build(&self->mesh, context)) {
         return false;
     }
@@ -121,9 +126,7 @@ ilG_builder ilG_heightmap_builder(unsigned w, unsigned h, ilG_tex height, ilG_te
     self->height = height;
     self->normal = normal;
     self->color = color;
-
-    ilG_mesh_init(&self->mesh, mesh);
-    ilA_mesh_free(mesh);
+    self->source = mesh;
 
     ilG_material_init(&self->shader);
     ilG_material *mat = &self->shader;

@@ -1,6 +1,8 @@
 #ifndef ILG_MESH_H
 #define ILG_MESH_H
 
+#include <stdbool.h>
+
 #include "tgl/gl.h"
 
 struct ilA_mesh;
@@ -24,8 +26,8 @@ enum ilG_mesh_attribs {
     ILG_MESH_SPECULAR
 };
 
-int ilG_mesh_init(ilG_mesh *mesh, const struct ilA_mesh *source);
-int ilG_mesh_fromfile(ilG_mesh *mesh, struct ilA_fs *fs, const char *name);
+bool __attribute__((warn_unused_result)) ilG_mesh_init(ilG_mesh *mesh, const struct ilA_mesh *source);
+bool __attribute__((warn_unused_result)) ilG_mesh_fromfile(ilG_mesh *mesh, struct ilA_fs *fs, const char *name);
 void ilG_mesh_free(ilG_mesh *mesh);
 enum ilG_mesh_attribs ilG_mesh_build(ilG_mesh *mesh, struct ilG_context *context);
 void ilG_mesh_bind(ilG_mesh *mesh);

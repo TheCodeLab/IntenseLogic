@@ -52,6 +52,9 @@ bool BallRenderer::build(void *obj, ilG_rendid id, ilG_context *context, ilG_bui
     b.imt_loc = ilG_material_getLoc(&b.mat, "imt");
     b.col_loc = ilG_material_getLoc(&b.mat, "col");
 
+    if (!ilG_mesh_fromfile(&b.mesh, &demo_fs, "demos/bouncing-lights/sphere.obj")) {
+        return false;
+    }
     if (!ilG_mesh_build(&b.mesh, context)) {
         return false;
     }
@@ -86,7 +89,6 @@ BallRenderer::BallRenderer()
     ilG_material_arrayAttrib(m, ILG_MESH_DIFFUSE, "in_Diffuse");
     ilG_material_arrayAttrib(m, ILG_MESH_SPECULAR, "in_Specular");*/
 
-    ilG_mesh_fromfile(&mesh, &demo_fs, "demos/bouncing-lights/sphere.obj");
 }
 
 ilG_builder BallRenderer::builder()

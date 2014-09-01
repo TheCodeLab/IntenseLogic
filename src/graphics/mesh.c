@@ -9,7 +9,7 @@
 #include "graphics/context.h"
 #include "graphics/renderer.h"
 
-int ilG_mesh_init(ilG_mesh *mesh, const ilA_mesh* self)
+bool ilG_mesh_init(ilG_mesh *mesh, const ilA_mesh* self)
 {
     memset(mesh, 0, sizeof(ilG_mesh));
     static const GLenum mapping[] = {
@@ -29,14 +29,17 @@ int ilG_mesh_init(ilG_mesh *mesh, const ilA_mesh* self)
     mesh->type = mapping[self->mode];
     mesh->count = self->num_vertices;
     mesh->mesh = ilA_mesh_copy(self);
-    return 1;
+    return true;
 }
 
 ilA_mesh *ilA_mesh_parseObj(ilA_fs *fs, const char *filename, const char *data, size_t length);
-int ilG_mesh_fromfile(ilG_mesh *mesh, ilA_fs *fs, const char *name)
+bool ilG_mesh_fromfile(ilG_mesh *mesh, ilA_fs *fs, const char *name)
 {
     ilA_mesh *asset = ilA_mesh_loadfile(fs, name);
-    int res = ilG_mesh_init(mesh, asset);
+    if (!asset) {
+        return false;
+    }
+    bool res = ilG_mesh_init(mesh, asset);
     ilA_mesh_free(asset);
     return res;
 }

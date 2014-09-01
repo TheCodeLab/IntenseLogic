@@ -63,6 +63,9 @@ static bool teapot_build(void *obj, ilG_rendid id, ilG_context *context, ilG_bui
     t->mvp_loc = ilG_material_getLoc(&t->mat, "mvp");
     t->imt_loc = ilG_material_getLoc(&t->mat, "imt");
 
+    if (!ilG_mesh_fromfile(&t->mesh, &demo_fs, "teapot.obj")) {
+        return false;
+    }
     if (!ilG_mesh_build(&t->mesh, context)) {
         return false;
     }
@@ -100,7 +103,6 @@ ilG_builder teapot_builder()
     ilG_material_arrayAttrib(m, ILG_MESH_SPECULAR, "in_Specular");
     ilG_material_textureUnit(m, 0, "tex");
 
-    ilG_mesh_fromfile(&t->mesh, &demo_fs, "teapot.obj");
     ilG_tex_loadfile(&t->tex, &demo_fs, "white-marble-texture.png");
 
     return ilG_builder_wrap(t, teapot_build);
