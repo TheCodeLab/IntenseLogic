@@ -44,6 +44,7 @@ bool BallRenderer::build(void *obj, ilG_rendid id, ilG_context *context, ilG_bui
 {
     (void)id;
     BallRenderer &b = *reinterpret_cast<BallRenderer*>(obj);
+
     if (ilG_material_link(&b.mat, context)) {
         return false;
     }
@@ -55,7 +56,6 @@ bool BallRenderer::build(void *obj, ilG_rendid id, ilG_context *context, ilG_bui
         return false;
     }
 
-    memset(out, 0, sizeof(ilG_buildresult));
     int *types = (int*)calloc(2, sizeof(int));
     types[MVP] = ILG_MVP;
     types[IMT] = ILG_IMT;

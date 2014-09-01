@@ -161,11 +161,12 @@ ilG_renderer    *ilG_context_findRenderer       (ilG_context *self, ilG_rendid i
 ilG_msgsink     *ilG_context_findSink           (ilG_context *self, ilG_rendid id);
 il_table        *ilG_context_findStorage        (ilG_context *self, ilG_rendid id);
 const char      *ilG_context_findName           (ilG_context *self, ilG_rendid id);
+const char      *ilG_context_findError          (ilG_context *self, ilG_rendid id);
 unsigned ilG_context_addRenderer    (ilG_context *self, ilG_rendid id, ilG_builder builder);
 unsigned ilG_context_addSink        (ilG_context *self, ilG_rendid id, ilG_message_fn sink);
-unsigned ilG_context_addChild       (ilG_context *self, ilG_rendid parent, ilG_rendid child);
+bool ilG_context_addChild           (ilG_context *self, ilG_rendid parent, ilG_rendid child);
 unsigned ilG_context_addCoords      (ilG_context *self, ilG_rendid id, ilG_cosysid cosys, unsigned codata);
-unsigned ilG_context_viewCoords     (ilG_context *self, ilG_rendid id, ilG_cosysid cosys);
+bool ilG_context_viewCoords         (ilG_context *self, ilG_rendid id, ilG_cosysid cosys);
 unsigned ilG_context_addLight       (ilG_context *self, ilG_rendid id, struct ilG_light light);
 unsigned ilG_context_addStorage     (ilG_context *self, ilG_rendid id);
 unsigned ilG_context_addName        (ilG_context *self, ilG_rendid id, const char *name);

@@ -85,6 +85,7 @@ const char *ilG_context_findName(ilG_context *self, ilG_rendid id)
 unsigned ilG_context_addRenderer(ilG_context *self, ilG_rendid id, ilG_builder builder)
 {
     ilG_buildresult b;
+    memset(&b, 0, sizeof(ilG_buildresult));
     bool res = builder.build(builder.obj, id, self, &b);
     ilG_renderer r = (ilG_renderer) {
         .free = NULL,
@@ -96,42 +97,46 @@ unsigned ilG_context_addRenderer(ilG_context *self, ilG_rendid id, ilG_builder b
         .data = NULL
     };
 
-    if (res) {
-        r.free = b.free;
-        r.data = b.obj;
-        if (b.update) {
-            ilG_statrenderer s = (ilG_statrenderer) {
-                .update = b.update
-            };
-            r.stat = self->manager.statrenderers.length;
-            IL_APPEND(self->manager.statrenderers, s);
-        }
-        if (b.view) {
-            for (unsigned i = 0; i < b.num_types; i++) {
-                if (b.types[i] & ILG_MODEL) {
-                    il_error("View renderers cannot have model transformations");
-                    return UINT_MAX;
-                }
+    if (!res) {
+        ilG_error e = (ilG_error) {id, b.error};
+        IL_APPEND(self->manager.failed, e);
+        return UINT_MAX;
+    }
+
+    r.free = b.free;
+    r.data = b.obj;
+    if (b.update) {
+        ilG_statrenderer s = (ilG_statrenderer) {
+            .update = b.update
+        };
+        r.stat = self->manager.statrenderers.length;
+        IL_APPEND(self->manager.statrenderers, s);
+    }
+    if (b.view) {
+        for (unsigned i = 0; i < b.num_types; i++) {
+            if (b.types[i] & ILG_MODEL) {
+                il_error("View renderers cannot have model transformations");
+                return UINT_MAX;
             }
-            ilG_viewrenderer v = (ilG_viewrenderer) {
-                .update = b.view,
-                .coordsys = 0, // TODO: Select coord system
-                .types = b.types,
-                .num_types = b.num_types,
-            };
-            r.view = self->manager.viewrenderers.length;
-            IL_APPEND(self->manager.viewrenderers, v);
         }
-        if (b.draw) {
-            ilG_objrenderer m = (ilG_objrenderer) {
-                .draw = b.draw,
-                .coordsys = 0, // TODO: Select coord system
-                .types = b.types,
-                .num_types = b.num_types
-            };
-            r.obj = self->manager.objrenderers.length;
-            IL_APPEND(self->manager.objrenderers, m);
-        }
+        ilG_viewrenderer v = (ilG_viewrenderer) {
+            .update = b.view,
+            .coordsys = 0, // TODO: Select coord system
+            .types = b.types,
+            .num_types = b.num_types,
+        };
+        r.view = self->manager.viewrenderers.length;
+        IL_APPEND(self->manager.viewrenderers, v);
+    }
+    if (b.draw) {
+        ilG_objrenderer m = (ilG_objrenderer) {
+            .draw = b.draw,
+            .coordsys = 0, // TODO: Select coord system
+            .types = b.types,
+            .num_types = b.num_types
+        };
+        r.obj = self->manager.objrenderers.length;
+        IL_APPEND(self->manager.objrenderers, m);
     }
     IL_APPEND(self->manager.renderers, r);
     IL_APPEND(self->manager.rendids, id);
@@ -148,27 +153,36 @@ unsigned ilG_context_addSink(ilG_context *self, ilG_rendid id, ilG_message_fn si
     return self->manager.sinks.length - 1;
 }
 
-unsigned ilG_context_addChild(ilG_context *self, ilG_rendid parent, ilG_rendid child)
+bool ilG_context_addChild(ilG_context *self, ilG_rendid parent, ilG_rendid child)
 {
     ilG_renderer *r = ilG_context_findRenderer(self, parent);
+    if (!r) {
+        return false;
+    }
     unsigned idx;
     ilG_rendid id;
     IL_FIND(self->manager.rendids, id, id == child, idx);
     if (idx < self->manager.rendids.length) {
         IL_APPEND(r->children, idx);
-        return 1;
+        return true;
     }
-    il_error("No such renderer %u", child);
-    return 0;
+    return false;
 }
 
 unsigned ilG_context_addCoords(ilG_context *self, ilG_rendid id, ilG_cosysid cosysid, unsigned codata)
 {
     ilG_renderer *r = ilG_context_findRenderer(self, id);
+    if (!r) {
+        return UINT_MAX;
+    }
     ilG_objrenderer *or = &self->manager.objrenderers.data[r->obj];
     unsigned cosys;
     ilG_coordsys co;
     IL_FIND(self->manager.coordsystems, co, co.id == cosysid, cosys);
+    if (cosys == self->manager.coordsystems.length) {
+        il_error("No such coord system");
+        return UINT_MAX;
+    }
     if (or->coordsys != cosys) {
         or->coordsys = cosys;
         if (or->objects.length > 0) {
@@ -180,17 +194,23 @@ unsigned ilG_context_addCoords(ilG_context *self, ilG_rendid id, ilG_cosysid cos
     return or->objects.length - 1;
 }
 
-unsigned ilG_context_viewCoords(ilG_context *self, ilG_rendid id, ilG_cosysid cosys)
+bool ilG_context_viewCoords(ilG_context *self, ilG_rendid id, ilG_cosysid cosys)
 {
     ilG_renderer *r = ilG_context_findRenderer(self, id);
+    if (!r) {
+        return false;
+    }
     ilG_viewrenderer *vr = &self->manager.viewrenderers.data[r->view];
     vr->coordsys = cosys;
-    return 0;
+    return true;
 }
 
 unsigned ilG_context_addLight(ilG_context *self, ilG_rendid id, ilG_light light)
 {
     ilG_renderer *r = ilG_context_findRenderer(self, id);
+    if (!r) {
+        return UINT_MAX;
+    }
     IL_APPEND(r->lights, light);
     return r->lights.length-1;
 }
@@ -272,6 +292,9 @@ bool ilG_context_delChild(ilG_context *self, ilG_rendid parent, ilG_rendid child
 bool ilG_context_delCoords(ilG_context *self, ilG_rendid id, unsigned cosys, unsigned codata)
 {
     ilG_renderer *r = ilG_context_findRenderer(self, id);
+    if (!r) {
+        return false;
+    }
     ilG_objrenderer *or = &self->manager.objrenderers.data[r->obj];
     unsigned idx;
     unsigned d;
@@ -289,6 +312,9 @@ bool ilG_context_delCoords(ilG_context *self, ilG_rendid id, unsigned cosys, uns
 bool ilG_context_delLight(ilG_context *self, ilG_rendid id, ilG_light light)
 {
     ilG_renderer *r = ilG_context_findRenderer(self, id);
+    if (!r) {
+        return false;
+    }
     unsigned idx;
     ilG_light val;
     IL_FIND(r->lights, val, val.id == light.id, idx);

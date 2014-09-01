@@ -41,7 +41,9 @@ void ilG_rendermanager_free(ilG_rendermanager *rm)
     }
     IL_FREE(rm->coordsystems);
     foreach(rm->failed) {
-        free(rm->failed.data[i].second);
+        if (rm->failed.data[i].second) {
+            free(rm->failed.data[i].second);
+        }
     }
     IL_FREE(rm->failed);
 }

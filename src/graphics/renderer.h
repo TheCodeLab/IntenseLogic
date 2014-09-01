@@ -35,6 +35,7 @@ typedef struct ilG_buildresult {
     int *types;
     unsigned num_types;
     void *obj;
+    char *error;
 } ilG_buildresult;
 
 typedef bool (*ilG_build_fn)(void *obj, ilG_rendid id, struct ilG_context *context, ilG_buildresult *out);
@@ -132,6 +133,7 @@ void ilG_handle_destroy(ilG_handle self);
 bool ilG_handle_ready(ilG_handle self);
 il_table *ilG_handle_storage(ilG_handle self);
 const char *ilG_handle_getName(ilG_handle self);
+const char *ilG_handle_getError(ilG_handle self);
 void ilG_handle_addCoords(ilG_handle self, ilG_cosysid cosys, unsigned codata);
 void ilG_handle_delCoords(ilG_handle self, ilG_cosysid cosys, unsigned codata);
 void ilG_handle_setViewCoords(ilG_handle self, ilG_cosysid cosys);
