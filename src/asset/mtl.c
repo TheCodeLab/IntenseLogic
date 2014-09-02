@@ -52,6 +52,7 @@ static int parse_line(ilA_mtl *mtl, char *line, char *error)
     return col;
 }
 
+char *strndup(const char*, size_t);
 ilA_mtl *ilA_mesh_parseMtl(ilA_mtl *mtl, const char *filename, const char *data, size_t length)
 {
     char *str = strndup(data, length), *saveptr = str, *ptr, error[1024], colstr[8];

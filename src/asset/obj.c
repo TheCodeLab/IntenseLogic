@@ -202,11 +202,11 @@ ilA_mesh *ilA_mesh_parseObj(ilA_fs *fs, const char *filename, const char *data, 
     mesh->mode = ILA_MESH_TRIANGLES;
     for (i = 0; i < obj->num_face; i++) {
         struct face *face = obj->face + i;
-        static const int quad_to_tri[] = {
+        static const unsigned quad_to_tri[] = {
             0, 1, 2, 2, 3, 0
         };
         for (j = 0; j < (face->num == 4? 6 : face->num); j++) {
-            int idx = face->num == 4? quad_to_tri[j] : j;
+            unsigned idx = face->num == 4? quad_to_tri[j] : j;
             int vert = face->vert[idx];
             if (vert < 0 || vert > (int)obj->num_vertex) {
                 if (vert != -1) {

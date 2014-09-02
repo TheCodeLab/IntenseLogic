@@ -19,16 +19,19 @@ typedef struct ilA_maphandle {
 } ilA_maphandle;
 typedef char *ilA_dirhandle;
 typedef DWORD ilA_errno_t;
+#define ilA_invalid_file NULL
 #elif __APPLE__
 typedef int ilA_filehandle;
 typedef int ilA_maphandle;
 typedef char *ilA_dirhandle;
 typedef int ilA_errno_t;
+#define ilA_invalid_file -1
 #else
 typedef int ilA_filehandle;
 typedef int ilA_maphandle;
 typedef int ilA_dirhandle;
 typedef int ilA_errno_t;
+#define ilA_invalid_file -1
 #endif
 
 typedef enum ilA_file_mode {
@@ -84,8 +87,8 @@ typedef struct ilA_fs {
 bool __attribute__((warn_unused_result)) ilA_mapfile(ilA_fs *fs, ilA_map *map, ilA_file_mode mode, const char *name, ssize_t namelen);
 bool __attribute__((warn_unused_result)) ilA_dir_mapfile(ilA_fs *fs, ilA_dirid id, ilA_map *map, ilA_file_mode mode, const char *name, ssize_t namelen);
 void ilA_unmapfile(ilA_map *map);
-int ilA_rawopen(ilA_fs *fs, ilA_error *err, ilA_file_mode mode, const char *name, ssize_t namelen);
-int ilA_dir_rawopen(ilA_fs *fs, ilA_dirid id, ilA_error *err, ilA_file_mode mode, const char *name, ssize_t namelen);
+ilA_filehandle ilA_rawopen(ilA_fs *fs, ilA_error *err, ilA_file_mode mode, const char *name, ssize_t namelen);
+ilA_filehandle ilA_dir_rawopen(ilA_fs *fs, ilA_dirid id, ilA_error *err, ilA_file_mode mode, const char *name, ssize_t namelen);
 ilA_dirid ilA_adddir(ilA_fs *fs, const char *path, ssize_t pathlen);
 void ilA_deldir(ilA_fs *fs, ilA_dirid id);
 ilA_dirid ilA_mkdir(ilA_fs *fs, const char *path, ssize_t pathlen);

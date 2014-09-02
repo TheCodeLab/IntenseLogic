@@ -67,7 +67,7 @@ void ilE_handler_name(ilE_handler *self, const char *name)
 void ilE_handler_fire(ilE_handler *self, const il_value *data)
 {
     unsigned i;
-    il_debug("Dispatch: %s <%p> (data: %p)", self->name, self, data); // TODO: Print contents of data
+    il_debug("Dispatch: %s <%p> (data: %p)", self->name, (void*)self, (void*)data); // TODO: Print contents of data
     for (i = 0; i < self->callbacks.length; i++) {
         if (self->callbacks.data[i].callback) {
             self->callbacks.data[i].callback(data, &self->callbacks.data[i].ctx);
@@ -112,7 +112,7 @@ void ilE_unregister(ilE_handler *self, int handle)
             return;
         }
     }
-    il_error("No callback %i in handler %s <%p>", handle, self->name, self);
+    il_error("No callback %i in handler %s <%p>", handle, self->name, (void*)self);
 }
 
 void ilE_dump(ilE_handler *self)
@@ -131,6 +131,8 @@ void ilE_dump(ilE_handler *self)
             default:
             strcpy(threading_str, "???");
         }
-        fprintf(stderr, "\t%s <%p> priority:%i threading:%s ctx<%p>\n", cb->name, (void*)cb->callback, cb->priority, threading_str, &cb->ctx);// TODO: Print contents of ctx
+#ifndef WIN32
+        fprintf(stderr, "\t%s <%p> priority:%i threading:%s ctx<%p>\n", cb->name, cb->callback, cb->priority, threading_str, (void*)&cb->ctx);// TODO: Print contents of ctx
+#endif
     }
 }

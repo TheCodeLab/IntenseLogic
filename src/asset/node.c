@@ -42,9 +42,7 @@ static bool node_test(ilA_error *err,
                       const char *name, size_t namelen)
 {
     (void)namelen;
-#ifdef WIN32
-
-#elif __APPLE__
+#if defined(WIN32) || defined(__APPLE__)
     char fullpath[strlen(dir) + 1 + namelen + 1];
     snprintf(fullpath, sizeof(fullpath), "%s/%s", dir, name);
     errno_check(*err, access(fullpath, F_OK));
@@ -147,6 +145,7 @@ bool ilA_mapfile(ilA_fs *fs, ilA_map *map, ilA_file_mode mode, const char *name,
      const_check(map->err, "No such file", true);
 }
 
+char *strndup(const char*, size_t);
 bool ilA_dir_mapfile(ilA_fs *fs, ilA_dirid id, ilA_map *map, ilA_file_mode mode, const char *name, ssize_t namelen)
 {
     memset(map, 0, sizeof(ilA_map));
@@ -181,8 +180,10 @@ bool ilA_dir_mapfile(ilA_fs *fs, ilA_dirid id, ilA_map *map, ilA_file_mode mode,
     };
     DWORD prot = prot_table[mode & ILA_RWE];
     DWORD oflag = oflag_table[mode & ILA_RWE];
-    errno_check(map->err, GetFileSizeEx(fh, &map->size));
-    map->h.mhandle = CreateFileMapping(map->h.fhandle, NULL, prot, map->size >> 32, map->size, NULL);
+    LARGE_INTEGER size;
+    errno_check(map->err, GetFileSizeEx(fh, &size));
+    map->size = (size_t)size.QuadPart;
+    map->h.mhandle = CreateFileMapping(map->h.fhandle, NULL, prot, size.u.HighPart, size.u.LowPart, NULL);
     errno_check2(map->err, "CreateFileMapping", !map->h.mhandle);
     map->data = MapViewOfFile(map->h.mhandle, oflag, 0, 0, 0);
     errno_check2(map->err, "MapViewOfFile", !map->data);
@@ -220,7 +221,9 @@ bool ilA_dir_mapfile(ilA_fs *fs, ilA_dirid id, ilA_map *map, ilA_file_mode mode,
 void ilA_unmapfile(ilA_map *map)
 {
 #ifdef WIN32
-
+    UnmapViewOfFile(map->data);
+    CloseHandle(map->h.mhandle);
+    CloseHandle(map->h.fhandle);
 #else
     if (map->err.type == ILA_STRERR) {
         free(map->err.val.str);
@@ -232,7 +235,7 @@ void ilA_unmapfile(ilA_map *map)
 #endif
 }
 
-int ilA_rawopen(ilA_fs *fs, ilA_error *err, ilA_file_mode mode, const char *name, ssize_t namelen)
+ilA_filehandle ilA_rawopen(ilA_fs *fs, ilA_error *err, ilA_file_mode mode, const char *name, ssize_t namelen)
 {
      if (namelen < 0) {
          namelen = strlen(name);
@@ -249,14 +252,14 @@ int ilA_rawopen(ilA_fs *fs, ilA_error *err, ilA_file_mode mode, const char *name
      }
      err->type = ILA_CONSTERR;
      err->val.cstr = "No such file";
-     return -1;
+     return ilA_invalid_file;
 }
 
-int ilA_dir_rawopen(ilA_fs *fs, ilA_dirid id, ilA_error *err, ilA_file_mode mode, const char *name, ssize_t namelen)
+ilA_filehandle ilA_dir_rawopen(ilA_fs *fs, ilA_dirid id, ilA_error *err, ilA_file_mode mode, const char *name, ssize_t namelen)
 {
     ilA_filehandle h;
     if (!node_open(&h, err, fs->dirs.data[id.id].dir, name, (size_t) namelen, mode)) {
-        return -1;
+        return ilA_invalid_file;
     }
     return h;
 }
@@ -269,8 +272,7 @@ ilA_dirid ilA_adddir(ilA_fs *fs, const char *path, ssize_t pathlen)
         pathlen = strlen(path);
     }
     d.pathlen = (size_t)pathlen;
-#ifdef WIN32
-#elif __APPLE__
+#if defined(WIN32) || defined(__APPLE__)
     d.dir = strdup(path);
 #else
     d.dir = open(path, O_DIRECTORY);
@@ -281,9 +283,7 @@ ilA_dirid ilA_adddir(ilA_fs *fs, const char *path, ssize_t pathlen)
 
 void ilA_deldir(ilA_fs *fs, ilA_dirid id)
 {
-#ifdef WIN32
-
-#elif __APPLE__
+#if defined(WIN32) || defined(__APPLE__)
     free(fs->dirs.data[id.id].dir);
 #else
     close(fs->dirs.data[id.id].dir);
@@ -295,6 +295,7 @@ ilA_dirid ilA_mkdir(ilA_fs *fs, const char *path, ssize_t pathlen)
 {
     (void)fs, (void)path, (void)pathlen;
     assert(!"ilA_mkdir unimplemented");
+    return (ilA_dirid){0};
 }
 
 void ilA_rmdir(ilA_fs *fs, ilA_dirid id)
