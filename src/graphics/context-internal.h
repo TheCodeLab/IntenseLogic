@@ -45,7 +45,7 @@ typedef struct ilG_context_msg {
             ilG_rendid parent;
             ilG_light child;
         } light;
-    } value;
+    } v;
 } ilG_context_msg;
 
 typedef struct ilG_client_msg {

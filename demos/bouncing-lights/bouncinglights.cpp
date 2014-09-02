@@ -242,9 +242,9 @@ ex void demo_start()
         }
         ilG_client_queue_read(context->client);
         for (unsigned i = 0; i < context->client->read.length; i++) {
-            ilG_client_msg *msg = &context->client->read.data[i];
-            if (msg->type == ilG_client_msg::ILG_FAILURE) {
-                il_log("Renderer %u failed: %s", msg->v.failure.id, msg->v.failure.msg);
+            ilG_client_msg msg = context->client->read.data[i];
+            if (msg.type == ilG_client_msg::ILG_FAILURE) {
+                il_log("Renderer %u failed: %s", msg.v.failure.id, msg.v.failure.msg);
             }
         }
         {

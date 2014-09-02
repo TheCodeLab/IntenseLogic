@@ -545,33 +545,33 @@ void *ilG_context_loop(void *ptr)
         // Process messages
         ilG_context_queue_read(self->queue);
         for (unsigned i = 0; i < self->queue->read.length; i++) {
-            ilG_context_msg *msg = &self->queue->read.data[i];
-            switch (msg->type) {
-            case ILG_UPLOAD: msg->value.upload.cb(msg->value.upload.ptr); break;
-            case ILG_RESIZE: ilG_context_localResize(self, msg->value.resize[0], msg->value.resize[1]); break;
+            ilG_context_msg msg = self->queue->read.data[i];
+            switch (msg.type) {
+            case ILG_UPLOAD: msg.v.upload.cb(msg.v.upload.ptr); break;
+            case ILG_RESIZE: ilG_context_localResize(self, msg.v.resize[0], msg.v.resize[1]); break;
             case ILG_STOP: goto stop;
             case ILG_END: goto end;
-            case ILG_MESSAGE: context_message(self, msg->value.message.node, msg->value.message.type, msg->value.message.data); break;
+            case ILG_MESSAGE: context_message(self, msg.v.message.node, msg.v.message.type, msg.v.message.data); break;
             case ILG_ADD_COORDS:
-                ilG_context_addCoords(self, msg->value.coords.parent, msg->value.coords.cosys, msg->value.coords.codata);
+                ilG_context_addCoords(self, msg.v.coords.parent, msg.v.coords.cosys, msg.v.coords.codata);
                 break;
             case ILG_DEL_COORDS:
-                ilG_context_delCoords(self, msg->value.coords.parent, msg->value.coords.cosys, msg->value.coords.codata);
+                ilG_context_delCoords(self, msg.v.coords.parent, msg.v.coords.cosys, msg.v.coords.codata);
                 break;
             case ILG_VIEW_COORDS:
-                ilG_context_viewCoords(self, msg->value.coords.parent, msg->value.coords.cosys);
+                ilG_context_viewCoords(self, msg.v.coords.parent, msg.v.coords.cosys);
                 break;
             case ILG_ADD_RENDERER:
-                ilG_context_addChild(self, msg->value.renderer.parent, msg->value.renderer.child);
+                ilG_context_addChild(self, msg.v.renderer.parent, msg.v.renderer.child);
                 break;
             case ILG_DEL_RENDERER:
-                ilG_context_delChild(self, msg->value.renderer.parent, msg->value.renderer.child);
+                ilG_context_delChild(self, msg.v.renderer.parent, msg.v.renderer.child);
                 break;
             case ILG_ADD_LIGHT:
-                ilG_context_addLight(self, msg->value.light.parent, msg->value.light.child);
+                ilG_context_addLight(self, msg.v.light.parent, msg.v.light.child);
                 break;
             case ILG_DEL_LIGHT:
-                ilG_context_delLight(self, msg->value.light.parent, msg->value.light.child);
+                ilG_context_delLight(self, msg.v.light.parent, msg.v.light.child);
                 break;
             }
         }
