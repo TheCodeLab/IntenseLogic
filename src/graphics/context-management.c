@@ -37,6 +37,12 @@ bool ilG_context_rename(ilG_context *self, const char *title)
     return true;
 }
 
+void ilG_context_setNotifier(ilG_context *self, void (*fn)(il_value*), il_value val)
+{
+    self->client->notify = fn;
+    self->client->user = val;
+}
+
 /////////////////////////////////////////////////////////////////////////////
 // Access and modification
 
@@ -102,6 +108,12 @@ unsigned ilG_context_addRenderer(ilG_context *self, ilG_rendid id, ilG_builder b
     if (!res) {
         ilG_error e = (ilG_error) {id, b.error};
         IL_APPEND(self->manager.failed, e);
+        ilG_client_msg msg;
+        memset(&msg, 0, sizeof(msg));
+        msg.type = ILG_FAILURE;
+        msg.v.failure.id = id;
+        msg.v.failure.msg = b.error;
+        ilG_client_queue_produce(self->client, msg);
         return UINT_MAX;
     }
 
@@ -142,6 +154,11 @@ unsigned ilG_context_addRenderer(ilG_context *self, ilG_rendid id, ilG_builder b
     }
     IL_APPEND(self->manager.renderers, r);
     IL_APPEND(self->manager.rendids, id);
+    ilG_client_msg msg;
+    memset(&msg, 0, sizeof(msg));
+    msg.type = ILG_READY;
+    msg.v.ready = id;
+    ilG_client_queue_produce(self->client, msg);
     return self->manager.renderers.length - 1;
 }
 

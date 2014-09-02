@@ -22,6 +22,7 @@ extern "C" {
 #include "asset/image.h"
 #include "graphics/transform.h"
 #include "math/matrix.h"
+#include "graphics/context-internal.h"
 #include "graphics/graphics.h"
 #include "graphics/heightmap.h"
 #include "graphics/renderer.h"
@@ -237,6 +238,13 @@ ex void demo_start()
                                                               ghostObject.getWorldTransform().getOrigin()));
                 }
                 break;
+            }
+        }
+        ilG_client_queue_read(context->client);
+        for (unsigned i = 0; i < context->client->read.length; i++) {
+            ilG_client_msg *msg = &context->client->read.data[i];
+            if (msg->type == ilG_client_msg::ILG_FAILURE) {
+                il_log("Renderer %u failed: %s", msg->v.failure.id, msg->v.failure.msg);
             }
         }
         {

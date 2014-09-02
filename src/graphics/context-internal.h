@@ -5,6 +5,7 @@
 
 #include "graphics/transform.h"
 #include "math/matrix.h"
+#include "util/storage.h"
 
 // TODO: Generalize this somehow
 typedef struct ilG_context_msg {
@@ -47,19 +48,45 @@ typedef struct ilG_context_msg {
     } value;
 } ilG_context_msg;
 
+typedef struct ilG_client_msg {
+    enum ilG_client_msgtype {
+        ILG_READY,
+        ILG_FAILURE,
+    } type;
+    union {
+        ilG_rendid ready;
+        struct {
+            ilG_rendid id;
+            const char *msg;
+        } failure;
+    } v;
+} ilG_client_msg;
+
 typedef IL_ARRAY(ilG_context_msg, ilG_context_msgarray) ilG_context_msgarray;
 
 typedef struct ilG_context_queue {
     ilG_context_msgarray read, write;
-    int nread;
     pthread_mutex_t mutex;
 } ilG_context_queue;
+
+typedef IL_ARRAY(ilG_client_msg, ilG_client_msgarray) ilG_client_msgarray;
+
+typedef struct ilG_client_queue {
+    ilG_client_msgarray read, write;
+    pthread_mutex_t mutex;
+    void (*notify)(il_value *);
+    il_value user;
+} ilG_client_queue;
 
 void ilG_context_queue_init(ilG_context_queue *queue);
 void ilG_context_queue_free(ilG_context_queue *queue);
 void ilG_context_queue_produce(ilG_context_queue *queue, ilG_context_msg msg);
-void lG_context_queue_read(ilG_context_queue *queue);
-void ilG_context_queue_doneread(ilG_context_queue *queue);
+void ilG_context_queue_read(ilG_context_queue *queue);
+
+void ilG_client_queue_init(ilG_client_queue *queue);
+void ilG_client_queue_free(ilG_client_queue *queue);
+void ilG_client_queue_produce(ilG_client_queue *queue, ilG_client_msg msg);
+void ilG_client_queue_read(ilG_client_queue *queue);
 
 void ilG_default_update(void *, ilG_rendid);
 void ilG_default_multiupdate(void *, ilG_rendid, il_mat *);

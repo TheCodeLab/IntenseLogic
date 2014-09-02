@@ -22,7 +22,7 @@
 #endif
 
 /////////////////////////////////////////////////////////////////////////////
-// Queue
+// Context Queue
 
 void ilG_context_queue_init(ilG_context_queue *queue)
 {
@@ -47,14 +47,47 @@ void ilG_context_queue_produce(ilG_context_queue *queue, ilG_context_msg msg)
 void ilG_context_queue_read(ilG_context_queue *queue)
 {
     pthread_mutex_lock(&queue->mutex);
+    ilG_context_msgarray tmp = queue->read;
     queue->read = queue->write;
-    queue->write = (ilG_context_msgarray){0,0,0};
+    tmp.length = 0;
+    queue->write = tmp;
     pthread_mutex_unlock(&queue->mutex);
 }
 
-void ilG_context_queue_doneconsume(ilG_context_queue *queue)
+/////////////////////////////////////////////////////////////////////////////
+// Client Queue
+
+void ilG_client_queue_init(ilG_client_queue *queue)
+{
+    memset(queue, 0, sizeof(ilG_client_queue));
+    pthread_mutex_init(&queue->mutex, NULL);
+}
+
+void ilG_client_queue_free(ilG_client_queue *queue)
 {
     IL_FREE(queue->read);
+    IL_FREE(queue->write);
+    pthread_mutex_destroy(&queue->mutex);
+}
+
+void ilG_client_queue_produce(ilG_client_queue *queue, ilG_client_msg msg)
+{
+    pthread_mutex_lock(&queue->mutex);
+    IL_APPEND(queue->write, msg);
+    pthread_mutex_unlock(&queue->mutex);
+    if (queue->notify) {
+        queue->notify(&queue->user);
+    }
+}
+
+void ilG_client_queue_read(ilG_client_queue *queue)
+{
+    pthread_mutex_lock(&queue->mutex);
+    ilG_client_msgarray tmp = queue->read;
+    queue->read = queue->write;
+    tmp.length = 0;
+    queue->write = tmp;
+    pthread_mutex_unlock(&queue->mutex);
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -70,6 +103,7 @@ ilG_context *ilG_context_new()
 void ilG_context_init(ilG_context *self)
 {
     memset(self, 0, sizeof(ilG_context));
+    // hints
     self->contextMajor = 3;
 #ifdef __APPLE__
     self->contextMinor = 2;
@@ -83,13 +117,17 @@ void ilG_context_init(ilG_context *self)
     self->startHeight = 600;
     self->vsync = 1;
     self->initialTitle = "IntenseLogic";
+    // public
     ilE_handler_init_with_name(&self->tick,    "il.graphics.context.tick");
     ilE_handler_init_with_name(&self->resize,  "il.graphics.context.resize");
     ilE_handler_init_with_name(&self->close,   "il.graphics.context.close");
     ilE_handler_init_with_name(&self->destroy, "il.graphics.context.destroy");
     ilI_handler_init(&self->handler);
+    self->client = calloc(1, sizeof(ilG_client_queue));
+    ilG_client_queue_init(self->client);
+    // private
     tgl_fbo_init(&self->fb);
-    self->queue = calloc(1, sizeof(struct ilG_context_queue));
+    self->queue = calloc(1, sizeof(ilG_context_queue));
     ilG_context_queue_init(self->queue);
     ilG_context_addRenderer(self, 0, ilG_builder_wrap(NULL, ilG_context_build));
     ilG_statrenderer stat = (ilG_statrenderer) {ilG_default_update};
@@ -537,7 +575,6 @@ void *ilG_context_loop(void *ptr)
                 break;
             }
         }
-        ilG_context_queue_doneconsume(self->queue);
         int width, height;
         SDL_GetWindowSize(self->window, &width, &height);
         if (width != self->width || height != self->height) {
@@ -558,7 +595,6 @@ void *ilG_context_loop(void *ptr)
     }
 
 stop:
-    ilG_context_queue_doneconsume(self->queue);
     self->running = false;
     return NULL;
 end:
