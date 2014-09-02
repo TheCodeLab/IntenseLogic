@@ -26,48 +26,35 @@
 
 void ilG_context_queue_init(ilG_context_queue *queue)
 {
-    queue->head = queue->tail = calloc(1, sizeof(struct ilG_context_msg));
-    queue->first = (struct ilG_context_msg*)queue->head;
+    memset(queue, 0, sizeof(ilG_context_queue));
+    pthread_mutex_init(&queue->mutex, NULL);
 }
 
 void ilG_context_queue_free(ilG_context_queue *queue)
 {
-    struct ilG_context_msg *cur;
-    while (queue->first) {
-        cur = queue->first;
-        queue->first = cur->next;
-        free(cur);
-    }
+    IL_FREE(queue->read);
+    IL_FREE(queue->write);
+    pthread_mutex_destroy(&queue->mutex);
 }
 
-// TODO: Multiple producer threads
-void ilG_context_queue_produce(ilG_context_queue *queue, ilG_context_msg *msg)
+void ilG_context_queue_produce(ilG_context_queue *queue, ilG_context_msg msg)
 {
-    msg->next = NULL;
-    queue->tail->next = msg;
-    queue->tail = msg;
-    struct ilG_context_msg *tmp;
-    while (queue->first != queue->head) {
-        tmp = queue->first;
-        queue->first = queue->first->next;
-        free(tmp);
-    }
+    pthread_mutex_lock(&queue->mutex);
+    IL_APPEND(queue->write, msg);
+    pthread_mutex_unlock(&queue->mutex);
 }
 
-ilG_context_msg *ilG_context_queue_consume(ilG_context_queue *queue)
+void ilG_context_queue_read(ilG_context_queue *queue)
 {
-    if (queue->head != queue->tail) {
-        return (struct ilG_context_msg*)queue->head->next;
-    }
-    return NULL;
+    pthread_mutex_lock(&queue->mutex);
+    queue->read = queue->write;
+    queue->write = (ilG_context_msgarray){0,0,0};
+    pthread_mutex_unlock(&queue->mutex);
 }
 
 void ilG_context_queue_doneconsume(ilG_context_queue *queue)
 {
-    if (queue->head != queue->tail)
-    {
-        queue->head = queue->head->next;
-    }
+    IL_FREE(queue->read);
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -518,8 +505,9 @@ void *ilG_context_loop(void *ptr)
         ilE_handler_fire(&self->tick, &nil);
         il_value_free(nil);
         // Process messages
-        struct ilG_context_msg *msg;
-        while ((msg = ilG_context_queue_consume(self->queue))) {
+        ilG_context_queue_read(self->queue);
+        for (unsigned i = 0; i < self->queue->read.length; i++) {
+            ilG_context_msg *msg = &self->queue->read.data[i];
             switch (msg->type) {
             case ILG_UPLOAD: msg->value.upload.cb(msg->value.upload.ptr); break;
             case ILG_RESIZE: ilG_context_localResize(self, msg->value.resize[0], msg->value.resize[1]); break;
@@ -548,8 +536,8 @@ void *ilG_context_loop(void *ptr)
                 ilG_context_delLight(self, msg->value.light.parent, msg->value.light.child);
                 break;
             }
-            ilG_context_queue_doneconsume(self->queue);
         }
+        ilG_context_queue_doneconsume(self->queue);
         int width, height;
         SDL_GetWindowSize(self->window, &width, &height);
         if (width != self->width || height != self->height) {
@@ -594,16 +582,18 @@ bool ilG_context_start(ilG_context *self)
 
 void ilG_context_stop(ilG_context *self)
 {
-    struct ilG_context_msg *msg = calloc(1, sizeof(struct ilG_context_msg));
-    msg->type = ILG_STOP;
+    ilG_context_msg msg;
+    memset(&msg, 0, sizeof(msg));
+    msg.type = ILG_STOP;
     ilG_context_queue_produce(self->queue, msg);
     pthread_join(self->thread, NULL);
 }
 
 void ilG_context_end(ilG_context *self)
 {
-    ilG_context_msg *msg = calloc(1, sizeof(ilG_context_msg));
-    msg->type = ILG_END;
+    ilG_context_msg msg;
+    memset(&msg, 0, sizeof(msg));
+    msg.type = ILG_END;
     ilG_context_queue_produce(self->queue, msg);
     pthread_join(self->thread, NULL);
 }

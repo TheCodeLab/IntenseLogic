@@ -10,20 +10,22 @@
 
 bool ilG_context_upload(ilG_context *self, void (*fn)(void*), void* ptr)
 {
-    struct ilG_context_msg *msg = calloc(1, sizeof(struct ilG_context_msg));
-    msg->type = ILG_UPLOAD;
-    msg->value.upload.cb = fn;
-    msg->value.upload.ptr = ptr;
+    ilG_context_msg msg;
+    memset(&msg, 0, sizeof(msg));
+    msg.type = ILG_UPLOAD;
+    msg.value.upload.cb = fn;
+    msg.value.upload.ptr = ptr;
     ilG_context_queue_produce(self->queue, msg);
     return true;
 }
 
 bool ilG_context_resize(ilG_context *self, int w, int h)
 {
-    struct ilG_context_msg *msg = calloc(1, sizeof(struct ilG_context_msg));
-    msg->type = ILG_RESIZE;
-    msg->value.resize[0] = w;
-    msg->value.resize[1] = h;
+    ilG_context_msg msg;
+    memset(&msg, 0, sizeof(msg));
+    msg.type = ILG_RESIZE;
+    msg.value.resize[0] = w;
+    msg.value.resize[1] = h;
     ilG_context_queue_produce(self->queue, msg);
     return true;
 }
