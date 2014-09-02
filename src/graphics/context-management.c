@@ -46,6 +46,17 @@ void ilG_context_setNotifier(ilG_context *self, void (*fn)(il_value*), il_value 
 /////////////////////////////////////////////////////////////////////////////
 // Access and modification
 
+void ilG_context_message(ilG_context *self, ilG_rendid id, int type, il_value val)
+{
+    ilG_client_msg msg;
+    memset(&msg, 0, sizeof(msg));
+    msg.type = ILG_CLIENT_MESSAGE;
+    msg.v.message.id = id;
+    msg.v.message.type = type;
+    msg.v.message.data = val;
+    ilG_client_queue_produce(self->client, msg);
+}
+
 ilG_renderer *ilG_context_findRenderer(ilG_context *self, ilG_rendid id)
 {
     ilG_rendid key;

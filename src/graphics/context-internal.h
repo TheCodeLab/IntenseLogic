@@ -52,6 +52,7 @@ typedef struct ilG_client_msg {
     enum ilG_client_msgtype {
         ILG_READY,
         ILG_FAILURE,
+        ILG_CLIENT_MESSAGE,
     } type;
     union {
         ilG_rendid ready;
@@ -59,6 +60,11 @@ typedef struct ilG_client_msg {
             ilG_rendid id;
             const char *msg;
         } failure;
+        struct {
+            ilG_rendid id;
+            int type;
+            il_value data;
+        } message;
     } v;
 } ilG_client_msg;
 

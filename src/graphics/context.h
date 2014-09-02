@@ -160,6 +160,7 @@ bool ilG_context_rename(ilG_context *self, const char *title);
 void ilG_context_setNotifier(ilG_context *self, void (*fn)(il_value*), il_value val);
 
 /* Rendering thread calls */
+void ilG_context_message(ilG_context *self, ilG_rendid id, int type, il_value val);
 ilG_renderer    *ilG_context_findRenderer       (ilG_context *self, ilG_rendid id);
 ilG_msgsink     *ilG_context_findSink           (ilG_context *self, ilG_rendid id);
 il_table        *ilG_context_findStorage        (ilG_context *self, ilG_rendid id);
