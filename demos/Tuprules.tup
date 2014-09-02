@@ -1,0 +1,82 @@
+ifdef CXX
+CXX = @(CXX)
+else
+CXX = clang++
+endif
+
+ifdef CC
+CC = @(CC)
+else
+CC = clang
+endif
+
+ifdef LD
+LD = @(LD)
+else
+LD = $(CXX)
+endif
+
+ifdef AR
+AR = @(AR)
+else
+AR = ar rcs
+endif
+
+ifdef PKG_CONFIG
+PKG_CONFIG = @(PKG_CONFIG)
+else
+PKG_CONFIG = pkg-config
+endif
+
+ifdef PROG_SUFFIX
+PROG_SUFFIX = @(PROG_SUFFIX)
+else
+PROG_SUFFIX =
+endif
+
+ifdef LOADER
+LOADER = @(LOADER)
+else
+LOADER = EPOXY
+endif
+
+ifeq ($(LOADER),GLEW)
+LOADER_PKG = glew
+endif
+ifeq ($(LOADER),EPOXY)
+LOADER_PKG = epoxy
+endif
+
+ifdef GL_LIBS
+GL_LIBS = @(GL_LIBS)
+else
+GL_LIBS = `$(PKG_CONFIG) gl --libs`
+endif
+
+ifdef LOADER_LIBS
+LOADER_LIBS = @(LOADER_LIBS)
+else
+LOADER_LIBS = `$(PKG_CONFIG) $(LOADER_PKG) --libs`
+endif
+
+ifdef PNG_LIBS
+PNG_LIBS = @(PNG_LIBS)
+else
+PNG_LIBS = `$(PKG_CONFIG) libpng --libs`
+endif
+
+ifdef SDL_LIBS
+SDL_LIBS = @(SDL_LIBS)
+else
+SDL_LIBS = `$(PKG_CONFIG) sdl2 --libs`
+endif
+
+ifdef BULLET_LIBS
+BULLET_LIBS = @(BULLET_LIBS)
+else
+BULLET_LIBS = `$(PKG_CONFIG) bullet --libs`
+endif
+
+CCFLAGS += -I$(TOP)/demos -I.
+LDFLAGS += -pthread -L$(TOP) -L$(TOP)/tiffgl @(LDFLAGS)
+LIBS += -ldemo -lilgraphics -ltgl -lilasset -lilmath -lilinput -lilutil $(GL_LIBS) $(LOADER_LIBS) $(PNG_LIBS) $(SDL_LIBS) @(LIBS)

@@ -1,10 +1,15 @@
 #include "node.h"
 
+#include <assert.h>
+
+#ifdef WIN32
+#include <windows.h>
+#else
 #include <errno.h>
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
-#include <assert.h>
+#endif
 
 #include "util/log.h"
 #include "util/ilassert.h"
@@ -92,7 +97,9 @@ static bool node_open(ilA_filehandle *handle,
     const_check(*err, "Invalid mode flag", mode == 0);
     DWORD access = flag_table[mode & ILA_RWE];
     DWORD create = (mode & ILA_CREATE)? CREATE_NEW : OPEN_EXISTING;
-    *handle = CreateFileA(self->path, access, 0, NULL, create, FILE_ATTRIBUTE_NORMAL, NULL);
+    char fullpath[strlen(dir) + 1 + namelen + 1];
+    snprintf(fullpath, sizeof(fullpath), "%s/%s", dir, name);
+    *handle = CreateFileA(fullpath, access, 0, NULL, create, FILE_ATTRIBUTE_NORMAL, NULL);
     errno_check2(*err, "CreateFileA", !*handle);
 #else
     static const int flag_table[] = {  // 0bEWR
@@ -175,7 +182,7 @@ bool ilA_dir_mapfile(ilA_fs *fs, ilA_dirid id, ilA_map *map, ilA_file_mode mode,
     DWORD prot = prot_table[mode & ILA_RWE];
     DWORD oflag = oflag_table[mode & ILA_RWE];
     errno_check(map->err, GetFileSizeEx(fh, &map->size));
-    map->h.mhandle = CreateFileMapping(self->fhandle, NULL, prot, high, low, NULL);
+    map->h.mhandle = CreateFileMapping(map->h.fhandle, NULL, prot, map->size >> 32, map->size, NULL);
     errno_check2(map->err, "CreateFileMapping", !map->h.mhandle);
     map->data = MapViewOfFile(map->h.mhandle, oflag, 0, 0, 0);
     errno_check2(map->err, "MapViewOfFile", !map->data);

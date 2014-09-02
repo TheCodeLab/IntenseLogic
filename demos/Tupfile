@@ -1,6 +1,4 @@
 include_rules
 
-CCFLAGS += -I.
-
 : foreach *.c |> !cc |>
 : *.o |> !ar |> $(TOP)/libdemo.a $(TOP)/<libs>

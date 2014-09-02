@@ -12,10 +12,12 @@
 #include "util/array.h"
 
 #ifdef WIN32
+#include <windows.h>
 typedef HANDLE ilA_filehandle;
 typedef struct ilA_maphandle {
     HANDLE fhandle, mhandle;
 } ilA_maphandle;
+typedef char *ilA_dirhandle;
 typedef DWORD ilA_errno_t;
 #elif __APPLE__
 typedef int ilA_filehandle;

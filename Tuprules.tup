@@ -42,9 +42,53 @@ else
 LOADER = EPOXY
 endif
 
+ifeq ($(LOADER),GLEW)
+LOADER_PKG = glew
+endif
+ifeq ($(LOADER),EPOXY)
+LOADER_PKG = epoxy
+endif
+
+ifdef GL_CFLAGS
+GL_CFLAGS = @(GL_CFLAGS)
+else
+GL_CFLAGS = `$(PKG_CONFIG) gl --cflags`
+endif
+
+ifdef TIFFGL_CFLAGS
+TIFFGL_CFLAGS = @(TIFFGL_CFLAGS)
+else
+TIFFGL_CFLAGS = -I$(TUP_CWD)/tiffgl/src -DTGL_USE_$(LOADER)
+endif
+
+ifdef LOADER_CFLAGS
+LOADER_CFLAGS = @(LOADER_CFLAGS)
+else
+LOADER_CFLAGS = `$(PKG_CONFIG) $(LOADER_PKG) --cflags`
+endif
+
+ifdef PNG_CFLAGS
+PNG_CFLAGS = @(PNG_CFLAGS)
+else
+PNG_CFLAGS = `$(PKG_CONFIG) libpng --cflags`
+endif
+
+ifdef SDL_CFLAGS
+SDL_CFLAGS = @(SDL_CFLAGS)
+else
+SDL_CFLAGS = `$(PKG_CONFIG) sdl2 --cflags`
+endif
+
+ifdef BULLET_CFLAGS
+BULLET_CFLAGS = @(BULLET_CFLAGS)
+else
+BULLET_CFLAGS = `$(PKG_CONFIG) bullet --cflags`
+endif
+
 TOP = $(TUP_CWD)
 
-CCFLAGS = -Wall -Wextra -pedantic -I$(TUP_CWD)/src -I$(TUP_CWD)/tiffgl/src -DTGL_USE_$(LOADER) @(CCFLAGS)
+CCFLAGS = -Wall -Wextra -pedantic -I$(TUP_CWD)/src @(CCFLAGS)
+CCFLAGS += $(GL_CFLAGS) $(TIFFGL_CFLAGS) $(LOADER_CFLAGS) $(PNG_CFLAGS) $(SDL_CFLAGS)
 
 CXXFLAGS = -std=c++11 @(CXXFLAGS)
 
@@ -58,18 +102,7 @@ ifeq ($(CC),clang)
 #  CFLAGS += -fcolor-diagonstics
 endif
 
-LDFLAGS = -pthread -L$(TOP) -L$(TOP)/tiffgl @(LDFLAGS)
-
-ifeq ($(LOADER),GLEW)
-  CCFLAGS += `$(PKG_CONFIG) glew --cflags`
-  LDFLAGS += `$(PKG_CONFIG) glew --libs`
-endif
-ifeq ($(LOADER),EPOXY)
-  CCFLAGS += `$(PKG_CONFIG) epoxy --cflags`
-  LDFLAGS += `$(PKG_CONFIG) epoxy --libs`
-endif
-
 !cxx = |> ^o C++ %f^ $(CXX) $(CXXFLAGS) $(CCFLAGS) -c %f -o %o |> %B.o | $(TOP)/<objs>
 !cc = |> ^o C %f^ $(CC) $(CFLAGS) $(CCFLAGS) -c %f -o %o |> %B.o | $(TOP)/<objs>
-!ld = |> ^o LINK %o^ $(LD) %f $(LDFLAGS) -o %o |>
+!ld = |> ^o LINK %o^ $(LD) %f $(LDFLAGS) $(LIBS) -o %o |>
 !ar = |> ^o LINK %o^ $(AR) %o %f |>

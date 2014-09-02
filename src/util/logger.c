@@ -92,7 +92,7 @@ static void log_stderr(il_logmsg *msg)
     }
 }
 
-il_logger il_logger_stderr = (il_logger) {
+il_logger il_logger_stderr = {
     .func = log_stderr,
     .filter = IL_NOTIFY,
     .name = "stderr"
