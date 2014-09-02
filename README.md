@@ -43,7 +43,7 @@ Build system based on tup [Tup](http://gittup.org/tup/).
 - OpenGL 3.1
 - [tiffgl](https://github.com/tiffany352/tiffgl) (provided as submodule)
 - [SDL 2.0](http://libsdl.org/)
-- [GLEW](http://glew.sourceforge.net/)
+- [Libepoxy](https://github.com/anholt/libepoxy) (default) or [GLEW](http://glew.sourceforge.net/) (requires a special flag)
 - [libpng](http://libpng.org/)
 - pthread
 
