@@ -1,7 +1,4 @@
 include_rules
 
-CCFLAGS += -I. -I..
-LDFLAGS += `$(PKG_CONFIG) glew sdl2 gl --libs` -ldemo -lilgraphics -ltgl -lilasset -lilmath -lilinput -lilutil -ldl -lpng -lz
-
 : foreach *.c |> !cc |>
 : foreach *.o | $(TOP)/<libs> $(TOP)/tiffgl/libtgl.a |> !ld |> $(TOP)/quad$(PROG_SUFFIX)
