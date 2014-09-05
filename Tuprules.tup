@@ -102,6 +102,8 @@ ifeq ($(CC),clang)
 #  CFLAGS += -fcolor-diagonstics
 endif
 
+LDFLAGS = 
+
 !cxx = |> ^o C++ %f^ $(CXX) $(CXXFLAGS) $(CCFLAGS) -c %f -o %o |> %B.o | $(TOP)/<objs>
 !cc = |> ^o C %f^ $(CC) $(CFLAGS) $(CCFLAGS) -c %f -o %o |> %B.o | $(TOP)/<objs>
 !ld = |> ^o LINK %o^ $(LD) %f $(LDFLAGS) $(LIBS) -o %o |>
