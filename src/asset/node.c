@@ -47,6 +47,18 @@
     (e).line = __LINE__; \
     (e).val.cstr = str; \
     return false;
+#define format_error(e, fn, ...) \
+    (e).type = ILA_STRERR; \
+    (e).func = fn; \
+    (e).file = __FILE__; \
+    (e).line = __LINE__; \
+    { \
+    size_t err_len = snprintf(NULL, 0, __VA_ARGS__); \
+    char *err_buf = malloc(err_len + 1); \
+    snprintf(err_buf, err_len + 1, __VA_ARGS__); \
+    (e).val.str = err_buf; \
+    return false; \
+    }
 
 static bool node_test(ilA_error *err,
                       ilA_dirhandle dir,
@@ -153,7 +165,7 @@ bool ilA_mapfile(ilA_fs *fs, ilA_map *map, ilA_file_mode mode, const char *name,
          }
          return true;
      }
-     const_error(map->err, __func__, "No such file");
+     format_error(map->err, __func__, "No such file \"%s\"", name);
 }
 
 char *strndup(const char*, size_t);
@@ -261,7 +273,7 @@ ilA_filehandle ilA_rawopen(ilA_fs *fs, ilA_error *err, ilA_file_mode mode, const
          }
          return h;
      }
-     const_error(*err, __func__, "No such file");
+     format_error(*err, __func__, "No such file \"%s\"", name);
      return ilA_invalid_file;
 }
 
