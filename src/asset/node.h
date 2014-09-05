@@ -51,7 +51,8 @@ typedef struct ilA_error {
         ILA_STRERR,
         ILA_CONSTERR
     } type;
-    const char *func;
+    const char *func, *file;
+    int line;
     union {
         ilA_errno_t err;
         char *str;
@@ -96,6 +97,7 @@ void ilA_rmdir(ilA_fs *fs, ilA_dirid id);
 void ilA_delete(ilA_fs *fs, const char *name, ssize_t namelen);
 void ilA_lookup(ilA_fs *fs, const char *pattern, ssize_t patlen, void (*cb)(void *user, ilA_dirid id, const char *name, size_t namelen), void *user);
 void ilA_strerror(ilA_error *err, char *buf, size_t len);
-void ilA_printerror(ilA_error *err);
+void ilA_printerror_real(ilA_error *err, const char *file, int line, const char *func);
+#define ilA_printerror(e) ilA_printerror_real(e, __FILE__, __LINE__, __func__)
 
 #endif

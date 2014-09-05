@@ -24,6 +24,8 @@
     if (cond) { \
         (e).type = ILA_ERRNOERR; \
         (e).func = fn; \
+        (e).file = __FILE__; \
+        (e).line = __LINE__; \
         (e).val.err = last_error; \
         return false; \
     }
@@ -32,10 +34,19 @@
     if (cond) { \
         (e).type = ILA_CONSTERR; \
         (e).func = fn; \
+        (e).file = __FILE__; \
+        (e).line = __LINE__; \
         (e).val.cstr = str; \
         return false; \
     }
 #define const_check(err, str, cond) const_check2(err, #cond, str, cond)
+#define const_error(e, fn, str) \
+    (e).type = ILA_CONSTERR; \
+    (e).func = fn; \
+    (e).file = __FILE__; \
+    (e).line = __LINE__; \
+    (e).val.cstr = str; \
+    return false;
 
 static bool node_test(ilA_error *err,
                       ilA_dirhandle dir,
@@ -142,7 +153,7 @@ bool ilA_mapfile(ilA_fs *fs, ilA_map *map, ilA_file_mode mode, const char *name,
          }
          return true;
      }
-     const_check(map->err, "No such file", true);
+     const_error(map->err, __func__, "No such file");
 }
 
 char *strndup(const char*, size_t);
@@ -250,8 +261,7 @@ ilA_filehandle ilA_rawopen(ilA_fs *fs, ilA_error *err, ilA_file_mode mode, const
          }
          return h;
      }
-     err->type = ILA_CONSTERR;
-     err->val.cstr = "No such file";
+     const_error(*err, __func__, "No such file");
      return ilA_invalid_file;
 }
 
@@ -338,23 +348,23 @@ void ilA_strerror(ilA_error *err, char *buf, size_t len)
     }
 }
 
-void ilA_printerror(ilA_error *err)
+void ilA_printerror_real(ilA_error *err, const char *file, int line, const char *func)
 {
-#define err(...) il_log_real("Asset", 0, err->func, 0, __VA_ARGS__)
+#define err(...) il_log_real(file, line, func, 0, __VA_ARGS__)
     switch (err->type) {
     case ILA_NOERR:
-        err("No error: Something reported an error when there is none");
+        err("No error: Reported an error when there is none");
         break;
     case ILA_ERRNOERR:
 #ifdef WIN32
-        err("%s", windows_strerror(err->val.err));
+        err("From %s:%i (%s): %s", err->file, err->line, err->func, windows_strerror(err->val.err));
 #else
-        err("%s", strerror(err->val.err));
+        err("From %s:%i (%s): %s", err->file, err->line, err->func, strerror(err->val.err));
 #endif
         break;
     case ILA_STRERR:
     case ILA_CONSTERR:
-        err("%s", err->val.cstr);
+        err("From %s:%i (%s): %s", err->file, err->line, err->func, err->val.cstr);
         break;
     default:
         err("Corrupt error value");
