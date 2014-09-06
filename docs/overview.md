@@ -20,5 +20,4 @@ IntenseLogic is a set of libraries used to create a game engine.
       |-util/           Events, datastructures, logging, third party code (uthash), etc.
       |-math/           Math related to 3D graphics (vectors, matrices, quaternions)
       |-graphics/       Code that manages rendering
-      |-asset/          Filesystem management and file format loaders
-      `-input/          Deprecated input layer
+      `-asset/          Filesystem management and file format loaders
