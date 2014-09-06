@@ -12,7 +12,6 @@
 #endif
 
 #include "util/log.h"
-#include "util/ilassert.h"
 
 #ifdef WIN32
 #define last_error GetLastError()

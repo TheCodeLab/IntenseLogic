@@ -11,7 +11,6 @@
 #include "graphics/graphics.h"
 #include "graphics/transform.h"
 #include "util/array.h"
-#include "util/ilassert.h"
 #include "util/log.h"
 
 struct textureunit {

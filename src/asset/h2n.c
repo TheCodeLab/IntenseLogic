@@ -1,12 +1,12 @@
 #include "image.h"
 
 #include "math/vector.h"
-#include "util/ilassert.h"
 
 ilA_img *ilA_img_height_to_normal(const ilA_img *self)
 {
-    il_return_null_on_fail(self);
-    il_return_null_on_fail(self->channels & ILA_IMG_R);
+    if (!self || !(self->channels & ILA_IMG_R)) {
+        return NULL;
+    }
     ilA_img *img = ilA_img_fromdata(NULL, self->width - 1, self->height - 1, 32, ILA_IMG_RGB);
     unsigned x, y, i;
 
@@ -41,4 +41,3 @@ ilA_img *ilA_img_height_to_normal(const ilA_img *self)
 
     return img;
 }
-

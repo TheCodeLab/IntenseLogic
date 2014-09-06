@@ -12,7 +12,6 @@
 #include "graphics/transform.h"
 #include "math/matrix.h"
 #include "tgl/tgl.h"
-#include "util/ilassert.h"
 #include "util/log.h"
 #include "util/logger.h"
 

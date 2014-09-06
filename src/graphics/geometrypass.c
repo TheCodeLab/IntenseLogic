@@ -7,7 +7,6 @@
 #include "graphics/transform.h"
 #include "graphics/arrayattrib.h"
 #include "tgl/tgl.h"
-#include "util/ilassert.h"
 
 static void geometry_free(void *ptr)
 {

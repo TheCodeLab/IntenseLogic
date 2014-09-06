@@ -2,8 +2,6 @@
 
 #include <stdlib.h>
 
-#include "util/ilassert.h"
-
 ilA_mesh *ilA_mesh_new(enum ilA_mesh_attrib attribs, size_t vertices)
 {
     ilA_mesh *self = calloc(1, sizeof(ilA_mesh));
@@ -111,7 +109,9 @@ void ilA_mesh_free(ilA_mesh *self)
 
 ilA_mesh *ilA_mesh_debugLines(ilA_mesh *self, float f)
 {
-    il_return_null_on_fail(self && self->position && self->normal);
+    if (!self || !self->position || !self->normal) {
+        return NULL;
+    }
     ilA_mesh *mesh = calloc(1, sizeof(ilA_mesh));
     mesh->mode = ILA_MESH_LINES;
     mesh->num_vertices = self->num_vertices * 2;
