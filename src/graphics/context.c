@@ -10,7 +10,6 @@
 #include "util/storage.h"
 #include "graphics/graphics.h"
 #include "graphics/transform.h"
-#include "input/input.h"
 #include "math/matrix.h"
 #include "tgl/tgl.h"
 #include "util/ilassert.h"
@@ -122,7 +121,6 @@ void ilG_context_init(ilG_context *self)
     ilE_handler_init_with_name(&self->resize,  "il.graphics.context.resize");
     ilE_handler_init_with_name(&self->close,   "il.graphics.context.close");
     ilE_handler_init_with_name(&self->destroy, "il.graphics.context.destroy");
-    ilI_handler_init(&self->handler);
     self->client = calloc(1, sizeof(ilG_client_queue));
     ilG_client_queue_init(self->client);
     // private

@@ -9,9 +9,9 @@
 
 #include "tgl/tgl.h"
 #include "util/array.h"
+#include "util/event.h"
 #include "util/list.h"
 #include "util/storage.h"
-#include "input/input.h"
 #include "graphics/renderer.h"
 
 enum ilG_context_attachments {
@@ -100,7 +100,6 @@ typedef struct ilG_context {
                 resize,
                 close,
                 destroy;
-    ilI_handler handler;
     ilG_handle root;
     struct ilG_client_queue *client;
     /* For rendering */

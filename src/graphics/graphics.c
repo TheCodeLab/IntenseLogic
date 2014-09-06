@@ -58,7 +58,6 @@ static void sdl_error(void *ptr, int cat, SDL_LogPriority pri, const char *reaso
     il_logger_log(&il_logger_stderr, log); // TODO: Log to appropriate location
 }
 
-void ilG_registerSdlInputBackend();
 static void sdl_setup()
 {
     if (SDL_Init(SDL_INIT_NOPARACHUTE) != 0) {
@@ -71,7 +70,6 @@ static void sdl_setup()
     signal(SIGTERM, SIG_DFL);
     SDL_LogSetOutputFunction(sdl_error, NULL);
     il_log("Using SDL %s", SDL_GetRevision());
-    ilG_registerSdlInputBackend();
 }
 
 int il_load_ilgraphics()
