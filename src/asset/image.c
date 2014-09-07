@@ -1,5 +1,6 @@
 #include "image.h"
 
+#include <assert.h>
 #include <png.h>
 
 #include "util/log.h"
@@ -15,14 +16,6 @@ struct read_context {
     size_t size;
     size_t head;
 };
-
-static int compute_bpp(int channels, int depth)
-{
-    return (!!(channels & ILA_IMG_R) +
-            !!(channels & ILA_IMG_G) +
-            !!(channels & ILA_IMG_B) +
-            !!(channels & ILA_IMG_A) ) * depth;
-}
 
 static void png_read_fn(png_structp png_ptr, png_bytep data, png_size_t length)
 {
@@ -63,19 +56,26 @@ static int read_png(ilA_img *self, const void *data, size_t size)
         NULL, NULL, NULL);
     rowbytes = png_get_rowbytes(png_ptr, info_ptr);
 
-    self->channels = ILA_IMG_R;
-    if (ctype & PNG_COLOR_MASK_COLOR) {
-        self->channels |= ILA_IMG_RGB;
+    switch (ctype) {
+    case PNG_COLOR_TYPE_RGB_ALPHA:
+        self->channels = ILA_IMG_RGBA;
+        break;
+    case PNG_COLOR_TYPE_RGB:
+        self->channels = ILA_IMG_RGB;
+        break;
+    case PNG_COLOR_TYPE_GRAY_ALPHA:
+        self->channels = ILA_IMG_RG;
+        break;
+    case PNG_COLOR_TYPE_GRAY:
+        self->channels = ILA_IMG_R;
+        break;
+    case PNG_COLOR_TYPE_PALETTE:
+        il_error("NYI: Palettes");
+        break;
+    default:
+        il_error("Unknown colour type");
     }
-    if (ctype & PNG_COLOR_MASK_ALPHA) {
-        self->channels |= ILA_IMG_A;
-    }
-    if (ctype & PNG_COLOR_MASK_PALETTE) {
-        il_error("Palettes are not handled");
-        return 0;
-    }
-    self->depth = 8; // TODO: 16-bit textures
-    self->bpp = compute_bpp(self->channels, 8);
+
     self->data = calloc(rowbytes, self->width);
     rows = png_get_rows(png_ptr, info_ptr);
     for (i = 0; i < self->height; i++) {
@@ -86,188 +86,193 @@ static int read_png(ilA_img *self, const void *data, size_t size)
     return 1;
 }
 
-ilA_img *ilA_img_load(const void *data, size_t size)
+ilA_imgerr ilA_img_load(ilA_img *img, const void *data, size_t size)
 {
-    ilA_img *img = calloc(1, sizeof(ilA_img));
+    memset(img, 0, sizeof(ilA_img));
     int res;
 
     if (check_png(data, size)) { // it is, in fact, a png file
         res = read_png(img, data, size);
         if (res) {
-            return img;
+            return ILA_IMG_SUCCESS;
         }
     }
 
-    il_error("Failed to load image");
-    free(img);
-    return NULL;
+    return ILA_IMG_UNRECOGNIZED_FORMAT;
 }
 
-ilA_img *ilA_img_loadfile(ilA_fs *fs, const char *name)
+ilA_imgerr ilA_img_loadfile(ilA_img *img, ilA_fs *fs, const char *name)
 {
     ilA_map map;
     if (!ilA_mapfile(fs, &map, ILA_READ, name, -1)) {
         ilA_printerror(&map.err);
-        return NULL;
+        return ILA_IMG_NO_SUCH_FILE;
     }
-    ilA_img *img = ilA_img_load(map.data, map.size);
+    ilA_imgerr res = ilA_img_load(img, map.data, map.size);
     ilA_unmapfile(&map);
-    return img;
+    return res;
 }
 
-ilA_img *ilA_img_fromdata(const void *data, unsigned w, unsigned h, unsigned depth, enum ilA_imgchannels channels)
+ilA_imgerr ilA_img_fromdata(ilA_img *img, const void *data, unsigned w, unsigned h, ilA_imgformat fmt, enum ilA_imgchannel chans)
 {
-    unsigned size = compute_bpp(channels, depth) * w * h / 8;
-    void *copy = malloc(size);
+    ilA_imgerr res = ilA_img_alloc(img, w, h, fmt, chans);
+    if (res) {
+        return res;
+    }
+    size_t size = ilA_img_size(img);
     if (data) {
-        memcpy(copy, data, size);
+        memcpy(img->data, data, size);
     } else {
-        memset(copy, 0, size);
+        memset(img->data, 0, size);
     }
-    return ilA_img_frombuf(copy, w, h, depth, channels);
+    return ILA_IMG_SUCCESS;
 }
 
-ilA_img *ilA_img_frombuf(void *data, unsigned w, unsigned h, unsigned depth, enum ilA_imgchannels channels)
+ilA_imgerr il_important ilA_img_alloc(ilA_img *self, unsigned w, unsigned h, ilA_imgformat fmt, ilA_imgchannel chans)
 {
-    ilA_img *img = calloc(1, sizeof(ilA_img));
-    img->width = w;
-    img->height = h;
-    img->channels = channels;
-    img->depth = depth;
-    img->bpp = compute_bpp(channels, depth);
-    img->data = data;
-    return img;
+    memset(self, 0, sizeof(ilA_img));
+    self->width = w;
+    self->height = h;
+    self->format = fmt;
+    self->channels = chans;
+    self->data = malloc(ilA_img_size(self));
+    return self->data? ILA_IMG_SUCCESS : ILA_IMG_MALLOC_FAILURE;
 }
 
-ilA_img *ilA_img_copy(const ilA_img *old)
+ilA_imgerr ilA_img_copy(ilA_img *dst, const ilA_img *src)
 {
-    ilA_img *new = calloc(1, sizeof(ilA_img));
-    new->width = old->width;
-    new->height = old->height;
-    new->channels = old->channels;
-    new->depth = old->depth;
-    new->bpp = old->bpp;
-    unsigned size = new->bpp * old->width * old->height / 8;
-    new->data = malloc(size);
-    memcpy(new->data, old->data, size);
-    return new;
-}
-
-void ilA_img_free(ilA_img *self)
-{
-    free(self->data);
-    free(self);
-}
-
-// TODO: stop asserting there are 8 bits per channel
-static void sample_pixel(void *dest, const void *src, int bpp, int channels, int desired_bpp, int desired_channels)
-{
-    unsigned char *ptr = dest;
-    const unsigned char *src_ptr = src;
-    (void)bpp, (void)desired_bpp;
-    if (desired_channels&ILA_IMG_R) {
-        if (channels&ILA_IMG_R) {
-            *ptr++ = *src_ptr++;
-        } else {
-            *ptr++ = 0;
-        }
+    ilA_imgerr res = ilA_img_alloc(dst, src->width, src->height, src->format, src->channels);
+    if (res) {
+        return res;
     }
-    if (desired_channels&ILA_IMG_G) {
-        if (channels&ILA_IMG_G) {
-            *ptr++ = *src_ptr++;
-        } else {
-            *ptr++ = 0;
-        }
+    memcpy(dst->data, src->data, ilA_img_size(src));
+    return ILA_IMG_SUCCESS;
+}
+
+size_t ilA_img_bytes_per_channel(const ilA_img *self)
+{
+    switch (self->format) {
+    case ILA_IMG_U8: return sizeof(uint8_t);
+    case ILA_IMG_U16: return sizeof(uint16_t);
+    case ILA_IMG_F32: return sizeof(float);
     }
-    if (desired_channels&ILA_IMG_B) {
-        if (channels&ILA_IMG_B) {
-            *ptr++ = *src_ptr++;
-        } else {
-            *ptr++ = 0;
-        }
+    assert(!"Invalid format");
+    return 0;
+}
+
+size_t ilA_img_stride(const ilA_img *self)
+{
+    return ilA_img_bytes_per_channel(self) * self->channels;
+}
+
+size_t ilA_img_pitch(const ilA_img *self)
+{
+    return ilA_img_stride(self) * self->width;
+}
+
+size_t ilA_img_size(const ilA_img *self)
+{
+    return ilA_img_pitch(self) * self->height;
+}
+
+void ilA_img_free(ilA_img self)
+{
+    free(self.data);
+}
+
+static inline void __attribute__((always_inline))
+sample_pixel(unsigned char *dst, const unsigned char *src,
+             ilA_imgformat dstfmt, ilA_imgchannel dstchans,
+             ilA_imgformat srcfmt, ilA_imgchannel srcchans)
+{
+    assert(dstfmt == srcfmt); // TODO: Format translation
+    unsigned bytes = 0;
+    switch (dstfmt) {
+    case ILA_IMG_U8:  bytes = sizeof(uint8_t);  break;
+    case ILA_IMG_U16: bytes = sizeof(uint16_t); break;
+    case ILA_IMG_F32: bytes = sizeof(float);    break;
     }
-    if (desired_channels&ILA_IMG_A) {
-        if (channels&ILA_IMG_A) {
-            *ptr++ = *src_ptr++;
-        } else {
-            *ptr++ = 0;
-        }
+    for (unsigned i = 0; i < (dstchans < srcchans? dstchans : srcchans); i++) {
+        memcpy(dst, src, bytes);
+        dst += bytes;
+        src += bytes;
+    }
+    for (unsigned i = 0; i < srcchans - dstchans; i++) {
+        memset(dst, 0, bytes);
+        dst += bytes;
     }
 }
 
-static void nearest_sample(ilA_img *self, const ilA_img *sample, int x, int y)
+static inline void __attribute__((always_inline))
+nearest_sample(ilA_img *dst, const ilA_img *src, int x, int y)
 {
-    float xp = (float)x/self->width, yp = (float)y/self->height;
-    int xs = xp * sample->width, ys = yp * sample->height;
-    int pix = self->bpp * (y*self->width + x) / 8, spix = sample->bpp * (ys*sample->width + xs) / 8;
-    sample_pixel(self->data + pix, sample->data + spix, sample->bpp, sample->channels, self->bpp, self->channels);
+    float xp = (float)x/dst->width, yp = (float)y/dst->height;
+    int xs = xp * src->width, ys = yp * src->height;
+    unsigned dstpix = y * ilA_img_pitch(dst) + x * ilA_img_stride(dst);
+    unsigned srcpix = ys * ilA_img_pitch(src) + xs * ilA_img_stride(src);
+    sample_pixel(dst->data + dstpix, src->data + srcpix,
+                 dst->format, dst->channels,
+                 src->format, src->channels);
 }
 
-ilA_img *ilA_img_resize(const ilA_img *self, enum ilA_img_interpolation up, enum ilA_img_interpolation down, unsigned w, unsigned h, int channels)
+ilA_imgerr ilA_img_resize(ilA_img *dst, const ilA_img *src, enum ilA_img_interpolation up, enum ilA_img_interpolation down, unsigned w, unsigned h)
 {
-    enum ilA_img_interpolation interp;
+    enum ilA_img_interpolation interp = w > src->width && h > src->height? up : down;
     unsigned x, y;
-    ilA_img *img = calloc(1, sizeof(ilA_img));
-
-    img->width = w;
-    img->height = h;
-    img->channels = channels;
-    img->depth = 8; 
-    img->bpp = compute_bpp(channels, 8);
-    img->data = calloc(img->bpp/8, w*h);
-    if (w > self->width && h > self->height) {
-        interp = up;
-    } else {
-        interp = down;
+    ilA_imgerr res = ilA_img_alloc(dst, w, h, src->format, src->channels);
+    if (res) {
+        return res;
     }
+
     switch (interp) {
-        case ILA_IMG_NEAREST:
+    case ILA_IMG_NEAREST:
         for (y = 0; y < h; y++) {
             for (x = 0; x < w; x++) {
-                nearest_sample(img, self, x, y);
+                nearest_sample(dst, src, x, y);
             }
         }
         break;
-        default:
-        il_error("Unknown interpolation algorithm");
+    default:
+        return ILA_IMG_UNKNOWN_INTERPOLATION;
     }
-    return img;
+    return ILA_IMG_SUCCESS;
 }
 
-static void decompose_pixel(enum ilA_imgchannels channels, const unsigned char *data, unsigned char out[4])
+static void decompose_pixel(ilA_imgformat fmt, ilA_imgchannel chans, const uint8_t *data, uint32_t out[4])
 {
-    memset(out, 0, sizeof(unsigned char) * 4);
-    if (channels & ILA_IMG_R) {
-        out[0] = *data++;
-    }
-    if (channels & ILA_IMG_G) {
-        out[1] = *data++;
-    }
-    if (channels & ILA_IMG_B) {
-        out[2] = *data++;
-    }
-    if (channels & ILA_IMG_A) {
-        out[3] = *data++;
+    for (unsigned i = 0; i < chans; i++) {
+        switch (fmt) {
+        case ILA_IMG_U8:
+            out[i] = ((const uint8_t*)data)[i];
+            break;
+        case ILA_IMG_U16:
+            out[i] = ((const uint16_t*)data)[i];
+            break;
+        case ILA_IMG_F32:
+            out[i] = ((const uint32_t*)data)[i];
+            break;
+        }
     }
 }
 
-static void compose_pixel(enum ilA_imgchannels channels, const unsigned char col[4], unsigned char *out)
+static void compose_pixel(ilA_imgformat fmt, ilA_imgchannel chans, const uint32_t col[4], uint8_t *out)
 {
-    if (channels & ILA_IMG_R) {
-        *out++ = col[0];
-    }
-    if (channels & ILA_IMG_G) {
-        *out++ = col[1];
-    }
-    if (channels & ILA_IMG_B) {
-        *out++ = col[2];
-    }
-    if (channels & ILA_IMG_A) {
-        *out++ = col[3];
+    for (unsigned i = 0; i < chans; i++) {
+        switch (fmt) {
+        case ILA_IMG_U8:
+            ((uint8_t*)out)[i] = col[i];
+            break;
+        case ILA_IMG_U16:
+            ((uint16_t*)out)[i] = col[i];
+            break;
+        case ILA_IMG_F32:
+            ((uint32_t*)out)[i] = col[i];
+            break;
+        }
     }
 }
 
-static void bitmat_mulv(uint16_t mat, const unsigned char col[4], unsigned char out[4])
+static void bitmat_mulv(uint16_t mat, const unsigned col[4], unsigned out[4])
 {
     int i, j, bit;
 
@@ -283,36 +288,71 @@ static void bitmat_mulv(uint16_t mat, const unsigned char col[4], unsigned char 
     }
 }
 
-ilA_img *ilA_img_swizzle(const ilA_img *self, uint16_t mask)
+ilA_imgerr ilA_img_swizzle(ilA_img *dst, const ilA_img *src, uint16_t mask)
 {
-    ilA_img *img = ilA_img_fromdata(NULL, self->width, self->height, self->depth, self->channels);
+    ilA_imgchannel num_chans = 0;
+    for (unsigned i = 0; i < 4; i++) {
+        for (unsigned j = 0; j < 4; j++) {
+            unsigned bit = mask & (1<<(i*4 + j));
+            if (bit) {
+                num_chans++;
+            }
+        }
+    }
+    if (num_chans < 1 || num_chans > 4) {
+        return ILA_IMG_INVALID_MASK;
+    }
+    ilA_imgerr res = ilA_img_alloc(dst, src->width, src->height, src->format, num_chans);
+    if (res) {
+        return res;
+    }
     unsigned x, y;
-    for (y = 0; y < img->height; y++) {
-        for (x = 0; x < img->width; x++) {
-            unsigned char col[4], out[4];
-            unsigned bpp = compute_bpp(self->channels, self->depth) / 8;
-            decompose_pixel(self->channels, self->data + bpp*x + bpp*self->width*y, col);
+    for (y = 0; y < src->height; y++) {
+        for (x = 0; x < src->width; x++) {
+            unsigned col[4], out[4];
+            size_t stride = ilA_img_stride(src);
+            size_t pitch = ilA_img_pitch(src);
+            decompose_pixel(src->format, src->channels, src->data + y*pitch + x*stride, col);
             bitmat_mulv(mask, col, out);
-            compose_pixel(img->channels, out, img->data + bpp*x + bpp*img->width*y);
+            compose_pixel(src->format, src->channels, out, dst->data + y*pitch + x*stride);
         }
     }
-    return img;
+    return ILA_IMG_SUCCESS;
 }
 
-ilA_img *ilA_img_bgra_to_rgba(const ilA_img *self)
+ilA_imgerr ilA_img_bgra_to_rgba(ilA_img *dst, const ilA_img *src)
 {
-    ilA_img *img = ilA_img_fromdata(NULL, self->width, self->height, self->depth, self->channels);
-    unsigned x, y, bpp = compute_bpp(self->channels, self->depth)/8;
-    for (y = 0; y < img->height; y++) {
-        for (x = 0; x < img->width; x++) {
-            unsigned char *dst = img->data + bpp * img->width * y + bpp * x;
-            const unsigned char *src = self->data + bpp * self->width * y + bpp * x;
-            dst[0] = src[2];
-            dst[1] = src[1];
-            dst[2] = src[0];
-            dst[3] = src[3];
+    ilA_imgerr res = ilA_img_alloc(dst, src->width, src->height, src->format, src->channels);
+    if (res) {
+        return res;
+    }
+    for (unsigned y = 0; y < src->height; y++) {
+        for (unsigned x = 0; x < src->width; x++) {
+            size_t pitch = ilA_img_pitch(src), stride = ilA_img_stride(src);
+            unsigned char       *dstp = dst->data + y * pitch + x * stride;
+            const unsigned char *srcp = src->data + y * pitch + x * stride;
+            dstp[0] = srcp[2];
+            dstp[1] = srcp[1];
+            dstp[2] = srcp[0];
+            dstp[3] = srcp[3];
         }
     }
-    return img;
+    return ILA_IMG_SUCCESS;
 }
 
+const char *ilA_img_strerror(ilA_imgerr err)
+{
+    static const char *const table[] = {
+        "Success",
+        "Unrecognized image file format",
+        "No such file exists",
+        "Interpolation algorithm not supported",
+        "Invalid swizzle mask",
+        "Null pointer input",
+        "Malloc failed"
+    };
+    if (err >= sizeof(table) / sizeof(const char * const)) {
+        return "Invalid error code";
+    }
+    return table[err];
+}

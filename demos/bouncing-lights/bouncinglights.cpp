@@ -41,6 +41,8 @@ extern "C" {
 #define ex extern "C"
 #endif
 
+const btScalar arenaWidth = 128;
+
 extern ilA_fs demo_fs;
 
 void add_objects(BulletSpace &bs, BallRenderer &ball, ilG_handle lights, ilG_handle r, btCollisionShape *shape, unsigned num, unsigned *seedp)
@@ -141,7 +143,6 @@ ex void demo_start()
     world.world.addAction(&player);
 
     // setup invisible arena walls
-    const btScalar arenaWidth = 128;
     int i;
     btStaticPlaneShape groundShape[4] = {
         btStaticPlaneShape(btVector3( 1, 0,  0), 1),
@@ -171,31 +172,51 @@ ex void demo_start()
     }
 
     // Create heightmap physics and render stuff
-    ilA_img *hm = ilA_img_loadfile(&demo_fs, "arena-heightmap.png");
+    ilA_img hm;
+    ilA_imgerr res = ilA_img_loadfile(&hm, &demo_fs, "arena-heightmap.png");
+    if (res) {
+        il_error("Failed to load heightmap: %s", ilA_img_strerror(res));
+        return;
+    }
     const unsigned height = 50;
     btHeightfieldTerrainShape heightmap_shape
-        (hm->width, hm->height, hm->data, height/255.f, 0, height, 1, PHY_UCHAR, false);
-    heightmap_shape.setLocalScaling(btVector3(arenaWidth/hm->width, 1, arenaWidth/hm->height));
+        (hm.width, hm.height, hm.data, height/255.f, 0, height, 1, PHY_UCHAR, false);
+    heightmap_shape.setLocalScaling(btVector3(arenaWidth/hm.width, 1, arenaWidth/hm.height));
     btTransform trans = btTransform(btQuaternion(0,0,0,1),
                                     btVector3(arenaWidth/2, height/2, arenaWidth/2));
     /*btVector3 min, max, scaling;
-    heightmap_shape.getAabb(trans, min, max);
-    printf("min(%f %f %f) max(%f %f %f)\n", min.x(), min.y(), min.z(), max.x(), max.y(), max.z());
-    scaling = heightmap_shape.getLocalScaling();
-    printf("scale(%f %f %f)\n", scaling.x(), scaling.y(), scaling.z());*/
+      heightmap_shape.getAabb(trans, min, max);
+      printf("min(%f %f %f) max(%f %f %f)\n", min.x(), min.y(), min.z(), max.x(), max.y(), max.z());
+      scaling = heightmap_shape.getLocalScaling();
+      printf("scale(%f %f %f)\n", scaling.x(), scaling.y(), scaling.z());*/
     btDefaultMotionState heightmap_state(trans);
     btRigidBody::btRigidBodyConstructionInfo groundRigidBodyCI
         (0, &heightmap_state, &heightmap_shape, btVector3(0,0,0));
     auto groundId = world.addBody(groundRigidBodyCI);
     world.getBody(groundId).setRestitution(1.0);
     world.setBodyScale(groundId, il_vec3_new(128, 50, 128));
-    ilA_img *norm = ilA_img_height_to_normal(hm);
+    ilA_img norm;
+    res = ilA_img_height_to_normal(&norm, &hm);
+    if (res) {
+        il_error("Failed to create normal map: %s", ilA_img_strerror(res));
+        return;
+    }
     ilG_tex colortex, heighttex, normaltex;
-    ilG_tex_loadfile(&colortex, &demo_fs, "terrain.png");
-    ilG_tex_loadimage(&heighttex, hm);
+    res = ilG_tex_loadfile(&colortex, &demo_fs, "terrain.png");
+    if (res) {
+        il_error("Failed to load heightmap texture: %s", ilA_img_strerror(res));
+        return;
+    }
+    ilA_img hmc;
+    res = ilA_img_copy(&hmc, &hm);
+    if (res) {
+        il_error("Failed to copy image: %s", ilA_img_strerror(res));
+        return;
+    }
+    ilG_tex_loadimage(&heighttex, hmc);
     ilG_tex_loadimage(&normaltex, norm);
     ilG_handle hmr = ilG_build
-        (ilG_heightmap_builder(hm->width, hm->height,
+        (ilG_heightmap_builder(hm.width, hm.height,
                                heighttex, normaltex, colortex), context);
     ilG_handle_addRenderer(h.geom, hmr);
     world.add(hmr, groundId);

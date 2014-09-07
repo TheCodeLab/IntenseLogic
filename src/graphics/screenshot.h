@@ -5,8 +5,7 @@
 
 struct ilA_img;
 
-/** cb will only be called once, and is responsible for cleaning up itself and removing the grabber from the scenegraph. */
-ilG_builder ilG_grabber_builder(void (*cb)(struct ilA_img* res, void *user), void *user);
+/** cb will only be called once */
+ilG_builder ilG_grabber_builder(void (*cb)(struct ilA_img res, void *user), void *user);
 
 #endif
-

@@ -6,6 +6,7 @@
 #include "graphics/lightpass.h"
 #include "graphics/outpass.h"
 #include "graphics/tex.h"
+#include "util/log.h"
 
 extern ilA_fs demo_fs;
 
@@ -20,14 +21,19 @@ helper_result helper_create(helper_config *conf)
     ilG_context_hint(r.context, ILG_CONTEXT_DEBUG_RENDER, 1);
     ilG_context_hint(r.context, ILG_CONTEXT_VSYNC, 1);
     if (conf->sky) {
-        ilA_img *imgs[6];
+        ilA_img imgs[6];
         for (unsigned i = 0; i < 6; i++) {
-            imgs[i] = ilA_img_loadfile(&demo_fs, conf->skytex[i]);
+            ilA_imgerr res = ilA_img_loadfile(&imgs[i], &demo_fs, conf->skytex[i]);
+            if (res) {
+                il_error("%s", ilA_img_strerror(res));
+                goto sky_fail;
+            }
         }
         ilG_tex tex;
         ilG_tex_loadcube(&tex, imgs);
         r.sky = ilG_build(ilG_skybox_builder(tex), r.context);
         ilG_handle_addRenderer(r.context->root, r.sky);
+      sky_fail:;
     }
     if (conf->geom) {
         r.geom = ilG_build(ilG_geometry_builder(), r.context);

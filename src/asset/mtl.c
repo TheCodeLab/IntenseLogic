@@ -84,17 +84,16 @@ void ilA_mtl_free(ilA_mtl *self)
         if (node->name) {
             free(node->name);
         }
-        if (node->diffuse_map) {
+        if (node->diffuse_map.data) {
             ilA_img_free(node->diffuse_map);
         }
-        if (node->specular_map) {
+        if (node->specular_map.data) {
             ilA_img_free(node->specular_map);
         }
-        if (node->specular_highlight_map) {
+        if (node->specular_highlight_map.data) {
             ilA_img_free(node->specular_highlight_map);
         }
         free(node);
     }
     free(self);
 }
-

@@ -2,42 +2,65 @@
 
 #include "math/vector.h"
 
-ilA_img *ilA_img_height_to_normal(const ilA_img *self)
+static inline void __attribute__((always_inline))
+pixel_height_to_normal(ilA_img *restrict dst, const ilA_img *restrict src, unsigned x, unsigned y)
 {
-    if (!self || !(self->channels & ILA_IMG_R)) {
-        return NULL;
-    }
-    ilA_img *img = ilA_img_fromdata(NULL, self->width - 1, self->height - 1, 32, ILA_IMG_RGB);
-    unsigned x, y, i;
-
-    img->fp = 1;
-    int offs[6] = {
+    size_t pitch = ilA_img_pitch(src), stride = ilA_img_stride(src);
+    float height[3];
+    static const int offs[6] = {
         1, 1,
         0, 1,
         1, 0,
     };
-    for (y = 0; y < self->width - 1; y++) {
-        for (x = 0; x < self->width - 1; x++) {
-            float height[3];
-            for (i = 0; i < 3; i++) {
-                unsigned lx = x + offs[2*i], ly = y + offs[2*i + 1];
-                uint8_t hval = *(uint8_t*)(self->data + ly*self->width*self->bpp/8 + lx*self->bpp/8); // TODO: Support higher than 8-bit
-                hval &= (1<<self->bpp) - 1; // we only care about red channel
-                height[i] = (float)hval / (1<<self->bpp);
-            }
-            float w = -1.0/img->width, h = -1.0/img->height;
-            //float w = -1, h = -1;
-            il_vec3 vx = il_vec3_new(w, height[1] - height[0], 0),
-                    vy = il_vec3_new(0, height[2] - height[0], h),
-                    res = il_vec3_cross(vy, vx);
-            res = il_vec3_normal(res);
+    for (unsigned i = 0; i < 3; i++) {
+        unsigned lx = x + offs[2*i], ly = y + offs[2*i + 1];
+        uint32_t hvalu;
+        float hvalf;
+        switch (src->format) {
+        case ILA_IMG_U8:
+            hvalu = *((uint8_t*)src->data + ly * pitch + lx * stride);
+            hvalf = hvalu / 255.0;
+            break;
+        case ILA_IMG_U16:
+            hvalu = *((uint16_t*)src->data + ly * pitch + lx * stride);
+            hvalf = hvalu / 65535.0;
+            break;
+        case ILA_IMG_F32:
+            hvalf = *((float*)src->data + ly * pitch + lx * stride);
+            break;
+        }
+        height[i] = hvalf;
+    }
+    float w = -1.0/src->width, h = -1.0/src->height;
+    il_vec3 vx  = il_vec3_new(w, height[1] - height[0], 0);
+    il_vec3 vy  = il_vec3_new(0, height[2] - height[0], h);
+    il_vec3 res = il_vec3_cross(vy, vx);
+    res = il_vec3_normal(res);
 
-            float* data = (float*) (img->data + y*img->width*img->bpp/8 + x*img->bpp/8);
-            data[0] = res.x;
-            data[1] = res.y;
-            data[2] = res.z;
+    {
+        size_t pitch = ilA_img_pitch(dst), stride = ilA_img_stride(dst);
+        float *data = (float*)(dst->data + y * pitch + x * stride);
+        data[0] = res.x;
+        data[1] = res.y;
+        data[2] = res.z;
+    }
+}
+
+ilA_imgerr ilA_img_height_to_normal(ilA_img *restrict dst, const ilA_img *restrict src)
+{
+    if (!src) {
+        return ILA_IMG_NULL;
+    }
+    ilA_imgerr res = ilA_img_alloc(dst, src->width-1, src->height-1, ILA_IMG_F32, ILA_IMG_RGB);
+    if (res) {
+        return res;
+    }
+
+    for (unsigned y = 0; y < dst->width; y++) {
+        for (unsigned x = 0; x < dst->width; x++) {
+            pixel_height_to_normal(dst, src, x, y);
         }
     }
 
-    return img;
+    return ILA_IMG_SUCCESS;
 }

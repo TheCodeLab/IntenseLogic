@@ -1,82 +1,81 @@
 #include "tex.h"
 
-#include "asset/image.h"
 #include "util/log.h"
 
-void ilG_tex_loadfile(ilG_tex *self, ilA_fs *fs, const char *file)
+ilA_imgerr ilG_tex_loadfile(ilG_tex *self, ilA_fs *fs, const char *file)
 {
-    ilA_img *img = ilA_img_loadfile(fs, file);
-    if (!img) {
-        return;
+    ilA_img img;
+    ilA_imgerr res = ilA_img_loadfile(&img, fs, file);
+    if (res) {
+        return res;
     }
     ilG_tex_loadimage(self, img);
+    return ILA_IMG_SUCCESS;
 }
 
 static GLenum getImgFormat(const ilA_img *img)
 {
     switch (img->channels) {
-        case ILA_IMG_RGBA:  return GL_RGBA;
-        case ILA_IMG_RGB:   return GL_RGB;
-        case ILA_IMG_RG:    return GL_RG;
-        case ILA_IMG_R:     return GL_RED;
-        default: il_error("Unhandled colour format"); return 0;
+    case ILA_IMG_RGBA:  return GL_RGBA;
+    case ILA_IMG_RGB:   return GL_RGB;
+    case ILA_IMG_RG:    return GL_RG;
+    case ILA_IMG_R:     return GL_RED;
     }
+    il_error("Unhandled colour format");
+    return 0;
 }
 
 static GLenum getImgType(const ilA_img *img)
 {
-    if (img->fp) {
-        return GL_FLOAT;
+    switch (img->format) {
+    case ILA_IMG_U8:     return GL_UNSIGNED_BYTE;
+    case ILA_IMG_U16:    return GL_UNSIGNED_SHORT;
+    case ILA_IMG_F32:    return GL_FLOAT;
     }
-    switch (img->depth) {
-        case 8:     return GL_UNSIGNED_BYTE;
-        case 16:    return GL_UNSIGNED_SHORT;
-        case 32:    return GL_UNSIGNED_INT;
-        default: il_error("Unhandled bit depth"); return 0;
-    }
+    il_error("Unhandled image format");
+    return 0;
 }
 
 static GLenum getImgIFormat(const ilA_img *img)
 {
     unsigned i;
     static const struct {
-        enum ilA_imgchannels channels;
-        unsigned depth;
-        unsigned fp;
+        ilA_imgchannel chans;
+        ilA_imgformat fmt;
         GLenum format;
     } mapping_table[] = {
-        {ILA_IMG_R,     8,  0,  GL_R8},
-        {ILA_IMG_R,     16, 0,  GL_R16},
-        {ILA_IMG_R,     32, 1,  GL_R32F},
+        {ILA_IMG_R,    ILA_IMG_U8,  GL_R8},
+        {ILA_IMG_R,    ILA_IMG_U16, GL_R16},
+        {ILA_IMG_R,    ILA_IMG_F32, GL_R32F},
 
-        {ILA_IMG_RG,    8,  0,  GL_RG8},
-        {ILA_IMG_RG,    16, 0,  GL_RG16},
-        {ILA_IMG_RG,    32, 1,  GL_RG32F},
+        {ILA_IMG_RG,   ILA_IMG_U8,  GL_RG8},
+        {ILA_IMG_RG,   ILA_IMG_U16, GL_RG16},
+        {ILA_IMG_RG,   ILA_IMG_F32, GL_RG32F},
 
-        {ILA_IMG_RGB,   8,  0, GL_RGB8},
-        {ILA_IMG_RGB,   16, 0, GL_RGB16},
-        {ILA_IMG_RGB,   32, 1, GL_RGB32F},
+        {ILA_IMG_RGB,  ILA_IMG_U8,  GL_RGB8},
+        {ILA_IMG_RGB,  ILA_IMG_U16, GL_RGB16},
+        {ILA_IMG_RGB,  ILA_IMG_F32, GL_RGB32F},
 
-        {ILA_IMG_RGBA,  8,  0, GL_RGBA8},
-        {ILA_IMG_RGBA,  16, 0, GL_RGBA16},
-        {ILA_IMG_RGBA,  32, 1, GL_RGBA32F},
+        {ILA_IMG_RGBA, ILA_IMG_U8,  GL_RGBA8},
+        {ILA_IMG_RGBA, ILA_IMG_U16, GL_RGBA16},
+        {ILA_IMG_RGBA, ILA_IMG_F32, GL_RGBA32F},
 
-        {0, 0, 0, 0}
+        {0, 0, 0}
     };
 
-    for (i = 0; mapping_table[i].depth; i++) {
-        if (mapping_table[i].channels == img->channels && mapping_table[i].fp == img->fp && mapping_table[i].depth == img->depth) {
+    for (i = 0; mapping_table[i].chans; i++) {
+        if (mapping_table[i].chans == img->channels && mapping_table[i].fmt == img->format) {
             return mapping_table[i].format;
         }
     }
-    
+
     return getImgFormat(img);
 }
 
 static void tex_cube_build(ilG_tex *self, struct ilG_context *context)
 {
     (void)context;
-    ilA_img **faces = self->data;
+    ilA_img *faces = self->data;
     static const GLenum targets[6] = {
         GL_TEXTURE_CUBE_MAP_POSITIVE_X,
         GL_TEXTURE_CUBE_MAP_NEGATIVE_X,
@@ -89,31 +88,36 @@ static void tex_cube_build(ilG_tex *self, struct ilG_context *context)
     glGenTextures(1, &self->object);
     glBindTexture(GL_TEXTURE_CUBE_MAP, self->object);
     for (unsigned i = 0; i < 6; i++) {
-        glTexImage2D(targets[i], 0, getImgIFormat(faces[i]), faces[i]->width, 
-                     faces[i]->height, 0, getImgFormat(faces[i]), 
-                     getImgType(faces[i]), faces[i]->data);
+        glTexImage2D(targets[i], 0, getImgIFormat(&faces[i]),
+                     faces[i].width, faces[i].height, 0,
+                     getImgFormat(&faces[i]),
+                     getImgType(&faces[i]), faces[i].data);
+        ilA_img_free(faces[i]);
     }
+    free(faces);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 }
 
-void ilG_tex_loadcube(ilG_tex *self, struct ilA_img *faces[6])
+void ilG_tex_loadcube(ilG_tex *self, struct ilA_img faces[6])
 {
-    ilA_img **ctx = calloc(6, sizeof(ilA_img*));
-    memcpy(ctx, faces, sizeof(ilA_img*) * 6);
+    ilA_img *ctx = calloc(6, sizeof(ilA_img));
+    memcpy(ctx, faces, sizeof(ilA_img) * 6);
     self->target = GL_TEXTURE_CUBE_MAP;
     self->data = ctx;
     self->build = tex_cube_build;
 }
 
-void ilG_tex_loadimage(ilG_tex *self, struct ilA_img *img)
+void ilG_tex_loadimage(ilG_tex *self, struct ilA_img img)
 {
     GLenum format, internalformat, type;
 
-    format = getImgFormat(img);
-    type = getImgType(img);
-    internalformat = getImgIFormat(img);
-    ilG_tex_loaddata(self, GL_TEXTURE_2D, internalformat, img->width, img->height, 1, format, type, img->data);
+    format = getImgFormat(&img);
+    type = getImgType(&img);
+    internalformat = getImgIFormat(&img);
+    ilG_tex_loaddata(self, GL_TEXTURE_2D, internalformat,
+                     img.width, img.height, 1,
+                     format, type, img.data);
 }
 
 struct data_ctx {
@@ -194,4 +198,3 @@ void ilG_tex_build(ilG_tex *self, struct ilG_context *context)
     self->build(self, context);
     self->complete = 1;
 }
-
