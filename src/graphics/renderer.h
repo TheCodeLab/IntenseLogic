@@ -4,12 +4,8 @@
 #include "util/storage.h"
 #include "math/matrix.h"
 
-struct ilG_material;
-struct ilG_drawable3d;
 struct ilG_context;
 struct ilG_renderer;
-struct ilG_tex;
-struct il_mat;
 
 #define il_pair(name, fst, snd) typedef struct name {fst first; snd second;} name
 
@@ -117,16 +113,7 @@ typedef struct ilG_rendermanager {
 } ilG_rendermanager;
 
 void ilG_rendermanager_free(ilG_rendermanager *rm);
-
-typedef struct ilG_legacy ilG_legacy;
-#define ilG_legacy_builder(p) ilG_builder_wrap(p, ilG_legacy_build)
-ilG_legacy *ilG_legacy_new(struct ilG_drawable3d *dr, struct ilG_material *mtl);
-void ilG_legacy_addTexture(ilG_legacy *self, struct ilG_tex tex);
-void ilG_legacy_addMatrix(ilG_legacy *self, unsigned loc, int type);
-bool ilG_legacy_build(void *ptr, ilG_rendid id, struct ilG_context *context, ilG_buildresult *out);
-
 ilG_builder ilG_builder_wrap(void *obj, const ilG_build_fn build);
-
 ilG_handle ilG_build(ilG_builder self, struct ilG_context *context);
 ilG_cosysid ilG_coordsys_build(ilG_coordsys_builder self, struct ilG_context *context);
 void ilG_handle_destroy(ilG_handle self);
