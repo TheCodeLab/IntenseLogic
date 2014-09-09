@@ -13,131 +13,81 @@
 #include "util/array.h"
 #include "util/log.h"
 
-struct textureunit {
-    char *location;
-    GLint uniform;
-    unsigned long type;
-};
-
-struct ilG_material_config {
-    IL_ARRAY(struct textureunit,) texunits;
-    bool file;
-    il_string vertsource, fragsource;
-    ilA_map vertfile, fragfile;
-    char* attriblocs[ILG_ARRATTR_NUMATTRS];
-    char* fraglocs[ILG_FRAGDATA_NUMATTRS];
-};
-
 char *strdup(const char*);
 
 void ilG_material_init(ilG_material *mtl)
 {
     memset(mtl, 0, sizeof(ilG_material));
-    mtl->config = calloc(1, sizeof(struct ilG_material_config));
-}
-
-static void free_old_vert(struct ilG_material_config *config)
-{
-    if (config->vertsource.str && config->file) {
-        ilA_unmapfile(&config->vertfile);
-    } else if (config->vertsource.str) {
-        free(config->vertsource.str);
-    }
-    config->vertsource.str = NULL;
-}
-
-static void free_old_frag(struct ilG_material_config *config)
-{
-    if (config->fragsource.str && config->file) {
-        ilA_unmapfile(&config->fragfile);
-    } else if (config->fragsource.str) {
-        free(config->fragsource.str);
-    }
-    config->fragsource.str = NULL;
 }
 
 void ilG_material_free(ilG_material *self)
 {
-    IL_FREE(self->config->texunits);
-    free_old_vert(self->config);
-    free_old_frag(self->config);
-    for (unsigned i = 0; i < ILG_FRAGDATA_NUMATTRS; i++) {
-        free(self->config->attriblocs[i]);
-        free(self->config->fraglocs[i]);
+    for (unsigned i = 0; i < self->texunits.length; i++) {
+        free(self->texunits.data[i].location);
     }
-    free(self->config);
-    free(self->name);
+    IL_FREE(self->texunits);
+    for (unsigned i = 0; i < ILG_FRAGDATA_NUMATTRS; i++) {
+        free(self->attriblocs[i]);
+        free(self->fraglocs[i]);
+    }
     glDeleteShader(self->vertshader);
     glDeleteShader(self->fragshader);
     glDeleteProgram(self->program);
+    ilA_fileclose(&self->vert);
+    ilA_fileclose(&self->frag);
 }
 
-void ilG_material_vertex(ilG_material* self, il_string source)
+void ilG_material_name(ilG_material *self, const char *name)
 {
-    free_old_vert(self->config);
-    self->config->vertsource = source;
-    self->config->file = false;
+    strncpy(self->name, name, 63);
 }
 
-void ilG_material_vertex_file(ilG_material *self, const char *filename)
+void ilG_material_vertex(ilG_material* self, ilA_file file)
 {
-    free_old_vert(self->config);
-    ilA_map map;
-    if (!ilA_mapfile(&ilG_shaders, &map, ILA_READ, filename, -1)) {
-        ilA_printerror(&map.err);
-        self->config->vertsource.str = NULL;
-        return;
+    self->vert = file;
+}
+
+bool ilG_material_vertex_file(ilG_material *self, const char *filename, char **error)
+{
+    bool res = ilA_fileopen(&ilG_shaders, &self->vert, filename, -1);
+    if (!res && error) {
+        *error = ilA_strerrora(&self->vert.err, NULL);
     }
-    self->config->vertsource = (il_string){map.data, map.size};
-    self->config->vertfile = map;
-    self->config->file = true;
+    return res;
 }
 
-void ilG_material_fragment(ilG_material* self, il_string source)
+void ilG_material_fragment(ilG_material* self, ilA_file file)
 {
-    free_old_frag(self->config);
-    self->config->fragsource = source;
-    self->config->file = false;
+    self->frag = file;
 }
 
-void ilG_material_fragment_file(ilG_material *self, const char *filename)
+bool ilG_material_fragment_file(ilG_material *self, const char *filename, char **error)
 {
-    free_old_frag(self->config);
-    ilA_map map;
-    if (!ilA_mapfile(&ilG_shaders, &map, ILA_READ, filename, -1)) {
-        ilA_printerror(&map.err);
-        self->config->fragsource.str = NULL;
-        return;
+    bool res = ilA_fileopen(&ilG_shaders, &self->frag, filename, -1);
+    if (!res && error) {
+        *error = ilA_strerrora(&self->frag.err, NULL);
     }
-    self->config->fragsource = (il_string){map.data, map.size};
-    self->config->fragfile = map;
-    self->config->file = true;
-}
-
-
-void ilG_material_name(ilG_material* self, const char* name)
-{
-    self->name = strdup(name);
+    return res;
 }
 
 void ilG_material_arrayAttrib(ilG_material* self, unsigned long attrib, const char *location)
 {
-    self->config->attriblocs[attrib] = strdup(location);
+    self->attriblocs[attrib] = strdup(location);
 }
 
 void ilG_material_fragData(ilG_material* self, unsigned long attrib, const char *location)
 {
-    self->config->fraglocs[attrib] = strdup(location);
+    self->fraglocs[attrib] = strdup(location);
 }
 
 void ilG_material_textureUnit(ilG_material* self, unsigned long unittype, const char *location)
 {
-    struct textureunit unit = (struct textureunit){
+    ilG_material_texunit unit = (ilG_material_texunit){
         strdup(location),
-        0,//glGetUniformLocation(self->program, location),
+        0,
         unittype
     };
-    IL_APPEND(self->config->texunits, unit);
+    IL_APPEND(self->texunits, unit);
 }
 
 GLuint ilG_material_getLoc(ilG_material *self, const char *location)
@@ -151,8 +101,8 @@ void ilG_material_bind(ilG_material *mtl)
     glUseProgram(mtl->program);
     tgl_check("glUseProgram()");
     unsigned int i;
-    for (i = 0; i < mtl->config->texunits.length; i++) {
-        glUniform1i(mtl->config->texunits.data[i].uniform, i);
+    for (i = 0; i < mtl->texunits.length; i++) {
+        glUniform1i(mtl->texunits.data[i].uniform, i);
         tgl_check("glUniform1i()");
     }
 }
@@ -163,73 +113,73 @@ void ilG_material_bindMatrix(ilG_material* self, GLuint loc, il_mat m)
     glUniformMatrix4fv(loc, 1, GL_TRUE, m.data);
 }
 
-static void link_shader(ilG_material *self)
+bool ilG_material_link(ilG_material *self, ilG_context *context, char **error)
 {
+    (void)context;
     tgl_check("Unknown");
     il_log("Building shader \"%s\"", self->name);
-    il_string vs = self->config->vertsource, fs = self->config->fragsource;
-    if (!vs.str || !fs.str) {
-        il_error("No source");
-        self->valid = 0;
-        return;
-    }
-    if (!tgl_make_shader(&self->vertshader, GL_VERTEX_SHADER, vs.str, vs.len)) {
-        self->valid = 0;
-        return;
-    }
-    if (!tgl_make_shader(&self->fragshader, GL_FRAGMENT_SHADER, fs.str, fs.len)) {
-        self->valid = 0;
-        return;
-    }
-    self->program = glCreateProgram();
-    if (TGL_EXTENSION(KHR_debug) && self->name) {
-        if (self->config->file) {
-            glObjectLabel(GL_SHADER,
-                          self->vertshader,
-                          self->config->vertfile.namelen,
-                          self->config->vertfile.name);
-            glObjectLabel(GL_SHADER,
-                          self->fragshader,
-                          self->config->fragfile.namelen,
-                          self->config->fragfile.name);
+    ilA_map vert, frag;
+    if (!ilA_mapopen(&vert, ILA_READ, self->vert)) {
+        if (error) {
+            *error = ilA_strerrora(&vert.err, NULL);
         }
-        glObjectLabel(GL_PROGRAM, self->program, strlen(self->name), self->name);
+        return false;
     }
-    glAttachShader(self->program, self->vertshader);
-    glAttachShader(self->program, self->fragshader);
+    if (!ilA_mapopen(&frag, ILA_READ, self->frag)) {
+        if (error) {
+            *error = ilA_strerrora(&frag.err, NULL);
+        }
+        return false;
+    }
+    GLuint vo, fo, po;
+    char *vs = vert.data, *fs = frag.data;
+    size_t vl = vert.size, fl = frag.size;
+    if (!tgl_make_shader(&vo, GL_VERTEX_SHADER, vs, vl, error)) {
+        return false;
+    }
+    if (!tgl_make_shader(&fo, GL_FRAGMENT_SHADER, fs, fl, error)) {
+        return false;
+    }
+    ilA_unmapfile(&vert);
+    ilA_unmapfile(&frag);
+    po = glCreateProgram();
+    if (TGL_EXTENSION(KHR_debug) && self->name) {
+        glObjectLabel(GL_SHADER,
+                      vo,
+                      self->vert.namelen,
+                      self->vert.name);
+        glObjectLabel(GL_SHADER,
+                      fo,
+                      self->frag.namelen,
+                      self->frag.name);
+        glObjectLabel(GL_PROGRAM, po, strlen(self->name), self->name);
+    }
+    glAttachShader(po, vo);
+    glAttachShader(po, fo);
     tgl_check("glAttachShader");
     unsigned int i;
     for (i = 0; i < ILG_ARRATTR_NUMATTRS; i++) {
-        if (self->config->attriblocs[i]) {
-            glBindAttribLocation(self->program, i, self->config->attriblocs[i]);
-            ILG_SETATTR(self->attrs, i);
+        if (self->attriblocs[i]) {
+            glBindAttribLocation(po, i, self->attriblocs[i]);
         }
     }
     tgl_check("Error binding array attributes");
     for (i = 0; i < ILG_FRAGDATA_NUMATTRS; i++) {
-        if (self->config->fraglocs[i]) {
-            glBindFragDataLocation(self->program, i, self->config->fraglocs[i]);
+        if (self->fraglocs[i]) {
+            glBindFragDataLocation(po, i, self->fraglocs[i]);
         }
     }
     tgl_check("Error binding fragment outputs");
-    tgl_link_program(self->program);
-    for (i = 0; i < self->config->texunits.length; i++) {
-        self->config->texunits.data[i].uniform = glGetUniformLocation(self->program, self->config->texunits.data[i].location);
+    if (!tgl_link_program(po, error)) {
+        return false;
+    }
+    for (i = 0; i < self->texunits.length; i++) {
+        self->texunits.data[i].uniform = glGetUniformLocation(po, self->texunits.data[i].location);
     }
     tgl_check("Error binding texture units");
+    self->vertshader = vo;
+    self->fragshader = fo;
+    self->program = po;
 
-    self->valid = 1;
-}
-
-int /*failure*/ ilG_material_link(ilG_material* self, ilG_context *ctx)
-{
-    if (!ctx) {
-        il_error("Null context");
-    }
-    if (!self) {
-        il_error("Null material");
-    }
-    self->context = ctx;
-    link_shader(self);
-    return !self->valid;
+    return true;
 }

@@ -12,18 +12,18 @@
 
 typedef struct ilG_heightmap {
     ilG_tex height, normal, color;
-    ilG_material shader;
+    ilG_matid mat;
     ilA_mesh *source;
     ilG_mesh mesh;
-    ilG_context *context;
     unsigned w,h;
+    ilG_context *context;
     GLenum mvp, imt, size;
 } ilG_heightmap;
 
 static void heightmap_free(void *ptr)
 {
     ilG_heightmap *self = ptr;
-    ilG_material_free(&self->shader);
+    ilG_context_delMaterial(self->context, self->mat);
     free(self);
 }
 
@@ -35,10 +35,11 @@ static void heightmap_draw(void *ptr, ilG_rendid id, il_mat **mats, const unsign
     ilG_tex_bind(&self->normal);
     ilG_tex_bind(&self->color);
     ilG_mesh_bind(&self->mesh);
-    ilG_material_bind(&self->shader);
+    ilG_material *shader = ilG_context_findMaterial(self->context, self->mat);
+    ilG_material_bind(shader);
     for (unsigned i = 0; i < num_mats; i++) {
-        ilG_material_bindMatrix(&self->shader, self->mvp, mats[0][i]);
-        ilG_material_bindMatrix(&self->shader, self->imt, mats[1][i]);
+        ilG_material_bindMatrix(shader, self->mvp, mats[0][i]);
+        ilG_material_bindMatrix(shader, self->imt, mats[1][i]);
         glUniform2f(self->size, self->w, self->h);
         ilG_mesh_draw(&self->mesh);
     }
@@ -52,12 +53,33 @@ static bool heightmap_build(void *ptr, ilG_rendid id, ilG_context *context, ilG_
     ilG_tex_build(&self->height, context);
     ilG_tex_build(&self->normal, context);
     ilG_tex_build(&self->color, context);
-    if (ilG_material_link(&self->shader, context)) {
+
+    ilG_material mat;
+    ilG_material_init(&mat);
+    ilG_material_name(&mat, "Heightmap Shader");
+    ilG_material_arrayAttrib(&mat, ILG_MESH_POS, "in_Position");
+    ilG_material_arrayAttrib(&mat, ILG_MESH_TEX, "in_Texcoord");
+    ilG_material_textureUnit(&mat, 0, "height_tex");
+    ilG_material_textureUnit(&mat, 1, "normal_tex");
+    ilG_material_textureUnit(&mat, 2, "ambient_tex");
+    ilG_material_fragData(&mat, ILG_FRAGDATA_ACCUMULATION, "out_Ambient");
+    ilG_material_fragData(&mat, ILG_FRAGDATA_NORMAL, "out_Normal");
+    ilG_material_fragData(&mat, ILG_FRAGDATA_DIFFUSE, "out_Diffuse");
+    ilG_material_fragData(&mat, ILG_FRAGDATA_SPECULAR, "out_Specular");
+    if (!ilG_material_vertex_file(&mat, "heightmap.vert", &out->error)) {
         return false;
     }
-    self->mvp = ilG_material_getLoc(&self->shader, "mvp");
-    self->imt = ilG_material_getLoc(&self->shader, "imt");
-    self->size = ilG_material_getLoc(&self->shader, "size");
+    if (!ilG_material_fragment_file(&mat, "heightmap.frag", &out->error)) {
+        return false;
+    }
+    if (!ilG_material_link(&mat, context, &out->error)) {
+        return false;
+    }
+    self->mat = ilG_context_addMaterial(context, mat);
+    self->mvp = ilG_material_getLoc(&mat, "mvp");
+    self->imt = ilG_material_getLoc(&mat, "imt");
+    self->size = ilG_material_getLoc(&mat, "size");
+
     if (!ilG_mesh_init(&self->mesh, self->source)) {
         ilA_mesh_free(self->source);
         return false;
@@ -127,21 +149,6 @@ ilG_builder ilG_heightmap_builder(unsigned w, unsigned h, ilG_tex height, ilG_te
     self->normal = normal;
     self->color = color;
     self->source = mesh;
-
-    ilG_material_init(&self->shader);
-    ilG_material *mat = &self->shader;
-    ilG_material_vertex_file(mat, "heightmap.vert");
-    ilG_material_fragment_file(mat, "heightmap.frag");
-    ilG_material_name(mat, "Heightmap Shader");
-    ilG_material_arrayAttrib(mat, ILG_MESH_POS, "in_Position");
-    ilG_material_arrayAttrib(mat, ILG_MESH_TEX, "in_Texcoord");
-    ilG_material_textureUnit(mat, 0, "height_tex");
-    ilG_material_textureUnit(mat, 1, "normal_tex");
-    ilG_material_textureUnit(mat, 2, "ambient_tex");
-    ilG_material_fragData(mat, ILG_FRAGDATA_ACCUMULATION, "out_Ambient");
-    ilG_material_fragData(mat, ILG_FRAGDATA_NORMAL, "out_Normal");
-    ilG_material_fragData(mat, ILG_FRAGDATA_DIFFUSE, "out_Diffuse");
-    ilG_material_fragData(mat, ILG_FRAGDATA_SPECULAR, "out_Specular");
 
     return ilG_builder_wrap(self, heightmap_build);
 }

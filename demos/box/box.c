@@ -63,30 +63,32 @@ static const float cube[] = {
     1.0, -1.0,  1.0,
 };
 
-struct box {
-    ilG_material mat;
+typedef struct box {
+    ilG_context *context;
+    ilG_matid mat;
     GLuint vbo, vao;
     GLuint pos_loc;
     GLuint mvp_loc;
-};
+} box;
 
 static void box_draw(void *obj, ilG_rendid id, il_mat **mats, const unsigned *objects, unsigned num_mats)
 {
     (void)id, (void)objects;
-    struct box *b = obj;
-    ilG_material_bind(&b->mat);
+    box *b = obj;
+    ilG_material *mat = ilG_context_findMaterial(b->context, b->mat);
+    ilG_material_bind(mat);
     glBindVertexArray(b->vao);
     glBindBuffer(GL_ARRAY_BUFFER, b->vbo);
     for (unsigned i = 0; i < num_mats; i++) {
-        ilG_material_bindMatrix(&b->mat, b->mvp_loc, mats[0][i]);
+        ilG_material_bindMatrix(mat, b->mvp_loc, mats[0][i]);
         glDrawArrays(GL_TRIANGLES, 0, 36);
     }
 }
 
 static void box_free(void *obj)
 {
-    struct box *b = obj;
-    ilG_material_free(&b->mat);
+    box *b = obj;
+    ilG_context_delMaterial(b->context, b->mat);
     glDeleteBuffers(1, &b->vao);
     glDeleteBuffers(1, &b->vbo);
     free(b);
@@ -95,12 +97,27 @@ static void box_free(void *obj)
 static bool box_build(void *obj, ilG_rendid id, ilG_context *context, ilG_buildresult *out)
 {
     (void)id;
-    struct box *b = obj;
-    if (ilG_material_link(&b->mat, context)) {
+    box *b = obj;
+    b->context = context;
+
+    ilG_material m;
+    ilG_material_init(&m);
+    ilG_material_name(&m, "Box Shader");
+    ilG_material_fragData(&m, ILG_FRAGDATA_ACCUMULATION, "out_Color");
+    ilG_material_arrayAttrib(&m, 0, "in_Position");
+    if (!ilG_material_vertex_file(&m, "box.vert", &out->error)) {
         return false;
     }
-    b->pos_loc = ilG_material_getLoc(&b->mat, "in_Position");
-    b->mvp_loc = ilG_material_getLoc(&b->mat, "mvp");
+    if (!ilG_material_fragment_file(&m, "box.frag", &out->error)) {
+        return false;
+    }
+    if (!ilG_material_link(&m, context, &out->error)) {
+        return false;
+    }
+    b->pos_loc = ilG_material_getLoc(&m, "in_Position");
+    b->mvp_loc = ilG_material_getLoc(&m, "mvp");
+    b->mat = ilG_context_addMaterial(context, m);
+
     glGenBuffers(1, &b->vbo);
     glGenVertexArrays(1, &b->vao);
     glBindBuffer(GL_ARRAY_BUFFER, b->vbo);
@@ -122,14 +139,7 @@ static bool box_build(void *obj, ilG_rendid id, ilG_context *context, ilG_buildr
 
 static ilG_builder box_builder()
 {
-    struct box *b = calloc(1, sizeof(struct box));
-    ilG_material_init(&b->mat);
-    ilG_material_vertex_file(&b->mat, "box.vert");
-    ilG_material_fragment_file(&b->mat, "box.frag");
-    ilG_material_name(&b->mat, "Box Shader");
-    ilG_material_fragData(&b->mat, ILG_FRAGDATA_ACCUMULATION, "out_Color");
-    ilG_material_arrayAttrib(&b->mat, 0, "in_Position");
-
+    box *b = calloc(1, sizeof(struct box));
     return ilG_builder_wrap(b, box_build);
 }
 

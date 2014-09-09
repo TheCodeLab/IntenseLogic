@@ -16,28 +16,20 @@ extern "C" {
 }
 
 DebugDraw::DebugDraw()
-{
-    debugMode = DBG_DrawAabb;
-    ilG_material_init(&this->mat);
-    ilG_material *mat = &this->mat;
-    ilG_material_vertex_file(mat, "bullet-debug.vert");
-    ilG_material_fragment_file(mat, "bullet-debug.frag");
-    ilG_material_name(mat, "Bullet Line Renderer");
-    ilG_material_arrayAttrib(mat, ILG_ARRATTR_POSITION, "in_Position");
-    ilG_material_arrayAttrib(mat, ILG_ARRATTR_AMBIENT, "in_Ambient");
-    ilG_material_fragData(mat, ILG_FRAGDATA_ACCUMULATION, "out_Color");
-    count = 0;
-}
+    : debugMode(DBG_DrawAabb),
+      count(0)
+{}
 
 void DebugDraw::view(void *ptr, ilG_rendid id, il_mat *mats)
 {
     (void)id;
     DebugDraw *self = reinterpret_cast<DebugDraw*>(ptr);
+    ilG_material *mat = ilG_context_findMaterial(self->context, self->mat);
     glDisable(GL_BLEND);
     glDisable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);
-    ilG_material_bind(&self->mat);
-    ilG_material_bindMatrix(&self->mat, self->vp_loc, mats[0]);
+    ilG_material_bind(mat);
+    ilG_material_bindMatrix(mat, self->vp_loc, mats[0]);
     glBindVertexArray(self->vao);
     glBindBuffer(GL_ARRAY_BUFFER, self->vbo);
     glDrawArrays(GL_LINES, 0, self->count);
@@ -46,6 +38,7 @@ void DebugDraw::view(void *ptr, ilG_rendid id, il_mat *mats)
 void DebugDraw::free(void *ptr)
 {
     DebugDraw *debugdraw = reinterpret_cast<DebugDraw*>(ptr);
+    ilG_context_delMaterial(debugdraw->context, debugdraw->mat);
     delete debugdraw;
 }
 
@@ -56,10 +49,23 @@ bool DebugDraw::build(void *ptr, ilG_rendid id, ilG_context *context, ilG_buildr
 
     self->context = context;
 
-    if (ilG_material_link(&self->mat, context)) {
+    ilG_material m;
+    ilG_material_init(&m);
+    ilG_material_name(&m, "Bullet Line Renderer");
+    ilG_material_arrayAttrib(&m, ILG_ARRATTR_POSITION, "in_Position");
+    ilG_material_arrayAttrib(&m, ILG_ARRATTR_AMBIENT, "in_Ambient");
+    ilG_material_fragData(&m, ILG_FRAGDATA_ACCUMULATION, "out_Color");
+    if (!ilG_material_vertex_file(&m, "bullet-debug.vert", &out->error)) {
         return false;
     }
-    self->vp_loc = ilG_material_getLoc(&self->mat, "vp");
+    if (!ilG_material_fragment_file(&m, "bullet-debug.frag", &out->error)) {
+        return false;
+    }
+    if (!ilG_material_link(&m, context, &out->error)) {
+        return false;
+    }
+    self->vp_loc = ilG_material_getLoc(&m, "vp");
+    self->mat = ilG_context_addMaterial(context, m);
 
     glGenBuffers(1, &self->vbo);
     glGenVertexArrays(1, &self->vao);

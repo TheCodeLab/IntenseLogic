@@ -165,6 +165,7 @@ ilG_msgsink     *ilG_context_findSink           (ilG_context *self, ilG_rendid i
 il_table        *ilG_context_findStorage        (ilG_context *self, ilG_rendid id);
 const char      *ilG_context_findName           (ilG_context *self, ilG_rendid id);
 const char      *ilG_context_findError          (ilG_context *self, ilG_rendid id);
+ilG_material    *ilG_context_findMaterial       (ilG_context *self, ilG_matid mat);
 unsigned ilG_context_addRenderer    (ilG_context *self, ilG_rendid id, ilG_builder builder);
 unsigned ilG_context_addSink        (ilG_context *self, ilG_rendid id, ilG_message_fn sink);
 bool ilG_context_addChild           (ilG_context *self, ilG_rendid parent, ilG_rendid child);
@@ -174,6 +175,7 @@ unsigned ilG_context_addLight       (ilG_context *self, ilG_rendid id, struct il
 unsigned ilG_context_addStorage     (ilG_context *self, ilG_rendid id);
 unsigned ilG_context_addName        (ilG_context *self, ilG_rendid id, const char *name);
 unsigned ilG_context_addCoordSys    (ilG_context *self, ilG_coordsys co);
+ilG_matid ilG_context_addMaterial   (ilG_context *self, ilG_material mat);
 bool ilG_context_delRenderer    (ilG_context *self, ilG_rendid id);
 bool ilG_context_delSink        (ilG_context *self, ilG_rendid id);
 bool ilG_context_delChild       (ilG_context *self, ilG_rendid parent, ilG_rendid child);
@@ -182,6 +184,7 @@ bool ilG_context_delLight       (ilG_context *self, ilG_rendid id, struct ilG_li
 bool ilG_context_delStorage     (ilG_context *self, ilG_rendid id);
 bool ilG_context_delName        (ilG_context *self, ilG_rendid id);
 bool ilG_context_delCoordSys    (ilG_context *self, unsigned id);
+bool ilG_context_delMaterial    (ilG_context *self, ilG_matid mat);
 /** Internal: Binds the context's internal framebuffer */
 void ilG_context_bindFB(ilG_context *self);
 /** Internal: Special case function which will be around until #ilG_context is changed to use #ilG_fbo */

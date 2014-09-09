@@ -1,6 +1,7 @@
 #include "ball.hpp"
 
 extern "C" {
+#include "graphics/context.h"
 #include "graphics/fragdata.h"
 #include "graphics/material.h"
 #include "graphics/mesh.h"
@@ -22,18 +23,19 @@ void BallRenderer::free(void *ptr)
 {
     BallRenderer &self = *reinterpret_cast<BallRenderer*>(ptr);
     ilG_mesh_free(&self.mesh);
-    ilG_material_free(&self.mat);
+    ilG_context_delMaterial(self.context, self.mat);
 }
 
 void BallRenderer::draw(void *obj, ilG_rendid id, il_mat **mats, const unsigned *objects, unsigned num_mats)
 {
     (void)id, (void)objects;
     BallRenderer &self = *reinterpret_cast<BallRenderer*>(obj);
+    ilG_material *mat = ilG_context_findMaterial(self.context, self.mat);
     ilG_mesh_bind(&self.mesh);
-    ilG_material_bind(&self.mat);
+    ilG_material_bind(mat);
     for (unsigned i = 0; i < num_mats; i++) {
-        ilG_material_bindMatrix(&self.mat, self.mvp_loc, mats[MVP][i]);
-        ilG_material_bindMatrix(&self.mat, self.imt_loc, mats[IMT][i]);
+        ilG_material_bindMatrix(mat, self.mvp_loc, mats[MVP][i]);
+        ilG_material_bindMatrix(mat, self.imt_loc, mats[IMT][i]);
         il_vec3 c = self.cols[objects[i]];
         glUniform3f(self.col_loc, c.x, c.y, c.z);
         ilG_mesh_draw(&self.mesh);
@@ -45,12 +47,29 @@ bool BallRenderer::build(void *obj, ilG_rendid id, ilG_context *context, ilG_bui
     (void)id;
     BallRenderer &b = *reinterpret_cast<BallRenderer*>(obj);
 
-    if (ilG_material_link(&b.mat, context)) {
+    b.context = context;
+
+    ilG_material m;
+    ilG_material_init(&m);
+    ilG_material_name(&m, "Ball Material");
+    ilG_material_fragData(&m, ILG_FRAGDATA_NORMAL, "out_Normal");
+    ilG_material_fragData(&m, ILG_FRAGDATA_ACCUMULATION, "out_Ambient");
+    ilG_material_fragData(&m, ILG_FRAGDATA_DIFFUSE, "out_Diffuse");
+    ilG_material_fragData(&m, ILG_FRAGDATA_SPECULAR, "out_Specular");
+    ilG_material_arrayAttrib(&m, ILG_MESH_POS, "in_Position");
+    if (!ilG_material_vertex_file(&m, "glow.vert", &out->error)) {
         return false;
     }
-    b.mvp_loc = ilG_material_getLoc(&b.mat, "mvp");
-    b.imt_loc = ilG_material_getLoc(&b.mat, "imt");
-    b.col_loc = ilG_material_getLoc(&b.mat, "col");
+    if (!ilG_material_fragment_file(&m, "glow.frag", &out->error)) {
+        return false;
+    }
+    if (!ilG_material_link(&m, context, &out->error)) {
+        return false;
+    }
+    b.mvp_loc = ilG_material_getLoc(&m, "mvp");
+    b.imt_loc = ilG_material_getLoc(&m, "imt");
+    b.col_loc = ilG_material_getLoc(&m, "col");
+    b.mat = ilG_context_addMaterial(context, m);
 
     if (!ilG_mesh_fromfile(&b.mesh, &demo_fs, "demos/bouncing-lights/sphere.obj")) {
         return false;
@@ -71,25 +90,6 @@ bool BallRenderer::build(void *obj, ilG_rendid id, ilG_context *context, ilG_bui
 }
 
 namespace BouncingLights {
-
-BallRenderer::BallRenderer()
-{
-    ilG_material *m = &mat;
-    ilG_material_init(m);
-    ilG_material_vertex_file(m, "glow.vert");
-    ilG_material_fragment_file(m, "glow.frag");
-    ilG_material_name(m, "Ball Material");
-    ilG_material_fragData(m, ILG_FRAGDATA_NORMAL, "out_Normal");
-    ilG_material_fragData(m, ILG_FRAGDATA_ACCUMULATION, "out_Ambient");
-    ilG_material_fragData(m, ILG_FRAGDATA_DIFFUSE, "out_Diffuse");
-    ilG_material_fragData(m, ILG_FRAGDATA_SPECULAR, "out_Specular");
-    ilG_material_arrayAttrib(m, ILG_MESH_POS, "in_Position");
-    /*ilG_material_arrayAttrib(m, ILG_MESH_TEX, "in_Texcoord");
-    ilG_material_arrayAttrib(m, ILG_MESH_NORM, "in_Normal");
-    ilG_material_arrayAttrib(m, ILG_MESH_DIFFUSE, "in_Diffuse");
-    ilG_material_arrayAttrib(m, ILG_MESH_SPECULAR, "in_Specular");*/
-
-}
 
 ilG_builder BallRenderer::builder()
 {

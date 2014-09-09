@@ -3,6 +3,7 @@
 
 #include "util/storage.h"
 #include "math/matrix.h"
+#include "graphics/material.h"
 
 struct ilG_context;
 struct ilG_renderer;
@@ -92,6 +93,10 @@ struct ilG_renderer {
     void *data;
 };
 
+typedef struct ilG_matid {
+    unsigned id;
+} ilG_matid;
+
 il_pair(ilG_rendstorage,ilG_rendid, il_table);
 il_pair(ilG_rendname,   ilG_rendid, unsigned);
 il_pair(ilG_error,      ilG_rendid, char*);
@@ -108,6 +113,7 @@ typedef struct ilG_rendermanager {
     IL_ARRAY(char*,)            names;
     IL_ARRAY(ilG_coordsys,)     coordsystems;
     IL_ARRAY(ilG_error,)        failed;
+    IL_ARRAY(ilG_material,)     materials;
     ilG_rendid curid;
     ilG_cosysid cursysid;
 } ilG_rendermanager;

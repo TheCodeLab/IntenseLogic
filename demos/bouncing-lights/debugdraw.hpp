@@ -21,7 +21,7 @@ struct Vertex {
 };
 
 class DebugDraw : public btIDebugDraw {
-    ilG_material mat;
+    ilG_matid mat;
     std::vector<Vertex> lines;
     GLuint vbo, vao;
     GLuint vp_loc;

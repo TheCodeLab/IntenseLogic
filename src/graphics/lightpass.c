@@ -23,16 +23,17 @@ struct ilG_lights {
     enum ilG_light_type type;
     ilG_context *context;
     GLint lights_size, mvp_size, lights_offset[3], mvp_offset[1], color_loc, radius_loc, mvp_loc, mv_loc, ivp_loc, size_loc;
-    ilG_material material;
+    ilG_matid mat;
     ilG_shape *ico;
     tgl_vao vao;
     tgl_quad quad;
+    const char *file;
 };
 
 static void lights_free(void *ptr)
 {
     ilG_lights *self = ptr;
-    ilG_material_free(&self->material);
+    ilG_context_delMaterial(self->context, self->mat);
     tgl_vao_free(&self->vao);
     tgl_quad_free(&self->quad);
     free(self);
@@ -44,7 +45,8 @@ static void lights_draw(void *ptr, ilG_rendid id, il_mat **mats, const unsigned 
     ilG_lights *self = ptr;
     const bool point = self->type == ILG_POINT;
     ilG_context *context = self->context;
-    ilG_material_bind(&self->material);
+    ilG_material *mat = ilG_context_findMaterial(context, self->mat);
+    ilG_material_bind(mat);
     glActiveTexture(GL_TEXTURE0);
     tgl_fbo_bindTex(&context->fb, ILG_CONTEXT_DEPTH);
     glActiveTexture(GL_TEXTURE0 + 1);
@@ -70,9 +72,9 @@ static void lights_draw(void *ptr, ilG_rendid id, il_mat **mats, const unsigned 
 
     ilG_renderer *r = ilG_context_findRenderer(context, id);
     for (unsigned i = 0; i < num_mats; i++) {
-        ilG_material_bindMatrix(&self->material, self->ivp_loc, mats[0][i]);
-        ilG_material_bindMatrix(&self->material, self->mv_loc,  mats[1][i]);
-        ilG_material_bindMatrix(&self->material, self->mvp_loc, mats[2][i]);
+        ilG_material_bindMatrix(mat, self->ivp_loc, mats[0][i]);
+        ilG_material_bindMatrix(mat, self->mv_loc,  mats[1][i]);
+        ilG_material_bindMatrix(mat, self->mvp_loc, mats[2][i]);
         glUniform2f(self->size_loc, context->width, context->height);
         ilG_light *l = &r->lights.data[i];
         il_vec3 col = l->color;
@@ -94,23 +96,38 @@ static bool lights_build(void *ptr, ilG_rendid id, ilG_context *context, ilG_bui
 {
     (void)id;
     ilG_lights *self = ptr;
-
-    ilG_material_fragment_file(&self->material, context->msaa? "light_msaa.frag" : "light.frag");
-
     self->context = context;
-    if (ilG_material_link(&self->material, context)) {
+
+    ilG_material m;
+    ilG_material_init(&m);
+    ilG_material_name(&m, "Deferred Lighting Shader");
+    ilG_material_arrayAttrib(&m, ILG_ARRATTR_POSITION, "in_Position");
+    ilG_material_textureUnit(&m, 0, "depth");
+    ilG_material_textureUnit(&m, 1, "normal");
+    ilG_material_textureUnit(&m, 2, "diffuse");
+    ilG_material_textureUnit(&m, 3, "specular");
+    ilG_material_fragData(&m, ILG_FRAGDATA_ACCUMULATION, "out_Color");
+    if (!ilG_material_vertex_file(&m, self->file, &out->error)) {
         return false;
     }
+    if (!ilG_material_fragment_file(&m, context->msaa? "light_msaa.frag" : "light.frag", &out->error)) {
+        return false;
+    }
+    if (!ilG_material_link(&m, context, &out->error)) {
+        return false;
+    }
+    self->color_loc     = glGetUniformLocation(m.program, "color");
+    self->radius_loc    = glGetUniformLocation(m.program, "radius");
+    self->mvp_loc       = glGetUniformLocation(m.program, "mvp");
+    self->mv_loc        = glGetUniformLocation(m.program, "mv");
+    self->ivp_loc       = glGetUniformLocation(m.program, "ivp");
+    self->size_loc      = glGetUniformLocation(m.program, "size");
+    self->mat = ilG_context_addMaterial(context, m);
+
     self->ico = ilG_icosahedron(context);
     tgl_vao_init(&self->vao);
     tgl_vao_bind(&self->vao);
     tgl_quad_init(&self->quad, ILG_ARRATTR_POSITION);
-    self->color_loc     = glGetUniformLocation(self->material.program, "color");
-    self->radius_loc    = glGetUniformLocation(self->material.program, "radius");
-    self->mvp_loc       = glGetUniformLocation(self->material.program, "mvp");
-    self->mv_loc        = glGetUniformLocation(self->material.program, "mv");
-    self->ivp_loc       = glGetUniformLocation(self->material.program, "ivp");
-    self->size_loc      = glGetUniformLocation(self->material.program, "size");
 
     int *types = malloc(sizeof(int) * 3);
     types[0] = ILG_INVERSE | ILG_VIEW_R | ILG_PROJECTION;
@@ -129,36 +146,18 @@ static bool lights_build(void *ptr, ilG_rendid id, ilG_context *context, ilG_bui
     return true;
 }
 
-static ilG_lights *make_lights()
-{
-    ilG_lights *self = calloc(1, sizeof(ilG_lights));
-    ilG_material_init(&self->material);
-    ilG_material* mtl = &self->material;
-    ilG_material_arrayAttrib(mtl, ILG_ARRATTR_POSITION, "in_Position");
-    ilG_material_textureUnit(mtl, 0, "depth");
-    ilG_material_textureUnit(mtl, 1, "normal");
-    ilG_material_textureUnit(mtl, 2, "diffuse");
-    ilG_material_textureUnit(mtl, 3, "specular");
-    ilG_material_fragData(mtl, ILG_FRAGDATA_ACCUMULATION, "out_Color");
-    return self;
-}
-
 ilG_builder ilG_pointlight_builder()
 {
-    ilG_lights *self = make_lights();
-    ilG_material *mtl = &self->material;
+    ilG_lights *self = calloc(1, sizeof(ilG_lights));
     self->type = ILG_POINT;
-    ilG_material_vertex_file(mtl, "light.vert");
-    ilG_material_name(mtl, "Deferred Point Shader");
+    self->file = "light.vert";
     return ilG_builder_wrap(self, lights_build);
 }
 
 ilG_builder ilG_sunlight_builder()
 {
-    ilG_lights *self = make_lights();
-    ilG_material *mtl = &self->material;
+    ilG_lights *self = calloc(1, sizeof(ilG_lights));
     self->type = ILG_SUN;
-    ilG_material_vertex_file(mtl, "id2d.vert");
-    ilG_material_name(mtl, "Deferred Sunlight Shader");
+    self->file = "id2d.vert";
     return ilG_builder_wrap(self, lights_build);
 }

@@ -14,6 +14,7 @@
 #include "util/log.h"
 
 #ifdef WIN32
+char *strndup(const char*, size_t);
 #define last_error GetLastError()
 #else
 #define last_error errno
@@ -149,6 +150,38 @@ static bool node_open(ilA_filehandle *handle,
     return true;
 }
 
+bool ilA_fileopen(ilA_fs *fs, ilA_file *file, const char *name, ssize_t namelen)
+{
+    memset(file, 0, sizeof(ilA_file));
+    if (namelen < 0) {
+        namelen = strlen(name);
+    }
+    for (unsigned i = 0; i < fs->dirs.length; i++) {
+        if (!node_test(&file->err, fs->dirs.data[i].dir, name, (size_t)namelen)) {
+            continue;
+        }
+        if (!ilA_dir_fileopen(fs, (ilA_dirid){i}, file, name, namelen)) {
+            continue;
+        }
+        return true;
+    }
+    format_error(file->err, __func__, "No such file \"%s\"", name);
+}
+
+void ilA_fileclose(ilA_file *file)
+{
+#ifdef WIN32
+    CloseHandle(file->handle);
+#else
+    if (file->err.type == ILA_STRERR) {
+        free(file->err.val.str);
+    } else if (file->err.type == ILA_NOERR) {
+        free(file->name);
+        close(file->handle);
+    }
+#endif
+}
+
 bool ilA_mapfile(ilA_fs *fs, ilA_map *map, ilA_file_mode mode, const char *name, ssize_t namelen)
 {
      memset(map, 0, sizeof(ilA_map));
@@ -167,7 +200,21 @@ bool ilA_mapfile(ilA_fs *fs, ilA_map *map, ilA_file_mode mode, const char *name,
      format_error(map->err, __func__, "No such file \"%s\"", name);
 }
 
-char *strndup(const char*, size_t);
+bool ilA_dir_fileopen(ilA_fs *fs, ilA_dirid id, ilA_file *file, const char *name, ssize_t namelen)
+{
+    memset(file, 0, sizeof(ilA_file));
+    ilA_dir *dir = &fs->dirs.data[id.id];
+    if (namelen < 0) {
+        namelen = strlen(name);
+    }
+    if (!node_open(&file->handle, &file->err, dir->dir, name, (size_t)namelen, ILA_READ)) {
+        return false;
+    }
+    file->name = strndup(name, (size_t)namelen);
+    file->namelen = (size_t)namelen;
+    return true;
+}
+
 bool ilA_dir_mapfile(ilA_fs *fs, ilA_dirid id, ilA_map *map, ilA_file_mode mode, const char *name, ssize_t namelen)
 {
     memset(map, 0, sizeof(ilA_map));
@@ -202,6 +249,7 @@ bool ilA_dir_mapfile(ilA_fs *fs, ilA_dirid id, ilA_map *map, ilA_file_mode mode,
     };
     DWORD prot = prot_table[mode & ILA_RWE];
     DWORD oflag = oflag_table[mode & ILA_RWE];
+
     LARGE_INTEGER size;
     errno_check(map->err, GetFileSizeEx(fh, &size));
     map->size = (size_t)size.QuadPart;
@@ -236,6 +284,90 @@ bool ilA_dir_mapfile(ilA_fs *fs, ilA_dirid id, ilA_map *map, ilA_file_mode mode,
 #endif
     map->name = strndup(name, (size_t)namelen);
     map->namelen = (size_t)namelen;
+    map->mode = mode;
+    return true;
+}
+
+bool ilA_mapopen(ilA_map *map, ilA_file_mode mode, ilA_file file)
+{
+    memset(map, 0, sizeof(ilA_map));
+#ifdef WIN32
+    static const int prot_table[] = {
+        -1,                     // 0b000
+        PAGE_READONLY,          // 0b001
+        PAGE_WRITECOPY,         // 0b010
+        PAGE_READWRITE,         // 0b011
+        -1,                     // 0b100
+        PAGE_EXECUTE_READ,      // 0b101
+        PAGE_EXECUTE_WRITECOPY, // 0b110
+        PAGE_EXECUTE_READWRITE  // 0b111
+    };
+    static const int oflag_table[] = {
+        -1,
+        FILE_MAP_READ,
+        FILE_MAP_WRITE,
+        FILE_MAP_READ|FILE_MAP_WRITE,
+        FILE_MAP_EXECUTE,
+        FILE_MAP_READ|FILE_MAP_EXECUTE,
+        FILE_MAP_WRITE|FILE_MAP_EXECUTE,
+        FILE_MAP_READ|FILE_MAP_WRITE|FILE_MAP_EXECUTE
+    };
+    static const int flag_table[] = {
+        -1,
+        GENERIC_READ,
+        GENERIC_WRITE,
+        GENERIC_READ|GENERIC_WRITE,
+        GENERIC_EXECUTE,
+        GENERIC_READ|GENERIC_EXECUTE,
+        GENERIC_WRITE|GENERIC_EXECUTE,
+        GENERIC_READ|GENERIC_WRITE|GENERIC_EXECUTE
+    };
+    DWORD prot = prot_table[mode & ILA_RWE];
+    DWORD oflag = oflag_table[mode & ILA_RWE];
+    DWORD access = flag_table[mode & ILA_RWE];
+    bool res = DuplicateHandle
+        (GetCurrentProcess(),
+         file.handle,
+         GetCurrentProcess(),
+         &map->h.fhandle,
+         access,
+         TRUE, // can be inherited
+         0); // options
+    errno_check2(map->err, "DuplicateHandle", !res);
+LARGE_INTEGER size;
+    errno_check(map->err, GetFileSizeEx(map->h.fhandle, &size));
+    map->size = (size_t)size.QuadPart;
+    map->h.mhandle = CreateFileMapping(map->h.fhandle, NULL, prot, size.u.HighPart, size.u.LowPart, NULL);
+    errno_check2(map->err, "CreateFileMapping", !map->h.mhandle);
+    map->data = MapViewOfFile(map->h.mhandle, oflag, 0, 0, 0);
+    errno_check2(map->err, "MapViewOfFile", !map->data);
+#else
+    map->h = dup(file.handle);
+    errno_check2(map->err, "dup", map->h == -1);
+    struct stat s;
+    if (fstat(map->h, &s) != 0) {
+        map->err.type = ILA_ERRNOERR;
+        map->err.func = "fstat";
+        map->err.val.err = errno;
+        return false;
+    }
+    map->size = s.st_size;
+    static const int prot_table[] = {   // 0bRWE
+        PROT_NONE,                      // 0b000
+        PROT_READ,                      // 0b001
+        PROT_WRITE,                     // 0b010
+        PROT_READ|PROT_WRITE,           // 0b011
+        PROT_EXEC,                      // 0b100
+        PROT_READ|PROT_EXEC,            // 0b101 EXEC READ
+        PROT_WRITE|PROT_EXEC,           // 0b110 EXEC WRITE
+        PROT_READ|PROT_WRITE|PROT_EXEC, // 0b111 EXEC READ WRITE
+    };
+    int prot = prot_table[mode & ILA_RWE];
+    map->data = mmap(NULL, map->size, prot, MAP_SHARED, map->h, 0);
+    errno_check2(map->err, "mmap", map->data == MAP_FAILED);
+#endif
+    map->name = strndup(file.name, file.namelen);
+    map->namelen = file.namelen;
     map->mode = mode;
     return true;
 }
@@ -337,26 +469,40 @@ void ilA_lookup(ilA_fs *fs, const char *pattern, ssize_t patlen, void (*cb)(void
     assert(!"ilA_lookup unimplemented");
 }
 
-void ilA_strerror(ilA_error *err, char *buf, size_t len)
+int ilA_strerror(ilA_error *err, char *buf, size_t len)
 {
     switch (err->type) {
     case ILA_NOERR:
-        snprintf(buf, len, "No error: Something reported an error when there is none");
+        return snprintf(buf, len, "No error: Something reported an error when there is none");
         break;
     case ILA_ERRNOERR:
 #ifdef WIN32
-        snprintf(buf, len, "%s: %s", err->func, windows_strerror(err->val.err));
+        return snprintf(buf, len, "[%s:%i] %s: %s", err->file, err->line, err->func, windows_strerror(err->val.err));
 #else
-        snprintf(buf, len, "%s: %s", err->func, strerror(err->val.err));
+        return snprintf(buf, len, "[%s:%i] %s: %s", err->file, err->line, err->func, strerror(err->val.err));
 #endif
         break;
     case ILA_STRERR:
     case ILA_CONSTERR:
-        snprintf(buf, len, "%s: %s", err->func, err->val.cstr);
+        return snprintf(buf, len, "[%s:%i] %s: %s", err->file, err->line, err->func, err->val.cstr);
         break;
     default:
-        snprintf(buf, len, "Corrupt error value");
+        return snprintf(buf, len, "Corrupt error value");
     }
+}
+
+char *ilA_strerrora(ilA_error *err, size_t *len)
+{
+    char *buf = malloc(1024); // cheesy solution
+    int res = ilA_strerror(err, buf, 1024);
+    if (res < 0) {
+        return strdup("sprintf failure");
+    }
+    size_t size = (size_t)res;
+    if (len) {
+        *len = size;
+    }
+    return realloc(buf, size);
 }
 
 void ilA_printerror_real(ilA_error *err, const char *file, int line, const char *func)

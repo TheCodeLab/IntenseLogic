@@ -9,7 +9,7 @@
 
 typedef struct ilG_out {
     ilG_context *context;
-    ilG_material tonemap, horizblur, vertblur;
+    ilG_matid tonemap, horizblur, vertblur;
     tgl_fbo front, result;
     tgl_quad quad;
     tgl_vao vao;
@@ -25,9 +25,9 @@ enum {
 static void out_free(void *ptr)
 {
     ilG_out *self = ptr;
-    ilG_material_free(&self->tonemap);
-    ilG_material_free(&self->horizblur);
-    ilG_material_free(&self->vertblur);
+    ilG_context_delMaterial(self->context, self->tonemap);
+    ilG_context_delMaterial(self->context, self->horizblur);
+    ilG_context_delMaterial(self->context, self->vertblur);
     tgl_fbo_free(&self->front);
     tgl_fbo_free(&self->result);
     tgl_quad_free(&self->quad);
@@ -41,12 +41,16 @@ static void out_bloom(ilG_out *self)
     unsigned i;
     int swapped = 0;
 
+    ilG_material *tonemap = ilG_context_findMaterial(context, self->tonemap);
+    ilG_material *horizblur = ilG_context_findMaterial(context, self->horizblur);
+    ilG_material *vertblur = ilG_context_findMaterial(context, self->vertblur);
+
     tgl_vao_bind(&self->vao);
 
     glActiveTexture(GL_TEXTURE0);
     // bind the framebuffer we want to display
     tgl_fbo_bindTex(&context->fb, self->which);
-    ilG_material_bind(&self->tonemap);
+    ilG_material_bind(tonemap);
     glUniform2f(self->size_loc, self->w, self->h);
     tgl_quad_draw_once(&self->quad);
 
@@ -73,7 +77,7 @@ static void out_bloom(ilG_out *self)
         tgl_fbo_bind(&self->result, TGL_FBO_RW);
         glViewport(0,0, w,h);
         // do a horizontal blur.
-        ilG_material_bind(&self->horizblur);
+        ilG_material_bind(horizblur);
         glUniform2f(self->size_loc, self->w, self->h);
         tgl_quad_draw_once(&self->quad);
 
@@ -88,7 +92,7 @@ static void out_bloom(ilG_out *self)
         glActiveTexture(GL_TEXTURE0);
         tgl_fbo_bindTex(&self->result, 0);
         // do a vertical blur.
-        ilG_material_bind(&self->vertblur);
+        ilG_material_bind(vertblur);
         glUniform2f(self->size_loc, self->w, self->h);
         tgl_quad_draw_once(&self->quad);
         glDisable(GL_BLEND);
@@ -173,20 +177,60 @@ static bool out_build(void *ptr, ilG_rendid id, ilG_context *context, ilG_buildr
         if (!tgl_fbo_build(&self->result, context->width, context->height)) {
             return false;
         }
-        if (ilG_material_link(&self->horizblur, context)) {
+
+        ilG_material m;
+
+        ilG_material_init(&m);
+        ilG_material_name(&m, "Horizontal Blur Shader");
+        ilG_material_arrayAttrib(&m, OUT_POSITION, "in_Texcoord");
+        ilG_material_fragData(&m, 0, "out_Color");
+        ilG_material_textureUnit(&m, 0, "tex");
+        if (!ilG_material_vertex_file(&m, "post.vert", &out->error)) {
             return false;
         }
-        if (ilG_material_link(&self->vertblur, context)) {
+        if (!ilG_material_fragment_file(&m, "horizblur.frag", &out->error)) {
             return false;
         }
-        if (ilG_material_link(&self->tonemap, context)) {
+        if (!ilG_material_link(&m, context, &out->error)) {
             return false;
         }
+        self->horizblur = ilG_context_addMaterial(context, m);
+
+        ilG_material_init(&m);
+        ilG_material_name(&m, "Vertical Blur Shader");
+        ilG_material_arrayAttrib(&m, OUT_POSITION, "in_Texcoord");
+        ilG_material_fragData(&m, 0, "out_Color");
+        ilG_material_textureUnit(&m, 0, "tex");
+        if (!ilG_material_vertex_file(&m, "post.vert", &out->error)) {
+            return false;
+        }
+        if (!ilG_material_fragment_file(&m, "vertblur.frag", &out->error)) {
+            return false;
+        }
+        if (!ilG_material_link(&m, context, &out->error)) {
+            return false;
+        }
+        self->vertblur = ilG_context_addMaterial(context, m);
+
+        ilG_material_init(&m);
+        ilG_material_name(&m, "Tone Mapping Shader");
+        ilG_material_arrayAttrib(&m, OUT_POSITION, "in_Texcoord");
+        ilG_material_textureUnit(&m, 0, "tex");
+        if (!ilG_material_vertex_file(&m, "post.vert", &out->error)) {
+            return false;
+        }
+        if (!ilG_material_fragment_file(&m, "hdr.frag", &out->error)) {
+            return false;
+        }
+        if (!ilG_material_link(&m, context, &out->error)) {
+            return false;
+        }
+        self->size_loc = ilG_material_getLoc(&m, "size");
+        self->tonemap = ilG_context_addMaterial(context, m);
+
         tgl_vao_init(&self->vao);
         tgl_vao_bind(&self->vao);
         tgl_quad_init(&self->quad, OUT_POSITION);
-        self->size_loc = ilG_material_getLoc(&self->tonemap, "size");
-
 
         il_storage_void sv = {self, NULL};
         ilE_register(&context->resize, ILE_DONTCARE, ILE_ANY, out_resize, il_value_opaque(sv));
@@ -207,39 +251,9 @@ static bool out_build(void *ptr, ilG_rendid id, ilG_context *context, ilG_buildr
 ilG_builder ilG_out_builder()
 {
     ilG_out *self = calloc(1, sizeof(ilG_out));
-    ilG_material *m;
 
     tgl_fbo_init(&self->front);
     tgl_fbo_init(&self->result);
-
-    ilG_material_init(&self->horizblur);
-    ilG_material_init(&self->vertblur);
-    ilG_material_init(&self->tonemap);
-
-    m = &self->horizblur;
-    ilG_material_vertex_file(m, "post.vert");
-    ilG_material_fragment_file(m, "horizblur.frag");
-    ilG_material_name(m, "Horizontal Blur Shader");
-    ilG_material_arrayAttrib(m, OUT_POSITION, "in_Texcoord");
-    ilG_material_fragData(m, 0, "out_Color");
-    ilG_material_textureUnit(m, 0, "tex");
-
-    m = &self->vertblur;
-    ilG_material_vertex_file(m, "post.vert");
-    ilG_material_fragment_file(m, "vertblur.frag");
-    ilG_material_name(m, "Vertical Blur Shader");
-    ilG_material_arrayAttrib(m, OUT_POSITION, "in_Texcoord");
-    ilG_material_fragData(m, 0, "out_Color");
-    ilG_material_textureUnit(m, 0, "tex");
-
-    m = &self->tonemap;
-    ilG_material_vertex_file(m, "post.vert");
-    ilG_material_fragment_file(m, "hdr.frag");
-    ilG_material_name(m, "Tone Mapping Shader");
-    ilG_material_arrayAttrib(m, OUT_POSITION, "in_Texcoord");
-    ilG_material_textureUnit(m, 0, "tex");
-
-    tgl_check("Failed to build vbo");
     self->which = 1;
 
     return ilG_builder_wrap(self, out_build);

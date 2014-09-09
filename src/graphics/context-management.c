@@ -101,6 +101,11 @@ const char *ilG_context_findName(ilG_context *self, ilG_rendid id)
     return NULL;
 }
 
+ilG_material *ilG_context_findMaterial(ilG_context *self, ilG_matid mat)
+{
+    return &self->manager.materials.data[mat.id];
+}
+
 unsigned ilG_context_addRenderer(ilG_context *self, ilG_rendid id, ilG_builder builder)
 {
     ilG_buildresult b;
@@ -118,6 +123,7 @@ unsigned ilG_context_addRenderer(ilG_context *self, ilG_rendid id, ilG_builder b
 
     if (!res) {
         ilG_error e = (ilG_error) {id, b.error};
+        il_error("Renderer failed: %s", b.error);
         IL_APPEND(self->manager.failed, e);
         ilG_client_msg msg;
         memset(&msg, 0, sizeof(msg));
@@ -277,6 +283,12 @@ unsigned ilG_context_addCoordSys(ilG_context *self, ilG_coordsys co)
     return self->manager.coordsystems.length-1;
 }
 
+ilG_matid ilG_context_addMaterial(ilG_context *self, ilG_material mat)
+{
+    IL_APPEND(self->manager.materials, mat);
+    return (ilG_matid){self->manager.materials.length-1};
+}
+
 bool ilG_context_delRenderer(ilG_context *self, ilG_rendid id)
 {
     unsigned idx;
@@ -403,4 +415,9 @@ bool ilG_context_delCoordSys(ilG_context *self, unsigned id)
         return true;
     }
     return false;
+}
+
+bool ilG_context_delMaterial(ilG_context *self, ilG_matid mat)
+{
+    return false; // TODO: Material deletion
 }

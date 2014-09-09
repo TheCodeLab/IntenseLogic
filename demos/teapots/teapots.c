@@ -22,33 +22,35 @@
 #define M_PI 3.1415926535
 #endif
 
-struct teapot {
-    ilG_material mat;
+typedef struct teapot {
+    ilG_context *context;
+    ilG_matid mat;
     ilG_mesh mesh;
     ilG_tex tex;
     GLuint mvp_loc, imt_loc;
-};
+} teapot;
 
 extern ilA_fs demo_fs;
 
 static void teapot_draw(void *obj, ilG_rendid id, il_mat **mats, const unsigned *objects, unsigned num_mats)
 {
     (void)id, (void)objects;
-    struct teapot *t = obj;
-    ilG_material_bind(&t->mat);
+    teapot *t = obj;
+    ilG_material *mat = ilG_context_findMaterial(t->context, t->mat);
+    ilG_material_bind(mat);
     ilG_mesh_bind(&t->mesh);
     ilG_tex_bind(&t->tex);
     for (unsigned i = 0; i < num_mats; i++) {
-        ilG_material_bindMatrix(&t->mat, t->mvp_loc, mats[0][i]);
-        ilG_material_bindMatrix(&t->mat, t->imt_loc, mats[1][i]);
+        ilG_material_bindMatrix(mat, t->mvp_loc, mats[0][i]);
+        ilG_material_bindMatrix(mat, t->imt_loc, mats[1][i]);
         ilG_mesh_draw(&t->mesh);
     }
 }
 
 static void teapot_free(void *obj)
 {
-    struct teapot *t = obj;
-    ilG_material_free(&t->mat);
+    teapot *t = obj;
+    ilG_context_delMaterial(t->context, t->mat);
     ilG_mesh_free(&t->mesh);
     free(t);
 }
@@ -56,12 +58,34 @@ static void teapot_free(void *obj)
 static bool teapot_build(void *obj, ilG_rendid id, ilG_context *context, ilG_buildresult *out)
 {
     (void)id;
-    struct teapot *t = obj;
-    if (ilG_material_link(&t->mat, context)) {
+    teapot *t = obj;
+    t->context = context;
+
+    ilG_material m;
+    ilG_material_init(&m);
+    ilG_material_name(&m, "Teapot Material");
+    ilG_material_fragData(&m, ILG_FRAGDATA_NORMAL, "out_Normal");
+    ilG_material_fragData(&m, ILG_FRAGDATA_ACCUMULATION, "out_Ambient");
+    ilG_material_fragData(&m, ILG_FRAGDATA_DIFFUSE, "out_Diffuse");
+    ilG_material_fragData(&m, ILG_FRAGDATA_SPECULAR, "out_Specular");
+    ilG_material_arrayAttrib(&m, ILG_MESH_POS, "in_Position");
+    ilG_material_arrayAttrib(&m, ILG_MESH_TEX, "in_Texcoord");
+    ilG_material_arrayAttrib(&m, ILG_MESH_NORM, "in_Normal");
+    ilG_material_arrayAttrib(&m, ILG_MESH_DIFFUSE, "in_Diffuse");
+    ilG_material_arrayAttrib(&m, ILG_MESH_SPECULAR, "in_Specular");
+    ilG_material_textureUnit(&m, 0, "tex");
+    if (!ilG_material_vertex_file(&m, "test.vert", &out->error)) {
         return false;
     }
-    t->mvp_loc = ilG_material_getLoc(&t->mat, "mvp");
-    t->imt_loc = ilG_material_getLoc(&t->mat, "imt");
+    if (!ilG_material_fragment_file(&m, "test.frag", &out->error)) {
+        return false;
+    }
+    if (!ilG_material_link(&m, context, &out->error)) {
+        return false;
+    }
+    t->mvp_loc = ilG_material_getLoc(&m, "mvp");
+    t->imt_loc = ilG_material_getLoc(&m, "imt");
+    t->mat = ilG_context_addMaterial(context, m);
 
     if (!ilG_mesh_fromfile(&t->mesh, &demo_fs, "teapot.obj")) {
         return false;
@@ -87,21 +111,6 @@ static bool teapot_build(void *obj, ilG_rendid id, ilG_context *context, ilG_bui
 ilG_builder teapot_builder()
 {
     struct teapot *t = calloc(1, sizeof(struct teapot));
-    ilG_material *m = &t->mat;
-    ilG_material_init(m);
-    ilG_material_vertex_file(m, "test.vert");
-    ilG_material_fragment_file(m, "test.frag");
-    ilG_material_name(m, "Teapot Material");
-    ilG_material_fragData(m, ILG_FRAGDATA_NORMAL, "out_Normal");
-    ilG_material_fragData(m, ILG_FRAGDATA_ACCUMULATION, "out_Ambient");
-    ilG_material_fragData(m, ILG_FRAGDATA_DIFFUSE, "out_Diffuse");
-    ilG_material_fragData(m, ILG_FRAGDATA_SPECULAR, "out_Specular");
-    ilG_material_arrayAttrib(m, ILG_MESH_POS, "in_Position");
-    ilG_material_arrayAttrib(m, ILG_MESH_TEX, "in_Texcoord");
-    ilG_material_arrayAttrib(m, ILG_MESH_NORM, "in_Normal");
-    ilG_material_arrayAttrib(m, ILG_MESH_DIFFUSE, "in_Diffuse");
-    ilG_material_arrayAttrib(m, ILG_MESH_SPECULAR, "in_Specular");
-    ilG_material_textureUnit(m, 0, "tex");
 
     ilG_tex_loadfile(&t->tex, &demo_fs, "white-marble-texture.png");
 
