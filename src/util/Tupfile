@@ -4,4 +4,7 @@ CCFLAGS += -I.
 
 : |> ^ Generating version.h^ sh gen_version.sh > %o |> version.c
 : foreach *.c | version.c |> !cc |>
+ifeq (@(TARGET),windows)
+     : foreach win32/*.c |> !cc |>
+endif
 : *.o |> !ar |> $(TOP)/libilutil.a $(TOP)/<libs>

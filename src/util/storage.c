@@ -2,6 +2,7 @@
 
 #include <string.h>
 #include <stdarg.h>
+#include <assert.h>
 
 #include "util/uthash.h"
 #include "util/array.h"
@@ -30,8 +31,9 @@ static void *s_hash_data(il_value *v, size_t *size)
     case IL_INT:    *size = sizeof(int);                    return &v->val.sint;
     case IL_FLOAT:  *size = sizeof(float);                  return &v->val.sfloat;
     case IL_TABLE:  // cannot be keys because I am lazy
-    case IL_VECTOR: return NULL;
+    case IL_VECTOR: ;
     }
+    return NULL;
 }
 
 il_table il_table_new()
@@ -240,7 +242,7 @@ il_vector il_vector_newv(size_t num, il_value *v)
 const il_value *il_vector_get(const il_vector *self, unsigned idx)
 {
     if (idx >= self->length) {
-        il_error("Index %u out of bounds (size %zu)", idx, self->length);
+        il_error("Index %u out of bounds (size %u)", idx, (unsigned)self->length);
         return &invalid;
     }
     return &self->data[idx];
@@ -249,7 +251,7 @@ const il_value *il_vector_get(const il_vector *self, unsigned idx)
 il_value *il_vector_mget(il_vector *self, unsigned idx)
 {
     if (idx >= self->length) {
-        il_error("Index %u out of bounds (size %zu)", idx, self->length);
+        il_error("Index %u out of bounds (size %u)", idx, (unsigned)self->length);
         return &invalid;
     }
     return &self->data[idx];
@@ -434,6 +436,8 @@ il_value il_value_copy(il_value *v)
         il_error("Copying of %s is not yet implemented", il_value_strwhich(v));
         return il_value_nil();
     }
+    assert(!"Invalid type");
+    return invalid;
 }
 
 void il_value_free(il_value v)
