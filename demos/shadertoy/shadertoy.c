@@ -32,7 +32,8 @@ typedef struct toy {
     */
     GLint iResolution, iGlobalTime, iMouse;
     int mouse[4];
-    bool linked;
+    bool linked, paused;
+    float last_time;
 } toy;
 
 static void toy_draw(void *obj, ilG_rendid id)
@@ -48,9 +49,14 @@ static void toy_draw(void *obj, ilG_rendid id)
     glUniform2f(t->iResolution, t->context->width, t->context->height);
 
     struct timeval now, tv;
-    gettimeofday(&now, NULL);
-    timersub(&now, &t->start, &tv);
-    float tf = (float)tv.tv_sec + (float)tv.tv_usec/1000000.0;
+    float tf;
+    if (t->paused) {
+        tf = t->last_time;
+    } else {
+        gettimeofday(&now, NULL);
+        timersub(&now, &t->start, &tv);
+        tf = t->last_time = (float)tv.tv_sec + (float)tv.tv_usec/1000000.0;
+    }
     glUniform1f(t->iGlobalTime, tf);
 
     glUniform4iv(t->iMouse, 1, t->mouse);
@@ -199,6 +205,19 @@ void demo_start()
             if (ev.motion.state & SDL_BUTTON_LMASK) {
                 t->mouse[2] = ev.motion.x;
                 t->mouse[3] = ev.motion.y;
+            }
+            break;
+        case SDL_KEYDOWN:
+            if (ev.key.state != SDL_PRESSED) {
+                break;
+            }
+            switch (ev.key.keysym.sym) {
+            case SDLK_r:
+                gettimeofday(&t->start, NULL);
+                break;
+            case SDLK_p:
+                t->paused = !t->paused;
+                break;
             }
             break;
         }
