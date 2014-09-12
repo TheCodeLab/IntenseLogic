@@ -79,4 +79,4 @@ endif
 
 CCFLAGS += -I$(TOP)/demos -I.
 LDFLAGS += -pthread -L$(TOP) -L$(TOP)/tiffgl @(LDFLAGS)
-LIBS += -ldemo -lilgraphics -ltgl -lilasset -lilmath -lilinput -lilutil $(GL_LIBS) $(LOADER_LIBS) $(PNG_LIBS) $(SDL_LIBS) @(LIBS)
+LIBS += -ldemo -lilgraphics -ltgl -lilasset -lilmath -lilutil $(GL_LIBS) $(LOADER_LIBS) $(PNG_LIBS) $(SDL_LIBS) @(LIBS)
