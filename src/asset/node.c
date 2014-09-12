@@ -210,8 +210,11 @@ bool ilA_dir_fileopen(ilA_fs *fs, ilA_dirid id, ilA_file *file, const char *name
     if (!node_open(&file->handle, &file->err, dir->dir, name, (size_t)namelen, ILA_READ)) {
         return false;
     }
-    file->name = strndup(name, (size_t)namelen);
-    file->namelen = (size_t)namelen;
+    size_t fp_len = dir->pathlen + 1 + (size_t)namelen + 1; // / and \0
+    char *fullpath = malloc(fp_len);
+    snprintf(fullpath, fp_len, "%s/%s", dir->path, name);
+    file->name = fullpath;
+    file->namelen = fp_len;
     return true;
 }
 
@@ -282,9 +285,11 @@ bool ilA_dir_mapfile(ilA_fs *fs, ilA_dirid id, ilA_map *map, ilA_file_mode mode,
     errno_check2(map->err, "mmap", map->data == MAP_FAILED);
     map->h = fh;
 #endif
-    map->name = strndup(name, (size_t)namelen);
-    map->namelen = (size_t)namelen;
-    map->mode = mode;
+    size_t fp_len = dir->pathlen + 1 + (size_t)namelen + 1; // / and \0
+    char *fullpath = malloc(fp_len);
+    snprintf(fullpath, fp_len, "%s/%s", dir->path, name);
+    map->name = fullpath;
+    map->namelen = fp_len;
     return true;
 }
 
