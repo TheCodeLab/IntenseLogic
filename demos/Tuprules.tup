@@ -77,6 +77,12 @@ else
 BULLET_LIBS = `$(PKG_CONFIG) bullet --libs`
 endif
 
+ifdef UV_LIBS
+UV_LIBS = @(UV_LIBS)
+else
+UV_LIBS = `$(PKG_CONFIG) libuv --libs`
+endif
+
 CCFLAGS += -I$(TOP)/demos -I.
 LDFLAGS += -pthread -L$(TOP) -L$(TOP)/tiffgl @(LDFLAGS)
 LIBS += -ldemo -lilgraphics -ltgl -lilasset -lilmath -lilutil $(GL_LIBS) $(LOADER_LIBS) $(PNG_LIBS) $(SDL_LIBS) @(LIBS)

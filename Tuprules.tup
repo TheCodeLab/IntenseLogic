@@ -86,6 +86,12 @@ BULLET_CFLAGS = -isystem "/usr/include/bullet"
 #`$(PKG_CONFIG) bullet --cflags`
 endif
 
+ifdef UV_CFLAGS
+UV_CFLAGS = @(UV_CFLAGS)
+else
+UV_CFLAGS = `$(PKG_CONFIG) libuv --cflags`
+endif
+
 TOP = $(TUP_CWD)
 
 CCFLAGS = -Wall -Wextra -pedantic -Werror -I$(TUP_CWD)/src @(CCFLAGS)
