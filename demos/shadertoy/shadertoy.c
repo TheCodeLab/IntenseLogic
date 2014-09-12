@@ -32,21 +32,28 @@ typedef struct toy {
     */
     GLint iResolution, iGlobalTime, iMouse;
     int mouse[4];
+    bool linked;
 } toy;
 
 static void toy_draw(void *obj, ilG_rendid id)
 {
     (void)id;
     toy *t = obj;
+    if (!t->linked) {
+        return;
+    }
     ilG_material *mat = ilG_context_findMaterial(t->context, t->mat);
     ilG_material_bind(mat);
 
     glUniform2f(t->iResolution, t->context->width, t->context->height);
 
     struct timeval now, tv;
+    gettimeofday(&now, NULL);
     timersub(&now, &t->start, &tv);
-    float tf = (float)tv.tv_sec + (float)tv.tv_usec/1000000;
+    float tf = (float)tv.tv_sec + (float)tv.tv_usec/1000000.0;
     glUniform1f(t->iGlobalTime, tf);
+
+    glUniform4iv(t->iMouse, 1, t->mouse);
 
     tgl_vao_bind(&t->vao);
     tgl_quad_draw_once(&t->quad);
@@ -76,12 +83,16 @@ static bool toy_build(void *obj, ilG_rendid id, ilG_context *context, ilG_buildr
         return false;
     }
     ilG_material_fragment(m, t->shader);
-    if (!ilG_material_link(m, context, &out->error)) {
-        return false;
+    char *error;
+    if (!ilG_material_link(m, context, &error)) {
+        il_error("%s", error);
+        free(error);
+    } else {
+        t->linked = true;
+        t->iResolution = ilG_material_getLoc(m, "iResolution");
+        t->iGlobalTime = ilG_material_getLoc(m, "iGlobalTime");
+        t->iMouse = ilG_material_getLoc(m, "iMouse");
     }
-    t->iResolution = ilG_material_getLoc(m, "iResolution");
-    t->iGlobalTime = ilG_material_getLoc(m, "iGlobalTime");
-    t->iMouse = ilG_material_getLoc(m, "iMouse");
     t->mat = ilG_context_addMaterial(context, *m);
     tgl_vao_init(&t->vao);
     tgl_vao_bind(&t->vao);
@@ -97,13 +108,14 @@ static bool toy_build(void *obj, ilG_rendid id, ilG_context *context, ilG_buildr
 typedef struct reload_ctx {
     uv_fs_event_t ev;
     ilG_context *context;
-    ilG_matid *mat;
+    toy *t;
 } reload_ctx;
 
 void upload_cb(void *ptr)
 {
     reload_ctx *ctx = ptr;
-    ilG_material *mat = ilG_context_findMaterial(ctx->context, *ctx->mat);
+    toy *t = ctx->t;
+    ilG_material *mat = ilG_context_findMaterial(ctx->context, t->mat);
     assert(mat);
     char *error;
     if (!ilG_material_link(mat, ctx->context, &error)) {
@@ -111,6 +123,10 @@ void upload_cb(void *ptr)
         free(error);
     } else {
         il_log("Shader reloaded");
+        t->linked = true;
+        t->iResolution = ilG_material_getLoc(mat, "iResolution");
+        t->iGlobalTime = ilG_material_getLoc(mat, "iGlobalTime");
+        t->iMouse = ilG_material_getLoc(mat, "iMouse");
     }
 }
 
@@ -132,18 +148,18 @@ void *event_loop(void *ptr)
     return NULL;
 }
 
+extern const char *demo_shader;
 void demo_start()
 {
     ilG_context context[1];
     ilG_handle out, toy_r;
     toy t[1];
-    const char *shader_name = "rainbow2d.frag"; // TODO: Get shader from command line
     ilA_file shader;
     pthread_t event_thread;
     uv_loop_t loop;
     reload_ctx rctx;
 
-    if (!ilA_fileopen(&ilG_shaders, &shader, shader_name, -1)) {
+    if (!ilA_fileopen(&ilG_shaders, &shader, demo_shader, -1)) {
         ilA_printerror(&shader.err);
         return;
     }
@@ -151,6 +167,7 @@ void demo_start()
     memset(t, 0, sizeof(toy));
     t->shader = shader;
     ilG_context_init(context);
+    ilG_context_hint(context, ILG_CONTEXT_VSYNC, 1);
     context->initialTitle = "Shader Toy";
     out = ilG_build(ilG_out_builder(), context);
     toy_r = ilG_build(ilG_builder_wrap(t, toy_build), context);
@@ -163,7 +180,7 @@ void demo_start()
     uv_loop_init(&loop);
     memset(&rctx, 0, sizeof(reload_ctx));
     rctx.context = context;
-    rctx.mat = &t->mat;
+    rctx.t = t;
     uv_fs_event_init(&loop, &rctx.ev);
     uv_fs_event_start(&rctx.ev, event_cb, shader.name, shader.namelen);
     pthread_create(&event_thread, NULL, event_loop, &loop);

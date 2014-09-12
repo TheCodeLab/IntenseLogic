@@ -25,10 +25,12 @@ const struct {
     {NO_ARG,    'v', "version", "Prints the version and exits"},
     {REQUIRED,  'd', "data",    "Adds a directory to look for data files"},
     {REQUIRED,  's', "shaders", "Adds a directory to look for GLSL shaders"},
+    {REQUIRED,  'f', "shader",  "ShaderToy demo: Select shader to load"},
     {NO_ARG,      0, NULL,      NULL}
 };
 
 ilA_fs demo_fs;
+const char *demo_shader;
 
 void demo_start();
 
@@ -83,6 +85,10 @@ int main(int argc, char **argv)
         }
         option("s", "shaders") {
             ilG_shaders_addPath(arg);
+        }
+        option("f", "shader") {
+            demo_shader = arg;
+            continue; // don't free arg
         }
         free(arg);
     }
