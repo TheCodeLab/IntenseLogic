@@ -82,12 +82,13 @@ endif
 ifdef BULLET_CFLAGS
 BULLET_CFLAGS = @(BULLET_CFLAGS)
 else
-BULLET_CFLAGS = `$(PKG_CONFIG) bullet --cflags`
+BULLET_CFLAGS = -isystem "/usr/include/bullet"
+#`$(PKG_CONFIG) bullet --cflags`
 endif
 
 TOP = $(TUP_CWD)
 
-CCFLAGS = -Wall -Wextra -pedantic -I$(TUP_CWD)/src @(CCFLAGS)
+CCFLAGS = -Wall -Wextra -pedantic -Werror -I$(TUP_CWD)/src @(CCFLAGS)
 CCFLAGS += $(GL_CFLAGS) $(TIFFGL_CFLAGS) $(LOADER_CFLAGS) $(PNG_CFLAGS) $(SDL_CFLAGS)
 
 CXXFLAGS = -std=c++11 @(CXXFLAGS)

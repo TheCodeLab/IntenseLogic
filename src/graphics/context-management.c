@@ -419,5 +419,6 @@ bool ilG_context_delCoordSys(ilG_context *self, unsigned id)
 
 bool ilG_context_delMaterial(ilG_context *self, ilG_matid mat)
 {
+    (void)self, (void)mat;
     return false; // TODO: Material deletion
 }
