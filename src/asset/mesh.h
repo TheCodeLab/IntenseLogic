@@ -54,7 +54,9 @@ ilA_mesh *ilA_mesh_loadfile(ilA_fs *fs, const char *path);
 ilA_mesh *ilA_mesh_loadmem(ilA_fs *fs, const char *filename, const void *data, size_t length);
 /** Destroys all data associated with a mesh */
 void ilA_mesh_free(ilA_mesh *self);
-/** Creates lines out of the position and normal data of a mesh, for debugging purposes. The f paramter is a factor for how long the lines should be */
-ilA_mesh *ilA_mesh_debugLines(ilA_mesh *self, float f);
+/** Creates lines out of the position and normal data of a mesh, for debugging purposes. The f paramter is a factor for how long the lines should be.
+ * positions and normals is num_verts * 3 * sizeof(float), out_verts is num_verts * 2 * 3 * sizeof(float).
+ */
+void ilA_debugLines(size_t num, float f, float *positions, float *normals, float *out_verts);
 
 #endif

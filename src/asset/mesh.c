@@ -1,6 +1,7 @@
 #include "mesh.h"
 
 #include <stdlib.h>
+#include <assert.h>
 
 ilA_mesh *ilA_mesh_new(enum ilA_mesh_attrib attribs, size_t vertices)
 {
@@ -107,21 +108,16 @@ void ilA_mesh_free(ilA_mesh *self)
     free(self);
 }
 
-ilA_mesh *ilA_mesh_debugLines(ilA_mesh *self, float f)
+void ilA_debugLines(size_t num, float f, float *positions, float *normals, float *out_verts)
 {
-    if (!self || !self->position || !self->normal) {
-        return NULL;
+    assert(positions && normals && out_verts);
+    for (unsigned i = 0; i < num; i++) {
+        const unsigned ps = 3, p = i*3;
+        const unsigned vs = ps*2, v1 = i*vs, v2 = v1 + ps;
+
+        memcpy(out_verts + v1, positions + p, sizeof(float) * vs);
+        out_verts[v2 + 0] = positions[p + 0] + normals[p + 0] * f;
+        out_verts[v2 + 1] = positions[p + 1] + normals[p + 0] * f;
+        out_verts[v2 + 2] = positions[p + 2] + normals[p + 0] * f;
     }
-    ilA_mesh *mesh = calloc(1, sizeof(ilA_mesh));
-    mesh->mode = ILA_MESH_LINES;
-    mesh->num_vertices = self->num_vertices * 2;
-    mesh->position = calloc(sizeof(float) * 4, mesh->num_vertices);
-    unsigned i;
-    for (i = 0; i < self->num_vertices; i++) {
-        memcpy(mesh->position[i * 2], self->position[i], sizeof(float) * 4);
-        mesh->position[i*2 + 1][0] = self->position[i][0] + self->normal[i][0] * f;
-        mesh->position[i*2 + 1][1] = self->position[i][1] + self->normal[i][1] * f;
-        mesh->position[i*2 + 1][2] = self->position[i][2] + self->normal[i][2] * f;
-    }
-    return mesh;
 }
