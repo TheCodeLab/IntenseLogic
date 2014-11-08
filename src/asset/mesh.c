@@ -117,7 +117,7 @@ void ilA_debugLines(size_t num, float f, float *positions, float *normals, float
 
         memcpy(out_verts + v1, positions + p, sizeof(float) * vs);
         out_verts[v2 + 0] = positions[p + 0] + normals[p + 0] * f;
-        out_verts[v2 + 1] = positions[p + 1] + normals[p + 0] * f;
-        out_verts[v2 + 2] = positions[p + 2] + normals[p + 0] * f;
+        out_verts[v2 + 1] = positions[p + 1] + normals[p + 1] * f;
+        out_verts[v2 + 2] = positions[p + 2] + normals[p + 2] * f;
     }
 }
