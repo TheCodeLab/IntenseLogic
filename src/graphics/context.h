@@ -225,6 +225,6 @@ void ilG_context_localSetup(ilG_context *context);
 void ilG_context_measure(ilG_context *context);
 bool ilG_context_build(void *obj, ilG_rendid id, ilG_context *context, ilG_buildresult *out);
 
-void ilG_context_printScenegraph(ilG_context *self);
+void ilG_context_print(ilG_context *self);
 
 #endif

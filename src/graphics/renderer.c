@@ -125,3 +125,88 @@ const char *ilG_handle_getName(ilG_handle self)
 {
     return ilG_context_findName(self.context, self.id);
 }
+
+#define log(...) do { fprintf(stderr, __VA_ARGS__); fputc('\n', stderr); } while (0)
+void ilG_material_print(ilG_material *mat)
+{
+    log("name: \"%s\"; vertex shader: %s; fragment shader: %s",
+        mat->name, mat->vert.name, mat->frag.name);
+}
+
+void print_tabs(unsigned n)
+{
+    for (unsigned i = 0; i < n; i++) {
+        fputs("  ", stderr);
+    }
+}
+
+#define tabbedn(n, ...) do { print_tabs(n); log(__VA_ARGS__); } while (0)
+#define tabbed(...) tabbedn(depth, __VA_ARGS__)
+void ilG_renderer_print(ilG_context *c, ilG_rendid root, unsigned depth)
+{
+    tabbed("Renderer %u: %s", root, ilG_context_findName(c, root));
+    ilG_renderer *r = ilG_context_findRenderer(c, root);
+    const char *error = ilG_context_findError(c, root);
+    if (error) {
+        tabbed("FAILED: %s", error);
+    }
+    if (!r) {
+        tabbed("Null renderer");
+        return;
+    }
+    if (r->obj) {
+        ilG_objrenderer *obj = &c->manager.objrenderers.data[r->obj];
+        tabbed("coordsys: %u", obj->coordsys);
+        print_tabs(depth);
+        fputs("types: [ ", stderr);
+        for (unsigned i = 0; i < obj->num_types; i++) {
+            fprintf(stderr, "%u ", obj->types[i]);
+        }
+        fputs("]\n", stderr);
+        print_tabs(depth);
+        fputs("objects: [ ", stderr);
+        for (unsigned i = 0; i < obj->objects.length; i++) {
+            fprintf(stderr, "%u ", obj->objects.data[i]);
+        }
+        fputs("]\n", stderr);
+    }
+    if (r->view) {
+        ilG_viewrenderer *view = &c->manager.viewrenderers.data[r->view];
+        tabbed("coordsys: %u", view->coordsys);
+        print_tabs(depth);
+        fputs("types: [ ", stderr);
+        for (unsigned i = 0; i < view->num_types; i++) {
+            fprintf(stderr, "%u ", view->types[i]);
+        }
+        fputs("]\n", stderr);
+    }
+    if (r->lights.length > 0) {
+        tabbed("lights: [");
+        for (unsigned i = 0; i < r->lights.length; i++) {
+            ilG_light *l = &r->lights.data[i];
+            tabbedn(depth+1, "{ id: %u; color: (%.2f %.2f %.2f); radius: %f }",
+                    l->id, l->color.x, l->color.y, l->color.z, l->radius);
+        }
+        tabbed("]");
+    }
+    if (r->children.length > 0) {
+        tabbed("children: [");
+        for (unsigned i = 0; i < r->children.length; i++) {
+            ilG_renderer_print(c, c->manager.rendids.data[r->children.data[i]], depth + 1);
+        }
+        tabbed("]");
+    } else {
+        fputc('\n', stderr);
+    }
+}
+
+void ilG_rendermanager_print(ilG_context *c, ilG_rendid root)
+{
+    ilG_rendermanager *rm = &c->manager;
+    log("Materials:");
+    for (unsigned i = 0; i < rm->materials.length; i++) {
+        fprintf(stderr, "  %u: ", i);
+        ilG_material_print(&rm->materials.data[i]);
+    }
+    ilG_renderer_print(c, root, 0);
+}

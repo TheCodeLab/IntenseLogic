@@ -630,3 +630,19 @@ void ilG_context_end(ilG_context *self)
     ilG_context_queue_produce(self->queue, msg);
     pthread_join(self->thread, NULL);
 }
+
+void ilG_context_print(ilG_context *self)
+{
+#define log(fmt, ...) fprintf(stderr, fmt "\n", __VA_ARGS__)
+    log("resolution: %i x %i", self->width, self->height);
+    log("average frame delta: %lu.%05lu", self->frames_average.tv_sec, self->frames_average.tv_usec);
+    log("title: %s", self->title);
+    log("gl version: %i.%i", self->contextMajor, self->contextMinor);
+#define flag(n) self->n? "+" #n : "-" #n
+    log("%s %s %s", flag(valid), flag(running), flag(complete));
+    log("flags: %s %s %s %s %s %s %s %s",
+        flag(forwardCompat), flag(debug_context), flag(experimental), flag(hdr),
+        flag(use_default_fb), flag(debug_render), flag(vsync), flag(msaa));
+#undef flag
+    ilG_rendermanager_print(self, self->root.id);
+}

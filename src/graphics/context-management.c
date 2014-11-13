@@ -101,6 +101,17 @@ const char *ilG_context_findName(ilG_context *self, ilG_rendid id)
     return NULL;
 }
 
+const char *ilG_context_findError(ilG_context *self, ilG_rendid id)
+{
+    ilG_error e;
+    unsigned idx;
+    IL_FIND(self->manager.failed, e, e.first == id, idx);
+    if (idx < self->manager.failed.length) {
+        return e.second;
+    }
+    return NULL;
+}
+
 ilG_material *ilG_context_findMaterial(ilG_context *self, ilG_matid mat)
 {
     return &self->manager.materials.data[mat.id];

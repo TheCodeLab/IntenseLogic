@@ -136,4 +136,8 @@ void ilG_handle_addLight(ilG_handle self, ilG_light light);
 void ilG_handle_delLight(ilG_handle self, ilG_light light);
 void ilG_handle_message(ilG_handle self, int type, il_value v);
 
+void ilG_material_print(ilG_material *mat);
+void ilG_renderer_print(struct ilG_context *c, ilG_rendid root, unsigned depth);
+void ilG_rendermanager_print(struct ilG_context *c, ilG_rendid root);
+
 #endif
