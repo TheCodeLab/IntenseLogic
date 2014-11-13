@@ -635,7 +635,7 @@ void ilG_context_print(ilG_context *self)
 {
 #define log(fmt, ...) fprintf(stderr, fmt "\n", __VA_ARGS__)
     log("resolution: %i x %i", self->width, self->height);
-    log("average frame delta: %lu.%05lu", self->frames_average.tv_sec, self->frames_average.tv_usec);
+    log("average frame delta: %lu.%08lu", self->frames_average.tv_sec, self->frames_average.tv_usec);
     log("title: %s", self->title);
     log("gl version: %i.%i", self->contextMajor, self->contextMinor);
 #define flag(n) self->n? "+" #n : "-" #n
