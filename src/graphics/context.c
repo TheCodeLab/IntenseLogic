@@ -151,6 +151,7 @@ void ilG_context_init(ilG_context *self)
     IL_APPEND(self->manager.viewrenderers, view);
     IL_APPEND(self->manager.statrenderers, stat);
     IL_APPEND(self->manager.coordsystems, co);
+    ilE_handler_init_with_name(&self->manager.material_creation, "Material Creation");
     self->root = (ilG_handle) {
         .id = 0,
         .context = self

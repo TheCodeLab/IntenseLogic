@@ -296,8 +296,11 @@ unsigned ilG_context_addCoordSys(ilG_context *self, ilG_coordsys co)
 
 ilG_matid ilG_context_addMaterial(ilG_context *self, ilG_material mat)
 {
+    unsigned id = self->manager.materials.length;
     IL_APPEND(self->manager.materials, mat);
-    return (ilG_matid){self->manager.materials.length-1};
+    il_value v = il_value_int(id);
+    ilE_handler_fire(&self->manager.material_creation, &v);
+    return (ilG_matid){id};
 }
 
 bool ilG_context_delRenderer(ilG_context *self, ilG_rendid id)

@@ -2,6 +2,7 @@
 #define ILG_RENDERER_H
 
 #include "util/storage.h"
+#include "util/event.h"
 #include "math/matrix.h"
 #include "graphics/material.h"
 
@@ -116,6 +117,7 @@ typedef struct ilG_rendermanager {
     IL_ARRAY(ilG_material,)     materials;
     ilG_rendid curid;
     ilG_cosysid cursysid;
+    ilE_handler material_creation;
 } ilG_rendermanager;
 
 void ilG_rendermanager_free(ilG_rendermanager *rm);
