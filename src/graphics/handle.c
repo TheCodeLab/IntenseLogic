@@ -6,7 +6,7 @@
 static void handle_destroy(void *ptr)
 {
     ilG_handle *self = ptr;
-    ilG_context_delRenderer(self->context, self->id);
+    ilG_renderman_delRenderer(&self->context->manager, self->id);
     free(self);
 }
 

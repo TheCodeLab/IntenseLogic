@@ -28,6 +28,7 @@ class DebugDraw : public btIDebugDraw {
     int debugMode;
     unsigned count;
     ilG_context *context;
+    ilG_renderman *rm;
 
     static void upload_cb(void*);
     static void view(void *ptr, ilG_rendid id, il_mat *mats);

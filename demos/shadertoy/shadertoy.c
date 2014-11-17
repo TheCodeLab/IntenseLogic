@@ -15,6 +15,7 @@
 
 typedef struct toy {
     ilG_context *context;
+    ilG_renderman *rm;
     ilG_matid mat;
     tgl_quad quad;
     tgl_vao vao;
@@ -43,7 +44,7 @@ static void toy_draw(void *obj, ilG_rendid id)
     if (!t->linked) {
         return;
     }
-    ilG_material *mat = ilG_context_findMaterial(t->context, t->mat);
+    ilG_material *mat = ilG_renderman_findMaterial(t->rm, t->mat);
     ilG_material_bind(mat);
 
     glUniform2f(t->iResolution, t->context->width, t->context->height);
@@ -69,7 +70,7 @@ static void toy_draw(void *obj, ilG_rendid id)
 static void toy_free(void *obj)
 {
     toy *t = obj;
-    ilG_context_delMaterial(t->context, t->mat);
+    ilG_renderman_delMaterial(t->rm, t->mat);
     tgl_vao_free(&t->vao);
     tgl_quad_free(&t->quad);
 }
@@ -79,6 +80,7 @@ static bool toy_build(void *obj, ilG_rendid id, ilG_context *context, ilG_buildr
     (void)id;
     toy *t = obj;
     t->context = context;
+    t->rm = &context->manager;
 
     ilG_material m[1];
     ilG_material_init(m);
@@ -99,7 +101,7 @@ static bool toy_build(void *obj, ilG_rendid id, ilG_context *context, ilG_buildr
         t->iGlobalTime = ilG_material_getLoc(m, "iGlobalTime");
         t->iMouse = ilG_material_getLoc(m, "iMouse");
     }
-    t->mat = ilG_context_addMaterial(context, *m);
+    t->mat = ilG_renderman_addMaterial(t->rm, *m);
     tgl_vao_init(&t->vao);
     tgl_vao_bind(&t->vao);
     tgl_quad_init(&t->quad, ILG_ARRATTR_POSITION);
@@ -121,7 +123,7 @@ void upload_cb(void *ptr)
 {
     reload_ctx *ctx = ptr;
     toy *t = ctx->t;
-    ilG_material *mat = ilG_context_findMaterial(ctx->context, t->mat);
+    ilG_material *mat = ilG_renderman_findMaterial(&ctx->context->manager, t->mat);
     assert(mat);
     char *error;
     if (!ilG_material_link(mat, ctx->context, &error)) {

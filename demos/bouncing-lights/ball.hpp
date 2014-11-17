@@ -15,7 +15,7 @@ extern "C" {
 namespace BouncingLights {
 
 class BallRenderer {
-    ilG_context *context;
+    ilG_renderman *rm;
     ilG_mesh mesh;
     ilG_matid mat;
     GLuint mvp_loc, imt_loc, col_loc;

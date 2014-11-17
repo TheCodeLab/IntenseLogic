@@ -126,6 +126,7 @@ void ilG_context_init(ilG_context *self)
     tgl_fbo_init(&self->fb);
     self->queue = calloc(1, sizeof(ilG_context_queue));
     ilG_context_queue_init(self->queue);
+    ilG_renderman *rm = &self->manager;
     ilG_context_addRenderer(self, 0, ilG_builder_wrap(NULL, ilG_context_build));
     ilG_statrenderer stat = (ilG_statrenderer) {ilG_default_update};
     ilG_viewrenderer view = (ilG_viewrenderer) {
@@ -147,11 +148,11 @@ void ilG_context_init(ilG_context *self)
         .obj = NULL,
         .id = 0,
     };
-    IL_APPEND(self->manager.objrenderers, obj);
-    IL_APPEND(self->manager.viewrenderers, view);
-    IL_APPEND(self->manager.statrenderers, stat);
-    IL_APPEND(self->manager.coordsystems, co);
-    ilE_handler_init_with_name(&self->manager.material_creation, "Material Creation");
+    IL_APPEND(rm->objrenderers, obj);
+    IL_APPEND(rm->viewrenderers, view);
+    IL_APPEND(rm->statrenderers, stat);
+    IL_APPEND(rm->coordsystems, co);
+    ilE_handler_init_with_name(&rm->material_creation, "Material Creation");
     self->root = (ilG_handle) {
         .id = 0,
         .context = self
@@ -202,7 +203,7 @@ void ilG_context_free(ilG_context *self)
     // destroy was already freed
     // TODO: Free or remove the input handler
 
-    ilG_rendermanager_free(&self->manager);
+    ilG_renderman_free(&self->manager);
 
     // private members
     tgl_fbo_free(&self->fb);
@@ -260,8 +261,8 @@ int ilG_context_localResize(ilG_context *self, int w, int h)
 
 static void context_message(ilG_context *self, ilG_rendid id, int type, il_value data)
 {
-    ilG_msgsink *s = ilG_context_findSink(self, id);
-    ilG_renderer *r = ilG_context_findRenderer(self, id);
+    ilG_msgsink *s = ilG_renderman_findSink(&self->manager, id);
+    ilG_renderer *r = ilG_renderman_findRenderer(&self->manager, id);
     assert(s && r);
     s->fn(r->data, type, &data);
     il_value_free(data);
@@ -272,7 +273,7 @@ static void context_message(ilG_context *self, ilG_rendid id, int type, il_value
 
 static void render_renderer(ilG_context *context, ilG_renderer *par)
 {
-    ilG_rendermanager *rm = &context->manager;
+    ilG_renderman *rm = &context->manager;
     ilG_renderer *r;
     for (unsigned i = 0, len = par->children.length; i < len; i++) {
         r = &rm->renderers.data[par->children.data[i]];
@@ -544,6 +545,7 @@ void *ilG_context_loop(void *ptr)
         ilG_context_queue_read(self->queue);
         for (unsigned i = 0; i < self->queue->read.length; i++) {
             ilG_context_msg msg = self->queue->read.data[i];
+            ilG_renderman *rm = &self->manager;
             switch (msg.type) {
             case ILG_UPLOAD: msg.v.upload.cb(msg.v.upload.ptr); break;
             case ILG_RESIZE: ilG_context_localResize(self, msg.v.resize[0], msg.v.resize[1]); break;
@@ -551,25 +553,25 @@ void *ilG_context_loop(void *ptr)
             case ILG_END: goto end;
             case ILG_MESSAGE: context_message(self, msg.v.message.node, msg.v.message.type, msg.v.message.data); break;
             case ILG_ADD_COORDS:
-                ilG_context_addCoords(self, msg.v.coords.parent, msg.v.coords.cosys, msg.v.coords.codata);
+                ilG_renderman_addCoords(rm, msg.v.coords.parent, msg.v.coords.cosys, msg.v.coords.codata);
                 break;
             case ILG_DEL_COORDS:
-                ilG_context_delCoords(self, msg.v.coords.parent, msg.v.coords.cosys, msg.v.coords.codata);
+                ilG_renderman_delCoords(rm, msg.v.coords.parent, msg.v.coords.cosys, msg.v.coords.codata);
                 break;
             case ILG_VIEW_COORDS:
-                ilG_context_viewCoords(self, msg.v.coords.parent, msg.v.coords.cosys);
+                ilG_renderman_viewCoords(rm, msg.v.coords.parent, msg.v.coords.cosys);
                 break;
             case ILG_ADD_RENDERER:
-                ilG_context_addChild(self, msg.v.renderer.parent, msg.v.renderer.child);
+                ilG_renderman_addChild(rm, msg.v.renderer.parent, msg.v.renderer.child);
                 break;
             case ILG_DEL_RENDERER:
-                ilG_context_delChild(self, msg.v.renderer.parent, msg.v.renderer.child);
+                ilG_renderman_delChild(rm, msg.v.renderer.parent, msg.v.renderer.child);
                 break;
             case ILG_ADD_LIGHT:
-                ilG_context_addLight(self, msg.v.light.parent, msg.v.light.child);
+                ilG_renderman_addLight(rm, msg.v.light.parent, msg.v.light.child);
                 break;
             case ILG_DEL_LIGHT:
-                ilG_context_delLight(self, msg.v.light.parent, msg.v.light.child);
+                ilG_renderman_delLight(rm, msg.v.light.parent, msg.v.light.child);
                 break;
             }
         }
@@ -645,5 +647,5 @@ void ilG_context_print(ilG_context *self)
         flag(forwardCompat), flag(debug_context), flag(experimental), flag(hdr),
         flag(use_default_fb), flag(debug_render), flag(vsync), flag(msaa));
 #undef flag
-    ilG_rendermanager_print(self, self->root.id);
+    ilG_renderman_print(self, self->root.id);
 }

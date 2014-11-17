@@ -21,6 +21,7 @@ enum ilG_light_type {
 typedef struct ilG_lights ilG_lights;
 struct ilG_lights {
     enum ilG_light_type type;
+    ilG_renderman *rm;
     ilG_context *context;
     GLint lights_size, mvp_size, lights_offset[3], mvp_offset[1], color_loc, radius_loc, mvp_loc, mv_loc, ivp_loc, size_loc;
     ilG_matid mat;
@@ -33,7 +34,7 @@ struct ilG_lights {
 static void lights_free(void *ptr)
 {
     ilG_lights *self = ptr;
-    ilG_context_delMaterial(self->context, self->mat);
+    ilG_renderman_delMaterial(self->rm, self->mat);
     tgl_vao_free(&self->vao);
     tgl_quad_free(&self->quad);
     free(self);
@@ -43,9 +44,9 @@ static void lights_draw(void *ptr, ilG_rendid id, il_mat **mats, const unsigned 
 {
     (void)id, (void)objects;
     ilG_lights *self = ptr;
-    const bool point = self->type == ILG_POINT;
     ilG_context *context = self->context;
-    ilG_material *mat = ilG_context_findMaterial(context, self->mat);
+    const bool point = self->type == ILG_POINT;
+    ilG_material *mat = ilG_renderman_findMaterial(self->rm, self->mat);
     ilG_material_bind(mat);
     glActiveTexture(GL_TEXTURE0);
     tgl_fbo_bindTex(&context->fb, ILG_CONTEXT_DEPTH);
@@ -70,7 +71,7 @@ static void lights_draw(void *ptr, ilG_rendid id, il_mat **mats, const unsigned 
     }
     tgl_check("Unknown");
 
-    ilG_renderer *r = ilG_context_findRenderer(context, id);
+    ilG_renderer *r = ilG_renderman_findRenderer(self->rm, id);
     for (unsigned i = 0; i < num_mats; i++) {
         ilG_material_bindMatrix(mat, self->ivp_loc, mats[0][i]);
         ilG_material_bindMatrix(mat, self->mv_loc,  mats[1][i]);
@@ -97,6 +98,7 @@ static bool lights_build(void *ptr, ilG_rendid id, ilG_context *context, ilG_bui
     (void)id;
     ilG_lights *self = ptr;
     self->context = context;
+    self->rm = &context->manager;
 
     ilG_material m;
     ilG_material_init(&m);
@@ -122,7 +124,7 @@ static bool lights_build(void *ptr, ilG_rendid id, ilG_context *context, ilG_bui
     self->mv_loc        = glGetUniformLocation(m.program, "mv");
     self->ivp_loc       = glGetUniformLocation(m.program, "ivp");
     self->size_loc      = glGetUniformLocation(m.program, "size");
-    self->mat = ilG_context_addMaterial(context, m);
+    self->mat = ilG_renderman_addMaterial(self->rm, m);
 
     self->ico = ilG_icosahedron(context);
     tgl_vao_init(&self->vao);

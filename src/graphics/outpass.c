@@ -9,6 +9,7 @@
 
 typedef struct ilG_out {
     ilG_context *context;
+    ilG_renderman *rm;
     ilG_matid tonemap, horizblur, vertblur;
     tgl_fbo front, result;
     tgl_quad quad;
@@ -25,9 +26,9 @@ enum {
 static void out_free(void *ptr)
 {
     ilG_out *self = ptr;
-    ilG_context_delMaterial(self->context, self->tonemap);
-    ilG_context_delMaterial(self->context, self->horizblur);
-    ilG_context_delMaterial(self->context, self->vertblur);
+    ilG_renderman_delMaterial(self->rm, self->tonemap);
+    ilG_renderman_delMaterial(self->rm, self->horizblur);
+    ilG_renderman_delMaterial(self->rm, self->vertblur);
     tgl_fbo_free(&self->front);
     tgl_fbo_free(&self->result);
     tgl_quad_free(&self->quad);
@@ -41,9 +42,9 @@ static void out_bloom(ilG_out *self)
     unsigned i;
     int swapped = 0;
 
-    ilG_material *tonemap = ilG_context_findMaterial(context, self->tonemap);
-    ilG_material *horizblur = ilG_context_findMaterial(context, self->horizblur);
-    ilG_material *vertblur = ilG_context_findMaterial(context, self->vertblur);
+    ilG_material *tonemap = ilG_renderman_findMaterial(self->rm, self->tonemap);
+    ilG_material *horizblur = ilG_renderman_findMaterial(self->rm, self->horizblur);
+    ilG_material *vertblur = ilG_renderman_findMaterial(self->rm, self->vertblur);
 
     tgl_vao_bind(&self->vao);
 
@@ -155,6 +156,7 @@ static bool out_build(void *ptr, ilG_rendid id, ilG_context *context, ilG_buildr
     (void)id;
     ilG_out *self = ptr;
     self->context = context;
+    self->rm = &context->manager;
     if (context->hdr) {
         tgl_fbo *f;
         GLenum fmt = context->msaa? GL_TEXTURE_2D_MULTISAMPLE : GL_TEXTURE_RECTANGLE;
@@ -194,7 +196,7 @@ static bool out_build(void *ptr, ilG_rendid id, ilG_context *context, ilG_buildr
         if (!ilG_material_link(&m, context, &out->error)) {
             return false;
         }
-        self->horizblur = ilG_context_addMaterial(context, m);
+        self->horizblur = ilG_renderman_addMaterial(self->rm, m);
 
         ilG_material_init(&m);
         ilG_material_name(&m, "Vertical Blur Shader");
@@ -210,7 +212,7 @@ static bool out_build(void *ptr, ilG_rendid id, ilG_context *context, ilG_buildr
         if (!ilG_material_link(&m, context, &out->error)) {
             return false;
         }
-        self->vertblur = ilG_context_addMaterial(context, m);
+        self->vertblur = ilG_renderman_addMaterial(self->rm, m);
 
         ilG_material_init(&m);
         ilG_material_name(&m, "Tone Mapping Shader");
@@ -226,7 +228,7 @@ static bool out_build(void *ptr, ilG_rendid id, ilG_context *context, ilG_buildr
             return false;
         }
         self->size_loc = ilG_material_getLoc(&m, "size");
-        self->tonemap = ilG_context_addMaterial(context, m);
+        self->tonemap = ilG_renderman_addMaterial(self->rm, m);
 
         tgl_vao_init(&self->vao);
         tgl_vao_bind(&self->vao);

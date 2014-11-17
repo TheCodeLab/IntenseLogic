@@ -12,7 +12,7 @@ typedef struct ilG_line {
     float *verts;
     unsigned count;
     ilG_matid mat;
-    ilG_context *context;
+    ilG_renderman *rm;
     tgl_vao vao;
     GLuint vbo;
     GLint mvp_loc, col_loc;
@@ -23,7 +23,7 @@ static void line_free(void *obj)
     ilG_line *self = obj;
     glDeleteBuffers(1, &self->vbo);
     tgl_vao_free(&self->vao);
-    ilG_context_delMaterial(self->context, self->mat);
+    ilG_renderman_delMaterial(self->rm, self->mat);
 }
 
 static void line_draw(void *obj, ilG_rendid id, il_mat **mats, const unsigned *objects, unsigned num_mats)
@@ -32,7 +32,7 @@ static void line_draw(void *obj, ilG_rendid id, il_mat **mats, const unsigned *o
     ilG_line *self = obj;
     tgl_vao_bind(&self->vao);
     glBindBuffer(GL_ARRAY_BUFFER, self->vbo);
-    ilG_material *mat = ilG_context_findMaterial(self->context, self->mat);
+    ilG_material *mat = ilG_renderman_findMaterial(self->rm, self->mat);
     ilG_material_bind(mat);
     glUniform3fv(self->col_loc, 1, self->col);
     for (unsigned i = 0; i < num_mats; i++) {
@@ -45,7 +45,7 @@ static bool line_build(void *obj, ilG_rendid id, ilG_context *context, ilG_build
 {
     (void)id;
     ilG_line *self = obj;
-    self->context = context;
+    self->rm = &context->manager;
 
     ilG_material m[1];
     ilG_material_init(m);
@@ -61,7 +61,7 @@ static bool line_build(void *obj, ilG_rendid id, ilG_context *context, ilG_build
     if (!ilG_material_link(m, context, &out->error)) {
         return false;
     }
-    self->mat = ilG_context_addMaterial(context, *m);
+    self->mat = ilG_renderman_addMaterial(self->rm, *m);
     self->mvp_loc = ilG_material_getLoc(m, "mvp");
     self->col_loc = ilG_material_getLoc(m, "col");
 

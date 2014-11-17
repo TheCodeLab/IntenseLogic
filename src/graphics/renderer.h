@@ -102,7 +102,7 @@ il_pair(ilG_rendstorage,ilG_rendid, il_table);
 il_pair(ilG_rendname,   ilG_rendid, unsigned);
 il_pair(ilG_error,      ilG_rendid, char*);
 
-typedef struct ilG_rendermanager {
+typedef struct ilG_renderman {
     IL_ARRAY(ilG_renderer,)     renderers;
     IL_ARRAY(ilG_objrenderer,)  objrenderers;
     IL_ARRAY(ilG_viewrenderer,) viewrenderers;
@@ -118,9 +118,9 @@ typedef struct ilG_rendermanager {
     ilG_rendid curid;
     ilG_cosysid cursysid;
     ilE_handler material_creation;
-} ilG_rendermanager;
+} ilG_renderman;
 
-void ilG_rendermanager_free(ilG_rendermanager *rm);
+void ilG_renderman_free(ilG_renderman *rm);
 ilG_builder ilG_builder_wrap(void *obj, const ilG_build_fn build);
 ilG_handle ilG_build(ilG_builder self, struct ilG_context *context);
 ilG_cosysid ilG_coordsys_build(ilG_coordsys_builder self, struct ilG_context *context);
@@ -138,8 +138,35 @@ void ilG_handle_addLight(ilG_handle self, ilG_light light);
 void ilG_handle_delLight(ilG_handle self, ilG_light light);
 void ilG_handle_message(ilG_handle self, int type, il_value v);
 
+/* Rendering thread calls */
+void ilG_renderman_message(ilG_renderman *self, ilG_rendid id, int type, il_value val);
+ilG_renderer    *ilG_renderman_findRenderer       (ilG_renderman *self, ilG_rendid id);
+ilG_msgsink     *ilG_renderman_findSink           (ilG_renderman *self, ilG_rendid id);
+il_table        *ilG_renderman_findStorage        (ilG_renderman *self, ilG_rendid id);
+const char      *ilG_renderman_findName           (ilG_renderman *self, ilG_rendid id);
+const char      *ilG_renderman_findError          (ilG_renderman *self, ilG_rendid id);
+ilG_material    *ilG_renderman_findMaterial       (ilG_renderman *self, ilG_matid mat);
+unsigned  ilG_renderman_addSink     (ilG_renderman *self, ilG_rendid id, ilG_message_fn sink);
+bool      ilG_renderman_addChild    (ilG_renderman *self, ilG_rendid parent, ilG_rendid child);
+unsigned  ilG_renderman_addCoords   (ilG_renderman *self, ilG_rendid id, ilG_cosysid cosys, unsigned codata);
+bool      ilG_renderman_viewCoords  (ilG_renderman *self, ilG_rendid id, ilG_cosysid cosys);
+unsigned  ilG_renderman_addLight    (ilG_renderman *self, ilG_rendid id, struct ilG_light light);
+unsigned  ilG_renderman_addStorage  (ilG_renderman *self, ilG_rendid id);
+unsigned  ilG_renderman_addName     (ilG_renderman *self, ilG_rendid id, const char *name);
+unsigned  ilG_renderman_addCoordSys (ilG_renderman *self, ilG_coordsys co);
+ilG_matid ilG_renderman_addMaterial (ilG_renderman *self, ilG_material mat);
+bool ilG_renderman_delRenderer      (ilG_renderman *self, ilG_rendid id);
+bool ilG_renderman_delSink          (ilG_renderman *self, ilG_rendid id);
+bool ilG_renderman_delChild         (ilG_renderman *self, ilG_rendid parent, ilG_rendid child);
+bool ilG_renderman_delCoords        (ilG_renderman *self, ilG_rendid id, ilG_cosysid cosys, unsigned codata);
+bool ilG_renderman_delLight         (ilG_renderman *self, ilG_rendid id, struct ilG_light light);
+bool ilG_renderman_delStorage       (ilG_renderman *self, ilG_rendid id);
+bool ilG_renderman_delName          (ilG_renderman *self, ilG_rendid id);
+bool ilG_renderman_delCoordSys      (ilG_renderman *self, unsigned id);
+bool ilG_renderman_delMaterial      (ilG_renderman *self, ilG_matid mat);
+
 void ilG_material_print(ilG_material *mat);
 void ilG_renderer_print(struct ilG_context *c, ilG_rendid root, unsigned depth);
-void ilG_rendermanager_print(struct ilG_context *c, ilG_rendid root);
+void ilG_renderman_print(struct ilG_context *c, ilG_rendid root);
 
 #endif

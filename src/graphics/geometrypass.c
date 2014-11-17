@@ -28,7 +28,7 @@ static void geometry_update(void *ptr, ilG_rendid id)
 static bool geometry_build(void *ptr, ilG_rendid id, ilG_context *ctx, ilG_buildresult *out)
 {
     (void)ctx;
-    ilG_context_addName(ctx, id, "Geometry");
+    ilG_renderman_addName(&ctx->manager, id, "Geometry");
     *out = (ilG_buildresult) {
         .free = geometry_free,
         .update = geometry_update,

@@ -16,14 +16,14 @@ typedef struct ilG_heightmap {
     ilA_mesh *source;
     ilG_mesh mesh;
     unsigned w,h;
-    ilG_context *context;
+    ilG_renderman *rm;
     GLenum mvp, imt, size;
 } ilG_heightmap;
 
 static void heightmap_free(void *ptr)
 {
     ilG_heightmap *self = ptr;
-    ilG_context_delMaterial(self->context, self->mat);
+    ilG_renderman_delMaterial(self->rm, self->mat);
     free(self);
 }
 
@@ -35,7 +35,7 @@ static void heightmap_draw(void *ptr, ilG_rendid id, il_mat **mats, const unsign
     ilG_tex_bind(&self->normal);
     ilG_tex_bind(&self->color);
     ilG_mesh_bind(&self->mesh);
-    ilG_material *shader = ilG_context_findMaterial(self->context, self->mat);
+    ilG_material *shader = ilG_renderman_findMaterial(self->rm, self->mat);
     ilG_material_bind(shader);
     for (unsigned i = 0; i < num_mats; i++) {
         ilG_material_bindMatrix(shader, self->mvp, mats[0][i]);
@@ -49,7 +49,7 @@ static bool heightmap_build(void *ptr, ilG_rendid id, ilG_context *context, ilG_
 {
     (void)id;
     ilG_heightmap *self = ptr;
-    self->context = context;
+    self->rm = &context->manager;
     ilG_tex_build(&self->height, context);
     ilG_tex_build(&self->normal, context);
     ilG_tex_build(&self->color, context);
@@ -75,7 +75,7 @@ static bool heightmap_build(void *ptr, ilG_rendid id, ilG_context *context, ilG_
     if (!ilG_material_link(&mat, context, &out->error)) {
         return false;
     }
-    self->mat = ilG_context_addMaterial(context, mat);
+    self->mat = ilG_renderman_addMaterial(self->rm, mat);
     self->mvp = ilG_material_getLoc(&mat, "mvp");
     self->imt = ilG_material_getLoc(&mat, "imt");
     self->size = ilG_material_getLoc(&mat, "size");

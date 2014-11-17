@@ -23,7 +23,7 @@
 #endif
 
 typedef struct teapot {
-    ilG_context *context;
+    ilG_renderman *rm;
     ilG_matid mat;
     ilG_mesh mesh;
     ilG_tex tex;
@@ -36,7 +36,7 @@ static void teapot_draw(void *obj, ilG_rendid id, il_mat **mats, const unsigned 
 {
     (void)id, (void)objects;
     teapot *t = obj;
-    ilG_material *mat = ilG_context_findMaterial(t->context, t->mat);
+    ilG_material *mat = ilG_renderman_findMaterial(t->rm, t->mat);
     ilG_material_bind(mat);
     ilG_mesh_bind(&t->mesh);
     ilG_tex_bind(&t->tex);
@@ -50,7 +50,7 @@ static void teapot_draw(void *obj, ilG_rendid id, il_mat **mats, const unsigned 
 static void teapot_free(void *obj)
 {
     teapot *t = obj;
-    ilG_context_delMaterial(t->context, t->mat);
+    ilG_renderman_delMaterial(t->rm, t->mat);
     ilG_mesh_free(&t->mesh);
     free(t);
 }
@@ -59,7 +59,7 @@ static bool teapot_build(void *obj, ilG_rendid id, ilG_context *context, ilG_bui
 {
     (void)id;
     teapot *t = obj;
-    t->context = context;
+    t->rm = &context->manager;
 
     ilG_material m;
     ilG_material_init(&m);
@@ -85,7 +85,7 @@ static bool teapot_build(void *obj, ilG_rendid id, ilG_context *context, ilG_bui
     }
     t->mvp_loc = ilG_material_getLoc(&m, "mvp");
     t->imt_loc = ilG_material_getLoc(&m, "imt");
-    t->mat = ilG_context_addMaterial(context, m);
+    t->mat = ilG_renderman_addMaterial(t->rm, m);
 
     if (!ilG_mesh_fromfile(&t->mesh, &demo_fs, "teapot.obj")) {
         return false;

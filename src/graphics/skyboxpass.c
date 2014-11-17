@@ -10,7 +10,7 @@
 #include "tgl/tgl.h"
 
 typedef struct ilG_skybox {
-    ilG_context *context;
+    ilG_renderman *rm;
     ilG_matid mat;
     ilG_shape *box;
     ilG_tex texture;
@@ -20,7 +20,7 @@ typedef struct ilG_skybox {
 static void sky_free(void *ptr)
 {
     ilG_skybox *self = ptr;
-    ilG_context_delMaterial(self->context, self->mat);
+    ilG_renderman_delMaterial(self->rm, self->mat);
 }
 
 static void sky_view(void *ptr, ilG_rendid id, il_mat *mats)
@@ -28,7 +28,7 @@ static void sky_view(void *ptr, ilG_rendid id, il_mat *mats)
     (void)id;
     ilG_skybox *self = ptr;
 
-    ilG_material *mat = ilG_context_findMaterial(self->context, self->mat);
+    ilG_material *mat = ilG_renderman_findMaterial(self->rm, self->mat);
 
     tgl_check("Unknown");
     glDisable(GL_DEPTH_TEST);
@@ -47,7 +47,7 @@ static void sky_view(void *ptr, ilG_rendid id, il_mat *mats)
 static bool sky_build(void *ptr, ilG_rendid id, ilG_context *context, ilG_buildresult *out)
 {
     ilG_skybox *self = ptr;
-    self->context = context;
+    self->rm = &context->manager;
     ilG_tex_build(&self->texture, context);
 
     ilG_material m;
@@ -70,11 +70,11 @@ static bool sky_build(void *ptr, ilG_rendid id, ilG_context *context, ilG_buildr
         return false;
     }
     self->vp_loc = ilG_material_getLoc(&m, "mat");
-    self->mat = ilG_context_addMaterial(context, m);
+    self->mat = ilG_renderman_addMaterial(self->rm, m);
 
     self->box = ilG_box(context);
 
-    ilG_context_addName(context, id, "Skybox");
+    ilG_renderman_addName(self->rm, id, "Skybox");
     int *types = malloc(1 * sizeof(int));
     types[0] = ILG_VIEW_R | ILG_PROJECTION;
     *out = (ilG_buildresult) {

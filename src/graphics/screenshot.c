@@ -7,6 +7,7 @@
 typedef struct ilG_grabber {
     void (*cb)(ilA_img img, void *user);
     void *user;
+    ilG_renderman *rm;
     ilG_context *context;
 } ilG_grabber;
 
@@ -28,7 +29,7 @@ static void grabber_update(void *obj, ilG_rendid id)
     glBindTexture(GL_TEXTURE_RECTANGLE, tgl_fbo_getTex(&self->context->fb, ILG_CONTEXT_ACCUM));
     glGetTexImage(GL_TEXTURE_RECTANGLE, 0, GL_RGB, GL_UNSIGNED_BYTE, img.data);
     self->cb(img, self->user);
-    ilG_context_delRenderer(self->context, id);
+    ilG_renderman_delRenderer(self->rm, id);
     ilA_img_free(img);
 }
 
@@ -37,6 +38,7 @@ static bool grabber_build(void *obj, ilG_rendid id, ilG_context *context, ilG_bu
     (void)id;
     ilG_grabber *self = obj;
     self->context = context;
+    self->rm = &context->manager;
     *out = (ilG_buildresult) {
         .free = grabber_free,
         .update = grabber_update,

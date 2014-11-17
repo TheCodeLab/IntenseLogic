@@ -23,31 +23,32 @@ DebugDraw::DebugDraw()
 void DebugDraw::view(void *ptr, ilG_rendid id, il_mat *mats)
 {
     (void)id;
-    DebugDraw *self = reinterpret_cast<DebugDraw*>(ptr);
-    ilG_material *mat = ilG_context_findMaterial(self->context, self->mat);
+    DebugDraw &self = *reinterpret_cast<DebugDraw*>(ptr);
+    ilG_material *mat = ilG_renderman_findMaterial(self.rm, self.mat);
     glDisable(GL_BLEND);
     glDisable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);
     ilG_material_bind(mat);
-    ilG_material_bindMatrix(mat, self->vp_loc, mats[0]);
-    glBindVertexArray(self->vao);
-    glBindBuffer(GL_ARRAY_BUFFER, self->vbo);
-    glDrawArrays(GL_LINES, 0, self->count);
+    ilG_material_bindMatrix(mat, self.vp_loc, mats[0]);
+    glBindVertexArray(self.vao);
+    glBindBuffer(GL_ARRAY_BUFFER, self.vbo);
+    glDrawArrays(GL_LINES, 0, self.count);
 }
 
 void DebugDraw::free(void *ptr)
 {
-    DebugDraw *debugdraw = reinterpret_cast<DebugDraw*>(ptr);
-    ilG_context_delMaterial(debugdraw->context, debugdraw->mat);
-    delete debugdraw;
+    DebugDraw &debugdraw = *reinterpret_cast<DebugDraw*>(ptr);
+    ilG_renderman_delMaterial(debugdraw.rm, debugdraw.mat);
+    delete &debugdraw;
 }
 
 bool DebugDraw::build(void *ptr, ilG_rendid id, ilG_context *context, ilG_buildresult *out)
 {
     (void)id;
-    DebugDraw *self = reinterpret_cast<DebugDraw*>(ptr);
+    DebugDraw &self = *reinterpret_cast<DebugDraw*>(ptr);
 
-    self->context = context;
+    self.rm = &context->manager;
+    self.context = context;
 
     ilG_material m;
     ilG_material_init(&m);
@@ -64,13 +65,13 @@ bool DebugDraw::build(void *ptr, ilG_rendid id, ilG_context *context, ilG_buildr
     if (!ilG_material_link(&m, context, &out->error)) {
         return false;
     }
-    self->vp_loc = ilG_material_getLoc(&m, "vp");
-    self->mat = ilG_context_addMaterial(context, m);
+    self.vp_loc = ilG_material_getLoc(&m, "vp");
+    self.mat = ilG_renderman_addMaterial(self.rm, m);
 
-    glGenBuffers(1, &self->vbo);
-    glGenVertexArrays(1, &self->vao);
-    glBindBuffer(GL_ARRAY_BUFFER, self->vbo);
-    glBindVertexArray(self->vao);
+    glGenBuffers(1, &self.vbo);
+    glGenVertexArrays(1, &self.vao);
+    glBindBuffer(GL_ARRAY_BUFFER, self.vbo);
+    glBindVertexArray(self.vao);
     glVertexAttribPointer(ILG_ARRATTR_POSITION, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)offsetof(Vertex, pos));
     glVertexAttribPointer(ILG_ARRATTR_AMBIENT, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)offsetof(Vertex, col));
     glEnableVertexAttribArray(ILG_ARRATTR_POSITION);
@@ -94,11 +95,11 @@ ilG_builder DebugDraw::builder()
 
 void DebugDraw::upload_cb(void *ptr)
 {
-    DebugDraw *self = (DebugDraw*)ptr;
-    glBindBuffer(GL_ARRAY_BUFFER, self->vbo);
-    glBufferData(GL_ARRAY_BUFFER, self->lines.size() * sizeof(Vertex), self->lines.data(), GL_DYNAMIC_DRAW);
-    self->count = self->lines.size();
-    self->lines.clear();
+    DebugDraw &self = *reinterpret_cast<DebugDraw*>(ptr);
+    glBindBuffer(GL_ARRAY_BUFFER, self.vbo);
+    glBufferData(GL_ARRAY_BUFFER, self.lines.size() * sizeof(Vertex), self.lines.data(), GL_DYNAMIC_DRAW);
+    self.count = self.lines.size();
+    self.lines.clear();
 }
 
 void DebugDraw::upload()

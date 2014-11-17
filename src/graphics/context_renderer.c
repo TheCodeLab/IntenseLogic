@@ -12,7 +12,7 @@ static void context_free(void *ptr)
 bool ilG_context_build(void *ptr, ilG_rendid id, ilG_context *self, ilG_buildresult *out)
 {
     (void)ptr;
-    ilG_context_addName(self, id, "Context");
+    ilG_renderman_addName(&self->manager, id, "Context");
     *out = (ilG_buildresult) {
         .free = context_free,
         .update = NULL,

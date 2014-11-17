@@ -64,7 +64,7 @@ static const float cube[] = {
 };
 
 typedef struct box {
-    ilG_context *context;
+    ilG_renderman *rm;
     ilG_matid mat;
     GLuint vbo, vao;
     GLuint pos_loc;
@@ -75,7 +75,7 @@ static void box_draw(void *obj, ilG_rendid id, il_mat **mats, const unsigned *ob
 {
     (void)id, (void)objects;
     box *b = obj;
-    ilG_material *mat = ilG_context_findMaterial(b->context, b->mat);
+    ilG_material *mat = ilG_renderman_findMaterial(b->rm, b->mat);
     ilG_material_bind(mat);
     glBindVertexArray(b->vao);
     glBindBuffer(GL_ARRAY_BUFFER, b->vbo);
@@ -88,7 +88,7 @@ static void box_draw(void *obj, ilG_rendid id, il_mat **mats, const unsigned *ob
 static void box_free(void *obj)
 {
     box *b = obj;
-    ilG_context_delMaterial(b->context, b->mat);
+    ilG_renderman_delMaterial(b->rm, b->mat);
     glDeleteBuffers(1, &b->vao);
     glDeleteBuffers(1, &b->vbo);
     free(b);
@@ -98,7 +98,7 @@ static bool box_build(void *obj, ilG_rendid id, ilG_context *context, ilG_buildr
 {
     (void)id;
     box *b = obj;
-    b->context = context;
+    b->rm = &context->manager;
 
     ilG_material m;
     ilG_material_init(&m);
@@ -116,7 +116,7 @@ static bool box_build(void *obj, ilG_rendid id, ilG_context *context, ilG_buildr
     }
     b->pos_loc = ilG_material_getLoc(&m, "in_Position");
     b->mvp_loc = ilG_material_getLoc(&m, "mvp");
-    b->mat = ilG_context_addMaterial(context, m);
+    b->mat = ilG_renderman_addMaterial(b->rm, m);
 
     glGenBuffers(1, &b->vbo);
     glGenVertexArrays(1, &b->vao);

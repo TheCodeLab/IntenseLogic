@@ -23,14 +23,14 @@ void BallRenderer::free(void *ptr)
 {
     BallRenderer &self = *reinterpret_cast<BallRenderer*>(ptr);
     ilG_mesh_free(&self.mesh);
-    ilG_context_delMaterial(self.context, self.mat);
+    ilG_renderman_delMaterial(self.rm, self.mat);
 }
 
 void BallRenderer::draw(void *obj, ilG_rendid id, il_mat **mats, const unsigned *objects, unsigned num_mats)
 {
     (void)id, (void)objects;
     BallRenderer &self = *reinterpret_cast<BallRenderer*>(obj);
-    ilG_material *mat = ilG_context_findMaterial(self.context, self.mat);
+    ilG_material *mat = ilG_renderman_findMaterial(self.rm, self.mat);
     ilG_mesh_bind(&self.mesh);
     ilG_material_bind(mat);
     for (unsigned i = 0; i < num_mats; i++) {
@@ -47,7 +47,7 @@ bool BallRenderer::build(void *obj, ilG_rendid id, ilG_context *context, ilG_bui
     (void)id;
     BallRenderer &b = *reinterpret_cast<BallRenderer*>(obj);
 
-    b.context = context;
+    b.rm = &context->manager;
 
     ilG_material m;
     ilG_material_init(&m);
@@ -69,7 +69,7 @@ bool BallRenderer::build(void *obj, ilG_rendid id, ilG_context *context, ilG_bui
     b.mvp_loc = ilG_material_getLoc(&m, "mvp");
     b.imt_loc = ilG_material_getLoc(&m, "imt");
     b.col_loc = ilG_material_getLoc(&m, "col");
-    b.mat = ilG_context_addMaterial(context, m);
+    b.mat = ilG_renderman_addMaterial(b.rm, m);
 
     if (!ilG_mesh_fromfile(&b.mesh, &demo_fs, "demos/bouncing-lights/sphere.obj")) {
         return false;

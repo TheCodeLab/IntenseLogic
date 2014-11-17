@@ -16,7 +16,7 @@
 #include "util/log.h"
 
 struct quad {
-    ilG_context *context;
+    ilG_renderman *rm;
     ilG_matid mat;
     tgl_quad quad;
     tgl_vao vao;
@@ -26,7 +26,7 @@ static void quad_draw(void *obj, ilG_rendid id)
 {
     (void)id;
     struct quad *q = obj;
-    ilG_material *mat = ilG_context_findMaterial(q->context, q->mat);
+    ilG_material *mat = ilG_renderman_findMaterial(q->rm, q->mat);
     ilG_material_bind(mat);
     tgl_vao_bind(&q->vao);
     tgl_quad_draw_once(&q->quad);
@@ -35,7 +35,7 @@ static void quad_draw(void *obj, ilG_rendid id)
 static void quad_free(void *obj)
 {
     struct quad *q = obj;
-    ilG_context_delMaterial(q->context, q->mat);
+    ilG_renderman_delMaterial(q->rm, q->mat);
     tgl_vao_free(&q->vao);
     tgl_quad_free(&q->quad);
     free(q);
@@ -45,7 +45,7 @@ static bool quad_build(void *obj, ilG_rendid id, ilG_context *context, ilG_build
 {
     (void)id;
     struct quad *q = obj;
-    q->context = context;
+    q->rm = &context->manager;
 
     ilG_material m;
     ilG_material_init(&m);
@@ -61,7 +61,7 @@ static bool quad_build(void *obj, ilG_rendid id, ilG_context *context, ilG_build
     if (!ilG_material_link(&m, context, &out->error)) {
         return false;
     }
-    q->mat = ilG_context_addMaterial(context, m);
+    q->mat = ilG_renderman_addMaterial(q->rm, m);
     tgl_vao_init(&q->vao);
     tgl_vao_bind(&q->vao);
     tgl_quad_init(&q->quad, ILG_ARRATTR_POSITION);

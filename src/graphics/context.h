@@ -103,7 +103,7 @@ typedef struct ilG_context {
     ilG_handle root;
     struct ilG_client_queue *client;
     /* For rendering */
-    ilG_rendermanager manager;
+    ilG_renderman manager;
     /* Private */
     bool valid;
     tgl_fbo fb;
@@ -147,6 +147,8 @@ void ilG_context_stop(ilG_context *self);
 /** Destroys the context and stops the render thread. Blocks. */
 void ilG_context_end(ilG_context *self);
 
+unsigned ilG_context_addRenderer(ilG_context *self, ilG_rendid id, ilG_builder builder);
+
 /* External calls */
 /** Calls a function at the beginning of the frame on the context thread, usually for building VBOs */
 bool ilG_context_upload(ilG_context *self, void (*fn)(void*), void*);
@@ -158,33 +160,6 @@ bool ilG_context_rename(ilG_context *self, const char *title);
 /** Sets the function called to notify client thread there are messages available */
 void ilG_context_setNotifier(ilG_context *self, void (*fn)(il_value*), il_value val);
 
-/* Rendering thread calls */
-void ilG_context_message(ilG_context *self, ilG_rendid id, int type, il_value val);
-ilG_renderer    *ilG_context_findRenderer       (ilG_context *self, ilG_rendid id);
-ilG_msgsink     *ilG_context_findSink           (ilG_context *self, ilG_rendid id);
-il_table        *ilG_context_findStorage        (ilG_context *self, ilG_rendid id);
-const char      *ilG_context_findName           (ilG_context *self, ilG_rendid id);
-const char      *ilG_context_findError          (ilG_context *self, ilG_rendid id);
-ilG_material    *ilG_context_findMaterial       (ilG_context *self, ilG_matid mat);
-unsigned ilG_context_addRenderer    (ilG_context *self, ilG_rendid id, ilG_builder builder);
-unsigned ilG_context_addSink        (ilG_context *self, ilG_rendid id, ilG_message_fn sink);
-bool ilG_context_addChild           (ilG_context *self, ilG_rendid parent, ilG_rendid child);
-unsigned ilG_context_addCoords      (ilG_context *self, ilG_rendid id, ilG_cosysid cosys, unsigned codata);
-bool ilG_context_viewCoords         (ilG_context *self, ilG_rendid id, ilG_cosysid cosys);
-unsigned ilG_context_addLight       (ilG_context *self, ilG_rendid id, struct ilG_light light);
-unsigned ilG_context_addStorage     (ilG_context *self, ilG_rendid id);
-unsigned ilG_context_addName        (ilG_context *self, ilG_rendid id, const char *name);
-unsigned ilG_context_addCoordSys    (ilG_context *self, ilG_coordsys co);
-ilG_matid ilG_context_addMaterial   (ilG_context *self, ilG_material mat);
-bool ilG_context_delRenderer    (ilG_context *self, ilG_rendid id);
-bool ilG_context_delSink        (ilG_context *self, ilG_rendid id);
-bool ilG_context_delChild       (ilG_context *self, ilG_rendid parent, ilG_rendid child);
-bool ilG_context_delCoords      (ilG_context *self, ilG_rendid id, ilG_cosysid cosys, unsigned codata);
-bool ilG_context_delLight       (ilG_context *self, ilG_rendid id, struct ilG_light light);
-bool ilG_context_delStorage     (ilG_context *self, ilG_rendid id);
-bool ilG_context_delName        (ilG_context *self, ilG_rendid id);
-bool ilG_context_delCoordSys    (ilG_context *self, unsigned id);
-bool ilG_context_delMaterial    (ilG_context *self, ilG_matid mat);
 /** Internal: Binds the context's internal framebuffer */
 void ilG_context_bindFB(ilG_context *self);
 /** Internal: Special case function which will be around until #ilG_context is changed to use #ilG_fbo */
