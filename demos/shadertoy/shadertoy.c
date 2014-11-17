@@ -20,7 +20,7 @@ typedef struct toy {
     tgl_quad quad;
     tgl_vao vao;
     ilA_file shader;
-    struct timeval start;
+    struct timeval start_real;
     /* The shadertoy.com uniforms:
       uniform vec3      iResolution;           // viewport resolution (in pixels)
       uniform float     iGlobalTime;           // shader playback time (in seconds)
@@ -34,7 +34,7 @@ typedef struct toy {
     GLint iResolution, iGlobalTime, iMouse;
     int mouse[4];
     bool linked, paused;
-    float last_time;
+    float mono_last, mono_start, speed;
 } toy;
 
 static void toy_draw(void *obj, ilG_rendid id)
@@ -52,11 +52,13 @@ static void toy_draw(void *obj, ilG_rendid id)
     struct timeval now, tv;
     float tf;
     if (t->paused) {
-        tf = t->last_time;
+        tf = t->mono_last;
     } else {
         gettimeofday(&now, NULL);
-        timersub(&now, &t->start, &tv);
-        tf = t->last_time = (float)tv.tv_sec + (float)tv.tv_usec/1000000.0;
+        timersub(&now, &t->start_real, &tv);
+        t->start_real = now;
+        t->mono_start += ((float)tv.tv_sec + (float)tv.tv_usec/1000000.0) * t->speed;
+        tf = t->mono_last = t->mono_start;
     }
     glUniform1f(t->iGlobalTime, tf);
 
@@ -82,6 +84,7 @@ static bool toy_build(void *obj, ilG_rendid id, ilG_context *context, ilG_buildr
     t->context = context;
     t->rm = &context->manager;
 
+    t->speed = 1.0;
     ilG_material m[1];
     ilG_material_init(m);
     ilG_material_name(m, "Rainbow Quad Shader");
@@ -105,7 +108,7 @@ static bool toy_build(void *obj, ilG_rendid id, ilG_context *context, ilG_buildr
     tgl_vao_init(&t->vao);
     tgl_vao_bind(&t->vao);
     tgl_quad_init(&t->quad, ILG_ARRATTR_POSITION);
-    gettimeofday(&t->start, NULL);
+    gettimeofday(&t->start_real, NULL);
 
     out->free = toy_free;
     out->update = toy_draw;
@@ -215,10 +218,23 @@ void demo_start()
             }
             switch (ev.key.keysym.sym) {
             case SDLK_r:
-                gettimeofday(&t->start, NULL);
+                il_log("Replay");
+                gettimeofday(&t->start_real, NULL);
+                t->mono_start = 0.0;
+                t->mono_last = 0.0;
                 break;
             case SDLK_p:
                 t->paused = !t->paused;
+                il_log("%s", t->paused? "Paused" : "Unpaused");
+                gettimeofday(&t->start_real, NULL);
+                break;
+            case SDLK_LEFT:
+                t->speed /= 2;
+                il_log("Speed: %f", t->speed);
+                break;
+            case SDLK_RIGHT:
+                t->speed *= 2;
+                il_log("Speed: %f", t->speed);
                 break;
             }
             break;
