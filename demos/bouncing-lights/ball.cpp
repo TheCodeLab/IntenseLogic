@@ -86,6 +86,7 @@ bool BallRenderer::build(void *obj, ilG_rendid id, ilG_context *context, ilG_bui
     out->types = types;
     out->num_types = 2;
     out->obj = obj;
+    out->name = strdup("Ball");
     return true;
 }
 

@@ -78,13 +78,13 @@ bool DebugDraw::build(void *ptr, ilG_rendid id, ilG_context *context, ilG_buildr
     glEnableVertexAttribArray(ILG_ARRATTR_AMBIENT);
     glBufferData(GL_ARRAY_BUFFER, 0, NULL, GL_DYNAMIC_DRAW);
 
-    memset(out, 0, sizeof(ilG_buildresult));
     int *types = reinterpret_cast<int*>(calloc(1, sizeof(int)));
     types[0] = ILG_VP;
     out->free = &DebugDraw::free;
     out->view = &DebugDraw::view;
     out->types = types;
     out->num_types = 1;
+    out->name = strdup("DebugDraw");
     return true;
 }
 

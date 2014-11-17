@@ -81,7 +81,8 @@ static bool line_build(void *obj, ilG_rendid id, ilG_context *context, ilG_build
         .draw = line_draw,
         .types = types,
         .num_types = 1,
-        .obj = obj
+        .obj = obj,
+        .name = strdup("Lines")
     };
     return true;
 }

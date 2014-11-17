@@ -46,6 +46,7 @@ static void sky_view(void *ptr, ilG_rendid id, il_mat *mats)
 
 static bool sky_build(void *ptr, ilG_rendid id, ilG_context *context, ilG_buildresult *out)
 {
+    (void)id;
     ilG_skybox *self = ptr;
     self->rm = &context->manager;
     ilG_tex_build(&self->texture, context);
@@ -74,7 +75,6 @@ static bool sky_build(void *ptr, ilG_rendid id, ilG_context *context, ilG_buildr
 
     self->box = ilG_box(context);
 
-    ilG_renderman_addName(self->rm, id, "Skybox");
     int *types = malloc(1 * sizeof(int));
     types[0] = ILG_VIEW_R | ILG_PROJECTION;
     *out = (ilG_buildresult) {
@@ -84,7 +84,8 @@ static bool sky_build(void *ptr, ilG_rendid id, ilG_context *context, ilG_buildr
         .draw = NULL,
         .types = types,
         .num_types = 1,
-        .obj = self
+        .obj = self,
+        .name = strdup("Skybox")
     };
     return true;
 }

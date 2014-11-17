@@ -66,10 +66,10 @@ static bool quad_build(void *obj, ilG_rendid id, ilG_context *context, ilG_build
     tgl_vao_bind(&q->vao);
     tgl_quad_init(&q->quad, ILG_ARRATTR_POSITION);
 
-    memset(out, 0, sizeof(ilG_buildresult));
     out->free = quad_free;
     out->update = quad_draw;
     out->obj = obj;
+    out->name = strdup("Quad");
     return true;
 }
 

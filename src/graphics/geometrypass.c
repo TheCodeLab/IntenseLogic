@@ -27,14 +27,14 @@ static void geometry_update(void *ptr, ilG_rendid id)
 
 static bool geometry_build(void *ptr, ilG_rendid id, ilG_context *ctx, ilG_buildresult *out)
 {
-    (void)ctx;
-    ilG_renderman_addName(&ctx->manager, id, "Geometry");
+    (void)ctx, (void)id;
     *out = (ilG_buildresult) {
         .free = geometry_free,
         .update = geometry_update,
         .types = NULL,
         .num_types = 0,
-        .obj = ptr
+        .obj = ptr,
+        .name = strdup("Geometry")
     };
     return true;
 }

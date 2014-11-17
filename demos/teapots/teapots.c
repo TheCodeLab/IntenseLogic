@@ -96,7 +96,6 @@ static bool teapot_build(void *obj, ilG_rendid id, ilG_context *context, ilG_bui
 
     ilG_tex_build(&t->tex, context);
 
-    memset(out, 0, sizeof(ilG_buildresult));
     int *types = calloc(2, sizeof(int));
     types[0] = ILG_MVP;
     types[1] = ILG_IMT;
@@ -105,6 +104,7 @@ static bool teapot_build(void *obj, ilG_rendid id, ilG_context *context, ilG_bui
     out->types = types;
     out->num_types = 2;
     out->obj = obj;
+    out->name = strdup("Teapot");
     return true;
 }
 

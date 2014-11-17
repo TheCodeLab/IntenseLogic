@@ -46,7 +46,8 @@ static bool grabber_build(void *obj, ilG_rendid id, ilG_context *context, ilG_bu
         .view = NULL,
         .types = NULL,
         .num_types = 0,
-        .obj = self
+        .obj = self,
+        .name = strdup("Screenshotter")
     };
     return true;
 }

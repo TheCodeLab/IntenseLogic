@@ -245,7 +245,8 @@ static bool out_build(void *ptr, ilG_rendid id, ilG_context *context, ilG_buildr
         .view = NULL,
         .types = NULL,
         .num_types = 0,
-        .obj = self
+        .obj = self,
+        .name = strdup("Screen Output")
     };
     return true;
 }

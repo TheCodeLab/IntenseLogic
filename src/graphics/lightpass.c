@@ -135,7 +135,6 @@ static bool lights_build(void *ptr, ilG_rendid id, ilG_context *context, ilG_bui
     types[0] = ILG_INVERSE | ILG_VIEW_R | ILG_PROJECTION;
     types[1] = ILG_MODEL_T | ILG_VIEW_T;
     types[2] = ILG_MODEL_T | ILG_VP;
-    memset(out, 0, sizeof(ilG_buildresult));
     *out = (ilG_buildresult) {
         .free = lights_free,
         .update = NULL,
@@ -143,7 +142,8 @@ static bool lights_build(void *ptr, ilG_rendid id, ilG_context *context, ilG_bui
         .view = NULL,
         .types = types,
         .num_types = 3,
-        .obj = self
+        .obj = self,
+        .name = strdup("Deferred Shading")
     };
     return true;
 }

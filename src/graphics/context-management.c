@@ -117,6 +117,10 @@ unsigned ilG_context_addRenderer(ilG_context *self, ilG_rendid id, ilG_builder b
         r.obj = self->manager.objrenderers.length;
         IL_APPEND(self->manager.objrenderers, m);
     }
+    if (b.name) {
+        ilG_renderman_addName(&self->manager, id, b.name);
+        free(b.name);
+    }
     IL_APPEND(self->manager.renderers, r);
     IL_APPEND(self->manager.rendids, id);
     ilG_client_msg msg;

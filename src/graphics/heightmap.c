@@ -96,7 +96,8 @@ static bool heightmap_build(void *ptr, ilG_rendid id, ilG_context *context, ilG_
         .draw = heightmap_draw,
         .types = types,
         .num_types = 2,
-        .obj = self
+        .obj = self,
+        .name = strdup("Heightmap")
     };
     return true;
 }

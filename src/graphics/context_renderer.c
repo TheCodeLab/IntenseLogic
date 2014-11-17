@@ -11,8 +11,7 @@ static void context_free(void *ptr)
 
 bool ilG_context_build(void *ptr, ilG_rendid id, ilG_context *self, ilG_buildresult *out)
 {
-    (void)ptr;
-    ilG_renderman_addName(&self->manager, id, "Context");
+    (void)ptr, (void)id;
     *out = (ilG_buildresult) {
         .free = context_free,
         .update = NULL,
@@ -20,7 +19,8 @@ bool ilG_context_build(void *ptr, ilG_rendid id, ilG_context *self, ilG_buildres
         .view = NULL,
         .types = NULL,
         .num_types = 0,
-        .obj = self
+        .obj = self,
+        .name = strdup("Context")
     };
     return true;
 }

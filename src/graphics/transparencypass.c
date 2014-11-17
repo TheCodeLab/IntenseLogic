@@ -32,7 +32,8 @@ static bool trans_build(void *ptr, ilG_rendid id, ilG_context *context, ilG_buil
         .view = NULL,
         .types = NULL,
         .num_types = 0,
-        .obj = ptr
+        .obj = ptr,
+        .name = strdup("Transparency")
     };
     return true;
 }

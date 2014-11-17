@@ -34,6 +34,7 @@ typedef struct ilG_buildresult {
     unsigned num_types;
     void *obj;
     char *error;
+    char *name;
 } ilG_buildresult;
 
 typedef bool (*ilG_build_fn)(void *obj, ilG_rendid id, struct ilG_context *context, ilG_buildresult *out);

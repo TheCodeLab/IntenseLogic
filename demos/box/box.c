@@ -126,7 +126,6 @@ static bool box_build(void *obj, ilG_rendid id, ilG_context *context, ilG_buildr
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
     glEnableVertexAttribArray(0);
 
-    memset(out, 0, sizeof(ilG_buildresult));
     int *types = calloc(1, sizeof(int));
     types[0] = ILG_MVP;
     out->free = box_free;
@@ -134,6 +133,7 @@ static bool box_build(void *obj, ilG_rendid id, ilG_context *context, ilG_buildr
     out->types = types;
     out->num_types = 1;
     out->obj = obj;
+    out->name = strdup("Box");
     return true;
 }
 
