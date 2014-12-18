@@ -4,4 +4,4 @@ CCFLAGS += $(BULLET_CFLAGS) -I. -I..
 LIBS += $(BULLET_LIBS)
 
 : foreach *.cpp |> !cxx |>
-: *.o | $(TOP)/<libs> $(TOP)/tiffgl/libtgl.a |> !ld |> $(TOP)/bouncing_lights$(PROG_SUFFIX)
+: *.o |> !ld |> $(TOP)/bouncing_lights$(PROG_SUFFIX)

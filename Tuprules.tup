@@ -94,24 +94,24 @@ endif
 
 TOP = $(TUP_CWD)
 
-CCFLAGS = -Wall -Wextra -pedantic -Werror -I$(TUP_CWD)/src @(CCFLAGS)
+CCFLAGS += -Wall -Wextra -pedantic -Werror -I$(TUP_CWD)/src @(CCFLAGS)
 CCFLAGS += $(GL_CFLAGS) $(TIFFGL_CFLAGS) $(LOADER_CFLAGS) $(PNG_CFLAGS) $(SDL_CFLAGS)
 
-CXXFLAGS = -std=c++11 @(CXXFLAGS)
+CXXFLAGS += -std=c++11 @(CXXFLAGS)
 
 ifeq ($(CXX),clang++)
   CXXFLAGS += -fcolor-diagnostics
 endif
 
-CFLAGS = -std=c99 -D_POSIX_C_SOURCE=200809L @(CFLAGS)
+CFLAGS += -std=c99 -D_POSIX_C_SOURCE=200809L @(CFLAGS)
 
 ifeq ($(CC),clang)
 #  CFLAGS += -fcolor-diagonstics
 endif
 
-LDFLAGS = 
+LDFLAGS += @(LDFLAGS)
 
 !cxx = |> ^o C++ %f^ $(CXX) $(CXXFLAGS) $(CCFLAGS) -c %f -o %o |> %B.o | $(TOP)/<objs>
 !cc = |> ^o C %f^ $(CC) $(CFLAGS) $(CCFLAGS) -c %f -o %o |> %B.o | $(TOP)/<objs>
-!ld = |> ^o LINK %o^ $(LD) %f $(LDFLAGS) $(LIBS) -o %o |>
+!ld = | $(TOP)/<libs> $(TGL_LIB) |> ^o LINK %o^ $(LD) %f $(LDFLAGS) $(LIBS) -o %o |>
 !ar = |> ^o LINK %o^ $(AR) %o %f |>

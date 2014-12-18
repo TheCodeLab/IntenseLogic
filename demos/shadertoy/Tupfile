@@ -4,4 +4,4 @@ CCFLAGS += $(UV_CFLAGS)
 LIBS += $(UV_LIBS)
 
 : foreach *.c |> !cc |>
-: foreach *.o | $(TOP)/<libs> $(TOP)/tiffgl/libtgl.a |> !ld |> $(TOP)/shadertoy$(PROG_SUFFIX)
+: foreach *.o |> !ld |> $(TOP)/shadertoy$(PROG_SUFFIX)

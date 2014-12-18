@@ -1,4 +1,4 @@
 include_rules
 
 : foreach *.c |> !cc |>
-: foreach *.o | $(TOP)/<libs> $(TOP)/tiffgl/libtgl.a |> !ld |> $(TOP)/quad$(PROG_SUFFIX)
+: foreach *.o |> !ld |> $(TOP)/quad$(PROG_SUFFIX)
