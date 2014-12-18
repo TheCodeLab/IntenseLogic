@@ -4,9 +4,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <pthread.h>
 
 #include "util/array.h"
 #include "util/event.h"
+
+pthread_mutex_t il_logger_stderr_mutex;
+bool il_logger_stderr_mutex_created = false;
 
 il_logger *il_logger_new(const char *name)
 {
@@ -66,6 +70,11 @@ bool il_logmsg_isLevel(const il_logmsg *self, enum il_loglevel level)
 
 static void log_stderr(il_logmsg *msg)
 {
+    if (!il_logger_stderr_mutex_created) {
+        il_logger_stderr_mutex_created = true;
+        pthread_mutex_init(&il_logger_stderr_mutex, NULL);
+    }
+    pthread_mutex_lock(&il_logger_stderr_mutex);
     fputc('(', stderr);
     if (msg->file.len) {
         fprintf(stderr, "%s:%i", msg->file.str, msg->line);
@@ -90,6 +99,7 @@ static void log_stderr(il_logmsg *msg)
     if (msg->extra.len) {
         fputs(msg->extra.str, stderr);
     }
+    pthread_mutex_unlock(&il_logger_stderr_mutex);
 }
 
 il_logger il_logger_stderr = {
