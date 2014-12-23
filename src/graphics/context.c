@@ -104,11 +104,9 @@ void ilG_context_init(ilG_context *self)
     // hints
     self->contextMajor = 3;
 #ifdef __APPLE__
-    self->contextMinor = 2;
     self->forwardCompat = 1;
-#else
-    self->contextMinor = 1;
 #endif
+    self->contextMinor = 2;
     self->profile = ILG_CONTEXT_NONE;
     self->experimental = 1;
     self->startWidth = 800;
@@ -471,7 +469,7 @@ void ilG_context_setupGLEW(ilG_context *self)
 # else
     if (!GLEW_VERSION_3_1) {
 # endif
-        il_error("GL version 3.1 is required, you have %s: crashes are on you", glGetString(GL_VERSION));
+        il_error("GL version 3.2 is required, you have %s: crashes are on you", glGetString(GL_VERSION));
     } else {
         il_log("OpenGL Version %s", glGetString(GL_VERSION));
     }
