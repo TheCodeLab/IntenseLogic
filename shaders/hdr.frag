@@ -4,7 +4,7 @@ in vec2 texcoord;
 
 uniform sampler2DRect tex;
 uniform vec2 size;
-const float bm = 0.5;
+const float bm = 1.0;
 const float exposure = 1.0;
 
 out vec3 color;

@@ -501,21 +501,25 @@ void ilG_context_localSetup(ilG_context *self)
     }
     if (!self->use_default_fb) {
         GLenum type = self->msaa? GL_TEXTURE_2D_MULTISAMPLE : GL_TEXTURE_RECTANGLE;
+        GLenum afmt = self->hdr? GL_RGBA16F : GL_RGBA8;
         tgl_fbo_numTargets(&self->fb, ILG_CONTEXT_NUMATTACHMENTS);
         tgl_fbo_texture(&self->fb, ILG_CONTEXT_DEPTH, type, GL_DEPTH_COMPONENT, GL_DEPTH_COMPONENT, GL_DEPTH_ATTACHMENT);
-        tgl_fbo_texture(&self->fb, ILG_CONTEXT_ACCUM, type, GL_RGBA8, GL_RGBA, GL_COLOR_ATTACHMENT0);
+        tgl_fbo_texture(&self->fb, ILG_CONTEXT_ACCUM, type, afmt, GL_RGBA, GL_COLOR_ATTACHMENT0);
         tgl_fbo_texture(&self->fb, ILG_CONTEXT_NORMAL, type, GL_RGB8, GL_RGB, GL_COLOR_ATTACHMENT1);
         tgl_fbo_texture(&self->fb, ILG_CONTEXT_DIFFUSE, type, GL_RGB8, GL_RGB, GL_COLOR_ATTACHMENT2);
-        tgl_fbo_texture(&self->fb, ILG_CONTEXT_SPECULAR, type, GL_RGBA8, GL_RGBA, GL_COLOR_ATTACHMENT3);
+        tgl_fbo_texture(&self->fb, ILG_CONTEXT_SPECULAR, type, GL_RGB8, GL_RGB, GL_COLOR_ATTACHMENT3);
+        tgl_fbo_texture(&self->fb, ILG_CONTEXT_SPECULAR_CO, type, GL_R16UI, GL_RED, GL_COLOR_ATTACHMENT3);
         if (self->msaa) {
             tgl_fbo_multisample(&self->fb, ILG_CONTEXT_DEPTH, self->msaa, false);
             tgl_fbo_multisample(&self->fb, ILG_CONTEXT_ACCUM, self->msaa, false);
             tgl_fbo_multisample(&self->fb, ILG_CONTEXT_NORMAL, self->msaa, false);
             tgl_fbo_multisample(&self->fb, ILG_CONTEXT_DIFFUSE, self->msaa, false);
             tgl_fbo_multisample(&self->fb, ILG_CONTEXT_SPECULAR, self->msaa, false);
+            tgl_fbo_multisample(&self->fb, ILG_CONTEXT_SPECULAR_CO, self->msaa, false);
         }
         tgl_check("Unable to generate framebuffer");
     }
+    glClampColor(GL_CLAMP_READ_COLOR, GL_FALSE);
     self->complete = 1;
 }
 

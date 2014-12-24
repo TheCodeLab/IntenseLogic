@@ -45,6 +45,11 @@ const btScalar arenaWidth = 128;
 
 extern ilA_fs demo_fs;
 
+float rand_float(unsigned *seedp)
+{
+    return (float)rand_r(seedp) / RAND_MAX;
+}
+
 void add_objects(BulletSpace &bs, BallRenderer &ball, ilG_handle lights, ilG_handle r, btCollisionShape *shape, unsigned num, unsigned *seedp)
 {
     for (unsigned i = 0; i < num; i++) {
@@ -52,10 +57,11 @@ void add_objects(BulletSpace &bs, BallRenderer &ball, ilG_handle lights, ilG_han
             (rand_r(seedp) % 128,
              rand_r(seedp) % 32 + 50,
              rand_r(seedp) % 128);
+        float brightness = rand_float(seedp) + 1;
         il_vec3 col = il_vec3_new
-            ((float)rand_r(seedp) / RAND_MAX,
-             (float)rand_r(seedp) / RAND_MAX,
-             (float)rand_r(seedp) / RAND_MAX);
+            (rand_float(seedp) * brightness,
+             rand_float(seedp) * brightness,
+             rand_float(seedp) * brightness);
         auto state = new btDefaultMotionState(btTransform(btQuaternion(0,0,0,1), vec));
         float mass = 1.f;
         btVector3 inertia(0,0,0);
@@ -67,7 +73,7 @@ void add_objects(BulletSpace &bs, BallRenderer &ball, ilG_handle lights, ilG_han
         bs.add(lights, id);
         ilG_light l;
         l.color = col;
-        l.radius = rand_r(seedp) * 20.0 / RAND_MAX;
+        l.radius = brightness * 10;
         ilG_handle_addLight(lights, l);
         ball.add_col(id.getId(), col);
     }
