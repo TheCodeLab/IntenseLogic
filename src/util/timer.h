@@ -1,6 +1,8 @@
 #ifndef IL_TIMER_H
 #define IL_TIMER_H
 
+#ifdef WIN32
+
 #define timeradd(a, b, res)                         \
     (res)->tv_sec  =  (a)->tv_sec + (b)->tv_sec;    \
     (res)->tv_usec =  (a)->tv_usec + (b)->tv_usec;  \
@@ -18,3 +20,4 @@
 
 #endif
 
+#endif

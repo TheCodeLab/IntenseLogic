@@ -24,78 +24,15 @@ else
 AR = ar rcs
 endif
 
-ifdef PKG_CONFIG
-PKG_CONFIG = @(PKG_CONFIG)
-else
-PKG_CONFIG = pkg-config
-endif
-
 ifdef PROG_SUFFIX
 PROG_SUFFIX = @(PROG_SUFFIX)
 else
 PROG_SUFFIX =
 endif
 
-ifdef LOADER
-LOADER = @(LOADER)
-else
-LOADER = EPOXY
-endif
-
-ifeq ($(LOADER),GLEW)
-LOADER_PKG = glew
-endif
-ifeq ($(LOADER),EPOXY)
-LOADER_PKG = epoxy
-endif
-
-ifdef GL_CFLAGS
-GL_CFLAGS = @(GL_CFLAGS)
-else
-GL_CFLAGS = `$(PKG_CONFIG) gl --cflags`
-endif
-
-ifdef TIFFGL_CFLAGS
-TIFFGL_CFLAGS = @(TIFFGL_CFLAGS)
-else
-TIFFGL_CFLAGS = -I$(TUP_CWD)/tiffgl/src -DTGL_USE_$(LOADER)
-endif
-
-ifdef LOADER_CFLAGS
-LOADER_CFLAGS = @(LOADER_CFLAGS)
-else
-LOADER_CFLAGS = `$(PKG_CONFIG) $(LOADER_PKG) --cflags`
-endif
-
-ifdef PNG_CFLAGS
-PNG_CFLAGS = @(PNG_CFLAGS)
-else
-PNG_CFLAGS = `$(PKG_CONFIG) libpng --cflags`
-endif
-
-ifdef SDL_CFLAGS
-SDL_CFLAGS = @(SDL_CFLAGS)
-else
-SDL_CFLAGS = `$(PKG_CONFIG) sdl2 --cflags`
-endif
-
-ifdef BULLET_CFLAGS
-BULLET_CFLAGS = @(BULLET_CFLAGS)
-else
-BULLET_CFLAGS = -isystem "/usr/include/bullet"
-#`$(PKG_CONFIG) bullet --cflags`
-endif
-
-ifdef UV_CFLAGS
-UV_CFLAGS = @(UV_CFLAGS)
-else
-UV_CFLAGS = `$(PKG_CONFIG) libuv --cflags`
-endif
-
 TOP = $(TUP_CWD)
 
 CCFLAGS += -Wall -Wextra -pedantic -Werror -I$(TUP_CWD)/src @(CCFLAGS)
-CCFLAGS += $(GL_CFLAGS) $(TIFFGL_CFLAGS) $(LOADER_CFLAGS) $(PNG_CFLAGS) $(SDL_CFLAGS)
 
 CXXFLAGS += -std=c++11 @(CXXFLAGS)
 
@@ -103,7 +40,7 @@ ifeq ($(CXX),clang++)
   CXXFLAGS += -fcolor-diagnostics
 endif
 
-CFLAGS += -std=c99 -D_POSIX_C_SOURCE=200809L @(CFLAGS)
+CFLAGS += -std=gnu99 @(CFLAGS)
 
 ifeq ($(CC),clang)
 #  CFLAGS += -fcolor-diagonstics

@@ -1,7 +1,4 @@
 include_rules
 
-CCFLAGS += $(UV_CFLAGS)
-LIBS += $(UV_LIBS)
-
 : foreach *.c |> !cc |>
 : foreach *.o |> !ld |> $(TOP)/shadertoy$(PROG_SUFFIX)
