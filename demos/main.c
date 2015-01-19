@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <SDL2/SDL.h> // for the #define of main to SDL_main
+#include <SDL.h> // for the #define of main to SDL_main
 
 #include "util/loader.h"
 #include "util/log.h"

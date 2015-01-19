@@ -2,7 +2,7 @@
 #define ILG_CONTEXT_H
 
 #include <stdlib.h>
-#include <SDL2/SDL_video.h>
+#include <SDL_video.h>
 #include <sys/time.h>
 #include <pthread.h>
 #include <stdbool.h>

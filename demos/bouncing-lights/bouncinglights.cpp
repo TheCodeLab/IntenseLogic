@@ -3,7 +3,7 @@
 #include <BulletDynamics/Character/btKinematicCharacterController.h>
 #include <BulletCollision/CollisionDispatch/btGhostObject.h>
 #include <BulletCollision/CollisionDispatch/btCollisionObject.h>
-#include <SDL2/SDL.h>
+#include <SDL.h>
 
 #include <iostream>
 #include <utility>

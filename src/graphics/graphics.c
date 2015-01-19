@@ -1,8 +1,8 @@
 #include "graphics.h"
 
 #include <stdlib.h>
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_video.h>
+#include <SDL.h>
+#include <SDL_video.h>
 #include <signal.h>
 
 #include "util/event.h"
