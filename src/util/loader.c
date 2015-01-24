@@ -30,8 +30,6 @@ typedef HINSTANCE il_handle;
 typedef void *il_handle;
 #endif
 
-char *strdup(const char*);
-
 static struct module {
     char *name;
     il_handle handle;

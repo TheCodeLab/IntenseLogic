@@ -344,7 +344,6 @@ il_value il_value_opaque(il_storage_void v)
     return val;
 }
 
-char *strdup(const char*);
 il_value il_value_string(const char* str)
 {
     il_value val;

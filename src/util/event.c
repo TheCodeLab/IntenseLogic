@@ -11,8 +11,6 @@
 #include "util/array.h"
 #include "util/uthash.h"
 
-char *strdup(const char*);
-
 struct ilE_handler_callback {
     ilE_callback callback;
     int priority;

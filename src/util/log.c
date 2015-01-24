@@ -5,8 +5,6 @@
 #include "util/uthash.h"
 #include "util/logger.h"
 
-char *strdup(const char*);
-
 void il_log_real(const char *file, int line, const char *func, unsigned level, const char *fmt, ...)
 {
     il_logger *logger = &il_logger_stderr; // TODO: dynamically scoped variable for current logger

@@ -7,8 +7,6 @@
 #include "util/log.h"
 #include "asset/mtl.h"
 
-char *strsep(char **stringp, const char *delim);
-
 static void *resize(void *src, size_t size, size_t newsize)
 {
     void *dst = calloc(1, newsize);

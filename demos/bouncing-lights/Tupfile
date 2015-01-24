@@ -1,7 +1,6 @@
 include_rules
 
-CCFLAGS += $(BULLET_CFLAGS) -I. -I..
-LIBS += $(BULLET_LIBS)
-
+ifdef BUILD_DEMOS
 : foreach *.cpp |> !cxx |>
 : *.o |> !ld |> $(TOP)/bouncing_lights$(PROG_SUFFIX)
+endif

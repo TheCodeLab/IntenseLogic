@@ -30,7 +30,6 @@ bool ilG_context_resize(ilG_context *self, int w, int h)
     return true;
 }
 
-char *strdup(const char*);
 bool ilG_context_rename(ilG_context *self, const char *title)
 {
     SDL_SetWindowTitle(self->window, title);
