@@ -98,12 +98,8 @@ int main(int argc, char **argv)
     il_log("IL Commit: %s", il_commit);
     il_log("Built %s", il_build_date);
 
-    void il_load_ilgraphics();
     il_load_ilgraphics();
-
     demo_start();
-
-    void ilG_quit();
     ilG_quit();
 
     return 0;

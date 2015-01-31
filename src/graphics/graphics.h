@@ -6,6 +6,7 @@
 
 extern ilA_fs ilG_shaders;
 
+int il_load_ilgraphics();
 void ilG_shaders_addPath(const char *path);
 void ilG_quit();
 

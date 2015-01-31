@@ -72,12 +72,15 @@ static void sdl_setup()
     il_log("Using SDL %s", SDL_GetRevision());
 }
 
+bool ilG_module_loaded = false;
+
 int il_load_ilgraphics()
 {
     if (ilG_shaders.dirs.length < 1) {
         ilG_shaders_addPath("shaders");
     }
     sdl_setup();
+    ilG_module_loaded = true;
     return 0;
 }
 

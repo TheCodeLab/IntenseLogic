@@ -408,8 +408,14 @@ static GLvoid error_cb(GLenum source, GLenum type, GLuint id, GLenum severity,
     il_logger_log(logger, lmsg);
 }
 
+extern bool ilG_module_loaded;
+
 void ilG_context_setupSDLWindow(ilG_context *self) // main thread
 {
+    if (!ilG_module_loaded) {
+        il_error("il_load_ilgraphics() has not been called");
+        abort();
+    }
     if (self->complete) {
         il_error("Context already complete");
         return;
