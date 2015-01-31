@@ -1,2 +1,2 @@
 CCFLAGS += -I$(TOP)/demos -I. @(DEMO_CCFLAGS)
-LDFLAGS += -pthread -ldemo -lilgraphics -ltgl -lilasset -lilmath -lilutil @(DEMO_LDFLAGS)
+LDFLAGS += -pthread -ldemo -lilgraphics -ltgl -lilasset -lilmath -lilutil -L$(TOP) @(DEMO_LDFLAGS)
