@@ -292,7 +292,7 @@ static void render_renderer(ilG_context *context, ilG_renderer *par)
         unsigned num_mats = obj->objects.length;
         il_mat objmats[obj->num_types][num_mats];
         il_mat *objmats_p[obj->num_types];
-        for (unsigned i = 0; i < obj->num_types; i++) {
+        for (unsigned i = 0; i < obj->num_types && num_mats; i++) {
             co->objmats(co->obj, obj->objects.data, num_mats, objmats[i], obj->types[i]);
             objmats_p[i] = &objmats[i][0];
         }
