@@ -69,7 +69,7 @@ static bool line_build(void *obj, ilG_rendid id, ilG_context *context, ilG_build
     tgl_vao_bind(&self->vao);
     glGenBuffers(1, &self->vbo);
     glBindBuffer(GL_ARRAY_BUFFER, self->vbo);
-    glBufferData(GL_ARRAY_BUFFER, self->count * 2 * 3 * sizeof(float), self->verts, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, self->count * 3 * sizeof(float), self->verts, GL_STATIC_DRAW);
     free(self->verts);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
     glEnableVertexAttribArray(0);
