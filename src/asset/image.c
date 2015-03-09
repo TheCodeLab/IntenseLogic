@@ -186,6 +186,7 @@ sample_pixel(unsigned char *dst, const unsigned char *src,
              ilA_imgformat srcfmt, ilA_imgchannel srcchans)
 {
     assert(dstfmt == srcfmt); // TODO: Format translation
+    (void)srcfmt;
     unsigned bytes = 0;
     switch (dstfmt) {
     case ILA_IMG_U8:  bytes = sizeof(uint8_t);  break;

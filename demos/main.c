@@ -34,8 +34,6 @@ const char *demo_shader;
 
 void demo_start();
 
-char *strdup(const char*);
-char *strndup(const char*, size_t);
 int main(int argc, char **argv)
 {
     size_t i;
