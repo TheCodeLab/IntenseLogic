@@ -141,7 +141,7 @@ bool ilG_material_link(ilG_material *self, ilG_context *context, char **error)
     ilA_unmapfile(&vert);
     ilA_unmapfile(&frag);
     po = glCreateProgram();
-    if (TGL_EXTENSION(KHR_debug) && self->name) {
+    if (TGL_EXTENSION(KHR_debug) && self->name[0]) {
         glObjectLabel(GL_SHADER,
                       vo,
                       self->vert.namelen,
