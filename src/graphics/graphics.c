@@ -55,7 +55,7 @@ static void sdl_error(void *ptr, int cat, SDL_LogPriority pri, const char *reaso
     log.level = level;
     log.msg = il_string_new(msg_str);
     log.reason = il_string_new((char*)reason);
-    il_logger_log(&il_logger_stderr, log); // TODO: Log to appropriate location
+    il_logger_log(il_logger_cur(), log);
 }
 
 static void sdl_setup()

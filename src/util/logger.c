@@ -107,3 +107,37 @@ il_logger il_logger_stderr = {
     .filter = IL_NOTIFY,
     .name = "stderr"
 };
+
+typedef struct logger_node {
+    il_logger *logger;
+    struct logger_node *next;
+} logger_node;
+
+// portability: GNU extension right here
+__thread logger_node *head;
+
+il_logger *il_logger_cur()
+{
+    if (!head || !head->logger) {
+        return &il_logger_stderr;
+    }
+    return head->logger;
+}
+
+void il_logger_push(il_logger *self)
+{
+    logger_node *node = calloc(1, sizeof(logger_node));
+    node->logger = self;
+    if (head) {
+        node->next = head;
+    }
+    head = node;
+}
+
+void il_logger_pop()
+{
+    logger_node *node = head;
+    assert(node && "No loggers left to pop: something has gone horribly wrong");
+    head = head->next;
+    free(node);
+}

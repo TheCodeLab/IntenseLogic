@@ -404,7 +404,7 @@ static GLvoid error_cb(GLenum source, GLenum type, GLuint id, GLenum severity,
     lmsg.msg = il_string_bin(msg_buf, len);
     lmsg.func = il_string_bin(source_buf, source_len);
 
-    il_logger *logger = &il_logger_stderr; // TODO
+    il_logger *logger = il_logger_cur();
     il_logger_log(logger, lmsg);
 }
 

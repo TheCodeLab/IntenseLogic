@@ -36,6 +36,9 @@ typedef struct il_logger {
 il_logger *il_logger_new(const char *name);
 void il_logger_init(il_logger *self, const char *name);
 void il_logger_destroy(il_logger *self);
+il_logger *il_logger_cur();
+void il_logger_push(il_logger *self);
+void il_logger_pop();
 
 void il_logger_forward(il_logger *from, il_logger *to, enum il_loglevel filter);
 bool /*success*/ il_logger_log(il_logger *self, il_logmsg msg);
