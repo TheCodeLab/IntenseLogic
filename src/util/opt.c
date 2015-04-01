@@ -6,7 +6,7 @@ static void do_opt(il_opts *opts, il_string modname, il_opt opt)
 {
     for (unsigned i = 0; i < opts->opts.length; i++) {
         il_modopts *modopts = &opts->opts.data[i];
-        if (modopts->modname.len == modname.len && strncmp(modopts->modname.str, modname.str, modname.len) == 0) {
+        if (il_string_cmp(modname, modopts->modname)) {
             IL_APPEND(modopts->args, opt);
             return;
         }

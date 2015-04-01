@@ -16,5 +16,5 @@ il_string il_string_bin(char *s, size_t len)
 
 bool il_string_cmp(il_string a, il_string b)
 {
-    return a.len == b.len && strncmp(a.str, b.str, a.len) == 0;
+    return a.len == b.len && (!a.len || strncmp(a.str, b.str, a.len) == 0);
 }
