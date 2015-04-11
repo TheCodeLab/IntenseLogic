@@ -1,10 +1,9 @@
-#include "line.h"
+#include "graphics/renderer.h"
 
 #include "tgl/tgl.h"
 #include "graphics/context.h"
 #include "graphics/material.h"
 #include "graphics/fragdata.h"
-#include "graphics/renderer.h"
 #include "graphics/transform.h"
 
 typedef struct ilG_line {

@@ -1,4 +1,4 @@
-#include "skyboxpass.h"
+#include "graphics/renderer.h"
 
 #include "graphics/arrayattrib.h"
 #include "graphics/context.h"

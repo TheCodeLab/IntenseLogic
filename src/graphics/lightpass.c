@@ -1,10 +1,9 @@
-#include "lightpass.h"
+#include "graphics/renderer.h"
 
 #include "graphics/arrayattrib.h"
 #include "graphics/context.h"
 #include "graphics/fragdata.h"
 #include "graphics/material.h"
-#include "graphics/renderer.h"
 #include "graphics/shape.h"
 #include "graphics/transform.h"
 #include "math/matrix.h"

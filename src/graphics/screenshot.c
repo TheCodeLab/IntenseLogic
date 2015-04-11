@@ -1,4 +1,4 @@
-#include "screenshot.h"
+#include "graphics/renderer.h"
 
 #include "asset/image.h"
 #include "graphics/context.h"

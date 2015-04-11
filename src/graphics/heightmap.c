@@ -1,4 +1,4 @@
-#include "heightmap.h"
+#include "graphics/renderer.h"
 
 #include "graphics/context.h"
 #include "graphics/material.h"
@@ -6,7 +6,6 @@
 #include "graphics/fragdata.h"
 #include "graphics/mesh.h"
 #include "graphics/tex.h"
-#include "graphics/renderer.h"
 #include "graphics/transform.h"
 #include "util/log.h"
 

@@ -1,7 +1,6 @@
-#include "transparencypass.h"
+#include "graphics/renderer.h"
 
 #include "graphics/context.h"
-#include "graphics/renderer.h"
 #include "tgl/tgl.h"
 
 static void trans_free(void *ptr)
