@@ -45,14 +45,14 @@ static void heightmap_draw(void *ptr, ilG_rendid id, il_mat **mats, const unsign
     }
 }
 
-static bool heightmap_build(void *ptr, ilG_rendid id, ilG_context *context, ilG_buildresult *out)
+static bool heightmap_build(void *ptr, ilG_rendid id, ilG_renderman *rm, ilG_buildresult *out)
 {
     (void)id;
     ilG_heightmap *self = ptr;
-    self->rm = &context->manager;
-    ilG_tex_build(&self->height, context);
-    ilG_tex_build(&self->normal, context);
-    ilG_tex_build(&self->color, context);
+    self->rm = rm;
+    ilG_tex_build(&self->height);
+    ilG_tex_build(&self->normal);
+    ilG_tex_build(&self->color);
 
     ilG_material mat;
     ilG_material_init(&mat);
@@ -72,7 +72,7 @@ static bool heightmap_build(void *ptr, ilG_rendid id, ilG_context *context, ilG_
     if (!ilG_material_fragment_file(&mat, "heightmap.frag", &out->error)) {
         return false;
     }
-    if (!ilG_material_link(&mat, context, &out->error)) {
+    if (!ilG_material_link(&mat, &out->error)) {
         return false;
     }
     self->mat = ilG_renderman_addMaterial(self->rm, mat);
@@ -85,7 +85,7 @@ static bool heightmap_build(void *ptr, ilG_rendid id, ilG_context *context, ilG_
         return false;
     }
     ilA_mesh_free(self->source);
-    if (ILG_MESH_ERROR & ilG_mesh_build(&self->mesh, context)) {
+    if (ILG_MESH_ERROR & ilG_mesh_build(&self->mesh)) {
         return false;
     }
     int *types = malloc(sizeof(int) * 2);

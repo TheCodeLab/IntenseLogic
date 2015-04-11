@@ -53,9 +53,8 @@ void ilG_mesh_free(ilG_mesh *mesh)
     }
 }
 
-enum ilG_mesh_attribs ilG_mesh_build(ilG_mesh *m, ilG_context *context)
+enum ilG_mesh_attribs ilG_mesh_build(ilG_mesh *m)
 {
-    (void)context;
     ilA_mesh *self = m->mesh;
     tgl_check("Unknown");
     glGenVertexArrays(1, &m->vao);

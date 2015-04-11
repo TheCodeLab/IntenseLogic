@@ -25,9 +25,9 @@ static void geometry_update(void *ptr, ilG_rendid id)
     tgl_check("Could not setup to draw geometry");
 }
 
-static bool geometry_build(void *ptr, ilG_rendid id, ilG_context *ctx, ilG_buildresult *out)
+static bool geometry_build(void *ptr, ilG_rendid id, ilG_renderman *rm, ilG_buildresult *out)
 {
-    (void)ctx, (void)id;
+    (void)id, (void)rm;
     *out = (ilG_buildresult) {
         .free = geometry_free,
         .update = geometry_update,

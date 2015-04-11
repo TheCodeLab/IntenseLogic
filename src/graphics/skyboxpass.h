@@ -8,4 +8,3 @@ struct ilG_tex;
 ilG_builder ilG_skybox_builder(struct ilG_tex skytex);
 
 #endif
-

@@ -42,6 +42,6 @@ GLuint ilG_material_getLoc(ilG_material*, const char *location);
 void ilG_material_bind(ilG_material*);
 void ilG_material_bindMatrix(ilG_material*, GLuint loc, il_mat m);
 bool /*success*/ __attribute__((warn_unused_result))
-ilG_material_link(ilG_material*, struct ilG_context *ctx, char **error);
+ilG_material_link(ilG_material*, char **error);
 
 #endif

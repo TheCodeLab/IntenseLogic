@@ -72,9 +72,8 @@ static GLenum getImgIFormat(const ilA_img *img)
     return getImgFormat(img);
 }
 
-static void tex_cube_build(ilG_tex *self, struct ilG_context *context)
+static void tex_cube_build(ilG_tex *self)
 {
-    (void)context;
     ilA_img *faces = self->data;
     static const GLenum targets[6] = {
         GL_TEXTURE_CUBE_MAP_POSITIVE_X,
@@ -125,9 +124,8 @@ struct data_ctx {
     unsigned width, height, depth;
     void *data;
 };
-static void tex_data_build(ilG_tex *self, struct ilG_context *context)
+static void tex_data_build(ilG_tex *self)
 {
-    (void)context;
     struct data_ctx *ctx = self->data;
     glGenTextures(1, &self->object);
     glBindTexture(self->target, self->object);
@@ -193,8 +191,8 @@ void ilG_tex_bind(ilG_tex *self)
     glBindTexture(self->target, self->object);
 }
 
-void ilG_tex_build(ilG_tex *self, struct ilG_context *context)
+void ilG_tex_build(ilG_tex *self)
 {
-    self->build(self, context);
+    self->build(self);
     self->complete = 1;
 }

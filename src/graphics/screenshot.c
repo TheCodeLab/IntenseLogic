@@ -33,12 +33,11 @@ static void grabber_update(void *obj, ilG_rendid id)
     ilA_img_free(img);
 }
 
-static bool grabber_build(void *obj, ilG_rendid id, ilG_context *context, ilG_buildresult *out)
+static bool grabber_build(void *obj, ilG_rendid id, ilG_renderman *rm, ilG_buildresult *out)
 {
     (void)id;
     ilG_grabber *self = obj;
-    self->context = context;
-    self->rm = &context->manager;
+    self->rm = rm;
     *out = (ilG_buildresult) {
         .free = grabber_free,
         .update = grabber_update,
@@ -52,9 +51,10 @@ static bool grabber_build(void *obj, ilG_rendid id, ilG_context *context, ilG_bu
     return true;
 }
 
-ilG_builder ilG_grabber_builder(void (*cb)(ilA_img res, void *user), void *user)
+ilG_builder ilG_grabber_builder(ilG_context *context, void (*cb)(ilA_img res, void *user), void *user)
 {
     ilG_grabber *self = calloc(1, sizeof(ilG_grabber));
+    self->context = context;
     self->cb = cb;
     self->user = user;
     return ilG_builder_wrap(self, grabber_build);

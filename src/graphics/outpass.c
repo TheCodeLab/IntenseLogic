@@ -151,12 +151,12 @@ static void out_resize(const il_value *data, il_value *ctx)
     tgl_fbo_build(&self->result, w, h);
 }
 
-static bool out_build(void *ptr, ilG_rendid id, ilG_context *context, ilG_buildresult *out)
+static bool out_build(void *ptr, ilG_rendid id, ilG_renderman *rm, ilG_buildresult *out)
 {
     (void)id;
     ilG_out *self = ptr;
-    self->context = context;
-    self->rm = &context->manager;
+    ilG_context *context = self->context;
+    self->rm = rm;
     if (context->hdr) {
         tgl_fbo *f;
         GLenum fmt = context->msaa? GL_TEXTURE_2D_MULTISAMPLE : GL_TEXTURE_RECTANGLE;
@@ -193,7 +193,7 @@ static bool out_build(void *ptr, ilG_rendid id, ilG_context *context, ilG_buildr
         if (!ilG_material_fragment_file(&m, "horizblur.frag", &out->error)) {
             return false;
         }
-        if (!ilG_material_link(&m, context, &out->error)) {
+        if (!ilG_material_link(&m, &out->error)) {
             return false;
         }
         self->horizblur = ilG_renderman_addMaterial(self->rm, m);
@@ -209,7 +209,7 @@ static bool out_build(void *ptr, ilG_rendid id, ilG_context *context, ilG_buildr
         if (!ilG_material_fragment_file(&m, "vertblur.frag", &out->error)) {
             return false;
         }
-        if (!ilG_material_link(&m, context, &out->error)) {
+        if (!ilG_material_link(&m, &out->error)) {
             return false;
         }
         self->vertblur = ilG_renderman_addMaterial(self->rm, m);
@@ -224,7 +224,7 @@ static bool out_build(void *ptr, ilG_rendid id, ilG_context *context, ilG_buildr
         if (!ilG_material_fragment_file(&m, "hdr.frag", &out->error)) {
             return false;
         }
-        if (!ilG_material_link(&m, context, &out->error)) {
+        if (!ilG_material_link(&m, &out->error)) {
             return false;
         }
         self->size_loc = ilG_material_getLoc(&m, "size");
@@ -251,12 +251,13 @@ static bool out_build(void *ptr, ilG_rendid id, ilG_context *context, ilG_buildr
     return true;
 }
 
-ilG_builder ilG_out_builder()
+ilG_builder ilG_out_builder(ilG_context *context)
 {
     ilG_out *self = calloc(1, sizeof(ilG_out));
 
     tgl_fbo_init(&self->front);
     tgl_fbo_init(&self->result);
+    self->context = context;
     self->which = 1;
 
     return ilG_builder_wrap(self, out_build);

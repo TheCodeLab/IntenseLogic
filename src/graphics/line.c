@@ -41,11 +41,11 @@ static void line_draw(void *obj, ilG_rendid id, il_mat **mats, const unsigned *o
     }
 }
 
-static bool line_build(void *obj, ilG_rendid id, ilG_context *context, ilG_buildresult *out)
+static bool line_build(void *obj, ilG_rendid id, ilG_renderman *rm, ilG_buildresult *out)
 {
     (void)id;
     ilG_line *self = obj;
-    self->rm = &context->manager;
+    self->rm = rm;
 
     ilG_material m[1];
     ilG_material_init(m);
@@ -58,7 +58,7 @@ static bool line_build(void *obj, ilG_rendid id, ilG_context *context, ilG_build
     if (!ilG_material_fragment_file(m, "line.frag", &out->error)) {
         return false;
     }
-    if (!ilG_material_link(m, context, &out->error)) {
+    if (!ilG_material_link(m, &out->error)) {
         return false;
     }
     self->mat = ilG_renderman_addMaterial(self->rm, *m);

@@ -149,9 +149,9 @@ static const short ico_index[] = {
     9, 8, 1,
 };
 
-ilG_shape *ilG_box(ilG_context *context)
+ilG_shape *ilG_box(ilG_renderman *rm)
 {
-    struct ilG_shape *self = il_table_mgetsp(&context->storage, "shape.box");
+    struct ilG_shape *self = il_table_mgetsp(&rm->storage, "shape.box");
     if (self) {
         return self;
     }
@@ -179,13 +179,13 @@ ilG_shape *ilG_box(ilG_context *context)
     tgl_check("Unable to set vertex attrib pointer");
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(cube_index), cube_index, GL_STATIC_DRAW);
     tgl_check("Unable to upload index buffer data");
-    il_table_setsp(&context->storage, "shape.box", il_opaque(self, free));
+    il_table_setsp(&rm->storage, "shape.box", il_opaque(self, free));
     return self;
 }
 
-ilG_shape *ilG_icosahedron(ilG_context *context)
+ilG_shape *ilG_icosahedron(ilG_renderman *rm)
 {
-    struct ilG_shape *self = il_table_mgetsp(&context->storage, "shape.icosahedron");
+    struct ilG_shape *self = il_table_mgetsp(&rm->storage, "shape.icosahedron");
     if (self) {
         return self;
     }
@@ -212,7 +212,7 @@ ilG_shape *ilG_icosahedron(ilG_context *context)
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(ico_index), ico_index, GL_STATIC_DRAW);
     tgl_check("Unable to upload index buffer data");
 
-    il_table_setsp(&context->storage, "shape.icosahedron", il_opaque(self, free));
+    il_table_setsp(&rm->storage, "shape.icosahedron", il_opaque(self, free));
     return self;
 }
 

@@ -13,7 +13,7 @@ typedef struct ilG_tex {
     bool complete;
     GLenum target;
     GLenum object;
-    void (*build)(struct ilG_tex *self, struct ilG_context *context);
+    void (*build)(struct ilG_tex *self);
     void *data;
 } ilG_tex;
 
@@ -23,6 +23,6 @@ void ilG_tex_loadimage(ilG_tex *self, ilA_img img);
 void ilG_tex_loaddata(ilG_tex *self, GLenum target, GLenum internalformat, unsigned width, unsigned height, unsigned depth, GLenum format, GLenum type, void *data);
 
 void ilG_tex_bind(ilG_tex *self);
-void ilG_tex_build(ilG_tex *self, struct ilG_context *context);
+void ilG_tex_build(ilG_tex *self);
 
 #endif

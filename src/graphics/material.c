@@ -111,9 +111,8 @@ void ilG_material_bindMatrix(ilG_material* self, GLuint loc, il_mat m)
     glUniformMatrix4fv(loc, 1, GL_TRUE, m.data);
 }
 
-bool ilG_material_link(ilG_material *self, ilG_context *context, char **error)
+bool ilG_material_link(ilG_material *self, char **error)
 {
-    (void)context;
     tgl_check("Unknown");
     il_log("Building shader \"%s\"", self->name);
     ilA_map vert, frag;

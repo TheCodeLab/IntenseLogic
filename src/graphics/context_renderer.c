@@ -9,9 +9,9 @@ static void context_free(void *ptr)
     (void)ptr;
 }
 
-bool ilG_context_build(void *ptr, ilG_rendid id, ilG_context *self, ilG_buildresult *out)
+bool ilG_context_build(void *ptr, ilG_rendid id, ilG_renderman *rm, ilG_buildresult *out)
 {
-    (void)ptr, (void)id;
+    (void)ptr, (void)id, (void)rm;
     *out = (ilG_buildresult) {
         .free = context_free,
         .update = NULL,
@@ -19,7 +19,7 @@ bool ilG_context_build(void *ptr, ilG_rendid id, ilG_context *self, ilG_buildres
         .view = NULL,
         .types = NULL,
         .num_types = 0,
-        .obj = self,
+        .obj = NULL,
         .name = strdup("Context")
     };
     return true;

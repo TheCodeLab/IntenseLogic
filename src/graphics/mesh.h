@@ -29,7 +29,7 @@ enum ilG_mesh_attribs {
 bool __attribute__((warn_unused_result)) ilG_mesh_init(ilG_mesh *mesh, const struct ilA_mesh *source);
 bool __attribute__((warn_unused_result)) ilG_mesh_fromfile(ilG_mesh *mesh, struct ilA_fs *fs, const char *name);
 void ilG_mesh_free(ilG_mesh *mesh);
-enum ilG_mesh_attribs ilG_mesh_build(ilG_mesh *mesh, struct ilG_context *context);
+enum ilG_mesh_attribs ilG_mesh_build(ilG_mesh *mesh);
 void ilG_mesh_bind(ilG_mesh *mesh);
 void ilG_mesh_draw(ilG_mesh *mesh);
 

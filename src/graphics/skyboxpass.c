@@ -44,12 +44,12 @@ static void sky_view(void *ptr, ilG_rendid id, il_mat *mats)
     glClear(GL_DEPTH_BUFFER_BIT);
 }
 
-static bool sky_build(void *ptr, ilG_rendid id, ilG_context *context, ilG_buildresult *out)
+static bool sky_build(void *ptr, ilG_rendid id, ilG_renderman *rm, ilG_buildresult *out)
 {
     (void)id;
     ilG_skybox *self = ptr;
-    self->rm = &context->manager;
-    ilG_tex_build(&self->texture, context);
+    self->rm = rm;
+    ilG_tex_build(&self->texture);
 
     ilG_material m;
     ilG_material_init(&m);
@@ -67,13 +67,13 @@ static bool sky_build(void *ptr, ilG_rendid id, ilG_context *context, ilG_buildr
     if (!ilG_material_fragment_file(&m, "skybox.frag", &out->error)) {
         return false;
     }
-    if (!ilG_material_link(&m, context, &out->error)) {
+    if (!ilG_material_link(&m, &out->error)) {
         return false;
     }
     self->vp_loc = ilG_material_getLoc(&m, "mat");
-    self->mat = ilG_renderman_addMaterial(self->rm, m);
+    self->mat = ilG_renderman_addMaterial(rm, m);
 
-    self->box = ilG_box(context);
+    self->box = ilG_box(rm);
 
     int *types = malloc(1 * sizeof(int));
     types[0] = ILG_VIEW_R | ILG_PROJECTION;

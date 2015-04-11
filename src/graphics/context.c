@@ -20,75 +20,6 @@
 #endif
 
 /////////////////////////////////////////////////////////////////////////////
-// Context Queue
-
-void ilG_context_queue_init(ilG_context_queue *queue)
-{
-    memset(queue, 0, sizeof(ilG_context_queue));
-    pthread_mutex_init(&queue->mutex, NULL);
-}
-
-void ilG_context_queue_free(ilG_context_queue *queue)
-{
-    IL_FREE(queue->read);
-    IL_FREE(queue->write);
-    pthread_mutex_destroy(&queue->mutex);
-}
-
-void ilG_context_queue_produce(ilG_context_queue *queue, ilG_context_msg msg)
-{
-    pthread_mutex_lock(&queue->mutex);
-    IL_APPEND(queue->write, msg);
-    pthread_mutex_unlock(&queue->mutex);
-}
-
-void ilG_context_queue_read(ilG_context_queue *queue)
-{
-    pthread_mutex_lock(&queue->mutex);
-    ilG_context_msgarray tmp = queue->read;
-    queue->read = queue->write;
-    tmp.length = 0;
-    queue->write = tmp;
-    pthread_mutex_unlock(&queue->mutex);
-}
-
-/////////////////////////////////////////////////////////////////////////////
-// Client Queue
-
-void ilG_client_queue_init(ilG_client_queue *queue)
-{
-    memset(queue, 0, sizeof(ilG_client_queue));
-    pthread_mutex_init(&queue->mutex, NULL);
-}
-
-void ilG_client_queue_free(ilG_client_queue *queue)
-{
-    IL_FREE(queue->read);
-    IL_FREE(queue->write);
-    pthread_mutex_destroy(&queue->mutex);
-}
-
-void ilG_client_queue_produce(ilG_client_queue *queue, ilG_client_msg msg)
-{
-    pthread_mutex_lock(&queue->mutex);
-    IL_APPEND(queue->write, msg);
-    pthread_mutex_unlock(&queue->mutex);
-    if (queue->notify) {
-        queue->notify(&queue->user);
-    }
-}
-
-void ilG_client_queue_read(ilG_client_queue *queue)
-{
-    pthread_mutex_lock(&queue->mutex);
-    ilG_client_msgarray tmp = queue->read;
-    queue->read = queue->write;
-    tmp.length = 0;
-    queue->write = tmp;
-    pthread_mutex_unlock(&queue->mutex);
-}
-
-/////////////////////////////////////////////////////////////////////////////
 // Book keeping
 
 ilG_context *ilG_context_new()
@@ -118,14 +49,12 @@ void ilG_context_init(ilG_context *self)
     ilE_handler_init_with_name(&self->resize,  "il.graphics.context.resize");
     ilE_handler_init_with_name(&self->close,   "il.graphics.context.close");
     ilE_handler_init_with_name(&self->destroy, "il.graphics.context.destroy");
-    self->client = calloc(1, sizeof(ilG_client_queue));
-    ilG_client_queue_init(self->client);
     // private
     tgl_fbo_init(&self->fb);
-    self->queue = calloc(1, sizeof(ilG_context_queue));
-    ilG_context_queue_init(self->queue);
     ilG_renderman *rm = &self->manager;
-    ilG_context_addRenderer(self, 0, ilG_builder_wrap(NULL, ilG_context_build));
+    ilG_renderman_queue_init(&rm->queue);
+    ilG_client_queue_init(&rm->client);
+    ilG_renderman_addRenderer(rm, 0, ilG_builder_wrap(NULL, ilG_context_build));
     ilG_statrenderer stat = (ilG_statrenderer) {ilG_default_update};
     ilG_viewrenderer view = (ilG_viewrenderer) {
         .update = ilG_default_multiupdate,
@@ -153,7 +82,7 @@ void ilG_context_init(ilG_context *self)
     ilE_handler_init_with_name(&rm->material_creation, "Material Creation");
     self->root = (ilG_handle) {
         .id = 0,
-        .context = self
+        .rm = &self->manager
     };
 }
 
@@ -205,7 +134,7 @@ void ilG_context_free(ilG_context *self)
 
     // private members
     tgl_fbo_free(&self->fb);
-    ilG_context_queue_free(self->queue);
+    ilG_renderman_queue_free(&self->manager.queue);
 
     SDL_GL_DeleteContext(self->context);
     SDL_DestroyWindow(self->window);
@@ -558,9 +487,9 @@ void *ilG_context_loop(void *ptr)
         ilE_handler_fire(&self->tick, &nil);
         il_value_free(nil);
         // Process messages
-        ilG_context_queue_read(self->queue);
-        for (unsigned i = 0; i < self->queue->read.length; i++) {
-            ilG_context_msg msg = self->queue->read.data[i];
+        ilG_renderman_queue_read(&self->manager.queue);
+        for (unsigned i = 0; i < self->manager.queue.read.length; i++) {
+            ilG_renderman_msg msg = self->manager.queue.read.data[i];
             ilG_renderman *rm = &self->manager;
             switch (msg.type) {
             case ILG_UPLOAD: msg.v.upload.cb(msg.v.upload.ptr); break;
@@ -634,19 +563,19 @@ bool ilG_context_start(ilG_context *self)
 
 void ilG_context_stop(ilG_context *self)
 {
-    ilG_context_msg msg;
+    ilG_renderman_msg msg;
     memset(&msg, 0, sizeof(msg));
     msg.type = ILG_STOP;
-    ilG_context_queue_produce(self->queue, msg);
+    ilG_renderman_queue_produce(&self->manager.queue, msg);
     pthread_join(self->thread, NULL);
 }
 
 void ilG_context_end(ilG_context *self)
 {
-    ilG_context_msg msg;
+    ilG_renderman_msg msg;
     memset(&msg, 0, sizeof(msg));
     msg.type = ILG_END;
-    ilG_context_queue_produce(self->queue, msg);
+    ilG_renderman_queue_produce(&self->manager.queue, msg);
     pthread_join(self->thread, NULL);
 }
 

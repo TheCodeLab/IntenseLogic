@@ -148,19 +148,6 @@ void ilG_context_stop(ilG_context *self);
 /** Destroys the context and stops the render thread. Blocks. */
 void ilG_context_end(ilG_context *self);
 
-unsigned ilG_context_addRenderer(ilG_context *self, ilG_rendid id, ilG_builder builder);
-
-/* External calls */
-/** Calls a function at the beginning of the frame on the context thread, usually for building VBOs */
-bool ilG_context_upload(ilG_context *self, void (*fn)(void*), void*);
-/** Resizes (and creates if first call) the context's framebuffers and calls the #ilG_context.resize event.
- * @return Success. */
-bool ilG_context_resize(ilG_context *self, int w, int h);
-/** Renames the window */
-bool ilG_context_rename(ilG_context *self, const char *title);
-/** Sets the function called to notify client thread there are messages available */
-void ilG_context_setNotifier(ilG_context *self, void (*fn)(il_value*), il_value val);
-
 /** Internal: Binds the context's internal framebuffer */
 void ilG_context_bindFB(ilG_context *self);
 /** Internal: Special case function which will be around until #ilG_context is changed to use #ilG_fbo */
@@ -199,7 +186,7 @@ void ilG_context_setupGLEW(ilG_context *context);
 void ilG_context_setupEpoxy(ilG_context *context);
 void ilG_context_localSetup(ilG_context *context);
 void ilG_context_measure(ilG_context *context);
-bool ilG_context_build(void *obj, ilG_rendid id, ilG_context *context, ilG_buildresult *out);
+bool ilG_context_build(void *obj, ilG_rendid id, ilG_renderman *renderman, ilG_buildresult *out);
 
 void ilG_context_print(ilG_context *self);
 

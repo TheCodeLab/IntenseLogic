@@ -4,6 +4,7 @@
 #include <limits.h>
 
 #include "graphics/context.h"
+#include "graphics/transform.h"
 #include "util/storage.h"
 #include "graphics/material.h"
 #include "util/array.h"
@@ -59,26 +60,26 @@ ilG_builder ilG_builder_wrap(void *obj, const ilG_build_fn build)
 
 struct build_ctx {
     ilG_builder self;
-    ilG_context *context;
+    ilG_renderman *rm;
     unsigned id;
 };
 static void build(void *ptr)
 {
     struct build_ctx *self = ptr;
-    ilG_context_addRenderer(self->context, self->id, self->self);
+    ilG_renderman_addRenderer(self->rm, self->id, self->self);
     free(self);
 }
 
-ilG_handle ilG_build(ilG_builder self, ilG_context *context)
+ilG_handle ilG_build(ilG_builder self, ilG_renderman *rm)
 {
     struct build_ctx *ctx = calloc(1, sizeof(struct build_ctx));
     ctx->self = self;
-    ctx->context = context;
-    ctx->id = ++context->manager.curid;
-    ilG_context_upload(context, build, ctx);
+    ctx->rm = rm;
+    ctx->id = ++rm->curid;
+    ilG_renderman_upload(rm, build, ctx);
     return (ilG_handle) {
         .id = ctx->id,
-        .context = context
+        .rm = rm
     };
 }
 
@@ -105,7 +106,7 @@ ilG_cosysid ilG_coordsys_build(ilG_coordsys_builder self, struct ilG_context *co
     ctx->builder = self;
     ctx->context = context;
     ctx->id = ++context->manager.cursysid;
-    ilG_context_upload(context, coordsys_build, ctx);
+    ilG_renderman_upload(&context->manager, coordsys_build, ctx);
     return ctx->id;
 }
 
@@ -113,18 +114,18 @@ bool ilG_handle_ready(ilG_handle self)
 {
     unsigned idx;
     ilG_rendid id;
-    IL_FIND(self.context->manager.rendids, id, id == self.id, idx);
-    return idx < self.context->manager.renderers.length;
+    IL_FIND(self.rm->rendids, id, id == self.id, idx);
+    return idx < self.rm->renderers.length;
 }
 
 il_table *ilG_handle_storage(ilG_handle self)
 {
-    return ilG_renderman_findStorage(&self.context->manager, self.id);
+    return ilG_renderman_findStorage(self.rm, self.id);
 }
 
 const char *ilG_handle_getName(ilG_handle self)
 {
-    return ilG_renderman_findName(&self.context->manager, self.id);
+    return ilG_renderman_findName(self.rm, self.id);
 }
 
 #define log(...) do { fprintf(stderr, __VA_ARGS__); fputc('\n', stderr); } while (0)
@@ -162,7 +163,7 @@ void ilG_renderer_print(ilG_context *c, ilG_rendid root, unsigned depth)
         print_tabs(depth);
         fputs("types: [ ", stderr);
         for (unsigned i = 0; i < obj->num_types; i++) {
-            fprintf(stderr, "%u ", obj->types[i]);
+            fprintf(stderr, "%i ", obj->types[i]);
         }
         fputs("]\n", stderr);
         print_tabs(depth);
@@ -178,7 +179,7 @@ void ilG_renderer_print(ilG_context *c, ilG_rendid root, unsigned depth)
         print_tabs(depth);
         fputs("types: [ ", stderr);
         for (unsigned i = 0; i < view->num_types; i++) {
-            fprintf(stderr, "%u ", view->types[i]);
+            fprintf(stderr, "%i ", view->types[i]);
         }
         fputs("]\n", stderr);
     }
@@ -521,4 +522,189 @@ bool ilG_renderman_delMaterial(ilG_renderman *self, ilG_matid mat)
 {
     (void)self, (void)mat;
     return false; // TODO: Material deletion
+}
+
+bool ilG_renderman_upload(ilG_renderman *self, void (*fn)(void*), void* ptr)
+{
+    ilG_renderman_msg msg;
+    memset(&msg, 0, sizeof(msg));
+    msg.type = ILG_UPLOAD;
+    msg.v.upload.cb = fn;
+    msg.v.upload.ptr = ptr;
+    ilG_renderman_queue_produce(&self->queue, msg);
+    return true;
+}
+
+bool ilG_renderman_resize(ilG_renderman *self, int w, int h)
+{
+    ilG_renderman_msg msg;
+    memset(&msg, 0, sizeof(msg));
+    msg.type = ILG_RESIZE;
+    msg.v.resize[0] = w;
+    msg.v.resize[1] = h;
+    ilG_renderman_queue_produce(&self->queue, msg);
+    return true;
+}
+
+void ilG_renderman_setNotifier(ilG_renderman *self, void (*fn)(il_value*), il_value val)
+{
+    self->client.notify = fn;
+    self->client.user = val;
+}
+
+void ilG_renderman_message(ilG_renderman *self, ilG_rendid id, int type, il_value val)
+{
+    ilG_client_msg msg;
+    memset(&msg, 0, sizeof(msg));
+    msg.type = ILG_CLIENT_MESSAGE;
+    msg.v.message.id = id;
+    msg.v.message.type = type;
+    msg.v.message.data = val;
+    ilG_client_queue_produce(&self->client, msg);
+}
+
+unsigned ilG_renderman_addRenderer(ilG_renderman *self, ilG_rendid id, ilG_builder builder)
+{
+    ilG_buildresult b;
+    memset(&b, 0, sizeof(ilG_buildresult));
+    bool res = builder.build(builder.obj, id, self, &b);
+    ilG_renderer r = (ilG_renderer) {
+        .free = NULL,
+        .children = {0,0,0},
+        .lights = {0,0,0},
+        .obj = 0,
+        .view = 0,
+        .stat = 0,
+        .data = NULL
+    };
+
+    if (!res) {
+        ilG_error e = (ilG_error) {id, b.error};
+        il_error("Renderer failed: %s", b.error);
+        IL_APPEND(self->failed, e);
+        ilG_client_msg msg;
+        memset(&msg, 0, sizeof(msg));
+        msg.type = ILG_FAILURE;
+        msg.v.failure.id = id;
+        msg.v.failure.msg = b.error;
+        ilG_client_queue_produce(&self->client, msg);
+        return UINT_MAX;
+    }
+
+    r.free = b.free;
+    r.data = b.obj;
+    if (b.update) {
+        ilG_statrenderer s = (ilG_statrenderer) {
+            .update = b.update
+        };
+        r.stat = self->statrenderers.length;
+        IL_APPEND(self->statrenderers, s);
+    }
+    if (b.view) {
+        for (unsigned i = 0; i < b.num_types; i++) {
+            if (b.types[i] & ILG_MODEL) {
+                il_error("View renderers cannot have model transformations");
+                return UINT_MAX;
+            }
+        }
+        ilG_viewrenderer v = (ilG_viewrenderer) {
+            .update = b.view,
+            .coordsys = 0, // TODO: Select coord system
+            .types = b.types,
+            .num_types = b.num_types,
+        };
+        r.view = self->viewrenderers.length;
+        IL_APPEND(self->viewrenderers, v);
+    }
+    if (b.draw) {
+        ilG_objrenderer m = (ilG_objrenderer) {
+            .draw = b.draw,
+            .coordsys = 0, // TODO: Select coord system
+            .types = b.types,
+            .num_types = b.num_types
+        };
+        r.obj = self->objrenderers.length;
+        IL_APPEND(self->objrenderers, m);
+    }
+    if (b.name) {
+        ilG_renderman_addName(self, id, b.name);
+        free(b.name);
+    }
+    IL_APPEND(self->renderers, r);
+    IL_APPEND(self->rendids, id);
+    ilG_client_msg msg;
+    memset(&msg, 0, sizeof(msg));
+    msg.type = ILG_READY;
+    msg.v.ready = id;
+    ilG_client_queue_produce(&self->client, msg);
+    return self->renderers.length - 1;
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// Renderman Queue
+
+void ilG_renderman_queue_init(ilG_renderman_queue *queue)
+{
+    memset(queue, 0, sizeof(ilG_renderman_queue));
+    pthread_mutex_init(&queue->mutex, NULL);
+}
+
+void ilG_renderman_queue_free(ilG_renderman_queue *queue)
+{
+    IL_FREE(queue->read);
+    IL_FREE(queue->write);
+    pthread_mutex_destroy(&queue->mutex);
+}
+
+void ilG_renderman_queue_produce(ilG_renderman_queue *queue, ilG_renderman_msg msg)
+{
+    pthread_mutex_lock(&queue->mutex);
+    IL_APPEND(queue->write, msg);
+    pthread_mutex_unlock(&queue->mutex);
+}
+
+void ilG_renderman_queue_read(ilG_renderman_queue *queue)
+{
+    pthread_mutex_lock(&queue->mutex);
+    ilG_renderman_msgarray tmp = queue->read;
+    queue->read = queue->write;
+    tmp.length = 0;
+    queue->write = tmp;
+    pthread_mutex_unlock(&queue->mutex);
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// Client Queue
+
+void ilG_client_queue_init(ilG_client_queue *queue)
+{
+    memset(queue, 0, sizeof(ilG_client_queue));
+    pthread_mutex_init(&queue->mutex, NULL);
+}
+
+void ilG_client_queue_free(ilG_client_queue *queue)
+{
+    IL_FREE(queue->read);
+    IL_FREE(queue->write);
+    pthread_mutex_destroy(&queue->mutex);
+}
+
+void ilG_client_queue_produce(ilG_client_queue *queue, ilG_client_msg msg)
+{
+    pthread_mutex_lock(&queue->mutex);
+    IL_APPEND(queue->write, msg);
+    pthread_mutex_unlock(&queue->mutex);
+    if (queue->notify) {
+        queue->notify(&queue->user);
+    }
+}
+
+void ilG_client_queue_read(ilG_client_queue *queue)
+{
+    pthread_mutex_lock(&queue->mutex);
+    ilG_client_msgarray tmp = queue->read;
+    queue->read = queue->write;
+    tmp.length = 0;
+    queue->write = tmp;
+    pthread_mutex_unlock(&queue->mutex);
 }

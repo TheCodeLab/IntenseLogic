@@ -22,9 +22,9 @@ static void trans_update(void *ptr, ilG_rendid id)
     tgl_check("glEnable");
 }
 
-static bool trans_build(void *ptr, ilG_rendid id, ilG_context *context, ilG_buildresult *out)
+static bool trans_build(void *ptr, ilG_rendid id, ilG_renderman *rm, ilG_buildresult *out)
 {
-    (void)context, (void)id;
+    (void)rm, (void)id;
     *out = (ilG_buildresult) {
         .free = trans_free,
         .update = trans_update,

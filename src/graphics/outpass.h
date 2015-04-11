@@ -5,7 +5,6 @@
 
 struct ilG_context;
 
-ilG_builder ilG_out_builder();
+ilG_builder ilG_out_builder(struct ilG_context *context);
 
 #endif
-

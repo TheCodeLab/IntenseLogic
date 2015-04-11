@@ -93,12 +93,11 @@ static void lights_draw(void *ptr, ilG_rendid id, il_mat **mats, const unsigned 
     tgl_check("Error drawing lights");
 }
 
-static bool lights_build(void *ptr, ilG_rendid id, ilG_context *context, ilG_buildresult *out)
+static bool lights_build(void *ptr, ilG_rendid id, ilG_renderman *rm, ilG_buildresult *out)
 {
     (void)id;
     ilG_lights *self = ptr;
-    self->context = context;
-    self->rm = &context->manager;
+    self->rm = rm;
 
     ilG_material m;
     ilG_material_init(&m);
@@ -112,10 +111,10 @@ static bool lights_build(void *ptr, ilG_rendid id, ilG_context *context, ilG_bui
     if (!ilG_material_vertex_file(&m, self->file, &out->error)) {
         return false;
     }
-    if (!ilG_material_fragment_file(&m, context->msaa? "light_msaa.frag" : "light.frag", &out->error)) {
+    if (!ilG_material_fragment_file(&m, self->context->msaa? "light_msaa.frag" : "light.frag", &out->error)) {
         return false;
     }
-    if (!ilG_material_link(&m, context, &out->error)) {
+    if (!ilG_material_link(&m, &out->error)) {
         return false;
     }
     self->color_loc     = glGetUniformLocation(m.program, "color");
@@ -126,7 +125,7 @@ static bool lights_build(void *ptr, ilG_rendid id, ilG_context *context, ilG_bui
     self->size_loc      = glGetUniformLocation(m.program, "size");
     self->mat = ilG_renderman_addMaterial(self->rm, m);
 
-    self->ico = ilG_icosahedron(context);
+    self->ico = ilG_icosahedron(rm);
     tgl_vao_init(&self->vao);
     tgl_vao_bind(&self->vao);
     tgl_quad_init(&self->quad, ILG_ARRATTR_POSITION);
@@ -148,17 +147,19 @@ static bool lights_build(void *ptr, ilG_rendid id, ilG_context *context, ilG_bui
     return true;
 }
 
-ilG_builder ilG_pointlight_builder()
+ilG_builder ilG_pointlight_builder(ilG_context *context)
 {
     ilG_lights *self = calloc(1, sizeof(ilG_lights));
+    self->context = context;
     self->type = ILG_POINT;
     self->file = "light.vert";
     return ilG_builder_wrap(self, lights_build);
 }
 
-ilG_builder ilG_sunlight_builder()
+ilG_builder ilG_sunlight_builder(ilG_context *context)
 {
     ilG_lights *self = calloc(1, sizeof(ilG_lights));
+    self->context = context;
     self->type = ILG_SUN;
     self->file = "id2d.vert";
     return ilG_builder_wrap(self, lights_build);
