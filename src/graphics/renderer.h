@@ -198,7 +198,6 @@ typedef struct ilG_renderman {
     ilE_handler material_creation;
     ilG_renderman_queue queue;
     ilG_client_queue client;
-    unsigned width, height;
     il_table storage;
 } ilG_renderman;
 

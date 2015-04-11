@@ -102,7 +102,6 @@ typedef struct ilG_context {
                 close,
                 destroy;
     ilG_handle root;
-    struct ilG_client_queue *client;
     /* For rendering */
     ilG_renderman manager;
     /* Private */
@@ -110,7 +109,6 @@ typedef struct ilG_context {
     tgl_fbo fb;
     int tick_id;
     size_t num_active;
-    struct ilG_context_queue *queue;
     SDL_Window *window;
     SDL_GLContext context;
     pthread_t thread;

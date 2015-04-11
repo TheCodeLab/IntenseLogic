@@ -2,8 +2,6 @@
 
 #include "math/matrix.h"
 
-void queue_free(struct ilG_context_queue *queue);
-
 static void context_free(void *ptr)
 {
     (void)ptr;
