@@ -272,13 +272,17 @@ static void context_message(ilG_context *self, ilG_rendid id, int type, il_value
 static void render_renderer(ilG_context *context, ilG_renderer *par)
 {
     ilG_renderman *rm = &context->manager;
-    ilG_renderer *r;
+    const bool have_debug = context->have_khr_debug;
     for (unsigned i = 0, len = par->children.length; i < len; i++) {
-        r = &rm->renderers.data[par->children.data[i]];
+        ilG_renderer *r = &rm->renderers.data[par->children.data[i]];
         ilG_rendid id = rm->rendids.data[par->children.data[i]];
         ilG_statrenderer *stat = &rm->statrenderers.data[r->stat];
         ilG_viewrenderer *view = &rm->viewrenderers.data[r->view];
         ilG_objrenderer *obj = &rm->objrenderers.data[r->obj];
+        if (have_debug) {
+            const char *name = ilG_renderman_findName(rm, id);
+            glPushDebugGroup(GL_DEBUG_SOURCE_THIRD_PARTY, 0, -1, name? name : "Unknown Renderer");
+        }
         stat->update(r->data, id);
         tgl_check("In %s static update", ilG_context_findName(context, id));
 
@@ -298,6 +302,9 @@ static void render_renderer(ilG_context *context, ilG_renderer *par)
         }
         obj->draw(r->data, id, objmats_p, obj->objects.data, num_mats);
         render_renderer(context, r);
+        if (have_debug) {
+            glPopDebugGroup();
+        }
     }
 }
 
@@ -502,6 +509,7 @@ void ilG_context_localSetup(ilG_context *self)
         glEnable(GL_DEBUG_OUTPUT);
         il_log("KHR_debug present, enabling advanced errors");
         tgl_check("glDebugMessageCallback()");
+        self->have_khr_debug = true;
     } else {
         il_log("KHR_debug missing");
     }

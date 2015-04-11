@@ -114,7 +114,7 @@ typedef struct ilG_context {
     SDL_Window *window;
     SDL_GLContext context;
     pthread_t thread;
-    bool running, complete;
+    bool running, complete, have_khr_debug;
     /* Creation parameters */
     int contextMajor;
     int contextMinor;
