@@ -7,11 +7,8 @@
 #include "graphics/context.h"
 #include "graphics/floatspace.h"
 #include "graphics/fragdata.h"
-#include "graphics/geometrypass.h"
-#include "graphics/lightpass.h"
 #include "graphics/material.h"
 #include "graphics/mesh.h"
-#include "graphics/outpass.h"
 #include "graphics/renderer.h"
 #include "graphics/tex.h"
 #include "graphics/transform.h"
@@ -55,11 +52,11 @@ static void teapot_free(void *obj)
     free(t);
 }
 
-static bool teapot_build(void *obj, ilG_rendid id, ilG_context *context, ilG_buildresult *out)
+static bool teapot_build(void *obj, ilG_rendid id, ilG_renderman *rm, ilG_buildresult *out)
 {
     (void)id;
     teapot *t = obj;
-    t->rm = &context->manager;
+    t->rm = rm;
 
     ilG_material m;
     ilG_material_init(&m);
@@ -80,7 +77,7 @@ static bool teapot_build(void *obj, ilG_rendid id, ilG_context *context, ilG_bui
     if (!ilG_material_fragment_file(&m, "test.frag", &out->error)) {
         return false;
     }
-    if (!ilG_material_link(&m, context, &out->error)) {
+    if (!ilG_material_link(&m, &out->error)) {
         return false;
     }
     t->mvp_loc = ilG_material_getLoc(&m, "mvp");
@@ -90,11 +87,11 @@ static bool teapot_build(void *obj, ilG_rendid id, ilG_context *context, ilG_bui
     if (!ilG_mesh_fromfile(&t->mesh, &demo_fs, "teapot.obj")) {
         return false;
     }
-    if (!ilG_mesh_build(&t->mesh, context)) {
+    if (!ilG_mesh_build(&t->mesh)) {
         return false;
     }
 
-    ilG_tex_build(&t->tex, context);
+    ilG_tex_build(&t->tex);
 
     int *types = calloc(2, sizeof(int));
     types[0] = ILG_MVP;
@@ -142,10 +139,11 @@ void demo_start()
     ilG_context_hint(context, ILG_CONTEXT_DEBUG_RENDER, 1);
     ilG_context_hint(context, ILG_CONTEXT_VSYNC, 1);
     ilG_handle geom, lights, out, teapot;
-    geom = ilG_build(ilG_geometry_builder(), context);
-    lights = ilG_build(ilG_sunlight_builder(), context);
-    out = ilG_build(ilG_out_builder(), context);
-    teapot = ilG_build(teapot_builder(), context);
+    ilG_renderman *rm = &context->manager;
+    geom = ilG_build(ilG_geometry_builder(), rm);
+    lights = ilG_build(ilG_sunlight_builder(context), rm);
+    out = ilG_build(ilG_out_builder(context), rm);
+    teapot = ilG_build(teapot_builder(), rm);
 
     ilG_handle_addRenderer(geom, teapot);
     ilG_handle_addRenderer(context->root, geom);
@@ -175,7 +173,7 @@ void demo_start()
     il_storage_void sv = {&fs, NULL};
     ilE_register(&context->tick, ILE_DONTCARE, ILE_ANY, update_camera, il_value_opaque(sv));
 
-    ilG_context_rename(context, "Teapots Demo");
+    context->initialTitle = strdup("Teapots Demo");
     ilG_context_start(context);
 
     SDL_Event ev;

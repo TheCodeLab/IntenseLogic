@@ -42,12 +42,12 @@ void BallRenderer::draw(void *obj, ilG_rendid id, il_mat **mats, const unsigned 
     }
 }
 
-bool BallRenderer::build(void *obj, ilG_rendid id, ilG_context *context, ilG_buildresult *out)
+bool BallRenderer::build(void *obj, ilG_rendid id, ilG_renderman *rm, ilG_buildresult *out)
 {
     (void)id;
     BallRenderer &b = *reinterpret_cast<BallRenderer*>(obj);
 
-    b.rm = &context->manager;
+    b.rm = rm;
 
     ilG_material m;
     ilG_material_init(&m);
@@ -63,7 +63,7 @@ bool BallRenderer::build(void *obj, ilG_rendid id, ilG_context *context, ilG_bui
     if (!ilG_material_fragment_file(&m, "glow.frag", &out->error)) {
         return false;
     }
-    if (!ilG_material_link(&m, context, &out->error)) {
+    if (!ilG_material_link(&m, &out->error)) {
         return false;
     }
     b.mvp_loc = ilG_material_getLoc(&m, "mvp");
@@ -74,7 +74,7 @@ bool BallRenderer::build(void *obj, ilG_rendid id, ilG_context *context, ilG_bui
     if (!ilG_mesh_fromfile(&b.mesh, &demo_fs, "demos/bouncing-lights/sphere.obj")) {
         return false;
     }
-    if (!ilG_mesh_build(&b.mesh, context)) {
+    if (!ilG_mesh_build(&b.mesh)) {
         return false;
     }
 

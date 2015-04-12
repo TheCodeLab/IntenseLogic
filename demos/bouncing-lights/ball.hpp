@@ -15,7 +15,7 @@ extern "C" {
 namespace BouncingLights {
 
 class BallRenderer {
-    ilG_renderman *rm;
+    ilG_renderman *rm = nullptr;
     ilG_mesh mesh;
     ilG_matid mat;
     GLuint mvp_loc, imt_loc, col_loc;
@@ -23,7 +23,7 @@ class BallRenderer {
 
     static void free(void *ptr);
     static void draw(void *obj, ilG_rendid id, il_mat **mats, const unsigned *objects, unsigned num_mats);
-    static bool build(void *obj, ilG_rendid id, ilG_context *context, ilG_buildresult *out);
+    static bool build(void *obj, ilG_rendid id, ilG_renderman *rm, ilG_buildresult *out);
 public:
     ilG_builder builder();
     void add_col(unsigned obj, il_vec3 col)

@@ -8,7 +8,6 @@
 #include "graphics/fragdata.h"
 #include "graphics/graphics.h"
 #include "graphics/material.h"
-#include "graphics/outpass.h"
 #include "graphics/renderer.h"
 #include "util/timer.h"
 #include "util/log.h"
@@ -77,12 +76,11 @@ static void toy_free(void *obj)
     tgl_quad_free(&t->quad);
 }
 
-static bool toy_build(void *obj, ilG_rendid id, ilG_context *context, ilG_buildresult *out)
+static bool toy_build(void *obj, ilG_rendid id, ilG_renderman *rm, ilG_buildresult *out)
 {
     (void)id;
     toy *t = obj;
-    t->context = context;
-    t->rm = &context->manager;
+    t->rm = rm;
 
     t->speed = 1.0;
     ilG_material m[1];
@@ -95,7 +93,7 @@ static bool toy_build(void *obj, ilG_rendid id, ilG_context *context, ilG_buildr
     }
     ilG_material_fragment(m, t->shader);
     char *error;
-    if (!ilG_material_link(m, context, &error)) {
+    if (!ilG_material_link(m, &error)) {
         il_error("%s", error);
         free(error);
     } else {
@@ -129,7 +127,7 @@ void upload_cb(void *ptr)
     ilG_material *mat = ilG_renderman_findMaterial(&ctx->context->manager, t->mat);
     assert(mat);
     char *error;
-    if (!ilG_material_link(mat, ctx->context, &error)) {
+    if (!ilG_material_link(mat, &error)) {
         il_error("Link failed: %s", error);
         free(error);
     } else {
@@ -149,7 +147,7 @@ void event_cb(uv_fs_event_t *handle,
     (void)events, (void)status;
     reload_ctx *ctx = (reload_ctx*)handle;
     il_log("File updated: %s", filename);
-    ilG_context_upload(ctx->context, upload_cb, ctx);
+    ilG_renderman_upload(&ctx->context->manager, upload_cb, ctx);
 }
 
 void *event_loop(void *ptr)
@@ -180,8 +178,8 @@ void demo_start()
     ilG_context_init(context);
     ilG_context_hint(context, ILG_CONTEXT_VSYNC, 1);
     context->initialTitle = "Shader Toy";
-    out = ilG_build(ilG_out_builder(), context);
-    toy_r = ilG_build(ilG_builder_wrap(t, toy_build), context);
+    out = ilG_build(ilG_out_builder(context), &context->manager);
+    toy_r = ilG_build(ilG_builder_wrap(t, toy_build), &context->manager);
 
     ilG_handle_addRenderer(context->root, toy_r);
     ilG_handle_addRenderer(context->root, out);

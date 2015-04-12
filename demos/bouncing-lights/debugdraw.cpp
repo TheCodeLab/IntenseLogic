@@ -42,13 +42,12 @@ void DebugDraw::free(void *ptr)
     delete &debugdraw;
 }
 
-bool DebugDraw::build(void *ptr, ilG_rendid id, ilG_context *context, ilG_buildresult *out)
+bool DebugDraw::build(void *ptr, ilG_rendid id, ilG_renderman *rm, ilG_buildresult *out)
 {
     (void)id;
     DebugDraw &self = *reinterpret_cast<DebugDraw*>(ptr);
 
-    self.rm = &context->manager;
-    self.context = context;
+    self.rm = rm;
 
     ilG_material m;
     ilG_material_init(&m);
@@ -62,7 +61,7 @@ bool DebugDraw::build(void *ptr, ilG_rendid id, ilG_context *context, ilG_buildr
     if (!ilG_material_fragment_file(&m, "bullet-debug.frag", &out->error)) {
         return false;
     }
-    if (!ilG_material_link(&m, context, &out->error)) {
+    if (!ilG_material_link(&m, &out->error)) {
         return false;
     }
     self.vp_loc = ilG_material_getLoc(&m, "vp");
@@ -104,7 +103,7 @@ void DebugDraw::upload_cb(void *ptr)
 
 void DebugDraw::upload()
 {
-    ilG_context_upload(context, upload_cb, this);
+    ilG_renderman_upload(rm, upload_cb, this);
 }
 
 void DebugDraw::drawLine(const btVector3 &from, const btVector3 &to, const btVector3 &color)

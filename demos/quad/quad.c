@@ -7,9 +7,7 @@
 #include "graphics/context.h"
 #include "graphics/floatspace.h"
 #include "graphics/fragdata.h"
-#include "graphics/geometrypass.h"
 #include "graphics/material.h"
-#include "graphics/outpass.h"
 #include "tgl/tgl.h"
 #include "graphics/renderer.h"
 #include "math/matrix.h"
@@ -41,11 +39,11 @@ static void quad_free(void *obj)
     free(q);
 }
 
-static bool quad_build(void *obj, ilG_rendid id, ilG_context *context, ilG_buildresult *out)
+static bool quad_build(void *obj, ilG_rendid id, ilG_renderman *rm, ilG_buildresult *out)
 {
     (void)id;
     struct quad *q = obj;
-    q->rm = &context->manager;
+    q->rm = rm;
 
     ilG_material m;
     ilG_material_init(&m);
@@ -58,7 +56,7 @@ static bool quad_build(void *obj, ilG_rendid id, ilG_context *context, ilG_build
     if (!ilG_material_fragment_file(&m, "rainbow2d.frag", &out->error)) {
         return false;
     }
-    if (!ilG_material_link(&m, context, &out->error)) {
+    if (!ilG_material_link(&m, &out->error)) {
         return false;
     }
     q->mat = ilG_renderman_addMaterial(q->rm, m);
@@ -85,13 +83,13 @@ void demo_start()
     ilG_context *context = ilG_context_new();
     ilG_context_hint(context, ILG_CONTEXT_DEBUG_RENDER, 1);
     ilG_handle out, quad;
-    out = ilG_build(ilG_out_builder(), context);
-    quad = ilG_build(quad_builder(), context);
+    out = ilG_build(ilG_out_builder(context), &context->manager);
+    quad = ilG_build(quad_builder(), &context->manager);
 
     ilG_handle_addRenderer(context->root, quad);
     ilG_handle_addRenderer(context->root, out);
 
-    ilG_context_rename(context, "Quad Demo");
+    context->initialTitle = strdup("Quad Demo");
     ilG_context_start(context);
 
     SDL_Event ev;

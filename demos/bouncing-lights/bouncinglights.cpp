@@ -24,7 +24,6 @@ extern "C" {
 #include "math/matrix.h"
 #include "graphics/context-internal.h"
 #include "graphics/graphics.h"
-#include "graphics/heightmap.h"
 #include "graphics/renderer.h"
 #include "graphics/tex.h"
 #include "util/log.h"
@@ -223,14 +222,14 @@ ex void demo_start()
     ilG_tex_loadimage(&normaltex, norm);
     ilG_handle hmr = ilG_build
         (ilG_heightmap_builder(hm.width, hm.height,
-                               heighttex, normaltex, colortex), context);
+                               heighttex, normaltex, colortex), &context->manager);
     ilG_handle_addRenderer(h.geom, hmr);
     world.add(hmr, groundId);
 
     // Create ball renderer and common bullet stuff
     btSphereShape ball_shape(1);
     BallRenderer ball;
-    ilG_handle ball_r = ilG_build(ball.builder(), context);
+    ilG_handle ball_r = ilG_build(ball.builder(), &context->manager);
     ilG_handle_addRenderer(h.geom, ball_r);
     unsigned seed = time(NULL);
     add_objects(world, ball, h.lights, ball_r, &ball_shape, 100, &seed);
@@ -267,9 +266,9 @@ ex void demo_start()
                 break;
             }
         }
-        ilG_client_queue_read(context->client);
-        for (unsigned i = 0; i < context->client->read.length; i++) {
-            ilG_client_msg msg = context->client->read.data[i];
+        ilG_client_queue_read(&context->manager.client);
+        for (unsigned i = 0; i < context->manager.client.read.length; i++) {
+            ilG_client_msg msg = context->manager.client.read.data[i];
             if (msg.type == ilG_client_msg::ILG_FAILURE) {
                 il_log("Renderer %u failed: %s", msg.v.failure.id, msg.v.failure.msg);
             }

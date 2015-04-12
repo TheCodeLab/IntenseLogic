@@ -27,13 +27,12 @@ class DebugDraw : public btIDebugDraw {
     GLuint vp_loc;
     int debugMode;
     unsigned count;
-    ilG_context *context;
-    ilG_renderman *rm;
+    ilG_renderman *rm = nullptr;
 
     static void upload_cb(void*);
     static void view(void *ptr, ilG_rendid id, il_mat *mats);
     static void free(void *ptr);
-    static bool build(void *ptr, ilG_rendid id, ilG_context *context, ilG_buildresult *out);
+    static bool build(void *ptr, ilG_rendid id, ilG_renderman *rm, ilG_buildresult *out);
 public:
     DebugDraw();
 
