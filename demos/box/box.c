@@ -103,18 +103,12 @@ static bool box_build(void *obj, ilG_rendid id, ilG_renderman *rm, ilG_buildresu
     ilG_material_name(&m, "Box Shader");
     ilG_material_fragData(&m, ILG_FRAGDATA_ACCUMULATION, "out_Color");
     ilG_material_arrayAttrib(&m, 0, "in_Position");
-    if (!ilG_material_vertex_file(&m, "box.vert", &out->error)) {
+    if (!ilG_renderman_addMaterialFromFile(rm, m, "box.vert", "box.frag", &b->mat, &out->error)) {
         return false;
     }
-    if (!ilG_material_fragment_file(&m, "box.frag", &out->error)) {
-        return false;
-    }
-    if (!ilG_material_link(&m, &out->error)) {
-        return false;
-    }
-    b->pos_loc = ilG_material_getLoc(&m, "in_Position");
-    b->mvp_loc = ilG_material_getLoc(&m, "mvp");
-    b->mat = ilG_renderman_addMaterial(b->rm, m);
+    ilG_material *mat = ilG_renderman_findMaterial(rm, b->mat);
+    b->pos_loc = ilG_material_getLoc(mat, "in_Position");
+    b->mvp_loc = ilG_material_getLoc(mat, "mvp");
 
     glGenBuffers(1, &b->vbo);
     glGenVertexArrays(1, &b->vao);
@@ -164,7 +158,7 @@ void demo_start()
     ilG_context_hint(context, ILG_CONTEXT_DEBUG_RENDER, 1);
     ilG_handle geom, out, box;
     geom = ilG_build(ilG_geometry_builder(), &context->manager);
-    out = ilG_build(ilG_out_builder(context), &context->manager);
+    out = ilG_build(ilG_out_builder(context, NULL, NULL), &context->manager);
     box = ilG_build(box_builder(), &context->manager);
 
     ilG_handle_addRenderer(geom, box);

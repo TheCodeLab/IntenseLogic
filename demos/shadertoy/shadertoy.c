@@ -76,6 +76,22 @@ static void toy_free(void *obj)
     tgl_quad_free(&t->quad);
 }
 
+static bool compile(toy *t, char **error)
+{
+    ilG_material *mat = ilG_renderman_findMaterial(t->rm, t->mat);
+    ilG_shader *vert = ilG_renderman_findShader(t->rm, mat->vert);
+    ilG_shader *frag = ilG_renderman_findShader(t->rm, mat->frag);
+    if (ilG_shader_compile(frag, GL_FRAGMENT_SHADER, error)
+        && ilG_material_link(mat, vert, frag, error)) {
+        t->linked = true;
+        t->iResolution = ilG_material_getLoc(mat, "iResolution");
+        t->iGlobalTime = ilG_material_getLoc(mat, "iGlobalTime");
+        t->iMouse = ilG_material_getLoc(mat, "iMouse");
+        return true;
+    }
+    return false;
+}
+
 static bool toy_build(void *obj, ilG_rendid id, ilG_renderman *rm, ilG_buildresult *out)
 {
     (void)id;
@@ -85,24 +101,25 @@ static bool toy_build(void *obj, ilG_rendid id, ilG_renderman *rm, ilG_buildresu
     t->speed = 1.0;
     ilG_material m[1];
     ilG_material_init(m);
-    ilG_material_name(m, "Rainbow Quad Shader");
+    ilG_material_name(m, "Shader Toy");
     ilG_material_fragData(m, ILG_FRAGDATA_ACCUMULATION, "out_Color");
     ilG_material_arrayAttrib(m, ILG_ARRATTR_POSITION, "in_Position");
-    if (!ilG_material_vertex_file(m, "id2d.vert", &out->error)) {
+    ilG_shader vert, frag;
+    if (!ilG_shader_file(&vert, "id2d.vert", &out->error)) {
         return false;
     }
-    ilG_material_fragment(m, t->shader);
+    if (!ilG_shader_compile(&vert, GL_VERTEX_SHADER, &out->error)) {
+        return false;
+    }
+    ilG_shader_load(&frag, t->shader);
+    m->vert = ilG_renderman_addShader(rm, vert);
+    m->frag = ilG_renderman_addShader(rm, frag);
+    t->mat = ilG_renderman_addMaterial(t->rm, *m);
     char *error;
-    if (!ilG_material_link(m, &error)) {
+    if (!compile(t, &error)) {
         il_error("%s", error);
         free(error);
-    } else {
-        t->linked = true;
-        t->iResolution = ilG_material_getLoc(m, "iResolution");
-        t->iGlobalTime = ilG_material_getLoc(m, "iGlobalTime");
-        t->iMouse = ilG_material_getLoc(m, "iMouse");
     }
-    t->mat = ilG_renderman_addMaterial(t->rm, *m);
     tgl_vao_init(&t->vao);
     tgl_vao_bind(&t->vao);
     tgl_quad_init(&t->quad, ILG_ARRATTR_POSITION);
@@ -124,18 +141,12 @@ void upload_cb(void *ptr)
 {
     reload_ctx *ctx = ptr;
     toy *t = ctx->t;
-    ilG_material *mat = ilG_renderman_findMaterial(&ctx->context->manager, t->mat);
-    assert(mat);
     char *error;
-    if (!ilG_material_link(mat, &error)) {
+    if (!compile(t, &error)) {
         il_error("Link failed: %s", error);
         free(error);
     } else {
         il_log("Shader reloaded");
-        t->linked = true;
-        t->iResolution = ilG_material_getLoc(mat, "iResolution");
-        t->iGlobalTime = ilG_material_getLoc(mat, "iGlobalTime");
-        t->iMouse = ilG_material_getLoc(mat, "iMouse");
     }
 }
 
@@ -178,7 +189,8 @@ void demo_start()
     ilG_context_init(context);
     ilG_context_hint(context, ILG_CONTEXT_VSYNC, 1);
     context->initialTitle = "Shader Toy";
-    out = ilG_build(ilG_out_builder(context), &context->manager);
+    t->context = context;
+    out = ilG_build(ilG_out_builder(context, NULL, NULL), &context->manager);
     toy_r = ilG_build(ilG_builder_wrap(t, toy_build), &context->manager);
 
     ilG_handle_addRenderer(context->root, toy_r);

@@ -183,58 +183,38 @@ static bool out_build(void *ptr, ilG_rendid id, ilG_renderman *rm, ilG_buildresu
             return false;
         }
 
-        ilG_material m;
+        ilG_material m, *mat;
 
         ilG_material_init(&m);
         ilG_material_name(&m, "Horizontal Blur Shader");
         ilG_material_arrayAttrib(&m, OUT_POSITION, "in_Texcoord");
         ilG_material_fragData(&m, 0, "out_Color");
         ilG_material_textureUnit(&m, 0, "tex");
-        if (!ilG_material_vertex_file(&m, "post.vert", &out->error)) {
+        if (!ilG_renderman_addMaterialFromFile(self->rm, m, "post.vert", "horizblur.frag", &self->horizblur, &out->error)) {
             return false;
         }
-        if (!ilG_material_fragment_file(&m, "horizblur.frag", &out->error)) {
-            return false;
-        }
-        if (!ilG_material_link(&m, &out->error)) {
-            return false;
-        }
-        self->h_exposure_loc = ilG_material_getLoc(&m, "exposure");
-        self->horizblur = ilG_renderman_addMaterial(self->rm, m);
+        mat = ilG_renderman_findMaterial(self->rm, self->horizblur);
 
         ilG_material_init(&m);
         ilG_material_name(&m, "Vertical Blur Shader");
         ilG_material_arrayAttrib(&m, OUT_POSITION, "in_Texcoord");
         ilG_material_fragData(&m, 0, "out_Color");
         ilG_material_textureUnit(&m, 0, "tex");
-        if (!ilG_material_vertex_file(&m, "post.vert", &out->error)) {
+        if (!ilG_renderman_addMaterialFromFile(self->rm, m, "post.vert", "vertblur.frag", &self->vertblur, &out->error)) {
             return false;
         }
-        if (!ilG_material_fragment_file(&m, "vertblur.frag", &out->error)) {
-            return false;
-        }
-        if (!ilG_material_link(&m, &out->error)) {
-            return false;
-        }
-        self->vertblur = ilG_renderman_addMaterial(self->rm, m);
 
         ilG_material_init(&m);
         ilG_material_name(&m, "Tone Mapping Shader");
         ilG_material_arrayAttrib(&m, OUT_POSITION, "in_Texcoord");
         ilG_material_textureUnit(&m, 0, "tex");
-        if (!ilG_material_vertex_file(&m, "post.vert", &out->error)) {
+        if (!ilG_renderman_addMaterialFromFile(self->rm, m, "post.vert", "hdr.frag", &self->tonemap, &out->error)) {
             return false;
         }
-        if (!ilG_material_fragment_file(&m, "hdr.frag", &out->error)) {
-            return false;
-        }
-        if (!ilG_material_link(&m, &out->error)) {
-            return false;
-        }
-        self->size_loc = ilG_material_getLoc(&m, "size");
-        self->t_exposure_loc = ilG_material_getLoc(&m, "exposure");
-        self->gamma_loc = ilG_material_getLoc(&m, "gamma");
-        self->tonemap = ilG_renderman_addMaterial(self->rm, m);
+        mat = ilG_renderman_findMaterial(self->rm, self->tonemap);
+        self->size_loc = ilG_material_getLoc(mat, "size");
+        self->t_exposure_loc = ilG_material_getLoc(mat, "exposure");
+        self->gamma_loc = ilG_material_getLoc(mat, "gamma");
 
         tgl_vao_init(&self->vao);
         tgl_vao_bind(&self->vao);

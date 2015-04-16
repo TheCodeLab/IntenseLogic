@@ -51,18 +51,12 @@ static bool line_build(void *obj, ilG_rendid id, ilG_renderman *rm, ilG_buildres
     ilG_material_name(m, "Line Segment Shader");
     ilG_material_arrayAttrib(m, 0, "in_Position");
     ilG_material_fragData(m, ILG_FRAGDATA_ACCUMULATION, "out_Ambient");
-    if (!ilG_material_vertex_file(m, "line.vert", &out->error)) {
+    if (!ilG_renderman_addMaterialFromFile(rm, *m, "line.vert", "line.frag", &self->mat, &out->error)) {
         return false;
     }
-    if (!ilG_material_fragment_file(m, "line.frag", &out->error)) {
-        return false;
-    }
-    if (!ilG_material_link(m, &out->error)) {
-        return false;
-    }
-    self->mat = ilG_renderman_addMaterial(self->rm, *m);
-    self->mvp_loc = ilG_material_getLoc(m, "mvp");
-    self->col_loc = ilG_material_getLoc(m, "col");
+    ilG_material *mat = ilG_renderman_findMaterial(rm, self->mat);
+    self->mvp_loc = ilG_material_getLoc(mat, "mvp");
+    self->col_loc = ilG_material_getLoc(mat, "col");
 
     tgl_vao_init(&self->vao);
     tgl_vao_bind(&self->vao);

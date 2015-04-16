@@ -61,17 +61,10 @@ static bool sky_build(void *ptr, ilG_rendid id, ilG_renderman *rm, ilG_buildresu
     ilG_material_fragData(&m, ILG_FRAGDATA_NORMAL, "out_Normal");
     ilG_material_fragData(&m, ILG_FRAGDATA_DIFFUSE, "out_Diffuse");
     ilG_material_fragData(&m, ILG_FRAGDATA_SPECULAR, "out_Specular");
-    if (!ilG_material_vertex_file(&m, "skybox.vert", &out->error)) {
+    if (!ilG_renderman_addMaterialFromFile(rm, m, "skybox.vert", "skybox.frag", &self->mat, &out->error)) {
         return false;
     }
-    if (!ilG_material_fragment_file(&m, "skybox.frag", &out->error)) {
-        return false;
-    }
-    if (!ilG_material_link(&m, &out->error)) {
-        return false;
-    }
-    self->vp_loc = ilG_material_getLoc(&m, "mat");
-    self->mat = ilG_renderman_addMaterial(rm, m);
+    self->vp_loc = ilG_material_getLoc(ilG_renderman_findMaterial(rm, self->mat), "mat");
 
     self->box = ilG_box(rm);
 

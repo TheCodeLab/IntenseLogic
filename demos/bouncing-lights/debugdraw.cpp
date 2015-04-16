@@ -55,17 +55,10 @@ bool DebugDraw::build(void *ptr, ilG_rendid id, ilG_renderman *rm, ilG_buildresu
     ilG_material_arrayAttrib(&m, ILG_ARRATTR_POSITION, "in_Position");
     ilG_material_arrayAttrib(&m, ILG_ARRATTR_AMBIENT, "in_Ambient");
     ilG_material_fragData(&m, ILG_FRAGDATA_ACCUMULATION, "out_Color");
-    if (!ilG_material_vertex_file(&m, "bullet-debug.vert", &out->error)) {
+    if (!ilG_renderman_addMaterialFromFile(rm, m, "bullet-debug.vert", "bullet-debug.frag", &self.mat, &out->error)) {
         return false;
     }
-    if (!ilG_material_fragment_file(&m, "bullet-debug.frag", &out->error)) {
-        return false;
-    }
-    if (!ilG_material_link(&m, &out->error)) {
-        return false;
-    }
-    self.vp_loc = ilG_material_getLoc(&m, "vp");
-    self.mat = ilG_renderman_addMaterial(self.rm, m);
+    self.vp_loc = ilG_material_getLoc(ilG_renderman_findMaterial(rm, self.mat), "vp");
 
     glGenBuffers(1, &self.vbo);
     glGenVertexArrays(1, &self.vao);

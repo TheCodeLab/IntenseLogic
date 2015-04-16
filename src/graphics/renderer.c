@@ -131,8 +131,8 @@ const char *ilG_handle_getName(ilG_handle self)
 #define log(...) do { fprintf(stderr, __VA_ARGS__); fputc('\n', stderr); } while (0)
 void ilG_material_print(ilG_material *mat)
 {
-    log("name: \"%s\"; vertex shader: %s; fragment shader: %s",
-        mat->name, mat->vert.name, mat->frag.name);
+    log("name: \"%s\"; vertex shader ID: %u; fragment shader ID: %u",
+        mat->name, mat->vert, mat->frag);
 }
 
 void print_tabs(unsigned n)
@@ -277,6 +277,11 @@ ilG_material *ilG_renderman_findMaterial(ilG_renderman *self, ilG_matid mat)
     return &self->materials.data[mat.id];
 }
 
+ilG_shader *ilG_renderman_findShader(ilG_renderman *self, unsigned id)
+{
+    return &self->shaders.data[id];
+}
+
 unsigned ilG_renderman_addSink(ilG_renderman *self, ilG_rendid id, ilG_message_fn sink)
 {
     ilG_msgsink s = {
@@ -388,6 +393,39 @@ ilG_matid ilG_renderman_addMaterial(ilG_renderman *self, ilG_material mat)
     il_value v = il_value_int(id);
     ilE_handler_fire(&self->material_creation, &v);
     return (ilG_matid){id};
+}
+
+__attribute__((warn_unused_result))
+bool ilG_renderman_addMaterialFromShader(ilG_renderman *self, ilG_material mat, ilG_shader vert,
+                                         ilG_shader frag, ilG_matid *out, char **error)
+{
+    mat.vert = ilG_renderman_addShader(self, vert);
+    mat.frag = ilG_renderman_addShader(self, frag);
+    if (!ilG_material_link(&mat, &vert, &frag, error)) {
+        return false;
+    }
+    *out = ilG_renderman_addMaterial(self, mat);
+    return true;
+}
+
+__attribute__((warn_unused_result))
+bool ilG_renderman_addMaterialFromFile(ilG_renderman *self, ilG_material mat, const char *vertpath,
+                                       const char *fragpath, ilG_matid *out, char **error)
+{
+    ilG_shader vert, frag;
+    if (!ilG_shader_file(&vert, vertpath, error) ||
+        !ilG_shader_file(&frag, fragpath, error) ||
+        !ilG_shader_compile(&vert, GL_VERTEX_SHADER, error) ||
+        !ilG_shader_compile(&frag, GL_FRAGMENT_SHADER, error)) {
+        return false;
+    }
+    return ilG_renderman_addMaterialFromShader(self, mat, vert, frag, out, error);
+}
+
+unsigned ilG_renderman_addShader(ilG_renderman *self, ilG_shader shader)
+{
+    IL_APPEND(self->shaders, shader);
+    return self->shaders.length - 1;
 }
 
 bool ilG_renderman_delRenderer(ilG_renderman *self, ilG_rendid id)

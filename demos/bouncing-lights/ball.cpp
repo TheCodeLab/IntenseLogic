@@ -57,19 +57,13 @@ bool BallRenderer::build(void *obj, ilG_rendid id, ilG_renderman *rm, ilG_buildr
     ilG_material_fragData(&m, ILG_FRAGDATA_DIFFUSE, "out_Diffuse");
     ilG_material_fragData(&m, ILG_FRAGDATA_SPECULAR, "out_Specular");
     ilG_material_arrayAttrib(&m, ILG_MESH_POS, "in_Position");
-    if (!ilG_material_vertex_file(&m, "glow.vert", &out->error)) {
+    if (!ilG_renderman_addMaterialFromFile(rm, m, "glow.vert", "glow.frag", &b.mat, &out->error)) {
         return false;
     }
-    if (!ilG_material_fragment_file(&m, "glow.frag", &out->error)) {
-        return false;
-    }
-    if (!ilG_material_link(&m, &out->error)) {
-        return false;
-    }
-    b.mvp_loc = ilG_material_getLoc(&m, "mvp");
-    b.imt_loc = ilG_material_getLoc(&m, "imt");
-    b.col_loc = ilG_material_getLoc(&m, "col");
-    b.mat = ilG_renderman_addMaterial(b.rm, m);
+    ilG_material *mat = ilG_renderman_findMaterial(rm, b.mat);
+    b.mvp_loc = ilG_material_getLoc(mat, "mvp");
+    b.imt_loc = ilG_material_getLoc(mat, "imt");
+    b.col_loc = ilG_material_getLoc(mat, "col");
 
     if (!ilG_mesh_fromfile(&b.mesh, &demo_fs, "demos/bouncing-lights/sphere.obj")) {
         return false;

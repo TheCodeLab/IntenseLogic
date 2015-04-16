@@ -50,16 +50,9 @@ static bool quad_build(void *obj, ilG_rendid id, ilG_renderman *rm, ilG_buildres
     ilG_material_name(&m, "Rainbow Quad Shader");
     ilG_material_fragData(&m, ILG_FRAGDATA_ACCUMULATION, "out_Color");
     ilG_material_arrayAttrib(&m, ILG_ARRATTR_POSITION, "in_Position");
-    if (!ilG_material_vertex_file(&m, "id2d.vert", &out->error)) {
+    if (!ilG_renderman_addMaterialFromFile(rm, m, "id2d.vert", "rainbow2d.frag", &q->mat, &out->error)) {
         return false;
     }
-    if (!ilG_material_fragment_file(&m, "rainbow2d.frag", &out->error)) {
-        return false;
-    }
-    if (!ilG_material_link(&m, &out->error)) {
-        return false;
-    }
-    q->mat = ilG_renderman_addMaterial(q->rm, m);
     tgl_vao_init(&q->vao);
     tgl_vao_bind(&q->vao);
     tgl_quad_init(&q->quad, ILG_ARRATTR_POSITION);
@@ -83,7 +76,7 @@ void demo_start()
     ilG_context *context = ilG_context_new();
     ilG_context_hint(context, ILG_CONTEXT_DEBUG_RENDER, 1);
     ilG_handle out, quad;
-    out = ilG_build(ilG_out_builder(context), &context->manager);
+    out = ilG_build(ilG_out_builder(context, NULL, NULL), &context->manager);
     quad = ilG_build(quad_builder(), &context->manager);
 
     ilG_handle_addRenderer(context->root, quad);

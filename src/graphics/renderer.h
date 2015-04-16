@@ -69,6 +69,12 @@ typedef struct ilG_light {
     float radius;
 } ilG_light;
 
+typedef struct ilG_shadowdata {
+    GLuint vao;
+    unsigned first, count;
+    GLenum type;
+} ilG_shadowdata;
+
 typedef struct ilG_objrenderer {
     ilG_draw_fn draw;
     unsigned coordsys;
@@ -193,6 +199,7 @@ typedef struct ilG_renderman {
     IL_ARRAY(ilG_coordsys,)     coordsystems;
     IL_ARRAY(ilG_error,)        failed;
     IL_ARRAY(ilG_material,)     materials;
+    IL_ARRAY(ilG_shader,)       shaders;
     ilG_rendid curid;
     ilG_cosysid cursysid;
     ilE_handler material_creation;
@@ -236,6 +243,7 @@ il_table        *ilG_renderman_findStorage        (ilG_renderman *self, ilG_rend
 const char      *ilG_renderman_findName           (ilG_renderman *self, ilG_rendid id);
 const char      *ilG_renderman_findError          (ilG_renderman *self, ilG_rendid id);
 ilG_material    *ilG_renderman_findMaterial       (ilG_renderman *self, ilG_matid mat);
+ilG_shader      *ilG_renderman_findShader         (ilG_renderman *self, unsigned id);
 unsigned  ilG_renderman_addSink     (ilG_renderman *self, ilG_rendid id, ilG_message_fn sink);
 bool      ilG_renderman_addChild    (ilG_renderman *self, ilG_rendid parent, ilG_rendid child);
 unsigned  ilG_renderman_addCoords   (ilG_renderman *self, ilG_rendid id, ilG_cosysid cosys, unsigned codata);
@@ -245,6 +253,13 @@ unsigned  ilG_renderman_addStorage  (ilG_renderman *self, ilG_rendid id);
 unsigned  ilG_renderman_addName     (ilG_renderman *self, ilG_rendid id, const char *name);
 unsigned  ilG_renderman_addCoordSys (ilG_renderman *self, ilG_coordsys co);
 ilG_matid ilG_renderman_addMaterial (ilG_renderman *self, ilG_material mat);
+__attribute__((warn_unused_result))
+bool ilG_renderman_addMaterialFromShader(ilG_renderman *self, ilG_material mat, ilG_shader vert,
+                                         ilG_shader frag, ilG_matid *out, char **error);
+__attribute__((warn_unused_result))
+bool ilG_renderman_addMaterialFromFile(ilG_renderman *self, ilG_material mat, const char *vert,
+                                       const char *frag, ilG_matid *out, char **error);
+unsigned  ilG_renderman_addShader   (ilG_renderman *self, ilG_shader shader);
 bool ilG_renderman_delRenderer      (ilG_renderman *self, ilG_rendid id);
 bool ilG_renderman_delSink          (ilG_renderman *self, ilG_rendid id);
 bool ilG_renderman_delChild         (ilG_renderman *self, ilG_rendid parent, ilG_rendid child);
@@ -254,6 +269,7 @@ bool ilG_renderman_delStorage       (ilG_renderman *self, ilG_rendid id);
 bool ilG_renderman_delName          (ilG_renderman *self, ilG_rendid id);
 bool ilG_renderman_delCoordSys      (ilG_renderman *self, unsigned id);
 bool ilG_renderman_delMaterial      (ilG_renderman *self, ilG_matid mat);
+bool ilG_renderman_delShader        (ilG_renderman *self, unsigned id);
 
 void ilG_renderman_queue_init(ilG_renderman_queue *queue);
 void ilG_renderman_queue_free(ilG_renderman_queue *queue);

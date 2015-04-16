@@ -107,22 +107,18 @@ static bool lights_build(void *ptr, ilG_rendid id, ilG_renderman *rm, ilG_buildr
     ilG_material_textureUnit(&m, 2, "diffuse");
     ilG_material_textureUnit(&m, 3, "specular");
     ilG_material_fragData(&m, ILG_FRAGDATA_ACCUMULATION, "out_Color");
-    if (!ilG_material_vertex_file(&m, self->file, &out->error)) {
+    if (!ilG_renderman_addMaterialFromFile(rm, m, self->file,
+                                           self->context->msaa? "light_msaa.frag" : "light.frag",
+                                           &self->mat, &out->error)) {
         return false;
     }
-    if (!ilG_material_fragment_file(&m, self->context->msaa? "light_msaa.frag" : "light.frag", &out->error)) {
-        return false;
-    }
-    if (!ilG_material_link(&m, &out->error)) {
-        return false;
-    }
-    self->color_loc     = glGetUniformLocation(m.program, "color");
-    self->radius_loc    = glGetUniformLocation(m.program, "radius");
-    self->mvp_loc       = glGetUniformLocation(m.program, "mvp");
-    self->mv_loc        = glGetUniformLocation(m.program, "mv");
-    self->ivp_loc       = glGetUniformLocation(m.program, "ivp");
-    self->size_loc      = glGetUniformLocation(m.program, "size");
-    self->mat = ilG_renderman_addMaterial(self->rm, m);
+    GLuint prog = ilG_renderman_findMaterial(rm, self->mat)->program;
+    self->color_loc     = glGetUniformLocation(prog, "color");
+    self->radius_loc    = glGetUniformLocation(prog, "radius");
+    self->mvp_loc       = glGetUniformLocation(prog, "mvp");
+    self->mv_loc        = glGetUniformLocation(prog, "mv");
+    self->ivp_loc       = glGetUniformLocation(prog, "ivp");
+    self->size_loc      = glGetUniformLocation(prog, "size");
 
     self->ico = ilG_icosahedron(rm);
     tgl_vao_init(&self->vao);

@@ -65,19 +65,13 @@ static bool heightmap_build(void *ptr, ilG_rendid id, ilG_renderman *rm, ilG_bui
     ilG_material_fragData(&mat, ILG_FRAGDATA_NORMAL, "out_Normal");
     ilG_material_fragData(&mat, ILG_FRAGDATA_DIFFUSE, "out_Diffuse");
     ilG_material_fragData(&mat, ILG_FRAGDATA_SPECULAR, "out_Specular");
-    if (!ilG_material_vertex_file(&mat, "heightmap.vert", &out->error)) {
+    if (!ilG_renderman_addMaterialFromFile(self->rm, mat, "heightmap.vert", "heightmap.frag", &self->mat, &out->error)) {
         return false;
     }
-    if (!ilG_material_fragment_file(&mat, "heightmap.frag", &out->error)) {
-        return false;
-    }
-    if (!ilG_material_link(&mat, &out->error)) {
-        return false;
-    }
-    self->mat = ilG_renderman_addMaterial(self->rm, mat);
-    self->mvp = ilG_material_getLoc(&mat, "mvp");
-    self->imt = ilG_material_getLoc(&mat, "imt");
-    self->size = ilG_material_getLoc(&mat, "size");
+    ilG_material *mat2 = ilG_renderman_findMaterial(rm, self->mat);
+    self->mvp = ilG_material_getLoc(mat2, "mvp");
+    self->imt = ilG_material_getLoc(mat2, "imt");
+    self->size = ilG_material_getLoc(mat2, "size");
 
     if (!ilG_mesh_init(&self->mesh, self->source)) {
         ilA_mesh_free(self->source);

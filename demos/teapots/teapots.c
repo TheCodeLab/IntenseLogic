@@ -71,18 +71,12 @@ static bool teapot_build(void *obj, ilG_rendid id, ilG_renderman *rm, ilG_buildr
     ilG_material_arrayAttrib(&m, ILG_MESH_DIFFUSE, "in_Diffuse");
     ilG_material_arrayAttrib(&m, ILG_MESH_SPECULAR, "in_Specular");
     ilG_material_textureUnit(&m, 0, "tex");
-    if (!ilG_material_vertex_file(&m, "test.vert", &out->error)) {
+    if (!ilG_renderman_addMaterialFromFile(rm, m, "test.vert", "test.frag", &t->mat, &out->error)) {
         return false;
     }
-    if (!ilG_material_fragment_file(&m, "test.frag", &out->error)) {
-        return false;
-    }
-    if (!ilG_material_link(&m, &out->error)) {
-        return false;
-    }
-    t->mvp_loc = ilG_material_getLoc(&m, "mvp");
-    t->imt_loc = ilG_material_getLoc(&m, "imt");
-    t->mat = ilG_renderman_addMaterial(t->rm, m);
+    ilG_material *mat = ilG_renderman_findMaterial(rm, t->mat);
+    t->mvp_loc = ilG_material_getLoc(mat, "mvp");
+    t->imt_loc = ilG_material_getLoc(mat, "imt");
 
     if (!ilG_mesh_fromfile(&t->mesh, &demo_fs, "teapot.obj")) {
         return false;
@@ -142,7 +136,7 @@ void demo_start()
     ilG_renderman *rm = &context->manager;
     geom = ilG_build(ilG_geometry_builder(), rm);
     lights = ilG_build(ilG_sunlight_builder(context), rm);
-    out = ilG_build(ilG_out_builder(context), rm);
+    out = ilG_build(ilG_out_builder(context, NULL, NULL), rm);
     teapot = ilG_build(teapot_builder(), rm);
 
     ilG_handle_addRenderer(geom, teapot);

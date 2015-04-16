@@ -41,7 +41,7 @@ helper_result helper_create(helper_config *conf)
         ilG_handle_addRenderer(r.context->root, r.lights);
     }
     if (conf->out) {
-        r.out = ilG_build(ilG_out_builder(r.context), rm);
+        r.out = ilG_build(ilG_out_builder(r.context, NULL, NULL), rm);
         ilG_handle_addRenderer(r.context->root, r.out);
     }
     return r;
