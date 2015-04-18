@@ -277,7 +277,7 @@ ilG_builder ilG_transparency_builder();
 ilG_builder ilG_skybox_builder(struct ilG_tex skytex);
 ilG_builder ilG_pointlight_builder(struct ilG_context *context);
 ilG_builder ilG_sunlight_builder(struct ilG_context *context);
-ilG_builder ilG_out_builder(struct ilG_context *context);
+ilG_builder ilG_out_builder(struct ilG_context *context, const float *exposure, const float *gamma);
 ilG_builder ilG_heightmap_builder(unsigned w, unsigned h, struct ilG_tex height, struct ilG_tex normal, struct ilG_tex color);
 // takes ownership of verts
 // verts is 3*count floats, or number of vertices

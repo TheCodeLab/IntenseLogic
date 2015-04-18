@@ -13,9 +13,10 @@ typedef struct ilG_out {
     tgl_fbo front, result;
     tgl_quad quad;
     tgl_vao vao;
-    GLuint size_loc;
+    GLuint size_loc, t_exposure_loc, h_exposure_loc, gamma_loc;
     unsigned w, h;
     int which;
+    const float *exposure, *gamma;
 } ilG_out;
 
 enum {
@@ -52,6 +53,8 @@ static void out_bloom(ilG_out *self)
     tgl_fbo_bindTex(&context->fb, self->which);
     ilG_material_bind(tonemap);
     glUniform2f(self->size_loc, self->w, self->h);
+    glUniform1f(self->t_exposure_loc, self->exposure? *self->exposure : 1.0);
+    glUniform1f(self->gamma_loc, self->gamma? *self->gamma : 1.0);
     tgl_quad_draw_once(&self->quad);
 
     for (i = 0; i < 4; i++) {
@@ -79,6 +82,7 @@ static void out_bloom(ilG_out *self)
         // do a horizontal blur.
         ilG_material_bind(horizblur);
         glUniform2f(self->size_loc, self->w, self->h);
+        glUniform1f(self->h_exposure_loc, self->exposure? *self->exposure : 1.0);
         tgl_quad_draw_once(&self->quad);
 
         // Into the screen,
@@ -195,6 +199,7 @@ static bool out_build(void *ptr, ilG_rendid id, ilG_renderman *rm, ilG_buildresu
         if (!ilG_material_link(&m, &out->error)) {
             return false;
         }
+        self->h_exposure_loc = ilG_material_getLoc(&m, "exposure");
         self->horizblur = ilG_renderman_addMaterial(self->rm, m);
 
         ilG_material_init(&m);
@@ -227,6 +232,8 @@ static bool out_build(void *ptr, ilG_rendid id, ilG_renderman *rm, ilG_buildresu
             return false;
         }
         self->size_loc = ilG_material_getLoc(&m, "size");
+        self->t_exposure_loc = ilG_material_getLoc(&m, "exposure");
+        self->gamma_loc = ilG_material_getLoc(&m, "gamma");
         self->tonemap = ilG_renderman_addMaterial(self->rm, m);
 
         tgl_vao_init(&self->vao);
@@ -250,7 +257,7 @@ static bool out_build(void *ptr, ilG_rendid id, ilG_renderman *rm, ilG_buildresu
     return true;
 }
 
-ilG_builder ilG_out_builder(ilG_context *context)
+ilG_builder ilG_out_builder(ilG_context *context, const float *exposure, const float *gamma)
 {
     ilG_out *self = calloc(1, sizeof(ilG_out));
 
@@ -258,6 +265,8 @@ ilG_builder ilG_out_builder(ilG_context *context)
     tgl_fbo_init(&self->result);
     self->context = context;
     self->which = 1;
+    self->exposure = exposure;
+    self->gamma = gamma;
 
     return ilG_builder_wrap(self, out_build);
 }
