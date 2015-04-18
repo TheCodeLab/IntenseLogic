@@ -162,11 +162,11 @@ static bool out_build(void *ptr, ilG_rendid id, ilG_renderman *rm, ilG_buildresu
 
         f = &self->front;
         tgl_fbo_numTargets(f, 1);
-        tgl_fbo_texture(f, 0, fmt, GL_RGB8, GL_RGB, GL_COLOR_ATTACHMENT0);
+        tgl_fbo_texture(f, 0, fmt, GL_RGB8, GL_RGB, GL_COLOR_ATTACHMENT0, GL_UNSIGNED_BYTE);
 
         f = &self->result;
         tgl_fbo_numTargets(f, 1);
-        tgl_fbo_texture(f, 0, fmt, GL_RGB8, GL_RGB, GL_COLOR_ATTACHMENT0);
+        tgl_fbo_texture(f, 0, fmt, GL_RGB8, GL_RGB, GL_COLOR_ATTACHMENT0, GL_UNSIGNED_BYTE);
 
         if (context->msaa) {
             tgl_fbo_multisample(&self->front, 0, context->msaa, false);

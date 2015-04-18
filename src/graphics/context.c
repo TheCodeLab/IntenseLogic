@@ -446,12 +446,12 @@ void ilG_context_localSetup(ilG_context *self)
         GLenum type = self->msaa? GL_TEXTURE_2D_MULTISAMPLE : GL_TEXTURE_RECTANGLE;
         GLenum afmt = self->hdr? GL_RGBA16F : GL_RGBA8;
         tgl_fbo_numTargets(&self->fb, ILG_CONTEXT_NUMATTACHMENTS);
-        tgl_fbo_texture(&self->fb, ILG_CONTEXT_DEPTH, type, GL_DEPTH_COMPONENT, GL_DEPTH_COMPONENT, GL_DEPTH_ATTACHMENT);
-        tgl_fbo_texture(&self->fb, ILG_CONTEXT_ACCUM, type, afmt, GL_RGBA, GL_COLOR_ATTACHMENT0);
-        tgl_fbo_texture(&self->fb, ILG_CONTEXT_NORMAL, type, GL_RGB8, GL_RGB, GL_COLOR_ATTACHMENT1);
-        tgl_fbo_texture(&self->fb, ILG_CONTEXT_DIFFUSE, type, GL_RGB8, GL_RGB, GL_COLOR_ATTACHMENT2);
-        tgl_fbo_texture(&self->fb, ILG_CONTEXT_SPECULAR, type, GL_RGB8, GL_RGB, GL_COLOR_ATTACHMENT3);
-        tgl_fbo_texture(&self->fb, ILG_CONTEXT_SPECULAR_CO, type, GL_R16UI, GL_RED, GL_COLOR_ATTACHMENT3);
+        tgl_fbo_texture(&self->fb, ILG_CONTEXT_DEPTH, type, GL_DEPTH_COMPONENT, GL_DEPTH_COMPONENT, GL_DEPTH_ATTACHMENT, GL_FLOAT);
+        tgl_fbo_texture(&self->fb, ILG_CONTEXT_ACCUM, type, afmt, GL_RGBA, GL_COLOR_ATTACHMENT0, self->hdr? GL_FLOAT : GL_UNSIGNED_BYTE);
+        tgl_fbo_texture(&self->fb, ILG_CONTEXT_NORMAL, type, GL_RGB8, GL_RGB, GL_COLOR_ATTACHMENT1, GL_UNSIGNED_BYTE);
+        tgl_fbo_texture(&self->fb, ILG_CONTEXT_DIFFUSE, type, GL_RGB8, GL_RGB, GL_COLOR_ATTACHMENT2, GL_UNSIGNED_BYTE);
+        tgl_fbo_texture(&self->fb, ILG_CONTEXT_SPECULAR, type, GL_RGB8, GL_RGB, GL_COLOR_ATTACHMENT3, GL_UNSIGNED_BYTE);
+        tgl_fbo_texture(&self->fb, ILG_CONTEXT_SPECULAR_CO, type, GL_R16UI, GL_RED_INTEGER, GL_COLOR_ATTACHMENT4, GL_UNSIGNED_BYTE);
         if (self->msaa) {
             tgl_fbo_multisample(&self->fb, ILG_CONTEXT_DEPTH, self->msaa, false);
             tgl_fbo_multisample(&self->fb, ILG_CONTEXT_ACCUM, self->msaa, false);
