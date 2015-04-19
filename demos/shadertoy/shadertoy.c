@@ -81,7 +81,7 @@ static bool compile(toy *t, char **error)
     ilG_material *mat = ilG_renderman_findMaterial(t->rm, t->mat);
     ilG_shader *vert = ilG_renderman_findShader(t->rm, mat->vert);
     ilG_shader *frag = ilG_renderman_findShader(t->rm, mat->frag);
-    if (ilG_shader_compile(frag, GL_FRAGMENT_SHADER, error)
+    if (ilG_shader_compile(frag, error)
         && ilG_material_link(mat, vert, frag, error)) {
         t->linked = true;
         t->iResolution = ilG_material_getLoc(mat, "iResolution");
@@ -105,13 +105,13 @@ static bool toy_build(void *obj, ilG_rendid id, ilG_renderman *rm, ilG_buildresu
     ilG_material_fragData(m, ILG_FRAGDATA_ACCUMULATION, "out_Color");
     ilG_material_arrayAttrib(m, ILG_ARRATTR_POSITION, "in_Position");
     ilG_shader vert, frag;
-    if (!ilG_shader_file(&vert, "id2d.vert", &out->error)) {
+    if (!ilG_shader_file(&vert, "id2d.vert", GL_VERTEX_SHADER, &out->error)) {
         return false;
     }
-    if (!ilG_shader_compile(&vert, GL_VERTEX_SHADER, &out->error)) {
+    if (!ilG_shader_compile(&vert, &out->error)) {
         return false;
     }
-    ilG_shader_load(&frag, t->shader);
+    ilG_shader_load(&frag, t->shader, GL_FRAGMENT_SHADER);
     m->vert = ilG_renderman_addShader(rm, vert);
     m->frag = ilG_renderman_addShader(rm, frag);
     t->mat = ilG_renderman_addMaterial(t->rm, *m);
