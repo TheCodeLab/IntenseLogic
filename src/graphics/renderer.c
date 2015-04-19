@@ -413,10 +413,10 @@ bool ilG_renderman_addMaterialFromFile(ilG_renderman *self, ilG_material mat, co
                                        const char *fragpath, ilG_matid *out, char **error)
 {
     ilG_shader vert, frag;
-    if (!ilG_shader_file(&vert, vertpath, error) ||
-        !ilG_shader_file(&frag, fragpath, error) ||
-        !ilG_shader_compile(&vert, GL_VERTEX_SHADER, error) ||
-        !ilG_shader_compile(&frag, GL_FRAGMENT_SHADER, error)) {
+    if (!ilG_shader_file(&vert, vertpath, GL_VERTEX_SHADER, error) ||
+        !ilG_shader_file(&frag, fragpath, GL_FRAGMENT_SHADER, error) ||
+        !ilG_shader_compile(&vert, error) ||
+        !ilG_shader_compile(&frag, error)) {
         return false;
     }
     return ilG_renderman_addMaterialFromShader(self, mat, vert, frag, out, error);

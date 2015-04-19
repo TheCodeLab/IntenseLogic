@@ -19,21 +19,23 @@ void ilG_shader_free(ilG_shader *self)
     ilA_fileclose(&self->file);
 }
 
-void ilG_shader_load(ilG_shader* self, ilA_file file)
+void ilG_shader_load(ilG_shader* self, ilA_file file, GLenum type)
 {
     self->file = file;
+    self->type = type;
 }
 
-bool ilG_shader_file(ilG_shader *self, const char *filename, char **error)
+bool ilG_shader_file(ilG_shader *self, const char *filename, GLenum type, char **error)
 {
     bool res = ilA_fileopen(&ilG_shaders, &self->file, filename, -1);
+    self->type = type;
     if (!res && error) {
         *error = ilA_strerrora(&self->file.err, NULL);
     }
     return res;
 }
 
-bool ilG_shader_compile(ilG_shader *self, GLenum type, char **error)
+bool ilG_shader_compile(ilG_shader *self, char **error)
 {
     ilA_map map;
     if (!ilA_mapopen(&map, ILA_READ, self->file)) {
@@ -45,7 +47,7 @@ bool ilG_shader_compile(ilG_shader *self, GLenum type, char **error)
     char *source = map.data;
     size_t len = map.size;
     GLuint object;
-    if (!tgl_make_shader(&object, type, source, len, error)) {
+    if (!tgl_make_shader(&object, self->type, source, len, error)) {
         return false;
     }
     self->object = object;
