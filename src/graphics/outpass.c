@@ -194,6 +194,7 @@ static bool out_build(void *ptr, ilG_rendid id, ilG_renderman *rm, ilG_buildresu
             return false;
         }
         mat = ilG_renderman_findMaterial(self->rm, self->horizblur);
+        self->h_exposure_loc = ilG_material_getLoc(mat, "exposure");
 
         ilG_material_init(&m);
         ilG_material_name(&m, "Vertical Blur Shader");
