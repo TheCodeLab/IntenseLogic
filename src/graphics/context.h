@@ -15,12 +15,11 @@
 #include "graphics/renderer.h"
 
 enum ilG_context_attachments {
-    ILG_CONTEXT_DEPTH,
-    ILG_CONTEXT_ACCUM,
-    ILG_CONTEXT_NORMAL,
     ILG_CONTEXT_DIFFUSE,
+    ILG_CONTEXT_NORMAL,
     ILG_CONTEXT_SPECULAR,
     ILG_CONTEXT_SPECULAR_CO,
+    ILG_CONTEXT_DEPTH,
     ILG_CONTEXT_NUMATTACHMENTS
 };
 
@@ -106,7 +105,7 @@ typedef struct ilG_context {
     ilG_renderman manager;
     /* Private */
     bool valid;
-    tgl_fbo fb;
+    tgl_fbo gbuffer, accum;
     int tick_id;
     size_t num_active;
     SDL_Window *window;
@@ -146,10 +145,6 @@ void ilG_context_stop(ilG_context *self);
 /** Destroys the context and stops the render thread. Blocks. */
 void ilG_context_end(ilG_context *self);
 
-/** Internal: Binds the context's internal framebuffer */
-void ilG_context_bindFB(ilG_context *self);
-/** Internal: Special case function which will be around until #ilG_context is changed to use #ilG_fbo */
-void ilG_context_bind_for_outpass(ilG_context *self);
 /** Render thread call for resizing framebuffer */
 int ilG_context_localResize(ilG_context *self, int w, int h);
 /** Render for one frame. Useful if you want your own render loop. */

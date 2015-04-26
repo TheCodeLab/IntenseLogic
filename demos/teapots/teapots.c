@@ -6,7 +6,6 @@
 #include "asset/node.h"
 #include "graphics/context.h"
 #include "graphics/floatspace.h"
-#include "graphics/fragdata.h"
 #include "graphics/material.h"
 #include "graphics/mesh.h"
 #include "graphics/renderer.h"
@@ -61,16 +60,15 @@ static bool teapot_build(void *obj, ilG_rendid id, ilG_renderman *rm, ilG_buildr
     ilG_material m;
     ilG_material_init(&m);
     ilG_material_name(&m, "Teapot Material");
-    ilG_material_fragData(&m, ILG_FRAGDATA_NORMAL, "out_Normal");
-    ilG_material_fragData(&m, ILG_FRAGDATA_ACCUMULATION, "out_Ambient");
-    ilG_material_fragData(&m, ILG_FRAGDATA_DIFFUSE, "out_Diffuse");
-    ilG_material_fragData(&m, ILG_FRAGDATA_SPECULAR, "out_Specular");
     ilG_material_arrayAttrib(&m, ILG_MESH_POS, "in_Position");
     ilG_material_arrayAttrib(&m, ILG_MESH_TEX, "in_Texcoord");
     ilG_material_arrayAttrib(&m, ILG_MESH_NORM, "in_Normal");
     ilG_material_arrayAttrib(&m, ILG_MESH_DIFFUSE, "in_Diffuse");
     ilG_material_arrayAttrib(&m, ILG_MESH_SPECULAR, "in_Specular");
     ilG_material_textureUnit(&m, 0, "tex");
+    ilG_material_fragData(&m, ILG_CONTEXT_DIFFUSE, "out_Diffuse");
+    ilG_material_fragData(&m, ILG_CONTEXT_NORMAL, "out_Normal");
+    ilG_material_fragData(&m, ILG_CONTEXT_SPECULAR, "out_Specular");
     if (!ilG_renderman_addMaterialFromFile(rm, m, "test.vert", "test.frag", &t->mat, &out->error)) {
         return false;
     }
@@ -104,6 +102,7 @@ ilG_builder teapot_builder()
     struct teapot *t = calloc(1, sizeof(struct teapot));
 
     ilG_tex_loadfile(&t->tex, &demo_fs, "white-marble-texture.png");
+    t->tex.unit = 0;
 
     return ilG_builder_wrap(t, teapot_build);
 }
@@ -132,15 +131,18 @@ void demo_start()
     ilG_context *context = ilG_context_new();
     ilG_context_hint(context, ILG_CONTEXT_DEBUG_RENDER, 1);
     ilG_context_hint(context, ILG_CONTEXT_VSYNC, 1);
-    ilG_handle geom, lights, out, teapot;
+    ilG_handle geom, ambient, lights, out, teapot;
     ilG_renderman *rm = &context->manager;
-    geom = ilG_build(ilG_geometry_builder(), rm);
+    il_vec3 ambient_col = il_vec3_new(0.5, 0.5, 0.5);
+    geom = ilG_build(ilG_geometry_builder(context), rm);
     lights = ilG_build(ilG_sunlight_builder(context), rm);
+    ambient = ilG_build(ilG_ambient_builder(context, &ambient_col), rm);
     out = ilG_build(ilG_out_builder(context, NULL, NULL), rm);
     teapot = ilG_build(teapot_builder(), rm);
 
-    ilG_handle_addRenderer(geom, teapot);
     ilG_handle_addRenderer(context->root, geom);
+    ilG_handle_addRenderer(geom, teapot);
+    ilG_handle_addRenderer(context->root, ambient);
     ilG_handle_addRenderer(context->root, lights);
     ilG_handle_addRenderer(context->root, out);
 

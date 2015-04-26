@@ -288,9 +288,9 @@ void ilG_renderman_print(struct ilG_context *c, ilG_rendid root);
 struct ilA_img;
 struct ilG_tex;
 
-ilG_builder ilG_geometry_builder();
+ilG_builder ilG_geometry_builder(struct ilG_context *context);
 ilG_builder ilG_transparency_builder();
-ilG_builder ilG_skybox_builder(struct ilG_tex skytex);
+ilG_builder ilG_skybox_builder(struct ilG_tex skytex, struct ilG_context *context);
 ilG_builder ilG_pointlight_builder(struct ilG_context *context);
 ilG_builder ilG_sunlight_builder(struct ilG_context *context);
 ilG_builder ilG_out_builder(struct ilG_context *context, const float *exposure, const float *gamma);
@@ -300,5 +300,6 @@ ilG_builder ilG_heightmap_builder(unsigned w, unsigned h, struct ilG_tex height,
 ilG_builder ilG_line_builder(unsigned num, float *verts, const float col[3]);
 /** cb will only be called once */
 ilG_builder ilG_grabber_builder(struct ilG_context *context, void (*cb)(struct ilA_img res, void *user), void *user);
+ilG_builder ilG_ambient_builder(struct ilG_context *context, il_vec3 *color);
 
 #endif

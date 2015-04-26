@@ -26,7 +26,7 @@ static void grabber_update(void *obj, ilG_rendid id)
         il_error("Screenshot failed: %s", ilA_img_strerror(res));
         return;
     }
-    glBindTexture(GL_TEXTURE_RECTANGLE, tgl_fbo_getTex(&self->context->fb, ILG_CONTEXT_ACCUM));
+    glBindTexture(GL_TEXTURE_RECTANGLE, tgl_fbo_getTex(&self->context->accum, 0));
     glGetTexImage(GL_TEXTURE_RECTANGLE, 0, GL_RGB, GL_UNSIGNED_BYTE, img.data);
     self->cb(img, self->user);
     ilG_renderman_delRenderer(self->rm, id);

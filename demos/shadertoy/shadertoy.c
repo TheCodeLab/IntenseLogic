@@ -5,7 +5,6 @@
 #include "tgl/tgl.h"
 #include "asset/node.h"
 #include "graphics/context.h"
-#include "graphics/fragdata.h"
 #include "graphics/graphics.h"
 #include "graphics/material.h"
 #include "graphics/renderer.h"
@@ -102,7 +101,6 @@ static bool toy_build(void *obj, ilG_rendid id, ilG_renderman *rm, ilG_buildresu
     ilG_material m[1];
     ilG_material_init(m);
     ilG_material_name(m, "Shader Toy");
-    ilG_material_fragData(m, ILG_FRAGDATA_ACCUMULATION, "out_Color");
     ilG_material_arrayAttrib(m, ILG_ARRATTR_POSITION, "in_Position");
     ilG_shader vert, frag;
     if (!ilG_shader_file(&vert, "id2d.vert", GL_VERTEX_SHADER, &out->error)) {

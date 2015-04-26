@@ -5,7 +5,6 @@
 
 #include "graphics/context.h"
 #include "graphics/floatspace.h"
-#include "graphics/fragdata.h"
 #include "graphics/material.h"
 #include "graphics/renderer.h"
 #include "graphics/transform.h"
@@ -101,8 +100,8 @@ static bool box_build(void *obj, ilG_rendid id, ilG_renderman *rm, ilG_buildresu
     ilG_material m;
     ilG_material_init(&m);
     ilG_material_name(&m, "Box Shader");
-    ilG_material_fragData(&m, ILG_FRAGDATA_ACCUMULATION, "out_Color");
     ilG_material_arrayAttrib(&m, 0, "in_Position");
+    ilG_material_fragData(&m, ILG_CONTEXT_DIFFUSE, "out_Color");
     if (!ilG_renderman_addMaterialFromFile(rm, m, "box.vert", "box.frag", &b->mat, &out->error)) {
         return false;
     }
@@ -156,13 +155,16 @@ void demo_start()
 {
     ilG_context *context = ilG_context_new();
     ilG_context_hint(context, ILG_CONTEXT_DEBUG_RENDER, 1);
-    ilG_handle geom, out, box;
-    geom = ilG_build(ilG_geometry_builder(), &context->manager);
+    ilG_handle geom, ambient, out, box;
+    il_vec3 ambient_col = il_vec3_new(0.75, 0.64, 0.95);
+    geom = ilG_build(ilG_geometry_builder(context), &context->manager);
+    ambient = ilG_build(ilG_ambient_builder(context, &ambient_col), &context->manager);
     out = ilG_build(ilG_out_builder(context, NULL, NULL), &context->manager);
     box = ilG_build(box_builder(), &context->manager);
 
     ilG_handle_addRenderer(geom, box);
     ilG_handle_addRenderer(context->root, geom);
+    ilG_handle_addRenderer(context->root, ambient);
     ilG_handle_addRenderer(context->root, out);
 
     ilG_floatspace fs;

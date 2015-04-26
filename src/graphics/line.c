@@ -3,7 +3,6 @@
 #include "tgl/tgl.h"
 #include "graphics/context.h"
 #include "graphics/material.h"
-#include "graphics/fragdata.h"
 #include "graphics/transform.h"
 
 typedef struct ilG_line {
@@ -50,7 +49,7 @@ static bool line_build(void *obj, ilG_rendid id, ilG_renderman *rm, ilG_buildres
     ilG_material_init(m);
     ilG_material_name(m, "Line Segment Shader");
     ilG_material_arrayAttrib(m, 0, "in_Position");
-    ilG_material_fragData(m, ILG_FRAGDATA_ACCUMULATION, "out_Ambient");
+    ilG_material_fragData(m, ILG_CONTEXT_DIFFUSE, "out_Ambient");
     if (!ilG_renderman_addMaterialFromFile(rm, *m, "line.vert", "line.frag", &self->mat, &out->error)) {
         return false;
     }

@@ -14,9 +14,6 @@ uniform mat4 ivp;
 uniform vec2 size;
 
 out vec3 out_Color;
-out vec3 out_Normal;
-out vec3 out_Diffuse;
-out vec3 out_Specular;
 
 /*
 [17:03] <feep> so device = clip.xyz/w and clip = Matrix world
@@ -74,7 +71,4 @@ void main()
     col += spec.xyz * pow(max(0, dot(reflection, viewer)), spec.w * 255);
 
     out_Color = max(vec3(0), col * daf * color);
-    out_Normal = vec3(0);
-    out_Diffuse = vec3(0);
-    out_Specular = vec3(0);
 }

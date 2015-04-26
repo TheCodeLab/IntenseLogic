@@ -13,8 +13,7 @@ uniform sampler2D ambient_tex;
 void main()
 {
     out_Normal = normal / vec3(2) + vec3(.5);
-    out_Ambient = texture(ambient_tex, texcoord); //vec4(0, 0, 0, 1); //vec4(.5, .5, .5, 1);
-    out_Diffuse = vec3(.64);
-    out_Specular = vec4(.5, .5, .5, 96);
+    vec3 col = texture(ambient_tex, texcoord).xyz;
+    out_Diffuse = col;
+    out_Specular = vec4(col, 96);
 }
-

@@ -11,7 +11,6 @@ extern "C" {
 #include "math/matrix.h"
 #include "graphics/renderer.h"
 #include "graphics/arrayattrib.h"
-#include "graphics/fragdata.h"
 #include "util/log.h"
 }
 
@@ -54,7 +53,6 @@ bool DebugDraw::build(void *ptr, ilG_rendid id, ilG_renderman *rm, ilG_buildresu
     ilG_material_name(&m, "Bullet Line Renderer");
     ilG_material_arrayAttrib(&m, ILG_ARRATTR_POSITION, "in_Position");
     ilG_material_arrayAttrib(&m, ILG_ARRATTR_AMBIENT, "in_Ambient");
-    ilG_material_fragData(&m, ILG_FRAGDATA_ACCUMULATION, "out_Color");
     if (!ilG_renderman_addMaterialFromFile(rm, m, "bullet-debug.vert", "bullet-debug.frag", &self.mat, &out->error)) {
         return false;
     }

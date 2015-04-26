@@ -116,6 +116,7 @@ ex void demo_start()
     };
     memcpy(c.skytex, sky, sizeof(sky));
     auto h = helper_create(&c);
+    *h.ambient_col = il_vec3_new(0.25, 0.25, 0.25);
     ilG_context *context = h.context;
     ilG_context_hint(context, ILG_CONTEXT_HDR, 1);
     //ilG_context_hint(context, ILG_CONTEXT_MSAA, 4);

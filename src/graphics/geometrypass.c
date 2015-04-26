@@ -14,8 +14,19 @@ static void geometry_free(void *ptr)
 
 static void geometry_update(void *ptr, ilG_rendid id)
 {
-    (void)ptr, (void)id;
+    (void)id;
+    ilG_context *context = ptr;
     tgl_check("Unknown");
+    static const unsigned order[] = {
+        ILG_CONTEXT_DIFFUSE,
+        ILG_CONTEXT_NORMAL,
+        ILG_CONTEXT_SPECULAR,
+        ILG_CONTEXT_SPECULAR_CO
+    };
+    tgl_fbo_bind_with(&context->gbuffer, TGL_FBO_RW, 4, order);
+    glClearDepth(1.0);
+    glClearColor(0,0,0,0);
+    glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
     glDisable(GL_BLEND);
@@ -38,7 +49,7 @@ static bool geometry_build(void *ptr, ilG_rendid id, ilG_renderman *rm, ilG_buil
     return true;
 }
 
-ilG_builder ilG_geometry_builder()
+ilG_builder ilG_geometry_builder(ilG_context *context)
 {
-    return ilG_builder_wrap(NULL, geometry_build);
+    return ilG_builder_wrap(context, geometry_build);
 }

@@ -2,7 +2,6 @@
 
 #include "graphics/arrayattrib.h"
 #include "graphics/context.h"
-#include "graphics/fragdata.h"
 #include "graphics/material.h"
 #include "graphics/shape.h"
 #include "graphics/transform.h"
@@ -48,13 +47,14 @@ static void lights_draw(void *ptr, ilG_rendid id, il_mat **mats, const unsigned 
     ilG_material *mat = ilG_renderman_findMaterial(self->rm, self->mat);
     ilG_material_bind(mat);
     glActiveTexture(GL_TEXTURE0);
-    tgl_fbo_bindTex(&context->fb, ILG_CONTEXT_DEPTH);
+    tgl_fbo_bindTex(&context->gbuffer, ILG_CONTEXT_DEPTH);
     glActiveTexture(GL_TEXTURE0 + 1);
-    tgl_fbo_bindTex(&context->fb, ILG_CONTEXT_NORMAL);
+    tgl_fbo_bindTex(&context->gbuffer, ILG_CONTEXT_NORMAL);
     glActiveTexture(GL_TEXTURE0 + 2);
-    tgl_fbo_bindTex(&context->fb, ILG_CONTEXT_DIFFUSE);
+    tgl_fbo_bindTex(&context->gbuffer, ILG_CONTEXT_DIFFUSE);
     glActiveTexture(GL_TEXTURE0 + 3);
-    tgl_fbo_bindTex(&context->fb, ILG_CONTEXT_SPECULAR);
+    tgl_fbo_bindTex(&context->gbuffer, ILG_CONTEXT_SPECULAR);
+    tgl_fbo_bind(&context->accum, TGL_FBO_RW);
     glEnable(GL_BLEND);
     glDisable(GL_DEPTH_TEST);
     glBlendFunc(GL_ONE, GL_ONE);
@@ -106,7 +106,7 @@ static bool lights_build(void *ptr, ilG_rendid id, ilG_renderman *rm, ilG_buildr
     ilG_material_textureUnit(&m, 1, "normal");
     ilG_material_textureUnit(&m, 2, "diffuse");
     ilG_material_textureUnit(&m, 3, "specular");
-    ilG_material_fragData(&m, ILG_FRAGDATA_ACCUMULATION, "out_Color");
+    ilG_material_fragData(&m, 0, "out_Color");
     if (!ilG_renderman_addMaterialFromFile(rm, m, self->file,
                                            self->context->msaa? "light_msaa.frag" : "light.frag",
                                            &self->mat, &out->error)) {

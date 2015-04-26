@@ -6,7 +6,6 @@
 #include "graphics/arrayattrib.h"
 #include "graphics/context.h"
 #include "graphics/floatspace.h"
-#include "graphics/fragdata.h"
 #include "graphics/material.h"
 #include "tgl/tgl.h"
 #include "graphics/renderer.h"
@@ -48,7 +47,6 @@ static bool quad_build(void *obj, ilG_rendid id, ilG_renderman *rm, ilG_buildres
     ilG_material m;
     ilG_material_init(&m);
     ilG_material_name(&m, "Rainbow Quad Shader");
-    ilG_material_fragData(&m, ILG_FRAGDATA_ACCUMULATION, "out_Color");
     ilG_material_arrayAttrib(&m, ILG_ARRATTR_POSITION, "in_Position");
     if (!ilG_renderman_addMaterialFromFile(rm, m, "id2d.vert", "rainbow2d.frag", &q->mat, &out->error)) {
         return false;

@@ -3,7 +3,6 @@
 #include "tgl/tgl.h"
 #include "graphics/arrayattrib.h"
 #include "graphics/context.h"
-#include "graphics/fragdata.h"
 #include "graphics/material.h"
 
 typedef struct ilG_out {
@@ -15,7 +14,6 @@ typedef struct ilG_out {
     tgl_vao vao;
     GLuint size_loc, t_exposure_loc, h_exposure_loc, gamma_loc;
     unsigned w, h;
-    int which;
     const float *exposure, *gamma;
 } ilG_out;
 
@@ -50,7 +48,8 @@ static void out_bloom(ilG_out *self)
 
     glActiveTexture(GL_TEXTURE0);
     // bind the framebuffer we want to display
-    tgl_fbo_bindTex(&context->fb, self->which);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    tgl_fbo_bindTex(&context->accum, 0);
     ilG_material_bind(tonemap);
     glUniform2f(self->size_loc, self->w, self->h);
     glUniform1f(self->t_exposure_loc, self->exposure? *self->exposure : 1.0);
@@ -64,8 +63,8 @@ static void out_bloom(ilG_out *self)
 
         // Into the front buffer,
         tgl_fbo_bind(&self->front, TGL_FBO_WRITE);
-        // from the context,
-        ilG_context_bind_for_outpass(context);
+        // from the accumulation buffer,
+        tgl_fbo_bind(&context->accum, TGL_FBO_READ);
         // downscale.
         glBlitFramebuffer(0,0, context->width,context->height,
                           0,0, w,h,
@@ -103,7 +102,6 @@ static void out_bloom(ilG_out *self)
 
         swapped = !swapped;
     }
-    ilG_context_bindFB(context);
 }
 
 static void out_update(void *ptr, ilG_rendid id)
@@ -132,7 +130,7 @@ static void out_update(void *ptr, ilG_rendid id)
         out_bloom(self);
     } else {
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-        ilG_context_bind_for_outpass(context);
+        tgl_fbo_bind(&context->accum, TGL_FBO_READ);
         unsigned w = context->width, h = context->height;
         glBlitFramebuffer(0,0, w,h,
                           0,0, w,h,
@@ -209,6 +207,7 @@ static bool out_build(void *ptr, ilG_rendid id, ilG_renderman *rm, ilG_buildresu
         ilG_material_name(&m, "Tone Mapping Shader");
         ilG_material_arrayAttrib(&m, OUT_POSITION, "in_Texcoord");
         ilG_material_textureUnit(&m, 0, "tex");
+        ilG_material_fragData(&m, 0, "out_Color");
         if (!ilG_renderman_addMaterialFromFile(self->rm, m, "post.vert", "hdr.frag", &self->tonemap, &out->error)) {
             return false;
         }
@@ -245,7 +244,6 @@ ilG_builder ilG_out_builder(ilG_context *context, const float *exposure, const f
     tgl_fbo_init(&self->front);
     tgl_fbo_init(&self->result);
     self->context = context;
-    self->which = 1;
     self->exposure = exposure;
     self->gamma = gamma;
 

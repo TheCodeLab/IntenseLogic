@@ -2,7 +2,6 @@
 
 #include "graphics/arrayattrib.h"
 #include "graphics/context.h"
-#include "graphics/fragdata.h"
 #include "graphics/material.h"
 #include "graphics/shape.h"
 #include "graphics/tex.h"
@@ -15,6 +14,7 @@ typedef struct ilG_skybox {
     ilG_shape *box;
     ilG_tex texture;
     GLuint vp_loc;
+    ilG_context *context;
 } ilG_skybox;
 
 static void sky_free(void *ptr)
@@ -31,17 +31,16 @@ static void sky_view(void *ptr, ilG_rendid id, il_mat *mats)
     ilG_material *mat = ilG_renderman_findMaterial(self->rm, self->mat);
 
     tgl_check("Unknown");
-    glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
+    glDepthMask(GL_FALSE);
     ilG_shape_bind(self->box);
     ilG_material_bind(mat);
     ilG_material_bindMatrix(mat, self->vp_loc, mats[0]);
 
     ilG_tex_bind(&self->texture);
     ilG_shape_draw(self->box);
-    glEnable(GL_DEPTH_TEST);
-    glClearDepth(1.0);
-    glClear(GL_DEPTH_BUFFER_BIT);
+    glEnable(GL_CULL_FACE);
+    glDepthMask(GL_TRUE);
 }
 
 static bool sky_build(void *ptr, ilG_rendid id, ilG_renderman *rm, ilG_buildresult *out)
@@ -57,10 +56,8 @@ static bool sky_build(void *ptr, ilG_rendid id, ilG_renderman *rm, ilG_buildresu
     ilG_material_arrayAttrib(&m, ILG_ARRATTR_POSITION, "in_Position");
     ilG_material_arrayAttrib(&m, ILG_ARRATTR_TEXCOORD, "in_Texcoord");
     ilG_material_textureUnit(&m, 0, "skytex");
-    ilG_material_fragData(&m, ILG_FRAGDATA_ACCUMULATION, "out_Color");
-    ilG_material_fragData(&m, ILG_FRAGDATA_NORMAL, "out_Normal");
-    ilG_material_fragData(&m, ILG_FRAGDATA_DIFFUSE, "out_Diffuse");
-    ilG_material_fragData(&m, ILG_FRAGDATA_SPECULAR, "out_Specular");
+    ilG_material_fragData(&m, ILG_CONTEXT_NORMAL, "out_Normal");
+    ilG_material_fragData(&m, ILG_CONTEXT_DIFFUSE, "out_Color");
     if (!ilG_renderman_addMaterialFromFile(rm, m, "skybox.vert", "skybox.frag", &self->mat, &out->error)) {
         return false;
     }
@@ -83,10 +80,11 @@ static bool sky_build(void *ptr, ilG_rendid id, ilG_renderman *rm, ilG_buildresu
     return true;
 }
 
-ilG_builder ilG_skybox_builder(ilG_tex skytex)
+ilG_builder ilG_skybox_builder(ilG_tex skytex, ilG_context *context)
 {
     ilG_skybox *self = calloc(1, sizeof(ilG_skybox));
     self->texture = skytex;
     self->texture.unit = 0;
+    self->context = context;
     return ilG_builder_wrap(self, sky_build);
 }

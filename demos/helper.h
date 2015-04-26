@@ -5,7 +5,8 @@
 
 typedef struct helper_result {
     ilG_context *context;
-    ilG_handle sky, geom, lights, out;
+    il_vec3 *ambient_col;
+    ilG_handle sky, geom, ambient, lights, out;
 } helper_result;
 
 typedef struct helper_config {

@@ -50,7 +50,8 @@ void ilG_context_init(ilG_context *self)
     ilE_handler_init_with_name(&self->close,   "il.graphics.context.close");
     ilE_handler_init_with_name(&self->destroy, "il.graphics.context.destroy");
     // private
-    tgl_fbo_init(&self->fb);
+    tgl_fbo_init(&self->gbuffer);
+    tgl_fbo_init(&self->accum);
     ilG_renderman *rm = &self->manager;
     ilG_renderman_queue_init(&rm->queue);
     ilG_client_queue_init(&rm->client);
@@ -133,30 +134,12 @@ void ilG_context_free(ilG_context *self)
     ilG_renderman_free(&self->manager);
 
     // private members
-    tgl_fbo_free(&self->fb);
+    tgl_fbo_free(&self->gbuffer);
+    tgl_fbo_free(&self->accum);
     ilG_renderman_queue_free(&self->manager.queue);
 
     SDL_GL_DeleteContext(self->context);
     SDL_DestroyWindow(self->window);
-}
-
-void ilG_context_bindFB(ilG_context *self)
-{
-    static const unsigned order[] = {
-        ILG_CONTEXT_ACCUM,
-        ILG_CONTEXT_NORMAL,
-        ILG_CONTEXT_DIFFUSE,
-        ILG_CONTEXT_SPECULAR
-    };
-    tgl_fbo_bind_with(&self->fb, TGL_FBO_WRITE, 4, order);
-}
-
-void ilG_context_bind_for_outpass(ilG_context *self)
-{
-    static const unsigned order[] = {
-        ILG_CONTEXT_ACCUM
-    };
-    tgl_fbo_bind_with(&self->fb, TGL_FBO_READ, 1, order);
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -177,7 +160,7 @@ int ilG_context_localResize(ilG_context *self, int w, int h)
         return 1;
     }
 
-    if (!tgl_fbo_build(&self->fb, w, h)) {
+    if (!tgl_fbo_build(&self->gbuffer, w, h) || !tgl_fbo_build(&self->accum, w, h)) {
         return 0;
     }
     tgl_check("Error setting up screen");
@@ -242,16 +225,10 @@ void ilG_context_renderFrame(ilG_context *context)
     glViewport(0, 0, context->width, context->height);
 
     il_debug("Begin render");
-    ilG_context_bindFB(context);
-    if (context->debug_render) {
-        glClearColor(0.39, 0.58, 0.93, 1.0); // cornflower blue
-    } else {
-        glClearColor(0, 0, 0, 1.0);
-    }
+    tgl_fbo_bind(&context->accum, TGL_FBO_WRITE);
+    glClearColor(0,0,0, 1.0);
     glClearDepth(1.0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glDepthFunc(GL_LESS);
-    glEnable(GL_DEPTH_TEST);
 
     // asserts that first renderer is the context itself
     render_renderer(context, &context->manager.renderers.data[0]);
@@ -445,20 +422,21 @@ void ilG_context_localSetup(ilG_context *self)
     if (!self->use_default_fb) {
         GLenum type = self->msaa? GL_TEXTURE_2D_MULTISAMPLE : GL_TEXTURE_RECTANGLE;
         GLenum afmt = self->hdr? GL_RGBA16F : GL_RGBA8;
-        tgl_fbo_numTargets(&self->fb, ILG_CONTEXT_NUMATTACHMENTS);
-        tgl_fbo_texture(&self->fb, ILG_CONTEXT_DEPTH, type, GL_DEPTH_COMPONENT, GL_DEPTH_COMPONENT, GL_DEPTH_ATTACHMENT, GL_FLOAT);
-        tgl_fbo_texture(&self->fb, ILG_CONTEXT_ACCUM, type, afmt, GL_RGBA, GL_COLOR_ATTACHMENT0, self->hdr? GL_FLOAT : GL_UNSIGNED_BYTE);
-        tgl_fbo_texture(&self->fb, ILG_CONTEXT_NORMAL, type, GL_RGB8, GL_RGB, GL_COLOR_ATTACHMENT1, GL_UNSIGNED_BYTE);
-        tgl_fbo_texture(&self->fb, ILG_CONTEXT_DIFFUSE, type, GL_RGB8, GL_RGB, GL_COLOR_ATTACHMENT2, GL_UNSIGNED_BYTE);
-        tgl_fbo_texture(&self->fb, ILG_CONTEXT_SPECULAR, type, GL_RGB8, GL_RGB, GL_COLOR_ATTACHMENT3, GL_UNSIGNED_BYTE);
-        tgl_fbo_texture(&self->fb, ILG_CONTEXT_SPECULAR_CO, type, GL_R16UI, GL_RED_INTEGER, GL_COLOR_ATTACHMENT4, GL_UNSIGNED_BYTE);
+        tgl_fbo_numTargets(&self->gbuffer, ILG_CONTEXT_NUMATTACHMENTS);
+        tgl_fbo_texture(&self->gbuffer, ILG_CONTEXT_DIFFUSE, type, GL_RGB8, GL_RGB, GL_COLOR_ATTACHMENT0, GL_UNSIGNED_BYTE);
+        tgl_fbo_texture(&self->gbuffer, ILG_CONTEXT_NORMAL, type, GL_RGB8, GL_RGB, GL_COLOR_ATTACHMENT1, GL_UNSIGNED_BYTE);
+        tgl_fbo_texture(&self->gbuffer, ILG_CONTEXT_SPECULAR, type, GL_RGB8, GL_RGB, GL_COLOR_ATTACHMENT2, GL_UNSIGNED_BYTE);
+        tgl_fbo_texture(&self->gbuffer, ILG_CONTEXT_SPECULAR_CO, type, GL_R16UI, GL_RED_INTEGER, GL_COLOR_ATTACHMENT3, GL_UNSIGNED_BYTE);
+        tgl_fbo_texture(&self->gbuffer, ILG_CONTEXT_DEPTH, type, GL_DEPTH_COMPONENT, GL_DEPTH_COMPONENT, GL_DEPTH_ATTACHMENT, GL_FLOAT);
+        tgl_fbo_numTargets(&self->accum, 1);
+        tgl_fbo_texture(&self->accum, 0, type, afmt, GL_RGBA, GL_COLOR_ATTACHMENT0, self->hdr? GL_FLOAT : GL_UNSIGNED_BYTE);
         if (self->msaa) {
-            tgl_fbo_multisample(&self->fb, ILG_CONTEXT_DEPTH, self->msaa, false);
-            tgl_fbo_multisample(&self->fb, ILG_CONTEXT_ACCUM, self->msaa, false);
-            tgl_fbo_multisample(&self->fb, ILG_CONTEXT_NORMAL, self->msaa, false);
-            tgl_fbo_multisample(&self->fb, ILG_CONTEXT_DIFFUSE, self->msaa, false);
-            tgl_fbo_multisample(&self->fb, ILG_CONTEXT_SPECULAR, self->msaa, false);
-            tgl_fbo_multisample(&self->fb, ILG_CONTEXT_SPECULAR_CO, self->msaa, false);
+            tgl_fbo_multisample(&self->gbuffer, ILG_CONTEXT_DEPTH, self->msaa, false);
+            tgl_fbo_multisample(&self->gbuffer, ILG_CONTEXT_NORMAL, self->msaa, false);
+            tgl_fbo_multisample(&self->gbuffer, ILG_CONTEXT_DIFFUSE, self->msaa, false);
+            tgl_fbo_multisample(&self->gbuffer, ILG_CONTEXT_SPECULAR, self->msaa, false);
+            tgl_fbo_multisample(&self->gbuffer, ILG_CONTEXT_SPECULAR_CO, self->msaa, false);
+            tgl_fbo_multisample(&self->accum, 0, self->msaa, false);
         }
         tgl_check("Unable to generate framebuffer");
     }

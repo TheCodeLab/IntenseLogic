@@ -7,7 +7,6 @@
 #include "asset/node.h"
 #include "graphics/arrayattrib.h"
 #include "graphics/context.h"
-#include "graphics/fragdata.h"
 #include "graphics/graphics.h"
 #include "graphics/transform.h"
 #include "util/array.h"
@@ -72,7 +71,7 @@ void ilG_material_free(ilG_material *self)
         free(self->texunits.data[i].location);
     }
     IL_FREE(self->texunits);
-    for (unsigned i = 0; i < ILG_FRAGDATA_NUMATTRS; i++) {
+    for (unsigned i = 0; i < ILG_CONTEXT_NUMATTACHMENTS; i++) {
         free(self->attriblocs[i]);
         free(self->fraglocs[i]);
     }
@@ -145,7 +144,7 @@ bool ilG_material_link(ilG_material *self, ilG_shader *vert, ilG_shader *frag, c
         }
     }
     tgl_check("Error binding array attributes");
-    for (i = 0; i < ILG_FRAGDATA_NUMATTRS; i++) {
+    for (i = 0; i < ILG_CONTEXT_NUMATTACHMENTS; i++) {
         if (self->fraglocs[i]) {
             glBindFragDataLocation(po, i, self->fraglocs[i]);
         }
