@@ -101,7 +101,7 @@ static bool box_build(void *obj, ilG_rendid id, ilG_renderman *rm, ilG_buildresu
     ilG_material_init(&m);
     ilG_material_name(&m, "Box Shader");
     ilG_material_arrayAttrib(&m, 0, "in_Position");
-    ilG_material_fragData(&m, ILG_CONTEXT_DIFFUSE, "out_Color");
+    ilG_material_fragData(&m, ILG_CONTEXT_ALBEDO, "out_Color");
     if (!ilG_renderman_addMaterialFromFile(rm, m, "box.vert", "box.frag", &b->mat, &out->error)) {
         return false;
     }

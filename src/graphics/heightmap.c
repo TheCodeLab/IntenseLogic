@@ -61,8 +61,7 @@ static bool heightmap_build(void *ptr, ilG_rendid id, ilG_renderman *rm, ilG_bui
     ilG_material_textureUnit(&mat, 1, "normal_tex");
     ilG_material_textureUnit(&mat, 2, "ambient_tex");
     ilG_material_fragData(&mat, ILG_CONTEXT_NORMAL, "out_Normal");
-    ilG_material_fragData(&mat, ILG_CONTEXT_DIFFUSE, "out_Diffuse");
-    ilG_material_fragData(&mat, ILG_CONTEXT_SPECULAR, "out_Specular");
+    ilG_material_fragData(&mat, ILG_CONTEXT_ALBEDO, "out_Albedo");
     if (!ilG_renderman_addMaterialFromFile(self->rm, mat, "heightmap.vert", "heightmap.frag", &self->mat, &out->error)) {
         return false;
     }

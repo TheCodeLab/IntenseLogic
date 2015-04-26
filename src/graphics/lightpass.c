@@ -51,9 +51,11 @@ static void lights_draw(void *ptr, ilG_rendid id, il_mat **mats, const unsigned 
     glActiveTexture(GL_TEXTURE0 + 1);
     tgl_fbo_bindTex(&context->gbuffer, ILG_CONTEXT_NORMAL);
     glActiveTexture(GL_TEXTURE0 + 2);
-    tgl_fbo_bindTex(&context->gbuffer, ILG_CONTEXT_DIFFUSE);
+    tgl_fbo_bindTex(&context->gbuffer, ILG_CONTEXT_ALBEDO);
     glActiveTexture(GL_TEXTURE0 + 3);
-    tgl_fbo_bindTex(&context->gbuffer, ILG_CONTEXT_SPECULAR);
+    tgl_fbo_bindTex(&context->gbuffer, ILG_CONTEXT_REFLECT);
+    glActiveTexture(GL_TEXTURE0 + 4);
+    tgl_fbo_bindTex(&context->gbuffer, ILG_CONTEXT_GLOSS);
     tgl_fbo_bind(&context->accum, TGL_FBO_RW);
     glEnable(GL_BLEND);
     glDisable(GL_DEPTH_TEST);
@@ -104,8 +106,9 @@ static bool lights_build(void *ptr, ilG_rendid id, ilG_renderman *rm, ilG_buildr
     ilG_material_arrayAttrib(&m, ILG_ARRATTR_POSITION, "in_Position");
     ilG_material_textureUnit(&m, 0, "depth");
     ilG_material_textureUnit(&m, 1, "normal");
-    ilG_material_textureUnit(&m, 2, "diffuse");
-    ilG_material_textureUnit(&m, 3, "specular");
+    ilG_material_textureUnit(&m, 2, "albedo");
+    ilG_material_textureUnit(&m, 3, "reflected");
+    ilG_material_textureUnit(&m, 4, "gloss");
     ilG_material_fragData(&m, 0, "out_Color");
     if (!ilG_renderman_addMaterialFromFile(rm, m, self->file,
                                            self->context->msaa? "light_msaa.frag" : "light.frag",

@@ -4,6 +4,7 @@
 #include <math.h>
 
 #include "asset/node.h"
+#include "graphics/graphics.h"
 #include "graphics/context.h"
 #include "graphics/floatspace.h"
 #include "graphics/material.h"
@@ -66,10 +67,11 @@ static bool teapot_build(void *obj, ilG_rendid id, ilG_renderman *rm, ilG_buildr
     ilG_material_arrayAttrib(&m, ILG_MESH_DIFFUSE, "in_Diffuse");
     ilG_material_arrayAttrib(&m, ILG_MESH_SPECULAR, "in_Specular");
     ilG_material_textureUnit(&m, 0, "tex");
-    ilG_material_fragData(&m, ILG_CONTEXT_DIFFUSE, "out_Diffuse");
+    ilG_material_fragData(&m, ILG_CONTEXT_ALBEDO, "out_Albedo");
     ilG_material_fragData(&m, ILG_CONTEXT_NORMAL, "out_Normal");
-    ilG_material_fragData(&m, ILG_CONTEXT_SPECULAR, "out_Specular");
-    if (!ilG_renderman_addMaterialFromFile(rm, m, "test.vert", "test.frag", &t->mat, &out->error)) {
+    ilG_material_fragData(&m, ILG_CONTEXT_REFLECT, "out_Reflect");
+    ilG_material_fragData(&m, ILG_CONTEXT_GLOSS, "out_Gloss");
+    if (!ilG_renderman_addMaterialFromFile(rm, m, "teapot.vert", "teapot.frag", &t->mat, &out->error)) {
         return false;
     }
     ilG_material *mat = ilG_renderman_findMaterial(rm, t->mat);
@@ -128,6 +130,7 @@ static void update_camera(const il_value *data, il_value *ctx)
 void demo_start()
 {
     ilA_adddir(&demo_fs, "demos/teapots/", -1);
+    ilA_adddir(&ilG_shaders, "demos/teapots/", -1);
     ilG_context *context = ilG_context_new();
     ilG_context_hint(context, ILG_CONTEXT_DEBUG_RENDER, 1);
     ilG_context_hint(context, ILG_CONTEXT_VSYNC, 1);

@@ -8,8 +8,6 @@ in vec4 in_Specular;
 
 out vec2 texcoord;
 out vec3 normal;
-out vec3 ambient;
-out vec4 specular;
 
 uniform mat4 mvp;
 uniform mat4 imt;
@@ -20,6 +18,4 @@ void main()
     texcoord = in_Texcoord;
     vec4 normal4 = vec4(in_Normal, 0.0) * imt;
     normal = normal4.xyz;
-    ambient = normal;//in_Diffuse;//in_Ambient;
-    specular = vec4(.5,.5,.5,96/255.f);//in_Specular;
 }

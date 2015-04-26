@@ -18,10 +18,11 @@ static void geometry_update(void *ptr, ilG_rendid id)
     ilG_context *context = ptr;
     tgl_check("Unknown");
     static const unsigned order[] = {
-        ILG_CONTEXT_DIFFUSE,
+        ILG_CONTEXT_ALBEDO,
         ILG_CONTEXT_NORMAL,
-        ILG_CONTEXT_SPECULAR,
-        ILG_CONTEXT_SPECULAR_CO
+        ILG_CONTEXT_REFLECT,
+        ILG_CONTEXT_GLOSS,
+        ILG_CONTEXT_EMISSION,
     };
     tgl_fbo_bind_with(&context->gbuffer, TGL_FBO_RW, 4, order);
     glClearDepth(1.0);

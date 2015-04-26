@@ -57,7 +57,7 @@ static bool sky_build(void *ptr, ilG_rendid id, ilG_renderman *rm, ilG_buildresu
     ilG_material_arrayAttrib(&m, ILG_ARRATTR_TEXCOORD, "in_Texcoord");
     ilG_material_textureUnit(&m, 0, "skytex");
     ilG_material_fragData(&m, ILG_CONTEXT_NORMAL, "out_Normal");
-    ilG_material_fragData(&m, ILG_CONTEXT_DIFFUSE, "out_Color");
+    ilG_material_fragData(&m, ILG_CONTEXT_ALBEDO, "out_Color");
     if (!ilG_renderman_addMaterialFromFile(rm, m, "skybox.vert", "skybox.frag", &self->mat, &out->error)) {
         return false;
     }

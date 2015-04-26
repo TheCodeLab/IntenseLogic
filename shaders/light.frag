@@ -4,8 +4,9 @@ uniform vec3 color;
 uniform float radius;
 uniform sampler2DRect depth;
 uniform sampler2DRect normal;
-uniform sampler2DRect diffuse;
-uniform sampler2DRect specular;
+uniform sampler2DRect albedo;
+uniform sampler2DRect reflected;
+uniform sampler2DRect gloss;
 uniform mat4 mv;
 uniform mat4 ivp;
 uniform vec2 size;
@@ -51,21 +52,24 @@ vec4 my_sample(sampler2DRect s, ivec2 uv)
 void main()
 {
     ivec2 fc = ivec2(gl_FragCoord.xy - vec2(.5));
+    float depth = my_sample(depth, fc).x;
+    vec3 norm = normalize(my_sample(normal, fc).xyz * vec3(2) - vec3(1));
+    vec3 albedo = my_sample(albedo, fc).xyz;
+    float reflectivity = clamp(my_sample(reflected, fc).x, 0, 1);
+    float gloss = my_sample(gloss, fc).x;
+
     // gl_FragCoord is from (.5, .5) to (w - .5, h - .5), depth texture is 0..1, feep's function wants (0,0,-1)..(1,1,1)
-    vec3 pos = screen_to_world(vec3(gl_FragCoord.xy / size, my_sample(depth, fc).x) * 2 - 1);
+    vec3 pos = screen_to_world(vec3(gl_FragCoord.xy / size, depth) * 2 - 1);
     vec3 lightpos = get_lightpos();
     vec3 lightdir = normalize(lightpos - pos);
-    vec3 norm = my_sample(normal, fc).xyz * vec3(2) - vec3(1);
     float dist = length(lightpos - pos) / radius;
     float daf = max(0, 1 - dist);
 
     vec3 col = vec3(0);
-    vec3 diffuse = my_sample(diffuse, fc).xyz;
-    col += diffuse * vec3(max(0, dot(lightdir, norm)));
-    vec4 spec = my_sample(specular, fc);
+    col += (1-reflectivity) * albedo * vec3(max(0, dot(lightdir, norm)));
     vec3 reflection = normalize(reflect(norm, lightdir));
     vec3 viewer = normalize(-pos); // camera space
-    col += spec.xyz * pow(max(0, dot(reflection, viewer)), spec.w * 255);
+    col += reflectivity * albedo * clamp(pow(max(0, dot(reflection, viewer)), gloss), 0, 1);
 
     out_Color = max(vec3(0), col * daf * color);
 }

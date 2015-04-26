@@ -28,7 +28,7 @@ static void ambient_update(void *ptr, ilG_rendid id)
     glDepthMask(GL_FALSE);
 
     glActiveTexture(GL_TEXTURE0);
-    tgl_fbo_bindTex(&self->context->gbuffer, ILG_CONTEXT_DIFFUSE);
+    tgl_fbo_bindTex(&self->context->gbuffer, ILG_CONTEXT_ALBEDO);
     tgl_fbo_bind(&self->context->accum, TGL_FBO_RW);
     ilG_material_bind(ilG_renderman_findMaterial(self->rm, self->mat));
     tgl_vao_bind(&self->vao);

@@ -52,8 +52,7 @@ bool BallRenderer::build(void *obj, ilG_rendid id, ilG_renderman *rm, ilG_buildr
     ilG_material_init(&m);
     ilG_material_name(&m, "Ball Material");
     ilG_material_fragData(&m, ILG_CONTEXT_NORMAL, "out_Normal");
-    ilG_material_fragData(&m, ILG_CONTEXT_DIFFUSE, "out_Diffuse");
-    ilG_material_fragData(&m, ILG_CONTEXT_SPECULAR, "out_Specular");
+    ilG_material_fragData(&m, ILG_CONTEXT_ALBEDO, "out_Albedo");
     ilG_material_arrayAttrib(&m, ILG_MESH_POS, "in_Position");
     if (!ilG_renderman_addMaterialFromFile(rm, m, "glow.vert", "glow.frag", &b.mat, &out->error)) {
         return false;
