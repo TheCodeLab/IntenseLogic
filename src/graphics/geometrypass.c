@@ -24,7 +24,7 @@ static void geometry_update(void *ptr, ilG_rendid id)
         ILG_CONTEXT_GLOSS,
         ILG_CONTEXT_EMISSION,
     };
-    tgl_fbo_bind_with(&context->gbuffer, TGL_FBO_RW, 4, order);
+    tgl_fbo_bind_with(&context->gbuffer, TGL_FBO_RW, 5, order);
     glClearDepth(1.0);
     glClearColor(0,0,0,0);
     glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);

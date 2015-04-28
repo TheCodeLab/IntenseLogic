@@ -423,11 +423,18 @@ void ilG_context_localSetup(ilG_context *self)
         GLenum type = self->msaa? GL_TEXTURE_2D_MULTISAMPLE : GL_TEXTURE_RECTANGLE;
         GLenum afmt = self->hdr? GL_RGBA16F : GL_RGBA8;
         tgl_fbo_numTargets(&self->gbuffer, ILG_CONTEXT_NUMATTACHMENTS);
-        tgl_fbo_texture(&self->gbuffer, ILG_CONTEXT_ALBEDO, type, GL_RGB8, GL_RGB, GL_COLOR_ATTACHMENT0, GL_UNSIGNED_BYTE);
-        tgl_fbo_texture(&self->gbuffer, ILG_CONTEXT_NORMAL, type, GL_RGB8, GL_RGB, GL_COLOR_ATTACHMENT1, GL_UNSIGNED_BYTE);
-        tgl_fbo_texture(&self->gbuffer, ILG_CONTEXT_REFLECT, type, GL_R8, GL_RED, GL_COLOR_ATTACHMENT2, GL_UNSIGNED_BYTE);
-        tgl_fbo_texture(&self->gbuffer, ILG_CONTEXT_GLOSS, type, GL_R16UI, GL_RED_INTEGER, GL_COLOR_ATTACHMENT3, GL_UNSIGNED_BYTE);
-        tgl_fbo_texture(&self->gbuffer, ILG_CONTEXT_EMISSION, type, GL_R16F, GL_RED, GL_COLOR_ATTACHMENT3, GL_FLOAT);
+        // Per GL 3.1 spec §4.2 (page 182, actual 195):
+        // Each COLOR_ATTACHMENTi adheres to COLOR_ATTACHMENTi = COLOR_ATTACHMENT0 + i.
+        tgl_fbo_texture(&self->gbuffer, ILG_CONTEXT_ALBEDO, type, GL_RGB8, GL_RGB,
+                        GL_COLOR_ATTACHMENT0 + ILG_CONTEXT_ALBEDO, GL_UNSIGNED_BYTE);
+        tgl_fbo_texture(&self->gbuffer, ILG_CONTEXT_NORMAL, type, GL_RGB8_SNORM, GL_RGB,
+                        GL_COLOR_ATTACHMENT0 + ILG_CONTEXT_NORMAL, GL_UNSIGNED_BYTE);
+        tgl_fbo_texture(&self->gbuffer, ILG_CONTEXT_REFLECT, type, GL_R8, GL_RED,
+                        GL_COLOR_ATTACHMENT0 + ILG_CONTEXT_REFLECT, GL_UNSIGNED_BYTE);
+        tgl_fbo_texture(&self->gbuffer, ILG_CONTEXT_GLOSS, type, GL_R16F, GL_RED,
+                        GL_COLOR_ATTACHMENT0 + ILG_CONTEXT_GLOSS, GL_FLOAT);
+        tgl_fbo_texture(&self->gbuffer, ILG_CONTEXT_EMISSION, type, GL_R16F, GL_RED,
+                        GL_COLOR_ATTACHMENT0 + ILG_CONTEXT_EMISSION, GL_FLOAT);
         tgl_fbo_texture(&self->gbuffer, ILG_CONTEXT_DEPTH, type, GL_DEPTH_COMPONENT, GL_DEPTH_COMPONENT, GL_DEPTH_ATTACHMENT, GL_FLOAT);
         tgl_fbo_numTargets(&self->accum, 1);
         tgl_fbo_texture(&self->accum, 0, type, afmt, GL_RGBA, GL_COLOR_ATTACHMENT0, self->hdr? GL_FLOAT : GL_UNSIGNED_BYTE);

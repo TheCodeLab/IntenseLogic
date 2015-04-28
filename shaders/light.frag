@@ -53,7 +53,7 @@ void main()
 {
     ivec2 fc = ivec2(gl_FragCoord.xy - vec2(.5));
     float depth = my_sample(depth, fc).x;
-    vec3 norm = normalize(my_sample(normal, fc).xyz * vec3(2) - vec3(1));
+    vec3 norm = normalize(my_sample(normal, fc).xyz);
     vec3 albedo = my_sample(albedo, fc).xyz;
     float reflectivity = clamp(my_sample(reflected, fc).x, 0, 1);
     float gloss = my_sample(gloss, fc).x;

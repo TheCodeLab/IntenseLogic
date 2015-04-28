@@ -29,6 +29,14 @@ struct ilG_lights {
     const char *file;
 };
 
+enum {
+    TEX_DEPTH,
+    TEX_NORMAL,
+    TEX_ALBEDO,
+    TEX_REFLECT,
+    TEX_GLOSS
+};
+
 static void lights_free(void *ptr)
 {
     ilG_lights *self = ptr;
@@ -46,15 +54,15 @@ static void lights_draw(void *ptr, ilG_rendid id, il_mat **mats, const unsigned 
     const bool point = self->type == ILG_POINT;
     ilG_material *mat = ilG_renderman_findMaterial(self->rm, self->mat);
     ilG_material_bind(mat);
-    glActiveTexture(GL_TEXTURE0);
+    glActiveTexture(GL_TEXTURE0 + TEX_DEPTH);
     tgl_fbo_bindTex(&context->gbuffer, ILG_CONTEXT_DEPTH);
-    glActiveTexture(GL_TEXTURE0 + 1);
+    glActiveTexture(GL_TEXTURE0 + TEX_NORMAL);
     tgl_fbo_bindTex(&context->gbuffer, ILG_CONTEXT_NORMAL);
-    glActiveTexture(GL_TEXTURE0 + 2);
+    glActiveTexture(GL_TEXTURE0 + TEX_ALBEDO);
     tgl_fbo_bindTex(&context->gbuffer, ILG_CONTEXT_ALBEDO);
-    glActiveTexture(GL_TEXTURE0 + 3);
+    glActiveTexture(GL_TEXTURE0 + TEX_REFLECT);
     tgl_fbo_bindTex(&context->gbuffer, ILG_CONTEXT_REFLECT);
-    glActiveTexture(GL_TEXTURE0 + 4);
+    glActiveTexture(GL_TEXTURE0 + TEX_GLOSS);
     tgl_fbo_bindTex(&context->gbuffer, ILG_CONTEXT_GLOSS);
     tgl_fbo_bind(&context->accum, TGL_FBO_RW);
     glEnable(GL_BLEND);
@@ -104,11 +112,11 @@ static bool lights_build(void *ptr, ilG_rendid id, ilG_renderman *rm, ilG_buildr
     ilG_material_init(&m);
     ilG_material_name(&m, "Deferred Lighting Shader");
     ilG_material_arrayAttrib(&m, ILG_ARRATTR_POSITION, "in_Position");
-    ilG_material_textureUnit(&m, 0, "depth");
-    ilG_material_textureUnit(&m, 1, "normal");
-    ilG_material_textureUnit(&m, 2, "albedo");
-    ilG_material_textureUnit(&m, 3, "reflected");
-    ilG_material_textureUnit(&m, 4, "gloss");
+    ilG_material_textureUnit(&m, TEX_DEPTH, "depth");
+    ilG_material_textureUnit(&m, TEX_NORMAL, "normal");
+    ilG_material_textureUnit(&m, TEX_ALBEDO, "albedo");
+    ilG_material_textureUnit(&m, TEX_REFLECT, "reflected");
+    ilG_material_textureUnit(&m, TEX_GLOSS, "gloss");
     ilG_material_fragData(&m, 0, "out_Color");
     if (!ilG_renderman_addMaterialFromFile(rm, m, self->file,
                                            self->context->msaa? "light_msaa.frag" : "light.frag",
