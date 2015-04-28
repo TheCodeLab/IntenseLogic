@@ -67,9 +67,9 @@ void main()
 
     vec3 col = vec3(0);
     col += (1-reflectivity) * albedo * vec3(max(0, dot(lightdir, norm)));
-    vec3 reflection = normalize(reflect(norm, lightdir));
-    vec3 viewer = normalize(-pos); // camera space
-    col += reflectivity * albedo * clamp(pow(max(0, dot(reflection, viewer)), gloss), 0, 1);
+    vec3 reflection = normalize(reflect(lightdir, norm));
+    vec3 viewer = normalize(pos); // camera space
+    col += albedo * vec3(reflectivity * pow(max(0, dot(reflection, viewer)), gloss));
 
     out_Color = max(vec3(0), col * daf * color);
 }
