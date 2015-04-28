@@ -15,5 +15,5 @@ void main()
     out_Normal = normal;
     out_Albedo = texture(tex, texcoord).xyz;
     out_Reflect = 0.5;
-    out_Gloss = 1.0;
+    out_Gloss = 96.0;
 }
