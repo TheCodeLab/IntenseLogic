@@ -17,6 +17,11 @@ static void ambient_free(void *ptr)
     (void)ptr;
 }
 
+enum {
+    TEX_ALBEDO,
+    TEX_EMISSION
+};
+
 static void ambient_update(void *ptr, ilG_rendid id)
 {
     (void)id;
@@ -27,8 +32,11 @@ static void ambient_update(void *ptr, ilG_rendid id)
     glBlendFunc(GL_ONE, GL_ONE);
     glDepthMask(GL_FALSE);
 
-    glActiveTexture(GL_TEXTURE0);
+    glActiveTexture(GL_TEXTURE0 + TEX_ALBEDO);
     tgl_fbo_bindTex(&self->context->gbuffer, ILG_CONTEXT_ALBEDO);
+    glActiveTexture(GL_TEXTURE0 + TEX_EMISSION);
+    tgl_fbo_bindTex(&self->context->gbuffer, ILG_CONTEXT_EMISSION);
+
     tgl_fbo_bind(&self->context->accum, TGL_FBO_RW);
     ilG_material_bind(ilG_renderman_findMaterial(self->rm, self->mat));
     tgl_vao_bind(&self->vao);
@@ -51,7 +59,8 @@ static bool ambient_build(void *ptr, ilG_rendid id, ilG_renderman *rm, ilG_build
     ilG_material_name(&m, "Ambient Lighting");
     ilG_material_arrayAttrib(&m, 0, "in_Texcoord");
     ilG_material_fragData(&m, 0, "out_Color");
-    ilG_material_textureUnit(&m, 0, "tex");
+    ilG_material_textureUnit(&m, TEX_ALBEDO, "tex_Albedo");
+    ilG_material_textureUnit(&m, TEX_EMISSION, "tex_Emission");
     if (!ilG_renderman_addMaterialFromFile(self->rm, m, "id2d.vert", "ambient.frag", &self->mat, &out->error)) {
         return false;
     }
