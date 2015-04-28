@@ -76,7 +76,7 @@ static int read_png(ilA_img *self, const void *data, size_t size)
         il_error("Unknown colour type");
     }
 
-    self->data = calloc(rowbytes, self->width);
+    self->data = calloc(rowbytes, self->height);
     rows = png_get_rows(png_ptr, info_ptr);
     for (i = 0; i < self->height; i++) {
         memcpy(self->data + rowbytes*i, rows[i], rowbytes);
