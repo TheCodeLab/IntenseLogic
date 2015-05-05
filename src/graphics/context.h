@@ -15,14 +15,16 @@
 #include "graphics/renderer.h"
 
 enum ilG_context_attachments {
-    ILG_CONTEXT_ALBEDO,
-    ILG_CONTEXT_NORMAL,
-    ILG_CONTEXT_REFLECT,
-    ILG_CONTEXT_GLOSS,
-    ILG_CONTEXT_EMISSION,
+    ILG_CONTEXT_ALBEDO,   // Ratio of light reflected in RGB
+    ILG_CONTEXT_NORMAL,   // Surface normal in camera-local space (world space centered on camera position)
+    ILG_CONTEXT_REFLECT,  // Ratio of light which is reflected vs diffused
+    ILG_CONTEXT_GLOSS,    // How shiny or glossy the surface should be
+    ILG_CONTEXT_EMISSION, // Emission from the material itself, measured in radiant intensity (W/sr)
     ILG_CONTEXT_DEPTH,
     ILG_CONTEXT_NUMATTACHMENTS
 };
+
+// Accumulation buffer is measured in irradiance (W/m^2)
 
 enum ilG_context_profile {
     ILG_CONTEXT_NONE,
@@ -102,6 +104,7 @@ typedef struct ilG_context {
                 close,
                 destroy;
     ilG_handle root;
+    float fovsquared; // Field of view in radians squared, needed by parts of renderer
     /* For rendering */
     ilG_renderman manager;
     /* Private */

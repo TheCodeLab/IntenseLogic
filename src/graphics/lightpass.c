@@ -21,7 +21,7 @@ struct ilG_lights {
     enum ilG_light_type type;
     ilG_renderman *rm;
     ilG_context *context;
-    GLint lights_size, mvp_size, lights_offset[3], mvp_offset[1], color_loc, radius_loc, mvp_loc, mv_loc, ivp_loc, size_loc;
+    GLint lights_size, mvp_size, lights_offset[3], mvp_offset[1], color_loc, radius_loc, mvp_loc, mv_loc, ivp_loc, size_loc, fovsquared_loc;
     ilG_matid mat;
     ilG_shape *ico;
     tgl_vao vao;
@@ -90,6 +90,7 @@ static void lights_draw(void *ptr, ilG_rendid id, il_mat **mats, const unsigned 
         il_vec3 col = l->color;
         glUniform3f(self->color_loc, col.x, col.y, col.z);
         glUniform1f(self->radius_loc, l->radius);
+        glUniform1f(self->fovsquared_loc, context->fovsquared);
         if (point) {
             ilG_shape_draw(self->ico);
         } else {
@@ -130,6 +131,7 @@ static bool lights_build(void *ptr, ilG_rendid id, ilG_renderman *rm, ilG_buildr
     self->mv_loc        = glGetUniformLocation(prog, "mv");
     self->ivp_loc       = glGetUniformLocation(prog, "ivp");
     self->size_loc      = glGetUniformLocation(prog, "size");
+    self->fovsquared_loc= glGetUniformLocation(prog, "fovsquared");
 
     self->ico = ilG_icosahedron(rm);
     tgl_vao_init(&self->vao);

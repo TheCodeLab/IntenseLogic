@@ -45,6 +45,7 @@ void ilG_context_init(ilG_context *self)
     self->vsync = 1;
     self->initialTitle = "IntenseLogic";
     // public
+    self->fovsquared = pow(45.f * M_PI / 180.f, 2.f);
     ilE_handler_init_with_name(&self->tick,    "il.graphics.context.tick");
     ilE_handler_init_with_name(&self->resize,  "il.graphics.context.resize");
     ilE_handler_init_with_name(&self->close,   "il.graphics.context.close");

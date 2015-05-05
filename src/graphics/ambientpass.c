@@ -4,7 +4,7 @@
 
 typedef struct ilG_ambient {
     ilG_matid mat;
-    GLuint col_loc;
+    GLuint col_loc, fovsquared_loc;
     ilG_renderman *rm;
     ilG_context *context;
     tgl_quad quad;
@@ -41,6 +41,7 @@ static void ambient_update(void *ptr, ilG_rendid id)
     ilG_material_bind(ilG_renderman_findMaterial(self->rm, self->mat));
     tgl_vao_bind(&self->vao);
     glUniform3f(self->col_loc, self->color->x, self->color->y, self->color->z);
+    glUniform1f(self->fovsquared_loc, self->context->fovsquared);
     tgl_quad_draw_once(&self->quad);
 
     glDisable(GL_BLEND);
@@ -66,6 +67,7 @@ static bool ambient_build(void *ptr, ilG_rendid id, ilG_renderman *rm, ilG_build
     }
     ilG_material *mat = ilG_renderman_findMaterial(self->rm, self->mat);
     self->col_loc = ilG_material_getLoc(mat, "color");
+    self->fovsquared_loc = ilG_material_getLoc(mat, "fovsquared");
 
     tgl_vao_init(&self->vao);
     tgl_vao_bind(&self->vao);

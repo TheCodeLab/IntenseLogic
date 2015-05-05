@@ -2,6 +2,7 @@
 
 uniform vec3 color;
 uniform float radius;
+uniform float fovsquared;
 uniform sampler2DRect depth;
 uniform sampler2DRect normal;
 uniform sampler2DRect albedo;
@@ -46,17 +47,17 @@ vec3 get_lightpos()
 
 vec4 my_sample(sampler2DRect s, ivec2 uv)
 {
-    return texture(s, uv);
+    return texelFetch(s, uv);
 }
 
 void main()
 {
-    ivec2 fc = ivec2(gl_FragCoord.xy - vec2(.5));
+    ivec2 fc = ivec2(gl_FragCoord.xy - vec2(0.5));
     float depth = my_sample(depth, fc).x;
-    vec3 norm = normalize(my_sample(normal, fc).xyz);
-    vec3 albedo = my_sample(albedo, fc).xyz;
-    float reflectivity = clamp(my_sample(reflected, fc).x, 0, 1);
-    float gloss = my_sample(gloss, fc).x;
+    vec3 norm = normalize(my_sample(normal, fc).xyz); // -1..1
+    vec3 albedo = my_sample(albedo, fc).xyz; // 0..1
+    float reflectivity = clamp(my_sample(reflected, fc).x, 0, 1); // 0..1
+    float gloss = my_sample(gloss, fc).x; // 1..inf
 
     // gl_FragCoord is from (.5, .5) to (w - .5, h - .5), depth texture is 0..1, feep's function wants (0,0,-1)..(1,1,1)
     vec3 pos = screen_to_world(vec3(gl_FragCoord.xy / size, depth) * 2 - 1);
@@ -66,10 +67,14 @@ void main()
     float daf = max(0, 1 - dist);
 
     vec3 col = vec3(0);
-    col += (1-reflectivity) * albedo * vec3(max(0, dot(lightdir, norm)));
+    col += (1-reflectivity) * albedo * vec3(clamp(dot(lightdir, norm), 0, 1));
     vec3 reflection = normalize(reflect(lightdir, norm));
     vec3 viewer = normalize(pos); // camera space
     col += albedo * vec3(reflectivity * pow(max(0, dot(reflection, viewer)), gloss));
 
-    out_Color = max(vec3(0), col * daf * color);
+    // Output is measured in irradiance
+    // Color is measured in radiant intensity
+    // We assume the sensor is unit size (1 m^2), which makes the formula to convert from radiant intensity thus:
+    // radiant intensity * viewing cone in steradians (fov^2, in this case)
+    out_Color = max(vec3(0), col * daf * color * fovsquared);
 }
