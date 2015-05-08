@@ -44,6 +44,7 @@ void ilG_context_init(ilG_context *self)
     self->startHeight = 600;
     self->vsync = 1;
     self->initialTitle = "IntenseLogic";
+    self->srgb = true;
     // public
     self->fovsquared = pow(45.f * M_PI / 180.f, 2.f);
     ilE_handler_init_with_name(&self->tick,    "il.graphics.context.tick");
@@ -105,6 +106,7 @@ void ilG_context_hint(ilG_context *self, enum ilG_context_hint hint, int param)
         HINT(ILG_CONTEXT_DEBUG_RENDER, debug_render);
         HINT(ILG_CONTEXT_VSYNC, vsync);
         HINT(ILG_CONTEXT_MSAA, msaa);
+        HINT(ILG_CONTEXT_SRGB, srgb);
     default:
         il_error("Invalid hint");
     }
@@ -230,6 +232,7 @@ void ilG_context_renderFrame(ilG_context *context)
     glClearColor(0,0,0, 1.0);
     glClearDepth(1.0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glEnable(GL_FRAMEBUFFER_SRGB);
 
     // asserts that first renderer is the context itself
     render_renderer(context, &context->manager.renderers.data[0]);
@@ -345,6 +348,7 @@ void ilG_context_setupSDLWindow(ilG_context *self) // main thread
     SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, self->msaa != 0);
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, self->msaa);
+    SDL_GL_SetAttribute(SDL_GL_FRAMEBUFFER_SRGB_CAPABLE, self->srgb);
     switch (self->profile) {
         case ILG_CONTEXT_NONE:
         break;

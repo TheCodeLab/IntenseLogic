@@ -73,6 +73,9 @@ enum ilG_context_hint {
     /** Enable Multisampled Anti-aliasing.
      * Defaults to 0 (disabled). Value indicates number of samples, should be power of four */
     ILG_CONTEXT_MSAA,
+    /** Enable sRGB colour space for default framebuffer.
+     * Defaults to 1 (enabled). */
+    ILG_CONTEXT_SRGB,
 };
 
 /** A linked list node for keeping track of the current framerate */
@@ -131,6 +134,7 @@ typedef struct ilG_context {
     char *initialTitle;
     bool vsync;
     bool msaa;
+    bool srgb;
 } ilG_context;
 
 ilG_context *ilG_context_new();
