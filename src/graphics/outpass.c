@@ -12,7 +12,7 @@ typedef struct ilG_out {
     tgl_fbo front, result;
     tgl_quad quad;
     tgl_vao vao;
-    GLuint size_loc, t_exposure_loc, h_exposure_loc, gamma_loc;
+    GLuint t_size_loc, h_size_loc, v_size_loc, t_exposure_loc, h_exposure_loc, gamma_loc;
     unsigned w, h;
     const float *exposure, *gamma;
 } ilG_out;
@@ -51,7 +51,7 @@ static void out_bloom(ilG_out *self)
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     tgl_fbo_bindTex(&context->accum, 0);
     ilG_material_bind(tonemap);
-    glUniform2f(self->size_loc, self->w, self->h);
+    glUniform2f(self->t_size_loc, self->w, self->h);
     glUniform1f(self->t_exposure_loc, self->exposure? *self->exposure : 1.0);
     glUniform1f(self->gamma_loc, self->gamma? *self->gamma : 1.0);
     tgl_quad_draw_once(&self->quad);
@@ -80,7 +80,7 @@ static void out_bloom(ilG_out *self)
         glViewport(0,0, w,h);
         // do a horizontal blur.
         ilG_material_bind(horizblur);
-        glUniform2f(self->size_loc, self->w, self->h);
+        glUniform2f(self->h_size_loc, self->w, self->h);
         glUniform1f(self->h_exposure_loc, self->exposure? *self->exposure : 1.0);
         tgl_quad_draw_once(&self->quad);
 
@@ -96,7 +96,7 @@ static void out_bloom(ilG_out *self)
         tgl_fbo_bindTex(&self->result, 0);
         // do a vertical blur.
         ilG_material_bind(vertblur);
-        glUniform2f(self->size_loc, self->w, self->h);
+        glUniform2f(self->v_size_loc, self->w, self->h);
         tgl_quad_draw_once(&self->quad);
         glDisable(GL_BLEND);
 
@@ -193,6 +193,7 @@ static bool out_build(void *ptr, ilG_rendid id, ilG_renderman *rm, ilG_buildresu
         }
         mat = ilG_renderman_findMaterial(self->rm, self->horizblur);
         self->h_exposure_loc = ilG_material_getLoc(mat, "exposure");
+        self->h_size_loc = ilG_material_getLoc(mat, "size");
 
         ilG_material_init(&m);
         ilG_material_name(&m, "Vertical Blur Shader");
@@ -202,6 +203,8 @@ static bool out_build(void *ptr, ilG_rendid id, ilG_renderman *rm, ilG_buildresu
         if (!ilG_renderman_addMaterialFromFile(self->rm, m, "post.vert", "vertblur.frag", &self->vertblur, &out->error)) {
             return false;
         }
+        mat = ilG_renderman_findMaterial(self->rm, self->vertblur);
+        self->v_size_loc = ilG_material_getLoc(mat, "size");
 
         ilG_material_init(&m);
         ilG_material_name(&m, "Tone Mapping Shader");
@@ -212,7 +215,7 @@ static bool out_build(void *ptr, ilG_rendid id, ilG_renderman *rm, ilG_buildresu
             return false;
         }
         mat = ilG_renderman_findMaterial(self->rm, self->tonemap);
-        self->size_loc = ilG_material_getLoc(mat, "size");
+        self->t_size_loc = ilG_material_getLoc(mat, "size");
         self->t_exposure_loc = ilG_material_getLoc(mat, "exposure");
         self->gamma_loc = ilG_material_getLoc(mat, "gamma");
 
