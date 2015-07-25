@@ -269,11 +269,15 @@ void ilG_context_measure(ilG_context *context)
     context->frames_average.tv_usec += (context->frames_sum.tv_sec % context->num_frames) * 1000000 / context->num_frames;
 }
 
+typedef struct {
+    IL_ARRAY(char*,) groups;
+} ilG_group_stack;
+
 // TODO: Find out why APIENTRY disappeared when switching to SDL
 static GLvoid error_cb(GLenum source, GLenum type, GLuint id, GLenum severity,
                        GLsizei length, const GLchar* message, GLvoid* user)
 {
-    (void)user;
+    ilG_group_stack *stack = user;
     const char *ssource;
     switch(source) {
         case GL_DEBUG_SOURCE_API_ARB:               ssource=" API";              break;
@@ -292,6 +296,15 @@ static GLvoid error_cb(GLenum source, GLenum type, GLuint id, GLenum severity,
         case GL_DEBUG_TYPE_PORTABILITY_ARB:         stype=" portability issue";     break;
         case GL_DEBUG_TYPE_PERFORMANCE_ARB:         stype=" performance issue";     break;
         case GL_DEBUG_TYPE_OTHER_ARB:               stype="";                       break;
+        case GL_DEBUG_TYPE_PUSH_GROUP: {
+            IL_APPEND(stack->groups, strdup(message));
+            return;
+        }
+        case GL_DEBUG_TYPE_POP_GROUP: {
+            assert(stack->groups.length > 0);
+            free(stack->groups.data[--stack->groups.length]);
+            return;
+        }
         default: stype="???";
     }
     const char *sseverity;
@@ -310,10 +323,21 @@ static GLvoid error_cb(GLenum source, GLenum type, GLuint id, GLenum severity,
     char source_buf[64];
     size_t source_len = snprintf(source_buf, 64, "OpenGL%s", ssource);
 
-    const char *msg_fmt = "%s%s #%u: %s";
-    size_t len = snprintf(NULL, 0, msg_fmt, sseverity, stype, id, msg);
+    char group_buf[4096] = "";
+    if (stack->groups.length) {
+        strcat(group_buf, " in ");
+    }
+    for (unsigned i = 0; i < stack->groups.length; i++) {
+        if (i > 0) {
+            strcat(group_buf, ".");
+        }
+        strcat(group_buf, stack->groups.data[i]);
+    }
+
+    const char *msg_fmt = "%s%s #%u%s: %s";
+    size_t len = snprintf(NULL, 0, msg_fmt, sseverity, stype, id, group_buf, msg);
     char msg_buf[len+1];
-    snprintf(msg_buf, len+1, msg_fmt, sseverity, stype, id, msg);
+    snprintf(msg_buf, len+1, msg_fmt, sseverity, stype, id, group_buf, msg);
 
     il_logmsg lmsg;
     memset(&lmsg, 0, sizeof(il_logmsg));
@@ -416,7 +440,9 @@ void ilG_context_localSetup(ilG_context *self)
 {
     tgl_check("Unknown");
     if (TGL_EXTENSION(KHR_debug)) {
-        glDebugMessageCallback((GLDEBUGPROC)&error_cb, NULL);
+        glDebugMessageControl(GL_DONT_CARE, GL_DEBUG_TYPE_PUSH_GROUP, GL_DONT_CARE, 0, NULL, true);
+        glDebugMessageControl(GL_DONT_CARE, GL_DEBUG_TYPE_POP_GROUP, GL_DONT_CARE, 0, NULL, true);
+        glDebugMessageCallback((GLDEBUGPROC)&error_cb, calloc(1, sizeof(ilG_group_stack)));
         glEnable(GL_DEBUG_OUTPUT);
         il_log("KHR_debug present, enabling advanced errors");
         tgl_check("glDebugMessageCallback()");
