@@ -16,6 +16,12 @@
         size_t capacity;    \
     }
 
+#ifdef __cplusplus
+#define IL_ARRAY_INTERNAL_CAST(x, y) decltype(x)(y)
+#else
+#define IL_ARRAY_INTERNAL_CAST(x, y) y
+#endif
+
 #define IL_RESIZE(list, nmemb)                  \
     do {                                        \
         size_t size = sizeof((list).data[0]);   \
@@ -27,7 +33,7 @@
                     size * min);                \
             free((list).data);                  \
         }                                       \
-        (list).data = tmp;                      \
+        (list).data = IL_ARRAY_INTERNAL_CAST(list.data, tmp);    \
         (list).capacity = nmemb;                \
     } while(0)
 
