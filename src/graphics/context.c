@@ -351,7 +351,7 @@ static GLvoid error_cb(GLenum source, GLenum type, GLuint id, GLenum severity,
 
 extern bool ilG_module_loaded;
 
-void ilG_context_setupSDLWindow(ilG_context *self) // main thread
+bool ilG_context_setupSDLWindow(ilG_context *self) // main thread
 {
     if (!ilG_module_loaded) {
         il_error("il_load_ilgraphics() has not been called");
@@ -359,7 +359,7 @@ void ilG_context_setupSDLWindow(ilG_context *self) // main thread
     }
     if (self->complete) {
         il_error("Context already complete");
-        return;
+        return false;
     }
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, self->contextMajor);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, self->contextMinor);
@@ -371,7 +371,9 @@ void ilG_context_setupSDLWindow(ilG_context *self) // main thread
     SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
     SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, self->msaa != 0);
-    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, self->msaa);
+    if (self->msaa) {
+        SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, self->msaa);
+    }
     SDL_GL_SetAttribute(SDL_GL_FRAMEBUFFER_SRGB_CAPABLE, self->srgb);
     switch (self->profile) {
         case ILG_CONTEXT_NONE:
@@ -384,7 +386,7 @@ void ilG_context_setupSDLWindow(ilG_context *self) // main thread
         break;
         default:
         il_error("Invalid profile");
-        return;
+        return false;
     }
     if (!(self->window = SDL_CreateWindow(
             self->initialTitle,
@@ -394,11 +396,12 @@ void ilG_context_setupSDLWindow(ilG_context *self) // main thread
             self->startHeight,
             SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE))) {
         il_error("SDL_CreateWindow: %s", SDL_GetError());
-        return;
+        return false;
     }
     self->width = self->startWidth;
     self->height = self->startHeight;
     SDL_SetWindowData(self->window, "context", self);
+    return true;
 }
 
 #ifdef TGL_USE_GLEW
@@ -568,7 +571,9 @@ end:
 
 bool ilG_context_start(ilG_context *self)
 {
-    ilG_context_setupSDLWindow(self);
+    if (!ilG_context_setupSDLWindow(self)) {
+        return false;
+    }
 
     self->running = true;
     // Start thread

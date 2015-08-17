@@ -182,7 +182,7 @@ void ilG_context_renderFrame(ilG_context *context);
         pthread_create(&context->thread, NULL, ilG_context_loop, context);
 */
 void *ilG_context_loop(void *context);
-void ilG_context_setupSDLWindow(ilG_context *context);
+bool /*success*/ ilG_context_setupSDLWindow(ilG_context *context);
 void ilG_context_setupGLEW(ilG_context *context);
 void ilG_context_setupEpoxy(ilG_context *context);
 void ilG_context_localSetup(ilG_context *context);
