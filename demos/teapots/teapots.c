@@ -69,7 +69,7 @@ static bool teapot_build(void *obj, ilG_rendid id, ilG_renderman *rm, ilG_buildr
     ilG_material_textureUnit(&m, 0, "tex");
     ilG_material_fragData(&m, ILG_CONTEXT_ALBEDO, "out_Albedo");
     ilG_material_fragData(&m, ILG_CONTEXT_NORMAL, "out_Normal");
-    ilG_material_fragData(&m, ILG_CONTEXT_REFLECT, "out_Reflect");
+    ilG_material_fragData(&m, ILG_CONTEXT_REFRACTION, "out_Refraction");
     ilG_material_fragData(&m, ILG_CONTEXT_GLOSS, "out_Gloss");
     if (!ilG_renderman_addMaterialFromFile(rm, m, "teapot.vert", "teapot.frag", &t->mat, &out->error)) {
         return false;

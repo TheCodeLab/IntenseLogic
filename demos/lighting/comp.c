@@ -153,7 +153,7 @@ enum {
 enum {
     TEX_ALBEDO,
     TEX_NORMAL,
-    TEX_REFLECT,
+    TEX_REFRACTION,
     // TEX_GLOSS,
     TEX_EMISSION,
 };
@@ -164,7 +164,7 @@ typedef struct ilG_computer {
     tgl_vao vao;
     GLuint v_vbo, n_vbo, t_vbo;
     GLuint mvp_loc, imt_loc;
-    ilG_tex tex_albedo, tex_normal, tex_reflect, tex_emission;
+    ilG_tex tex_albedo, tex_normal, tex_refraction, tex_emission;
 } ilG_computer;
 
 static void comp_draw(void *obj, ilG_rendid id, il_mat **mats, const unsigned *objects, unsigned num_mats)
@@ -175,7 +175,7 @@ static void comp_draw(void *obj, ilG_rendid id, il_mat **mats, const unsigned *o
 
     ilG_tex_bind(&self->tex_albedo);
     ilG_tex_bind(&self->tex_normal);
-    ilG_tex_bind(&self->tex_reflect);
+    ilG_tex_bind(&self->tex_refraction);
     ilG_tex_bind(&self->tex_emission);
 
     ilG_material_bind(mat);
@@ -207,18 +207,18 @@ static bool comp_build(void *obj, ilG_rendid id, ilG_renderman *rm, ilG_buildres
     ilG_material m;
     ilG_material_init(&m);
     ilG_material_name(&m, "Computer Shader");
-    ilG_material_arrayAttrib(&m, ATTRIB_POSITION,   "in_Position");
-    ilG_material_arrayAttrib(&m, ATTRIB_NORMAL,     "in_Normal");
-    ilG_material_arrayAttrib(&m, ATTRIB_TEXCOORD,   "in_Texcoord");
-    ilG_material_fragData(&m, ILG_CONTEXT_ALBEDO,   "out_Albedo");
-    ilG_material_fragData(&m, ILG_CONTEXT_NORMAL,   "out_Normal");
-    ilG_material_fragData(&m, ILG_CONTEXT_REFLECT,  "out_Reflect");
-    ilG_material_fragData(&m, ILG_CONTEXT_GLOSS,    "out_Gloss");
-    ilG_material_fragData(&m, ILG_CONTEXT_EMISSION, "out_Emission");
-    ilG_material_textureUnit(&m, TEX_ALBEDO,   "tex_Albedo");
-    ilG_material_textureUnit(&m, TEX_NORMAL,   "tex_Normal");
-    ilG_material_textureUnit(&m, TEX_REFLECT,  "tex_Reflect");
-    ilG_material_textureUnit(&m, TEX_EMISSION, "tex_Emission");
+    ilG_material_arrayAttrib(&m, ATTRIB_POSITION,     "in_Position");
+    ilG_material_arrayAttrib(&m, ATTRIB_NORMAL,       "in_Normal");
+    ilG_material_arrayAttrib(&m, ATTRIB_TEXCOORD,     "in_Texcoord");
+    ilG_material_fragData(&m, ILG_CONTEXT_ALBEDO,     "out_Albedo");
+    ilG_material_fragData(&m, ILG_CONTEXT_NORMAL,     "out_Normal");
+    ilG_material_fragData(&m, ILG_CONTEXT_REFRACTION, "out_Refraction");
+    ilG_material_fragData(&m, ILG_CONTEXT_GLOSS,      "out_Gloss");
+    ilG_material_fragData(&m, ILG_CONTEXT_EMISSION,   "out_Emission");
+    ilG_material_textureUnit(&m, TEX_ALBEDO,          "tex_Albedo");
+    ilG_material_textureUnit(&m, TEX_NORMAL,          "tex_Normal");
+    ilG_material_textureUnit(&m, TEX_REFRACTION,      "tex_Reflect");
+    ilG_material_textureUnit(&m, TEX_EMISSION,        "tex_Emission");
     if (!ilG_renderman_addMaterialFromFile(rm, m, "comp.vert", "comp.frag", &self->mat, &out->error)) {
         return false;
     }
@@ -247,7 +247,7 @@ static bool comp_build(void *obj, ilG_rendid id, ilG_renderman *rm, ilG_buildres
     ilG_tex *texes[4] = {
         &self->tex_albedo,
         &self->tex_normal,
-        &self->tex_reflect,
+        &self->tex_refraction,
         &self->tex_emission
     };
     static const char *const files[] = {
