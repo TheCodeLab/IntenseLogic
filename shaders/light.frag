@@ -6,7 +6,7 @@ uniform float fovsquared;
 uniform sampler2DRect depth;
 uniform sampler2DRect normal;
 uniform sampler2DRect albedo;
-uniform sampler2DRect reflected;
+uniform sampler2DRect refraction;
 uniform sampler2DRect gloss;
 uniform mat4 mv;
 uniform mat4 ivp;
@@ -56,7 +56,7 @@ void main()
     float depth = my_sample(depth, fc).x;
     vec3 norm = normalize(my_sample(normal, fc).xyz); // -1..1
     vec3 albedo = my_sample(albedo, fc).xyz; // 0..1
-    float reflectivity = clamp(my_sample(reflected, fc).x, 0, 1); // 0..1
+    float n2 = clamp(my_sample(refraction, fc).x, 0, 1); // 0..1
     float gloss = my_sample(gloss, fc).x; // 1..inf
 
     // gl_FragCoord is from (.5, .5) to (w - .5, h - .5), depth texture is 0..1, feep's function wants (0,0,-1)..(1,1,1)
@@ -65,11 +65,15 @@ void main()
     vec3 lightdir = normalize(lightpos - pos);
     float dist = length(lightpos - pos) / radius;
     float daf = max(0, 1 - dist);
+    vec3 viewer = normalize(pos); // camera space
+    vec3 reflection = normalize(reflect(lightdir, norm));
+    float ndotv = dot(lightdir, norm);
+    float n1 = 1; // vacuum, air is so close to vacuum it doesn't matter
+    float r0 = pow((n1-n2) / (n1+n2), 2);
+    float reflectivity = r0 + (1-r0)*pow(1 - ndotv, 5);
 
     vec3 col = vec3(0);
-    col += (1-reflectivity) * albedo * vec3(clamp(dot(lightdir, norm), 0, 1));
-    vec3 reflection = normalize(reflect(lightdir, norm));
-    vec3 viewer = normalize(pos); // camera space
+    col += (1-reflectivity) * albedo * vec3(clamp(ndotv, 0, 1));
     col += albedo * vec3(reflectivity * pow(max(0, dot(reflection, viewer)), gloss));
 
     // Output is measured in irradiance

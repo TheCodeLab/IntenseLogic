@@ -20,7 +20,7 @@ static void geometry_update(void *ptr, ilG_rendid id)
     static const unsigned order[] = {
         ILG_CONTEXT_ALBEDO,
         ILG_CONTEXT_NORMAL,
-        ILG_CONTEXT_REFLECT,
+        ILG_CONTEXT_REFRACTION,
         ILG_CONTEXT_GLOSS,
         ILG_CONTEXT_EMISSION,
     };

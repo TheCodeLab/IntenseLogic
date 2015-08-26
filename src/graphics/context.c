@@ -463,8 +463,8 @@ void ilG_context_localSetup(ilG_context *self)
                         GL_COLOR_ATTACHMENT0 + ILG_CONTEXT_ALBEDO, GL_UNSIGNED_BYTE);
         tgl_fbo_texture(&self->gbuffer, ILG_CONTEXT_NORMAL, type, GL_RGB8_SNORM, GL_RGB,
                         GL_COLOR_ATTACHMENT0 + ILG_CONTEXT_NORMAL, GL_UNSIGNED_BYTE);
-        tgl_fbo_texture(&self->gbuffer, ILG_CONTEXT_REFLECT, type, GL_R8, GL_RED,
-                        GL_COLOR_ATTACHMENT0 + ILG_CONTEXT_REFLECT, GL_UNSIGNED_BYTE);
+        tgl_fbo_texture(&self->gbuffer, ILG_CONTEXT_REFRACTION, type, GL_R8, GL_RED,
+                        GL_COLOR_ATTACHMENT0 + ILG_CONTEXT_REFRACTION, GL_UNSIGNED_BYTE);
         tgl_fbo_texture(&self->gbuffer, ILG_CONTEXT_GLOSS, type, GL_R16F, GL_RED,
                         GL_COLOR_ATTACHMENT0 + ILG_CONTEXT_GLOSS, GL_FLOAT);
         tgl_fbo_texture(&self->gbuffer, ILG_CONTEXT_EMISSION, type, GL_R16F, GL_RED,
@@ -476,7 +476,7 @@ void ilG_context_localSetup(ilG_context *self)
             tgl_fbo_multisample(&self->gbuffer, ILG_CONTEXT_DEPTH, self->msaa, false);
             tgl_fbo_multisample(&self->gbuffer, ILG_CONTEXT_NORMAL, self->msaa, false);
             tgl_fbo_multisample(&self->gbuffer, ILG_CONTEXT_ALBEDO, self->msaa, false);
-            tgl_fbo_multisample(&self->gbuffer, ILG_CONTEXT_REFLECT, self->msaa, false);
+            tgl_fbo_multisample(&self->gbuffer, ILG_CONTEXT_REFRACTION, self->msaa, false);
             tgl_fbo_multisample(&self->gbuffer, ILG_CONTEXT_GLOSS, self->msaa, false);
             tgl_fbo_multisample(&self->gbuffer, ILG_CONTEXT_EMISSION, self->msaa, false);
             tgl_fbo_multisample(&self->accum, 0, self->msaa, false);

@@ -33,7 +33,7 @@ enum {
     TEX_DEPTH,
     TEX_NORMAL,
     TEX_ALBEDO,
-    TEX_REFLECT,
+    TEX_REFRACTION,
     TEX_GLOSS
 };
 
@@ -60,8 +60,8 @@ static void lights_draw(void *ptr, ilG_rendid id, il_mat **mats, const unsigned 
     tgl_fbo_bindTex(&context->gbuffer, ILG_CONTEXT_NORMAL);
     glActiveTexture(GL_TEXTURE0 + TEX_ALBEDO);
     tgl_fbo_bindTex(&context->gbuffer, ILG_CONTEXT_ALBEDO);
-    glActiveTexture(GL_TEXTURE0 + TEX_REFLECT);
-    tgl_fbo_bindTex(&context->gbuffer, ILG_CONTEXT_REFLECT);
+    glActiveTexture(GL_TEXTURE0 + TEX_REFRACTION);
+    tgl_fbo_bindTex(&context->gbuffer, ILG_CONTEXT_REFRACTION);
     glActiveTexture(GL_TEXTURE0 + TEX_GLOSS);
     tgl_fbo_bindTex(&context->gbuffer, ILG_CONTEXT_GLOSS);
     tgl_fbo_bind(&context->accum, TGL_FBO_RW);
@@ -116,7 +116,7 @@ static bool lights_build(void *ptr, ilG_rendid id, ilG_renderman *rm, ilG_buildr
     ilG_material_textureUnit(&m, TEX_DEPTH, "depth");
     ilG_material_textureUnit(&m, TEX_NORMAL, "normal");
     ilG_material_textureUnit(&m, TEX_ALBEDO, "albedo");
-    ilG_material_textureUnit(&m, TEX_REFLECT, "reflected");
+    ilG_material_textureUnit(&m, TEX_REFRACTION, "refraction");
     ilG_material_textureUnit(&m, TEX_GLOSS, "gloss");
     ilG_material_fragData(&m, 0, "out_Color");
     if (!ilG_renderman_addMaterialFromFile(rm, m, self->file,

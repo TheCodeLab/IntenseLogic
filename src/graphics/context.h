@@ -15,11 +15,11 @@
 #include "graphics/renderer.h"
 
 enum ilG_context_attachments {
-    ILG_CONTEXT_ALBEDO,   // Ratio of light reflected in RGB
-    ILG_CONTEXT_NORMAL,   // Surface normal in camera-local space (world space centered on camera position)
-    ILG_CONTEXT_REFLECT,  // Ratio of light which is reflected vs diffused
-    ILG_CONTEXT_GLOSS,    // How shiny or glossy the surface should be
-    ILG_CONTEXT_EMISSION, // Emission from the material itself, measured in radiant intensity (W/sr)
+    ILG_CONTEXT_ALBEDO,     // Ratio of light reflected in RGB
+    ILG_CONTEXT_NORMAL,     // Surface normal in camera-local space (world space centered on camera position)
+    ILG_CONTEXT_REFRACTION, // Refractive index
+    ILG_CONTEXT_GLOSS,      // How shiny or glossy the surface should be
+    ILG_CONTEXT_EMISSION,   // Emission from the material itself, measured in radiant intensity (W/sr)
     ILG_CONTEXT_DEPTH,
     ILG_CONTEXT_NUMATTACHMENTS
 };
