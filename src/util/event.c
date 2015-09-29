@@ -129,7 +129,8 @@ void ilE_dump(ilE_handler *self)
             strcpy(threading_str, "???");
         }
 #ifndef WIN32
-        fprintf(stderr, "\t%s <%p> priority:%i threading:%s ctx<%p>\n", cb->name, cb->callback, cb->priority, threading_str, (void*)&cb->ctx);// TODO: Print contents of ctx
+        fprintf(stderr, "\t%s <%p> priority:%i threading:%s ctx<%p>\n",
+                cb->name, (void*)cb->callback, cb->priority, threading_str, (void*)&cb->ctx);
 #endif
     }
 }
