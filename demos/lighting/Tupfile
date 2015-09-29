@@ -1,6 +1,0 @@
-include_rules
-
-ifdef BUILD_DEMOS
-: foreach *.c |> !cc |>
-: *.o |> !ld |> $(TOP)/lighting$(PROG_SUFFIX)
-endif

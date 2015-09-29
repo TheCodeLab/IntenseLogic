@@ -1,6 +1,0 @@
-include_rules
-
-ifdef BUILD_DEMOS
-: foreach *.cpp |> !cxx |>
-: *.o |> !ld |> $(TOP)/bouncing_lights$(PROG_SUFFIX)
-endif

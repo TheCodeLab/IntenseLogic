@@ -1,6 +1,0 @@
-include_rules
-
-ifdef BUILD_DEMOS
-: foreach *.c |> !cc |>
-: foreach *.o |> !ld |> $(TOP)/teapots$(PROG_SUFFIX)
-endif

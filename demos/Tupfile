@@ -1,6 +1,0 @@
-include_rules
-
-ifdef BUILD_DEMOS
-: foreach *.c |> !cc |>
-: *.o |> !ar |> $(TOP)/libdemo.a $(TOP)/<libs>
-endif

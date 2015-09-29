@@ -1,18 +1,18 @@
 # IntenseLogic
-IntenseLogic is a set of libraries for developing a game or game engine written in C99, which runs on Linux, Windows, and OS X.
+IntenseLogic is a library for developing a game engine written in C99, which runs on Linux, Windows, and OS X.
 
-## Libraries
+## Components
 
 ### Graphics
 A 3D graphics library for rendering scenes using OpenGL, which can run in its own thread.
 
-Supports deferred shading, HDR, MSAA, and has very good performance as well as a model which maps well to the GPU.
+Supports deferred shading, HDR, MSAA.
 Can be extended with custom renderer types and custom coordinate systems
 (Only single precision floating point is provided but it is not hard to implement double precision or fixed point.)
 
 ### Asset
 A VFS layer with importers for PNG and OBJ formats.
-Uses mmap or MapViewOfFile to map files into memory, rather than copying them a la stdio.
+Uses mmap or MapViewOfFile to map files into memory.
 
 ### Util
 - Data structures: vectors, linked lists, hash tables from uthash
@@ -25,36 +25,35 @@ Uses mmap or MapViewOfFile to map files into memory, rather than copying them a 
 ### Math
 Contains useful 3D graphics math: 3d/4d vectors, matrices, and quaternions.
 
-## Screenshots
+## Demos
+
+Demos can be found at https://github.com/TheCodeLab/IntenseLogicDemos
 
 ![Bouncing Lights Demo](http://i.imgur.com/JhcLYPO.png)
 
-## Documentation
-
-(very out of date)
-
-- [C API Documentation](https://lymiahugs.com/~tiffany/il/api/index.html)
-
-## Building
-Build system based on tup [Tup](http://gittup.org/tup/).
-
 ### Dependencies
 
-- OpenGL 3.1
-- [tiffgl](https://github.com/tiffany352/tiffgl) (provided as submodule)
+- OpenGL 3.2
+- [tiffgl](https://github.com/tiffany352/tiffgl)
 - [SDL 2.0](http://libsdl.org/)
-- [Libepoxy](https://github.com/anholt/libepoxy) (default) or [GLEW](http://glew.sourceforge.net/) (requires a special flag)
+- [libepoxy](https://github.com/anholt/libepoxy) (default) or [GLEW](http://glew.sourceforge.net/) (requires a special flag)
 - [libpng](http://libpng.org/)
 - pthread
 
 ### Building
 
-    git submodule update --init --recursive
-    git pull --recurse-submodules
-    tup init
-    tup
+Build files for tup are provided.
 
-See the Wiki for full and detailed [build instructions](https://github.com/TheCodeLab/IntenseLogic/wiki/Building).
+Manual builds must satisfy the following:
+
+- The 'src' directory must be on the include path
+- Each dependency must be on the include path
+- Tiffgl requires you to decide whether you are using libepoxy or
+  GLFW through a compiler define
+- It is preferred to create statically linked libraries for IL, as it
+  is not ABI or API compatible between versions. You should vendor
+  this repository as a submodule.
+- Code should be compiled as C with -std=gnu99.
 
 ## Contact
 
