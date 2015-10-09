@@ -5,6 +5,8 @@
 #include "util/event.h"
 #include "math/matrix.h"
 #include "graphics/material.h"
+#include "graphics/tex.h"
+#include "graphics/mesh.h"
 
 struct ilG_context;
 struct ilG_renderer;
@@ -286,20 +288,122 @@ void ilG_renderer_print(struct ilG_context *c, ilG_rendid root, unsigned depth);
 void ilG_renderman_print(struct ilG_context *c, ilG_rendid root);
 
 struct ilA_img;
-struct ilG_tex;
+struct ilA_mesh;
+struct ilG_shape;
 
+void ilG_geometry_bind(tgl_fbo *gbuffer);
 ilG_builder ilG_geometry_builder(struct ilG_context *context);
-ilG_builder ilG_transparency_builder();
-ilG_builder ilG_skybox_builder(struct ilG_tex skytex, struct ilG_context *context);
-ilG_builder ilG_pointlight_builder(struct ilG_context *context);
-ilG_builder ilG_sunlight_builder(struct ilG_context *context);
-ilG_builder ilG_out_builder(struct ilG_context *context, const float *exposure, const float *gamma);
-ilG_builder ilG_heightmap_builder(unsigned w, unsigned h, struct ilG_tex height, struct ilG_tex normal, struct ilG_tex color);
-// takes ownership of verts
-// verts is 3*count floats, or number of vertices
-ilG_builder ilG_line_builder(unsigned num, float *verts, const float col[3]);
-/** cb will only be called once */
-ilG_builder ilG_grabber_builder(struct ilG_context *context, void (*cb)(struct ilA_img res, void *user), void *user);
-ilG_builder ilG_ambient_builder(struct ilG_context *context, il_vec3 *color);
+
+typedef struct ilG_skybox {
+    ilG_tex texture;
+    ilG_renderman *rm;
+    ilG_matid mat;
+} ilG_skybox;
+
+bool ilG_skybox_build(ilG_skybox *skybox, ilG_renderman *rm, ilG_tex skytex, char **error);
+void ilG_skybox_draw(ilG_skybox *skybox, il_mat vp);
+void ilG_skybox_free(ilG_skybox *skybox);
+ilG_builder ilG_skybox_builder(ilG_skybox *skybox, ilG_tex skytex);
+
+typedef enum ilG_light_type {
+    ILG_POINT,
+    ILG_SUN,
+} ilG_light_type;
+
+typedef struct ilG_lighting {
+    // update these
+    tgl_fbo *gbuffer, *accum;
+    unsigned width, height;
+    float fovsquared;
+    // end
+    ilG_renderman *rm;
+    GLint lights_size, mvp_size, lights_offset[3], mvp_offset[1], color_loc, radius_loc, mvp_loc, mv_loc, ivp_loc, size_loc, fovsquared_loc;
+    ilG_matid mat;
+    struct ilG_shape *ico;
+    tgl_vao vao;
+    tgl_quad quad;
+    // legacy
+    ilG_light_type type;
+    bool msaa;
+} ilG_lighting;
+
+bool ilG_lighting_build(ilG_lighting *lighting, ilG_renderman *rm,
+                        ilG_light_type type, bool msaa, char **error);
+void ilG_lighting_free(ilG_lighting *lighting);
+/* ILG_INVERSE | ILG_VIEW_R | ILG_PROJECTION
+   ILG_MODEL_T | ILG_VIEW_T
+   ILG_MODEL_T | ILG_VP */
+void ilG_lighting_draw(ilG_lighting *lighting, il_mat **mats, ilG_light *lights, size_t count);
+ilG_builder ilG_lighting_builder(ilG_lighting *lighting, bool msaa, ilG_light_type type);
+
+typedef struct ilG_out {
+    // update these
+    float exposure, gamma;
+    // end
+    unsigned w, h;
+    struct ilG_context *context;
+    ilG_renderman *rm;
+    ilG_matid tonemap, horizblur, vertblur;
+    tgl_fbo front, result;
+    tgl_quad quad;
+    tgl_vao vao;
+    GLuint t_size_loc, h_size_loc, v_size_loc, t_exposure_loc, h_exposure_loc, gamma_loc;
+} ilG_out;
+
+bool ilG_out_build(ilG_out *out, struct ilG_context *context, char **error);
+void ilG_out_free(ilG_out *out);
+void ilG_out_resize(ilG_out *out, unsigned w, unsigned h);
+void ilG_out_draw(ilG_out *out);
+ilG_builder ilG_out_builder(ilG_out *out, struct ilG_context *context);
+
+typedef struct ilG_heightmap {
+    ilG_tex height, normal, color;
+    ilG_matid mat;
+    ilG_mesh mesh;
+    unsigned w,h;
+    ilG_renderman *rm;
+    GLenum mvp, imt, size;
+} ilG_heightmap;
+
+bool ilG_heightmap_build(ilG_heightmap *hm, ilG_renderman *rm, unsigned w, unsigned h,
+                         ilG_tex height, ilG_tex normal, ilG_tex color, char **error);
+void ilG_heightmap_free(ilG_heightmap *hm);
+void ilG_heightmap_draw(ilG_heightmap *hm, il_mat mvp, il_mat imt);
+ilG_builder ilG_heightmap_builder(ilG_heightmap *hm, unsigned w, unsigned h,
+                                  ilG_tex height, ilG_tex normal, ilG_tex color);
+
+typedef struct ilG_wireframe {
+    unsigned count;
+    ilG_matid mat;
+    ilG_renderman *rm;
+    tgl_vao vao;
+    GLuint vbo;
+    GLint mvp_loc, col_loc;
+} ilG_wireframe;
+
+bool ilG_wireframe_build(ilG_wireframe *wf, ilG_renderman *rm, char **error);
+void ilG_wireframe_free(ilG_wireframe *wf);
+// number of vertices (3*count floats)
+void ilG_wireframe_data(ilG_wireframe *wf, const float *verts, size_t count);
+void ilG_wireframe_draw(ilG_wireframe *wf, il_mat mvp, const float col[3]);
+
+ilA_imgerr ilG_screenshot(struct ilG_context *context, ilA_img *out);
+
+typedef struct ilG_ambient {
+    // public
+    il_vec3 color;
+    // private
+    ilG_matid mat;
+    GLuint col_loc, fovsquared_loc;
+    ilG_renderman *rm;
+    struct ilG_context *context;
+    tgl_quad quad;
+    tgl_vao vao;
+} ilG_ambient;
+
+bool ilG_ambient_build(ilG_ambient *ambient, struct ilG_context *context, char **error);
+void ilG_ambient_free(ilG_ambient *ambient);
+void ilG_ambient_draw(ilG_ambient *ambient);
+ilG_builder ilG_ambient_builder(ilG_ambient *ambient, struct ilG_context *context);
 
 #endif

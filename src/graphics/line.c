@@ -5,85 +5,53 @@
 #include "graphics/material.h"
 #include "graphics/transform.h"
 
-typedef struct ilG_line {
-    float col[3];
-    float *verts;
-    unsigned count;
-    ilG_matid mat;
-    ilG_renderman *rm;
-    tgl_vao vao;
-    GLuint vbo;
-    GLint mvp_loc, col_loc;
-} ilG_line;
-
-static void line_free(void *obj)
+void ilG_wireframe_free(ilG_wireframe *wf)
 {
-    ilG_line *self = obj;
-    glDeleteBuffers(1, &self->vbo);
-    tgl_vao_free(&self->vao);
-    ilG_renderman_delMaterial(self->rm, self->mat);
+    glDeleteBuffers(1, &wf->vbo);
+    tgl_vao_free(&wf->vao);
+    ilG_renderman_delMaterial(wf->rm, wf->mat);
 }
 
-static void line_draw(void *obj, ilG_rendid id, il_mat **mats, const unsigned *objects, unsigned num_mats)
+void ilG_wireframe_draw(ilG_wireframe *wf, il_mat mvp, const float col[3])
 {
-    (void)id, (void)objects;
-    ilG_line *self = obj;
-    tgl_vao_bind(&self->vao);
-    glBindBuffer(GL_ARRAY_BUFFER, self->vbo);
-    ilG_material *mat = ilG_renderman_findMaterial(self->rm, self->mat);
+    tgl_vao_bind(&wf->vao);
+    glBindBuffer(GL_ARRAY_BUFFER, wf->vbo);
+    ilG_material *mat = ilG_renderman_findMaterial(wf->rm, wf->mat);
     ilG_material_bind(mat);
-    glUniform3fv(self->col_loc, 1, self->col);
-    for (unsigned i = 0; i < num_mats; i++) {
-        ilG_material_bindMatrix(mat, self->mvp_loc, mats[0][i]);
-        glDrawArrays(GL_LINES, 0, self->count);
-    }
+    glUniform3fv(wf->col_loc, 1, col);
+    ilG_material_bindMatrix(mat, wf->mvp_loc, mvp);
+    glDrawArrays(GL_LINES, 0, wf->count);
 }
 
-static bool line_build(void *obj, ilG_rendid id, ilG_renderman *rm, ilG_buildresult *out)
+bool ilG_wireframe_build(ilG_wireframe *wf, ilG_renderman *rm, char **error)
 {
-    (void)id;
-    ilG_line *self = obj;
-    self->rm = rm;
+    wf->rm = rm;
 
     ilG_material m[1];
     ilG_material_init(m);
     ilG_material_name(m, "Line Segment Shader");
     ilG_material_arrayAttrib(m, 0, "in_Position");
     ilG_material_fragData(m, ILG_CONTEXT_ALBEDO, "out_Ambient");
-    if (!ilG_renderman_addMaterialFromFile(rm, *m, "line.vert", "line.frag", &self->mat, &out->error)) {
+    if (!ilG_renderman_addMaterialFromFile(rm, *m, "line.vert", "line.frag", &wf->mat, error)) {
         return false;
     }
-    ilG_material *mat = ilG_renderman_findMaterial(rm, self->mat);
-    self->mvp_loc = ilG_material_getLoc(mat, "mvp");
-    self->col_loc = ilG_material_getLoc(mat, "col");
+    ilG_material *mat = ilG_renderman_findMaterial(rm, wf->mat);
+    wf->mvp_loc = ilG_material_getLoc(mat, "mvp");
+    wf->col_loc = ilG_material_getLoc(mat, "col");
 
-    tgl_vao_init(&self->vao);
-    tgl_vao_bind(&self->vao);
-    glGenBuffers(1, &self->vbo);
-    glBindBuffer(GL_ARRAY_BUFFER, self->vbo);
-    glBufferData(GL_ARRAY_BUFFER, self->count * 3 * sizeof(float), self->verts, GL_STATIC_DRAW);
-    free(self->verts);
+    tgl_vao_init(&wf->vao);
+    tgl_vao_bind(&wf->vao);
+    glGenBuffers(1, &wf->vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, wf->vbo);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
     glEnableVertexAttribArray(0);
 
-    int *types = malloc(sizeof(int) * 1);
-    types[0] = ILG_MVP;
-    *out = (ilG_buildresult) {
-        .free = line_free,
-        .draw = line_draw,
-        .types = types,
-        .num_types = 1,
-        .obj = obj,
-        .name = strdup("Lines")
-    };
     return true;
 }
 
-ilG_builder ilG_line_builder(unsigned num, float *verts, const float col[3])
+void ilG_wireframe_data(ilG_wireframe *wf, const float *verts, size_t count)
 {
-    ilG_line *self = calloc(1, sizeof(ilG_line));
-    memcpy(self->col, col, sizeof(self->col));
-    self->verts = verts;
-    self->count = num;
-    return ilG_builder_wrap(self, line_build);
+    wf->count = count;
+    glBindBuffer(GL_ARRAY_BUFFER, wf->vbo);
+    glBufferData(GL_ARRAY_BUFFER, count * 3 * sizeof(float), verts, GL_STATIC_DRAW);
 }

@@ -5,33 +5,24 @@
 #include "graphics/context.h"
 #include "graphics/material.h"
 
-typedef struct ilG_out {
-    ilG_context *context;
-    ilG_renderman *rm;
-    ilG_matid tonemap, horizblur, vertblur;
-    tgl_fbo front, result;
-    tgl_quad quad;
-    tgl_vao vao;
-    GLuint t_size_loc, h_size_loc, v_size_loc, t_exposure_loc, h_exposure_loc, gamma_loc;
-    unsigned w, h;
-    const float *exposure, *gamma;
-} ilG_out;
-
 enum {
     OUT_POSITION
 };
 
+void ilG_out_free(ilG_out *out)
+{
+    ilG_renderman_delMaterial(out->rm, out->tonemap);
+    ilG_renderman_delMaterial(out->rm, out->horizblur);
+    ilG_renderman_delMaterial(out->rm, out->vertblur);
+    tgl_fbo_free(&out->front);
+    tgl_fbo_free(&out->result);
+    tgl_quad_free(&out->quad);
+    tgl_vao_free(&out->vao);
+}
+
 static void out_free(void *ptr)
 {
-    ilG_out *self = ptr;
-    ilG_renderman_delMaterial(self->rm, self->tonemap);
-    ilG_renderman_delMaterial(self->rm, self->horizblur);
-    ilG_renderman_delMaterial(self->rm, self->vertblur);
-    tgl_fbo_free(&self->front);
-    tgl_fbo_free(&self->result);
-    tgl_quad_free(&self->quad);
-    tgl_vao_free(&self->vao);
-    free(self);
+    ilG_out_free(ptr);
 }
 
 static void out_bloom(ilG_out *self)
@@ -52,8 +43,8 @@ static void out_bloom(ilG_out *self)
     tgl_fbo_bindTex(&context->accum, 0);
     ilG_material_bind(tonemap);
     glUniform2f(self->t_size_loc, self->w, self->h);
-    glUniform1f(self->t_exposure_loc, self->exposure? *self->exposure : 1.0);
-    glUniform1f(self->gamma_loc, self->gamma? *self->gamma : 1.0);
+    glUniform1f(self->t_exposure_loc, self->exposure);
+    glUniform1f(self->gamma_loc, self->gamma);
     tgl_quad_draw_once(&self->quad);
 
     for (i = 0; i < 4; i++) {
@@ -81,7 +72,7 @@ static void out_bloom(ilG_out *self)
         // do a horizontal blur.
         ilG_material_bind(horizblur);
         glUniform2f(self->h_size_loc, self->w, self->h);
-        glUniform1f(self->h_exposure_loc, self->exposure? *self->exposure : 1.0);
+        glUniform1f(self->h_exposure_loc, self->exposure);
         tgl_quad_draw_once(&self->quad);
 
         // Into the screen,
@@ -142,14 +133,93 @@ static void out_update(void *ptr, ilG_rendid id)
     tgl_check("outpass");
 }
 
+void ilG_out_resize(ilG_out *out, unsigned w, unsigned h)
+{
+    tgl_fbo_build(&out->front, w, h);
+    tgl_fbo_build(&out->result, w, h);
+}
+
 static void out_resize(const il_value *data, il_value *ctx)
 {
     ilG_out *self = il_value_tomvoid(ctx);
     const il_vector *vec = il_value_tovec(data);
     unsigned w = il_vector_geti(vec, 0);
     unsigned h = il_vector_geti(vec, 1);
-    tgl_fbo_build(&self->front, w, h);
-    tgl_fbo_build(&self->result, w, h);
+    ilG_out_resize(self, w, h);
+}
+
+bool ilG_out_build(ilG_out *out, ilG_context *context, char **error)
+{
+    tgl_fbo *f;
+    GLenum fmt = context->msaa? GL_TEXTURE_2D_MULTISAMPLE : GL_TEXTURE_RECTANGLE;
+
+    f = &out->front;
+    tgl_fbo_init(f);
+    tgl_fbo_numTargets(f, 1);
+    tgl_fbo_texture(f, 0, fmt, GL_RGB8, GL_RGB, GL_COLOR_ATTACHMENT0, GL_UNSIGNED_BYTE);
+
+    f = &out->result;
+    tgl_fbo_init(f);
+    tgl_fbo_numTargets(f, 1);
+    tgl_fbo_texture(f, 0, fmt, GL_RGB8, GL_RGB, GL_COLOR_ATTACHMENT0, GL_UNSIGNED_BYTE);
+
+    if (context->msaa) {
+        tgl_fbo_multisample(&out->front, 0, context->msaa, false);
+        tgl_fbo_multisample(&out->result, 0, context->msaa, false);
+    }
+    if (!tgl_fbo_build(&out->front, context->width, context->height)) {
+        return false;
+    }
+    if (!tgl_fbo_build(&out->result, context->width, context->height)) {
+        return false;
+    }
+
+    ilG_material m, *mat;
+
+    ilG_material_init(&m);
+    ilG_material_name(&m, "Horizontal Blur Shader");
+    ilG_material_arrayAttrib(&m, OUT_POSITION, "in_Texcoord");
+    ilG_material_fragData(&m, 0, "out_Color");
+    ilG_material_textureUnit(&m, 0, "tex");
+    if (!ilG_renderman_addMaterialFromFile(out->rm, m, "post.vert", "horizblur.frag", &out->horizblur, error)) {
+        return false;
+    }
+    mat = ilG_renderman_findMaterial(out->rm, out->horizblur);
+    out->h_exposure_loc = ilG_material_getLoc(mat, "exposure");
+    out->h_size_loc = ilG_material_getLoc(mat, "size");
+
+    ilG_material_init(&m);
+    ilG_material_name(&m, "Vertical Blur Shader");
+    ilG_material_arrayAttrib(&m, OUT_POSITION, "in_Texcoord");
+    ilG_material_fragData(&m, 0, "out_Color");
+    ilG_material_textureUnit(&m, 0, "tex");
+    if (!ilG_renderman_addMaterialFromFile(out->rm, m, "post.vert", "vertblur.frag", &out->vertblur, error)) {
+        return false;
+    }
+    mat = ilG_renderman_findMaterial(out->rm, out->vertblur);
+    out->v_size_loc = ilG_material_getLoc(mat, "size");
+
+    ilG_material_init(&m);
+    ilG_material_name(&m, "Tone Mapping Shader");
+    ilG_material_arrayAttrib(&m, OUT_POSITION, "in_Texcoord");
+    ilG_material_textureUnit(&m, 0, "tex");
+    ilG_material_fragData(&m, 0, "out_Color");
+    if (!ilG_renderman_addMaterialFromFile(out->rm, m, "post.vert", "hdr.frag", &out->tonemap, error)) {
+        return false;
+    }
+    mat = ilG_renderman_findMaterial(out->rm, out->tonemap);
+    out->t_size_loc = ilG_material_getLoc(mat, "size");
+    out->t_exposure_loc = ilG_material_getLoc(mat, "exposure");
+    out->gamma_loc = ilG_material_getLoc(mat, "gamma");
+
+    tgl_vao_init(&out->vao);
+    tgl_vao_bind(&out->vao);
+    tgl_quad_init(&out->quad, OUT_POSITION);
+
+    il_storage_void sv = {out, NULL};
+    ilE_register(&context->resize, ILE_DONTCARE, ILE_ANY, out_resize, il_value_opaque(sv));
+
+    return true;
 }
 
 static bool out_build(void *ptr, ilG_rendid id, ilG_renderman *rm, ilG_buildresult *out)
@@ -158,73 +228,8 @@ static bool out_build(void *ptr, ilG_rendid id, ilG_renderman *rm, ilG_buildresu
     ilG_out *self = ptr;
     ilG_context *context = self->context;
     self->rm = rm;
-    if (context->hdr) {
-        tgl_fbo *f;
-        GLenum fmt = context->msaa? GL_TEXTURE_2D_MULTISAMPLE : GL_TEXTURE_RECTANGLE;
-
-        f = &self->front;
-        tgl_fbo_numTargets(f, 1);
-        tgl_fbo_texture(f, 0, fmt, GL_RGB8, GL_RGB, GL_COLOR_ATTACHMENT0, GL_UNSIGNED_BYTE);
-
-        f = &self->result;
-        tgl_fbo_numTargets(f, 1);
-        tgl_fbo_texture(f, 0, fmt, GL_RGB8, GL_RGB, GL_COLOR_ATTACHMENT0, GL_UNSIGNED_BYTE);
-
-        if (context->msaa) {
-            tgl_fbo_multisample(&self->front, 0, context->msaa, false);
-            tgl_fbo_multisample(&self->result, 0, context->msaa, false);
-        }
-        if (!tgl_fbo_build(&self->front, context->width, context->height)) {
-            return false;
-        }
-        if (!tgl_fbo_build(&self->result, context->width, context->height)) {
-            return false;
-        }
-
-        ilG_material m, *mat;
-
-        ilG_material_init(&m);
-        ilG_material_name(&m, "Horizontal Blur Shader");
-        ilG_material_arrayAttrib(&m, OUT_POSITION, "in_Texcoord");
-        ilG_material_fragData(&m, 0, "out_Color");
-        ilG_material_textureUnit(&m, 0, "tex");
-        if (!ilG_renderman_addMaterialFromFile(self->rm, m, "post.vert", "horizblur.frag", &self->horizblur, &out->error)) {
-            return false;
-        }
-        mat = ilG_renderman_findMaterial(self->rm, self->horizblur);
-        self->h_exposure_loc = ilG_material_getLoc(mat, "exposure");
-        self->h_size_loc = ilG_material_getLoc(mat, "size");
-
-        ilG_material_init(&m);
-        ilG_material_name(&m, "Vertical Blur Shader");
-        ilG_material_arrayAttrib(&m, OUT_POSITION, "in_Texcoord");
-        ilG_material_fragData(&m, 0, "out_Color");
-        ilG_material_textureUnit(&m, 0, "tex");
-        if (!ilG_renderman_addMaterialFromFile(self->rm, m, "post.vert", "vertblur.frag", &self->vertblur, &out->error)) {
-            return false;
-        }
-        mat = ilG_renderman_findMaterial(self->rm, self->vertblur);
-        self->v_size_loc = ilG_material_getLoc(mat, "size");
-
-        ilG_material_init(&m);
-        ilG_material_name(&m, "Tone Mapping Shader");
-        ilG_material_arrayAttrib(&m, OUT_POSITION, "in_Texcoord");
-        ilG_material_textureUnit(&m, 0, "tex");
-        ilG_material_fragData(&m, 0, "out_Color");
-        if (!ilG_renderman_addMaterialFromFile(self->rm, m, "post.vert", "hdr.frag", &self->tonemap, &out->error)) {
-            return false;
-        }
-        mat = ilG_renderman_findMaterial(self->rm, self->tonemap);
-        self->t_size_loc = ilG_material_getLoc(mat, "size");
-        self->t_exposure_loc = ilG_material_getLoc(mat, "exposure");
-        self->gamma_loc = ilG_material_getLoc(mat, "gamma");
-
-        tgl_vao_init(&self->vao);
-        tgl_vao_bind(&self->vao);
-        tgl_quad_init(&self->quad, OUT_POSITION);
-
-        il_storage_void sv = {self, NULL};
-        ilE_register(&context->resize, ILE_DONTCARE, ILE_ANY, out_resize, il_value_opaque(sv));
+    if (context->hdr && !ilG_out_build(self, context, &out->error)) {
+        return false;
     }
 
     *out = (ilG_buildresult) {
@@ -240,15 +245,8 @@ static bool out_build(void *ptr, ilG_rendid id, ilG_renderman *rm, ilG_buildresu
     return true;
 }
 
-ilG_builder ilG_out_builder(ilG_context *context, const float *exposure, const float *gamma)
+ilG_builder ilG_out_builder(ilG_out *out, ilG_context *context)
 {
-    ilG_out *self = calloc(1, sizeof(ilG_out));
-
-    tgl_fbo_init(&self->front);
-    tgl_fbo_init(&self->result);
-    self->context = context;
-    self->exposure = exposure;
-    self->gamma = gamma;
-
-    return ilG_builder_wrap(self, out_build);
+    out->context = context;
+    return ilG_builder_wrap(out, out_build);
 }

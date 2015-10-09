@@ -12,11 +12,8 @@ static void geometry_free(void *ptr)
     (void)ptr;
 }
 
-static void geometry_update(void *ptr, ilG_rendid id)
+void ilG_geometry_bind(tgl_fbo *gbuffer)
 {
-    (void)id;
-    ilG_context *context = ptr;
-    tgl_check("Unknown");
     static const unsigned order[] = {
         ILG_CONTEXT_ALBEDO,
         ILG_CONTEXT_NORMAL,
@@ -24,7 +21,7 @@ static void geometry_update(void *ptr, ilG_rendid id)
         ILG_CONTEXT_GLOSS,
         ILG_CONTEXT_EMISSION,
     };
-    tgl_fbo_bind_with(&context->gbuffer, TGL_FBO_RW, 5, order);
+    tgl_fbo_bind_with(gbuffer, TGL_FBO_RW, 5, order);
     glClearDepth(1.0);
     glClearColor(0,0,0,0);
     glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
@@ -33,6 +30,14 @@ static void geometry_update(void *ptr, ilG_rendid id)
     glDisable(GL_BLEND);
     glFrontFace(GL_CCW);
     glCullFace(GL_BACK);
+}
+
+static void geometry_update(void *ptr, ilG_rendid id)
+{
+    (void)id;
+    ilG_context *context = ptr;
+    tgl_check("Unknown");
+    ilG_geometry_bind(&context->gbuffer);
     tgl_check("Could not setup to draw geometry");
 }
 

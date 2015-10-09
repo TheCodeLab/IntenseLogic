@@ -2,19 +2,16 @@
 
 #include "context.h"
 
-typedef struct ilG_ambient {
-    ilG_matid mat;
-    GLuint col_loc, fovsquared_loc;
-    ilG_renderman *rm;
-    ilG_context *context;
-    tgl_quad quad;
-    tgl_vao vao;
-    il_vec3 *color;
-} ilG_ambient;
+void ilG_ambient_free(ilG_ambient *ambient)
+{
+    ilG_renderman_delMaterial(ambient->rm, ambient->mat);
+    tgl_quad_free(&ambient->quad);
+    tgl_vao_free(&ambient->vao);
+}
 
 static void ambient_free(void *ptr)
 {
-    (void)ptr;
+    ilG_ambient_free(ptr);
 }
 
 enum {
@@ -22,39 +19,41 @@ enum {
     TEX_EMISSION
 };
 
-static void ambient_update(void *ptr, ilG_rendid id)
+void ilG_ambient_draw(ilG_ambient *ambient)
 {
-    (void)id;
-    ilG_ambient *self = ptr;
-
     glDisable(GL_BLEND);
     glDisable(GL_DEPTH_TEST);
     glBlendFunc(GL_ONE, GL_ONE);
     glDepthMask(GL_FALSE);
 
     glActiveTexture(GL_TEXTURE0 + TEX_ALBEDO);
-    tgl_fbo_bindTex(&self->context->gbuffer, ILG_CONTEXT_ALBEDO);
+    tgl_fbo_bindTex(&ambient->context->gbuffer, ILG_CONTEXT_ALBEDO);
     glActiveTexture(GL_TEXTURE0 + TEX_EMISSION);
-    tgl_fbo_bindTex(&self->context->gbuffer, ILG_CONTEXT_EMISSION);
+    tgl_fbo_bindTex(&ambient->context->gbuffer, ILG_CONTEXT_EMISSION);
 
-    tgl_fbo_bind(&self->context->accum, TGL_FBO_RW);
-    ilG_material_bind(ilG_renderman_findMaterial(self->rm, self->mat));
-    tgl_vao_bind(&self->vao);
-    glUniform3f(self->col_loc, self->color->x, self->color->y, self->color->z);
-    glUniform1f(self->fovsquared_loc, self->context->fovsquared);
-    tgl_quad_draw_once(&self->quad);
+    tgl_fbo_bind(&ambient->context->accum, TGL_FBO_RW);
+    ilG_material_bind(ilG_renderman_findMaterial(ambient->rm, ambient->mat));
+    tgl_vao_bind(&ambient->vao);
+    glUniform3f(ambient->col_loc, ambient->color.x, ambient->color.y, ambient->color.z);
+    glUniform1f(ambient->fovsquared_loc, ambient->context->fovsquared);
+    tgl_quad_draw_once(&ambient->quad);
 
     glDisable(GL_BLEND);
     glDepthMask(GL_TRUE);
 }
 
-static bool ambient_build(void *ptr, ilG_rendid id, ilG_renderman *rm, ilG_buildresult *out)
+static void ambient_update(void *ptr, ilG_rendid id)
 {
     (void)id;
     ilG_ambient *self = ptr;
+    ilG_ambient_draw(self);
+}
 
-    self->rm = rm;
-
+bool ilG_ambient_build(ilG_ambient *ambient, ilG_context *context, char **error)
+{
+    memset(ambient, 0, sizeof(*ambient));
+    ambient->context = context;
+    ambient->rm = &context->manager;
     ilG_material m;
     ilG_material_init(&m);
     ilG_material_name(&m, "Ambient Lighting");
@@ -62,28 +61,39 @@ static bool ambient_build(void *ptr, ilG_rendid id, ilG_renderman *rm, ilG_build
     ilG_material_fragData(&m, 0, "out_Color");
     ilG_material_textureUnit(&m, TEX_ALBEDO, "tex_Albedo");
     ilG_material_textureUnit(&m, TEX_EMISSION, "tex_Emission");
-    if (!ilG_renderman_addMaterialFromFile(self->rm, m, "id2d.vert", "ambient.frag", &self->mat, &out->error)) {
+    if (!ilG_renderman_addMaterialFromFile(ambient->rm, m, "id2d.vert", "ambient.frag", &ambient->mat, error)) {
         return false;
     }
-    ilG_material *mat = ilG_renderman_findMaterial(self->rm, self->mat);
-    self->col_loc = ilG_material_getLoc(mat, "color");
-    self->fovsquared_loc = ilG_material_getLoc(mat, "fovsquared");
+    ilG_material *mat = ilG_renderman_findMaterial(ambient->rm, ambient->mat);
+    ambient->col_loc = ilG_material_getLoc(mat, "color");
+    ambient->fovsquared_loc = ilG_material_getLoc(mat, "fovsquared");
 
-    tgl_vao_init(&self->vao);
-    tgl_vao_bind(&self->vao);
-    tgl_quad_init(&self->quad, 0);
+    tgl_vao_init(&ambient->vao);
+    tgl_vao_bind(&ambient->vao);
+    tgl_quad_init(&ambient->quad, 0);
+
+    return true;
+}
+
+static bool ambient_build(void *ptr, ilG_rendid id, ilG_renderman *rm, ilG_buildresult *out)
+{
+    (void)id, (void)rm;
+    ilG_ambient *self = ptr;
+
+    if (!ilG_ambient_build(self, self->context, &out->error)) {
+        return false;
+    }
 
     out->free = ambient_free;
     out->update = ambient_update;
     out->obj = ptr;
     out->name = strdup("Ambient Lighting");
+
     return true;
 }
 
-ilG_builder ilG_ambient_builder(ilG_context *context, il_vec3 *color)
+ilG_builder ilG_ambient_builder(ilG_ambient *ambient, ilG_context *context)
 {
-    ilG_ambient *self = calloc(1, sizeof(ilG_ambient));
-    self->context = context;
-    self->color = color;
-    return ilG_builder_wrap(self, ambient_build);
+    ambient->context = context;
+    return ilG_builder_wrap(ambient, ambient_build);
 }
