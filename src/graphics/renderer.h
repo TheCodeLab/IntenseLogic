@@ -336,7 +336,7 @@ void ilG_lighting_free(ilG_lighting *lighting);
 void ilG_lighting_draw(ilG_lighting *lighting, il_mat **mats, ilG_light *lights, size_t count);
 ilG_builder ilG_lighting_builder(ilG_lighting *lighting, bool msaa, ilG_light_type type);
 
-typedef struct ilG_out {
+typedef struct ilG_tonemapper {
     // update these
     float exposure, gamma;
     // end
@@ -348,13 +348,13 @@ typedef struct ilG_out {
     tgl_quad quad;
     tgl_vao vao;
     GLuint t_size_loc, h_size_loc, v_size_loc, t_exposure_loc, h_exposure_loc, gamma_loc;
-} ilG_out;
+} ilG_tonemapper;
 
-bool ilG_out_build(ilG_out *out, struct ilG_context *context, char **error);
-void ilG_out_free(ilG_out *out);
-void ilG_out_resize(ilG_out *out, unsigned w, unsigned h);
-void ilG_out_draw(ilG_out *out);
-ilG_builder ilG_out_builder(ilG_out *out, struct ilG_context *context);
+bool ilG_tonemapper_build(ilG_tonemapper *tm, struct ilG_context *context, char **error);
+void ilG_tonemapper_free(ilG_tonemapper *tm);
+void ilG_tonemapper_resize(ilG_tonemapper *tm, unsigned w, unsigned h);
+void ilG_tonemapper_draw(ilG_tonemapper *tm);
+ilG_builder ilG_tonemapper_builder(ilG_tonemapper *tm, struct ilG_context *context);
 
 typedef struct ilG_heightmap {
     ilG_tex height, normal, color;
