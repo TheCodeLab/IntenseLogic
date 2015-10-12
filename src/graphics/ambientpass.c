@@ -30,7 +30,7 @@ void ilG_ambient_draw(ilG_ambient *ambient)
     ilG_material_bind(ilG_renderman_findMaterial(ambient->rm, ambient->mat));
     tgl_vao_bind(&ambient->vao);
     glUniform3f(ambient->col_loc, ambient->color.x, ambient->color.y, ambient->color.z);
-    glUniform1f(ambient->fovsquared_loc, ambient->context->fovsquared);
+    glUniform1f(ambient->fovsquared_loc, ambient->fovsquared);
     tgl_quad_draw_once(&ambient->quad);
 
     glDisable(GL_BLEND);

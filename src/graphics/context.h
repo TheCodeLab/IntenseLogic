@@ -47,9 +47,6 @@ enum ilG_context_hint {
     /** Sets the context as being a debug context.
      * Defaults to `GL_TRUE`. Required for `KHR_debug` on some implementations (namely, Nvidia). */
     ILG_CONTEXT_DEBUG_CONTEXT,
-    /** Set the `glfwExperimental` flag.
-     * Defaults to `GL_TRUE`. Last it was tested, the engine would crash without this flag set. */
-    ILG_CONTEXT_EXPERIMENTAL,
     /** Window width.
      * Defaults to 800. */
     ILG_CONTEXT_WIDTH,
@@ -88,14 +85,10 @@ typedef struct ilG_context {
     /* Public members */
     int width, height;
     char *title;
-    float fovsquared; // Field of view in radians squared, needed by parts of renderer
     /* For rendering */
     ilG_renderman manager;
     /* Private */
-    bool valid;
     tgl_fbo gbuffer, accum;
-    int tick_id;
-    size_t num_active;
     SDL_Window *window;
     SDL_GLContext context;
     pthread_t thread;
@@ -106,7 +99,6 @@ typedef struct ilG_context {
     bool forwardCompat;
     enum ilG_context_profile profile;
     bool debug_context;
-    bool experimental;
     int startWidth;
     int startHeight;
     bool hdr;

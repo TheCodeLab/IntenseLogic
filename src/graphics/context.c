@@ -37,14 +37,11 @@ void ilG_context_init(ilG_context *self)
 #endif
     self->contextMinor = 2;
     self->profile = ILG_CONTEXT_NONE;
-    self->experimental = 1;
     self->startWidth = 800;
     self->startHeight = 600;
     self->vsync = 1;
     self->initialTitle = "IntenseLogic";
     self->srgb = true;
-    // public
-    self->fovsquared = pow(45.f * M_PI / 180.f, 2.f);
     // private
     tgl_fbo_init(&self->gbuffer);
     tgl_fbo_init(&self->accum);
@@ -84,7 +81,6 @@ void ilG_context_hint(ilG_context *self, enum ilG_context_hint hint, int param)
         HINT(ILG_CONTEXT_FORWARD_COMPAT, forwardCompat);
         HINT(ILG_CONTEXT_PROFILE, profile);
         HINT(ILG_CONTEXT_DEBUG_CONTEXT, debug_context);
-        HINT(ILG_CONTEXT_EXPERIMENTAL, experimental);
         HINT(ILG_CONTEXT_WIDTH, startWidth);
         HINT(ILG_CONTEXT_HEIGHT, startHeight);
         HINT(ILG_CONTEXT_HDR, hdr);
@@ -122,16 +118,15 @@ int ilG_context_localResize(ilG_context *self, int w, int h)
     self->height = h;
 
     if (self->use_default_fb) {
-        self->valid = 1;
         return 1;
     }
 
     if (!tgl_fbo_build(&self->gbuffer, w, h) || !tgl_fbo_build(&self->accum, w, h)) {
+        self->complete = false;
         return 0;
     }
     tgl_check("Error setting up screen");
 
-    self->valid = 1;
     return 1;
 }
 
@@ -330,7 +325,7 @@ bool ilG_context_setupSDLWindow(ilG_context *self) // main thread
 #ifdef TGL_USE_GLEW
 void ilG_context_setupGLEW(ilG_context *self)
 {
-    glewExperimental = self->experimental? GL_TRUE : GL_FALSE; // TODO: find out why IL crashes without this
+    glewExperimental = GL_TRUE; // TODO: find out why IL crashes without this
     GLenum err = glewInit();
     if (GLEW_OK != err) {
         il_error("glewInit() failed: %s", glewGetErrorString(err));
@@ -425,7 +420,7 @@ void *ilG_context_loop(void *ptr)
     ilG_context_localSetup(self);
     ilG_context_localResize(self, self->startWidth, self->startHeight);
 
-    if (!self->valid || !self->complete) {
+    if (!self->complete) {
         il_error("Tried to render invalid context");
         return NULL;
     }
@@ -475,9 +470,9 @@ void ilG_context_print(ilG_context *self)
     log("title: %s", self->title);
     log("gl version: %i.%i", self->contextMajor, self->contextMinor);
 #define flag(n) self->n? "+" #n : "-" #n
-    log("%s %s %s", flag(valid), flag(running), flag(complete));
-    log("flags: %s %s %s %s %s %s %s %s",
-        flag(forwardCompat), flag(debug_context), flag(experimental), flag(hdr),
+    log("%s %s", flag(running), flag(complete));
+    log("flags: %s %s %s %s %s %s %s",
+        flag(forwardCompat), flag(debug_context), flag(hdr),
         flag(use_default_fb), flag(debug_render), flag(vsync), flag(msaa));
 #undef flag
     ilG_renderman_print(self, 0);

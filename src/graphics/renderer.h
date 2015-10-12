@@ -110,8 +110,6 @@ typedef struct ilG_renderman {
 
 void ilG_renderman_free(ilG_renderman *rm);
 ilG_builder ilG_builder_wrap(void *obj, const ilG_build_fn build);
-/** Calls a function at the beginning of the frame on the context thread, usually for building VBOs */
-bool ilG_renderman_upload(ilG_renderman *self, void (*fn)(void*), void*);
 /** Resizes (and creates if first call) the context's framebuffers and calls the #ilG_context.resize event.
  * @return Success. */
 bool ilG_renderman_resize(ilG_renderman *self, int w, int h);
@@ -273,6 +271,7 @@ ilA_imgerr ilG_screenshot(struct ilG_context *context, ilA_img *out);
 typedef struct ilG_ambient {
     // public
     il_vec3 color;
+    float fovsquared;
     // private
     ilG_matid mat;
     GLuint col_loc, fovsquared_loc;
