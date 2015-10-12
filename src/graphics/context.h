@@ -9,9 +9,6 @@
 
 #include "tgl/tgl.h"
 #include "util/array.h"
-#include "util/event.h"
-#include "util/list.h"
-#include "util/storage.h"
 #include "graphics/renderer.h"
 
 enum ilG_context_attachments {
@@ -78,12 +75,6 @@ enum ilG_context_hint {
     ILG_CONTEXT_SRGB,
 };
 
-/** A linked list node for keeping track of the current framerate */
-struct ilG_frame {
-    struct timeval start, elapsed;
-    IL_LIST(struct ilG_frame) ll;
-};
-
 struct ilG_fbo;
 struct ilG_context;
 
@@ -95,17 +86,8 @@ struct ilG_context;
  * - Members used for hints at thread startup (window title, GL version). */
 typedef struct ilG_context {
     /* Public members */
-    il_table storage;
     int width, height;
-    struct ilG_frame frames_head;
-    struct timeval frames_sum,
-                   frames_average;
-    size_t num_frames;
     char *title;
-    ilE_handler tick,
-                resize,
-                close,
-                destroy;
     ilG_handle root;
     float fovsquared; // Field of view in radians squared, needed by parts of renderer
     /* For rendering */

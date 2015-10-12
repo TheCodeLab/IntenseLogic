@@ -126,15 +126,6 @@ void ilG_tonemapper_resize(ilG_tonemapper *tonemapper, unsigned w, unsigned h)
     tgl_fbo_build(&tonemapper->result, w, h);
 }
 
-static void tonemapper_resize(const il_value *data, il_value *ctx)
-{
-    ilG_tonemapper *self = il_value_tomvoid(ctx);
-    const il_vector *vec = il_value_tovec(data);
-    unsigned w = il_vector_geti(vec, 0);
-    unsigned h = il_vector_geti(vec, 1);
-    ilG_tonemapper_resize(self, w, h);
-}
-
 bool ilG_tonemapper_build(ilG_tonemapper *tm, ilG_context *context, char **error)
 {
     memset(tm, 0, sizeof(*tm));
@@ -217,9 +208,6 @@ static bool tonemapper_build(void *ptr, ilG_rendid id, ilG_renderman *rm, ilG_bu
     if (!ilG_tonemapper_build(self, context, &tonemapper->error)) {
         return false;
     }
-
-    il_storage_void sv = {self, NULL};
-    ilE_register(&context->resize, ILE_DONTCARE, ILE_ANY, tonemapper_resize, il_value_opaque(sv));
 
     *tonemapper = (ilG_buildresult) {
         .free = tonemapper_free,

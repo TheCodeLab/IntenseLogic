@@ -1,8 +1,6 @@
 #ifndef ILG_RENDERER_H
 #define ILG_RENDERER_H
 
-#include "util/storage.h"
-#include "util/event.h"
 #include "math/matrix.h"
 #include "graphics/material.h"
 #include "graphics/tex.h"
@@ -13,12 +11,6 @@ struct ilG_renderer;
 struct ilG_renderman;
 
 #define il_pair(name, fst, snd) typedef struct name {fst first; snd second;} name
-
-typedef void (*ilG_message_fn)(void *obj, int type, il_value *v);
-typedef struct ilG_msgsink {
-    ilG_message_fn fn;
-    unsigned id;
-} ilG_msgsink;
 
 typedef unsigned ilG_rendid;
 typedef unsigned ilG_cosysid;
@@ -108,7 +100,6 @@ typedef struct ilG_matid {
     unsigned id;
 } ilG_matid;
 
-il_pair(ilG_rendstorage,ilG_rendid, il_table);
 il_pair(ilG_rendname,   ilG_rendid, unsigned);
 il_pair(ilG_error,      ilG_rendid, char*);
 
@@ -118,7 +109,6 @@ typedef struct ilG_renderman_msg {
         ILG_RESIZE,
         ILG_STOP,
         ILG_END,
-        ILG_MESSAGE,
         ILG_ADD_COORDS,
         ILG_DEL_COORDS,
         ILG_VIEW_COORDS,
@@ -133,11 +123,6 @@ typedef struct ilG_renderman_msg {
             void *ptr;
         } upload;
         int resize[2];
-        struct {
-            ilG_rendid node;
-            int type;
-            il_value data;
-        } message;
         struct {
             ilG_rendid parent, child;
         } renderer;
@@ -156,7 +141,6 @@ typedef struct ilG_client_msg {
     enum ilG_client_msgtype {
         ILG_READY,
         ILG_FAILURE,
-        ILG_CLIENT_MESSAGE,
     } type;
     union {
         ilG_rendid ready;
@@ -164,11 +148,6 @@ typedef struct ilG_client_msg {
             ilG_rendid id;
             const char *msg;
         } failure;
-        struct {
-            ilG_rendid id;
-            int type;
-            il_value data;
-        } message;
     } v;
 } ilG_client_msg;
 
@@ -184,9 +163,11 @@ typedef IL_ARRAY(ilG_client_msg, ilG_client_msgarray) ilG_client_msgarray;
 typedef struct ilG_client_queue {
     ilG_client_msgarray read, write;
     pthread_mutex_t mutex;
-    void (*notify)(il_value *);
-    il_value user;
+    void (*notify)(void *);
+    void *user;
 } ilG_client_queue;
+
+struct ilG_shape;
 
 typedef struct ilG_renderman {
     IL_ARRAY(ilG_renderer,)     renderers;
@@ -194,8 +175,6 @@ typedef struct ilG_renderman {
     IL_ARRAY(ilG_viewrenderer,) viewrenderers;
     IL_ARRAY(ilG_statrenderer,) statrenderers;
     IL_ARRAY(ilG_rendid,)       rendids;
-    IL_ARRAY(ilG_msgsink,)      sinks;
-    IL_ARRAY(ilG_rendstorage,)  storages;
     IL_ARRAY(ilG_rendname,)     namelinks;
     IL_ARRAY(char*,)            names;
     IL_ARRAY(ilG_coordsys,)     coordsystems;
@@ -204,10 +183,11 @@ typedef struct ilG_renderman {
     IL_ARRAY(ilG_shader,)       shaders;
     ilG_rendid curid;
     ilG_cosysid cursysid;
-    ilE_handler material_creation;
+    void (*material_creation)(ilG_matid, void*);
+    void *material_creation_data;
     ilG_renderman_queue queue;
     ilG_client_queue client;
-    il_table storage;
+    struct ilG_shape *box, *ico;
 } ilG_renderman;
 
 void ilG_renderman_free(ilG_renderman *rm);
@@ -218,13 +198,10 @@ bool ilG_renderman_upload(ilG_renderman *self, void (*fn)(void*), void*);
 /** Resizes (and creates if first call) the context's framebuffers and calls the #ilG_context.resize event.
  * @return Success. */
 bool ilG_renderman_resize(ilG_renderman *self, int w, int h);
-/** Sets the function called to notify client thread there are messages available */
-void ilG_renderman_setNotifier(ilG_renderman *self, void (*fn)(il_value*), il_value val);
 
 ilG_cosysid ilG_coordsys_build(ilG_coordsys_builder self, struct ilG_context *context);
 void ilG_handle_destroy(ilG_handle self);
 bool ilG_handle_ready(ilG_handle self);
-il_table *ilG_handle_storage(ilG_handle self);
 const char *ilG_handle_getName(ilG_handle self);
 const char *ilG_handle_getError(ilG_handle self);
 void ilG_handle_addCoords(ilG_handle self, ilG_cosysid cosys, unsigned codata);
@@ -234,19 +211,14 @@ void ilG_handle_addRenderer(ilG_handle self, ilG_handle node);
 void ilG_handle_delRenderer(ilG_handle self, ilG_handle node);
 void ilG_handle_addLight(ilG_handle self, ilG_light light);
 void ilG_handle_delLight(ilG_handle self, ilG_light light);
-void ilG_handle_message(ilG_handle self, int type, il_value v);
 
 /* Rendering thread calls */
-void ilG_renderman_message(ilG_renderman *self, ilG_rendid id, int type, il_value val);
 unsigned ilG_renderman_addRenderer(ilG_renderman *self, ilG_rendid id, ilG_builder builder);
 ilG_renderer    *ilG_renderman_findRenderer       (ilG_renderman *self, ilG_rendid id);
-ilG_msgsink     *ilG_renderman_findSink           (ilG_renderman *self, ilG_rendid id);
-il_table        *ilG_renderman_findStorage        (ilG_renderman *self, ilG_rendid id);
 const char      *ilG_renderman_findName           (ilG_renderman *self, ilG_rendid id);
 const char      *ilG_renderman_findError          (ilG_renderman *self, ilG_rendid id);
 ilG_material    *ilG_renderman_findMaterial       (ilG_renderman *self, ilG_matid mat);
 ilG_shader      *ilG_renderman_findShader         (ilG_renderman *self, unsigned id);
-unsigned  ilG_renderman_addSink     (ilG_renderman *self, ilG_rendid id, ilG_message_fn sink);
 bool      ilG_renderman_addChild    (ilG_renderman *self, ilG_rendid parent, ilG_rendid child);
 unsigned  ilG_renderman_addCoords   (ilG_renderman *self, ilG_rendid id, ilG_cosysid cosys, unsigned codata);
 bool      ilG_renderman_viewCoords  (ilG_renderman *self, ilG_rendid id, ilG_cosysid cosys);

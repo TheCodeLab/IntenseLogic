@@ -4,7 +4,6 @@
 #include <stdbool.h>
 
 #include "util/ilstring.h"
-#include "util/event.h"
 #include "util/array.h"
 
 enum il_loglevel {
@@ -27,7 +26,6 @@ typedef struct il_logforward {
 
 typedef struct il_logger {
     void (*func)(il_logmsg *msg);
-    ilE_handler handler;
     enum il_loglevel filter;
     IL_ARRAY(il_logforward,) forwards;
     char name[64];

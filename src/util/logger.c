@@ -7,7 +7,6 @@
 #include <pthread.h>
 
 #include "util/array.h"
-#include "util/event.h"
 
 pthread_mutex_t il_logger_stderr_mutex;
 bool il_logger_stderr_mutex_created = false;
@@ -27,14 +26,11 @@ void il_logger_init(il_logger *self, const char *name)
     }
     strcpy(self->name, name);
     self->filter = IL_NOTIFY;
-    char hname[strlen(name) + 64];
-    sprintf(hname, "Message Handler for Logger %s", name);
-    ilE_handler_init_with_name(&self->handler, hname);
 }
 
 void il_logger_destroy(il_logger *self)
 {
-    ilE_handler_destroy(&self->handler);
+    (void)self;
 }
 
 void il_logger_forward(il_logger *from, il_logger *to, enum il_loglevel filter)
@@ -51,9 +47,6 @@ bool il_logger_log(il_logger *self, il_logmsg msg)
     if (self->func) {
         self->func(&msg);
     }
-    il_storage_void sv = {&msg, NULL};
-    il_value v = il_value_opaque(sv);
-    ilE_handler_fire(&self->handler, &v);
     size_t i;
     for (i = 0; i < self->forwards.length; i++) {
         if (il_logmsg_isLevel(&msg, self->forwards.data[i].filter)) {

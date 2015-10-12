@@ -6,7 +6,6 @@
 #include "graphics/renderer.h"
 #include "graphics/transform.h"
 #include "math/matrix.h"
-#include "util/storage.h"
 
 void ilG_default_update(void *, ilG_rendid);
 void ilG_default_multiupdate(void *, ilG_rendid, il_mat *);

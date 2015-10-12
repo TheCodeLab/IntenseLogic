@@ -5,7 +5,6 @@
 
 #include "graphics/context.h"
 #include "graphics/transform.h"
-#include "util/storage.h"
 #include "graphics/material.h"
 #include "util/array.h"
 #include "util/log.h"
@@ -28,11 +27,6 @@ void ilG_renderman_free(ilG_renderman *rm)
     IL_FREE(rm->viewrenderers);
     IL_FREE(rm->statrenderers);
     IL_FREE(rm->rendids);
-    IL_FREE(rm->sinks);
-    foreach(rm->storages) {
-        il_table_free(rm->storages.data[i].second);
-    }
-    IL_FREE(rm->storages);
     IL_FREE(rm->namelinks);
     foreach(rm->names) {
         free(rm->names.data[i]);
@@ -116,11 +110,6 @@ bool ilG_handle_ready(ilG_handle self)
     ilG_rendid id;
     IL_FIND(self.rm->rendids, id, id == self.id, idx);
     return idx < self.rm->renderers.length;
-}
-
-il_table *ilG_handle_storage(ilG_handle self)
-{
-    return ilG_renderman_findStorage(self.rm, self.id);
 }
 
 const char *ilG_handle_getName(ilG_handle self)
@@ -228,28 +217,6 @@ ilG_renderer *ilG_renderman_findRenderer(ilG_renderman *self, ilG_rendid id)
     return NULL;
 }
 
-ilG_msgsink *ilG_renderman_findSink(ilG_renderman *self, ilG_rendid id)
-{
-    ilG_msgsink r;
-    unsigned idx;
-    IL_FIND(self->sinks, r, r.id == id, idx);
-    if (idx < self->sinks.length) {
-        return &self->sinks.data[idx];
-    }
-    return NULL;
-}
-
-il_table *ilG_renderman_findStorage(ilG_renderman *self, ilG_rendid id)
-{
-    ilG_rendstorage r;
-    unsigned idx;
-    IL_FIND(self->storages, r, r.first == id, idx);
-    if (idx < self->storages.length) {
-        return &self->storages.data[idx].second;
-    }
-    return NULL;
-}
-
 const char *ilG_renderman_findName(ilG_renderman *self, ilG_rendid id)
 {
     ilG_rendname r;
@@ -280,16 +247,6 @@ ilG_material *ilG_renderman_findMaterial(ilG_renderman *self, ilG_matid mat)
 ilG_shader *ilG_renderman_findShader(ilG_renderman *self, unsigned id)
 {
     return &self->shaders.data[id];
-}
-
-unsigned ilG_renderman_addSink(ilG_renderman *self, ilG_rendid id, ilG_message_fn sink)
-{
-    ilG_msgsink s = {
-        .fn = sink,
-        .id = id
-    };
-    IL_APPEND(self->sinks, s);
-    return self->sinks.length - 1;
 }
 
 bool ilG_renderman_addChild(ilG_renderman *self, ilG_rendid parent, ilG_rendid child)
@@ -354,16 +311,6 @@ unsigned ilG_renderman_addLight(ilG_renderman *self, ilG_rendid id, ilG_light li
     return r->lights.length-1;
 }
 
-unsigned ilG_renderman_addStorage(ilG_renderman *self, ilG_rendid id)
-{
-    ilG_rendstorage r = {
-        .first = id,
-        .second = il_table_new()
-    };
-    IL_APPEND(self->storages, r);
-    return self->storages.length - 1;
-}
-
 unsigned ilG_renderman_addName(ilG_renderman *self, ilG_rendid id, const char *name)
 {
     unsigned idx;
@@ -390,9 +337,9 @@ ilG_matid ilG_renderman_addMaterial(ilG_renderman *self, ilG_material mat)
 {
     unsigned id = self->materials.length;
     IL_APPEND(self->materials, mat);
-    il_value v = il_value_int(id);
-    ilE_handler_fire(&self->material_creation, &v);
-    return (ilG_matid){id};
+    ilG_matid matid = (ilG_matid){id};
+    self->material_creation(matid, self->material_creation_data);
+    return matid;
 }
 
 __attribute__((warn_unused_result))
@@ -455,18 +402,6 @@ bool ilG_renderman_delRenderer(ilG_renderman *self, ilG_rendid id)
     return false;
 }
 
-bool ilG_renderman_delSink(ilG_renderman *self, ilG_rendid id)
-{
-    unsigned idx;
-    ilG_msgsink r;
-    IL_FIND(self->sinks, r, r.id == id, idx);
-    if (idx < self->sinks.length) {
-        IL_FASTREMOVE(self->sinks, idx);
-        return true;
-    }
-    return false;
-}
-
 bool ilG_renderman_delChild(ilG_renderman *self, ilG_rendid parent, ilG_rendid child)
 {
     unsigned idx;
@@ -515,18 +450,6 @@ bool ilG_renderman_delLight(ilG_renderman *self, ilG_rendid id, ilG_light light)
     IL_FIND(r->lights, val, val.id == light.id, idx);
     if (idx < r->lights.length) {
         IL_FASTREMOVE(r->lights, idx);
-        return true;
-    }
-    return false;
-}
-
-bool ilG_renderman_delStorage(ilG_renderman *self, ilG_rendid id)
-{
-    unsigned idx;
-    ilG_rendstorage r;
-    IL_FIND(self->storages, r, r.first == id, idx);
-    if (idx < self->storages.length) {
-        IL_FASTREMOVE(self->storages, idx);
         return true;
     }
     return false;
@@ -582,23 +505,6 @@ bool ilG_renderman_resize(ilG_renderman *self, int w, int h)
     msg.v.resize[1] = h;
     ilG_renderman_queue_produce(&self->queue, msg);
     return true;
-}
-
-void ilG_renderman_setNotifier(ilG_renderman *self, void (*fn)(il_value*), il_value val)
-{
-    self->client.notify = fn;
-    self->client.user = val;
-}
-
-void ilG_renderman_message(ilG_renderman *self, ilG_rendid id, int type, il_value val)
-{
-    ilG_client_msg msg;
-    memset(&msg, 0, sizeof(msg));
-    msg.type = ILG_CLIENT_MESSAGE;
-    msg.v.message.id = id;
-    msg.v.message.type = type;
-    msg.v.message.data = val;
-    ilG_client_queue_produce(&self->client, msg);
 }
 
 unsigned ilG_renderman_addRenderer(ilG_renderman *self, ilG_rendid id, ilG_builder builder)

@@ -5,7 +5,6 @@
 #include <SDL_video.h>
 #include <signal.h>
 
-#include "util/event.h"
 #include "util/log.h"
 #include "util/logger.h"
 #include "util/opt.h"

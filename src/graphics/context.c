@@ -6,8 +6,6 @@
 #include <assert.h>
 #include <limits.h>
 
-#include "util/event.h"
-#include "util/storage.h"
 #include "graphics/graphics.h"
 #include "graphics/transform.h"
 #include "math/matrix.h"
@@ -47,10 +45,6 @@ void ilG_context_init(ilG_context *self)
     self->srgb = true;
     // public
     self->fovsquared = pow(45.f * M_PI / 180.f, 2.f);
-    ilE_handler_init_with_name(&self->tick,    "il.graphics.context.tick");
-    ilE_handler_init_with_name(&self->resize,  "il.graphics.context.resize");
-    ilE_handler_init_with_name(&self->close,   "il.graphics.context.close");
-    ilE_handler_init_with_name(&self->destroy, "il.graphics.context.destroy");
     // private
     tgl_fbo_init(&self->gbuffer);
     tgl_fbo_init(&self->accum);
@@ -82,7 +76,6 @@ void ilG_context_init(ilG_context *self)
     IL_APPEND(rm->viewrenderers, view);
     IL_APPEND(rm->statrenderers, stat);
     IL_APPEND(rm->coordsystems, co);
-    ilE_handler_init_with_name(&rm->material_creation, "Material Creation");
     self->root = (ilG_handle) {
         .id = 0,
         .rm = &self->manager
@@ -117,23 +110,6 @@ void ilG_context_free(ilG_context *self)
     assert(!self->running);
     self->complete = 0;
 
-    il_value nil = il_value_nil();
-    ilE_handler_fire_once(&self->destroy, &nil);
-    il_value_free(nil);
-
-    // public members
-    il_table_free(self->storage);
-    struct ilG_frame *elt, *tmp;
-    IL_LIST_ITER(self->frames_head, ll, elt, tmp) {
-        free(elt);
-    }
-    free(self->title);
-    ilE_handler_destroy(&self->tick);
-    ilE_handler_destroy(&self->resize);
-    ilE_handler_destroy(&self->close);
-    // destroy was already freed
-    // TODO: Free or remove the input handler
-
     ilG_renderman_free(&self->manager);
 
     // private members
@@ -153,11 +129,6 @@ int ilG_context_localResize(ilG_context *self, int w, int h)
     self->width = w;
     self->height = h;
 
-    il_value val;
-    val = il_value_vectorl(2, il_value_int(self->width), il_value_int(self->height));
-    ilE_handler_fire(&self->resize, &val);
-    il_value_free(val);
-
     if (self->use_default_fb) {
         self->valid = 1;
         return 1;
@@ -170,15 +141,6 @@ int ilG_context_localResize(ilG_context *self, int w, int h)
 
     self->valid = 1;
     return 1;
-}
-
-static void context_message(ilG_context *self, ilG_rendid id, int type, il_value data)
-{
-    ilG_msgsink *s = ilG_renderman_findSink(&self->manager, id);
-    ilG_renderer *r = ilG_renderman_findRenderer(&self->manager, id);
-    assert(s && r);
-    s->fn(r->data, type, &data);
-    il_value_free(data);
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -236,37 +198,6 @@ void ilG_context_renderFrame(ilG_context *context)
 
     // asserts that first renderer is the context itself
     render_renderer(context, &context->manager.renderers.data[0]);
-}
-
-void ilG_context_measure(ilG_context *context)
-{
-    struct timeval time, tv;
-    struct ilG_frame *iter, *temp, *frame, *last;
-
-    gettimeofday(&time, NULL);
-    IL_LIST_ITER(context->frames_head, ll, iter, temp) {
-        timersub(&time, &iter->start, &tv);
-        if (tv.tv_sec > 0) {
-            IL_LIST_POPHEAD(context->frames_head, ll, frame);
-            timersub(&context->frames_sum, &frame->elapsed, &context->frames_sum);
-            context->num_frames--;
-            free(frame);
-        }
-    }
-    last = IL_LIST_TAIL(context->frames_head, ll);
-    frame = calloc(1, sizeof(struct ilG_frame));
-    frame->start = time;
-    if (last) {
-        timersub(&time, &last->start, &frame->elapsed);
-    } else {
-        frame->elapsed = (struct timeval){0,0};
-    }
-    IL_LIST_APPEND(context->frames_head, ll, frame);
-    context->num_frames++;
-    timeradd(&frame->elapsed, &context->frames_sum, &context->frames_sum);
-    context->frames_average.tv_sec = context->frames_sum.tv_sec / context->num_frames;
-    context->frames_average.tv_usec = context->frames_sum.tv_usec / context->num_frames;
-    context->frames_average.tv_usec += (context->frames_sum.tv_sec % context->num_frames) * 1000000 / context->num_frames;
 }
 
 typedef struct {
@@ -503,10 +434,6 @@ void *ilG_context_loop(void *ptr)
     ilG_context_localResize(self, self->startWidth, self->startHeight);
 
     while (self->valid) {
-        // Run per-frame stuff
-        il_value nil = il_value_nil();
-        ilE_handler_fire(&self->tick, &nil);
-        il_value_free(nil);
         // Process messages
         ilG_renderman_queue_read(&self->manager.queue);
         for (unsigned i = 0; i < self->manager.queue.read.length; i++) {
@@ -517,7 +444,6 @@ void *ilG_context_loop(void *ptr)
             case ILG_RESIZE: ilG_context_localResize(self, msg.v.resize[0], msg.v.resize[1]); break;
             case ILG_STOP: goto stop;
             case ILG_END: goto end;
-            case ILG_MESSAGE: context_message(self, msg.v.message.node, msg.v.message.type, msg.v.message.data); break;
             case ILG_ADD_COORDS:
                 ilG_renderman_addCoords(rm, msg.v.coords.parent, msg.v.coords.cosys, msg.v.coords.codata);
                 break;
@@ -552,8 +478,6 @@ void *ilG_context_loop(void *ptr)
             glViewport(0,0, self->width, self->height);
             SDL_GL_SwapWindow(self->window);
         }
-        // Perform fps measuring calculations
-        ilG_context_measure(self);
     }
 
     if (!self->valid || !self->complete) {
@@ -606,7 +530,6 @@ void ilG_context_print(ilG_context *self)
 {
 #define log(fmt, ...) fprintf(stderr, fmt "\n", __VA_ARGS__)
     log("resolution: %i x %i", self->width, self->height);
-    log("average frame delta: %lu.%08lu", self->frames_average.tv_sec, self->frames_average.tv_usec);
     log("title: %s", self->title);
     log("gl version: %i.%i", self->contextMajor, self->contextMinor);
 #define flag(n) self->n? "+" #n : "-" #n

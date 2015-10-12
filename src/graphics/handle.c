@@ -17,7 +17,6 @@ void ilG_handle_destroy(ilG_handle self)
 }
 
 bool ilG_handle_ready(ilG_handle self);
-il_table *ilG_handle_storage(ilG_handle self);
 const char *ilG_handle_getName(ilG_handle self);
 const char *ilG_handle_getError(ilG_handle self);
 
@@ -90,16 +89,5 @@ void ilG_handle_delLight(ilG_handle self, struct ilG_light light)
     msg.type = ILG_DEL_LIGHT;
     msg.v.light.parent = self.id;
     msg.v.light.child = light;
-    ilG_renderman_queue_produce(&self.rm->queue, msg);
-}
-
-void ilG_handle_message(ilG_handle self, int type, il_value data)
-{
-    ilG_renderman_msg msg;
-    memset(&msg, 0, sizeof(msg));
-    msg.type = ILG_MESSAGE;
-    msg.v.message.node = self.id;
-    msg.v.message.type = type;
-    msg.v.message.data = data;
     ilG_renderman_queue_produce(&self.rm->queue, msg);
 }

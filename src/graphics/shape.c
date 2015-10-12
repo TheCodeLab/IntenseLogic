@@ -151,7 +151,7 @@ static const short ico_index[] = {
 
 ilG_shape *ilG_box(ilG_renderman *rm)
 {
-    struct ilG_shape *self = il_table_mgetsp(&rm->storage, "shape.box");
+    struct ilG_shape *self = rm->box;
     if (self) {
         return self;
     }
@@ -179,13 +179,13 @@ ilG_shape *ilG_box(ilG_renderman *rm)
     tgl_check("Unable to set vertex attrib pointer");
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(cube_index), cube_index, GL_STATIC_DRAW);
     tgl_check("Unable to upload index buffer data");
-    il_table_setsp(&rm->storage, "shape.box", il_opaque(self, free));
+    rm->box = self;
     return self;
 }
 
 ilG_shape *ilG_icosahedron(ilG_renderman *rm)
 {
-    struct ilG_shape *self = il_table_mgetsp(&rm->storage, "shape.icosahedron");
+    struct ilG_shape *self = rm->ico;
     if (self) {
         return self;
     }
@@ -212,7 +212,7 @@ ilG_shape *ilG_icosahedron(ilG_renderman *rm)
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(ico_index), ico_index, GL_STATIC_DRAW);
     tgl_check("Unable to upload index buffer data");
 
-    il_table_setsp(&rm->storage, "shape.icosahedron", il_opaque(self, free));
+    rm->ico = self;
     return self;
 }
 
