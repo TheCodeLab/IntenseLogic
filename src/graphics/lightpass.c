@@ -33,7 +33,8 @@ static void lights_free(void *ptr)
     ilG_lighting_free(ptr);
 }
 
-void ilG_lighting_draw(ilG_lighting *lighting, il_mat **mats, ilG_light *lights, size_t count)
+void ilG_lighting_draw(ilG_lighting *lighting, const il_mat *ivp, const il_mat *mv,
+                       const il_mat *vp, const ilG_light *lights, size_t count)
 {
     ilG_material *mat = ilG_renderman_findMaterial(lighting->rm, lighting->mat);
     const bool point = lighting->type == ILG_POINT;
@@ -65,11 +66,11 @@ void ilG_lighting_draw(ilG_lighting *lighting, il_mat **mats, ilG_light *lights,
     tgl_check("Unknown");
 
     for (unsigned i = 0; i < count; i++) {
-        ilG_material_bindMatrix(mat, lighting->ivp_loc, mats[0][i]);
-        ilG_material_bindMatrix(mat, lighting->mv_loc,  mats[1][i]);
-        ilG_material_bindMatrix(mat, lighting->mvp_loc, mats[2][i]);
+        ilG_material_bindMatrix(mat, lighting->ivp_loc, ivp[i]);
+        ilG_material_bindMatrix(mat, lighting->mv_loc,  mv[i]);
+        ilG_material_bindMatrix(mat, lighting->mvp_loc, vp[i]);
         glUniform2f(lighting->size_loc, lighting->width, lighting->height);
-        ilG_light *l = &lights[i];
+        const ilG_light *l = &lights[i];
         il_vec3 col = l->color;
         glUniform3f(lighting->color_loc, col.x, col.y, col.z);
         glUniform1f(lighting->radius_loc, l->radius);
@@ -92,7 +93,7 @@ static void lights_draw(void *ptr, ilG_rendid id, il_mat **mats, const unsigned 
 
     ilG_renderer *r = ilG_renderman_findRenderer(self->rm, id);
     assert(r->lights.length == num_mats);
-    ilG_lighting_draw(self, mats, r->lights.data, num_mats);
+    ilG_lighting_draw(self, mats[0], mats[1], mats[2], r->lights.data, num_mats);
     tgl_check("Error drawing lights");
 }
 

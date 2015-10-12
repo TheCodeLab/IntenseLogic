@@ -333,7 +333,8 @@ void ilG_lighting_free(ilG_lighting *lighting);
 /* ILG_INVERSE | ILG_VIEW_R | ILG_PROJECTION
    ILG_MODEL_T | ILG_VIEW_T
    ILG_MODEL_T | ILG_VP */
-void ilG_lighting_draw(ilG_lighting *lighting, il_mat **mats, ilG_light *lights, size_t count);
+void ilG_lighting_draw(ilG_lighting *lighting, const il_mat *ivp, const il_mat *mv,
+                       const il_mat *vp, const ilG_light *lights, size_t count);
 ilG_builder ilG_lighting_builder(ilG_lighting *lighting, bool msaa, ilG_light_type type);
 
 typedef struct ilG_tonemapper {
