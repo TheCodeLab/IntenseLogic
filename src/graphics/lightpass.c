@@ -5,7 +5,6 @@
 #include "graphics/arrayattrib.h"
 #include "graphics/context.h"
 #include "graphics/material.h"
-#include "graphics/shape.h"
 #include "graphics/transform.h"
 #include "math/matrix.h"
 #include "math/vector.h"
@@ -92,11 +91,12 @@ static void lights_draw(void *ptr, ilG_rendid id, il_mat **mats, const unsigned 
     tgl_check("Error drawing lights");
 }
 
-bool ilG_lighting_build(ilG_lighting *lighting, ilG_renderman *rm,
+bool ilG_lighting_build(ilG_lighting *lighting, ilG_renderman *rm, ilG_shape *ico,
                         ilG_light_type type, bool msaa, char **error)
 {
     memset(lighting, 0, sizeof(*lighting));
     lighting->rm = rm;
+    lighting->ico = ico;
 
     const char *file = type == ILG_POINT? "light.vert" : "id2d.vert";
 
@@ -124,7 +124,6 @@ bool ilG_lighting_build(ilG_lighting *lighting, ilG_renderman *rm,
     lighting->size_loc      = glGetUniformLocation(prog, "size");
     lighting->fovsquared_loc= glGetUniformLocation(prog, "fovsquared");
 
-    lighting->ico = ilG_icosahedron(rm);
     tgl_vao_init(&lighting->vao);
     tgl_vao_bind(&lighting->vao);
     tgl_quad_init(&lighting->quad, ILG_ARRATTR_POSITION);
@@ -136,7 +135,7 @@ static bool lights_build(void *ptr, ilG_rendid id, ilG_renderman *rm, ilG_buildr
 {
     (void)id;
     ilG_lighting *self = ptr;
-    if (!ilG_lighting_build(self, rm, self->type, self->msaa, &out->error)) {
+    if (!ilG_lighting_build(self, rm, self->ico, self->type, self->msaa, &out->error)) {
         return false;
     }
 
@@ -156,9 +155,10 @@ static bool lights_build(void *ptr, ilG_rendid id, ilG_renderman *rm, ilG_buildr
     return true;
 }
 
-ilG_builder ilG_lighting_builder(ilG_lighting *self, bool msaa, ilG_light_type type)
+ilG_builder ilG_lighting_builder(ilG_lighting *self, bool msaa, ilG_light_type type, ilG_shape *ico)
 {
     self->type = type;
     self->msaa = msaa;
+    self->ico = ico;
     return ilG_builder_wrap(self, lights_build);
 }

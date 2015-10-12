@@ -1,19 +1,10 @@
-#include "shape.h"
+#include "graphics/renderer.h"
 
 #include <stdlib.h>
 
 #include "tgl/tgl.h"
 #include "graphics/arrayattrib.h"
 #include "graphics/context.h"
-
-struct ilG_shape {
-    GLuint vbo;
-    GLuint ibo;
-    GLuint vao;
-    GLenum mode;
-    GLsizei count;
-    int type;
-};
 
 static const float cube[] = {
     // front
@@ -148,16 +139,10 @@ static const short ico_index[] = {
     9, 8, 1,
 };
 
-ilG_shape *ilG_box(ilG_renderman *rm)
+void ilG_box(ilG_shape *self)
 {
-    struct ilG_shape *self = rm->box;
-    if (self) {
-        return self;
-    }
-    self = calloc(1, sizeof(ilG_shape));
     self->mode = GL_TRIANGLES;
     self->count = 36;
-    self->type = 1;
 
     glGenVertexArrays(1, &self->vao);
     glGenBuffers(1, &self->vbo);
@@ -178,20 +163,12 @@ ilG_shape *ilG_box(ilG_renderman *rm)
     tgl_check("Unable to set vertex attrib pointer");
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(cube_index), cube_index, GL_STATIC_DRAW);
     tgl_check("Unable to upload index buffer data");
-    rm->box = self;
-    return self;
 }
 
-ilG_shape *ilG_icosahedron(ilG_renderman *rm)
+void ilG_icosahedron(ilG_shape *self)
 {
-    struct ilG_shape *self = rm->ico;
-    if (self) {
-        return self;
-    }
-    self = calloc(1, sizeof(ilG_shape));
     self->mode = GL_TRIANGLES;
     self->count = 20 * 3;
-    self->type = 2;
     glGenVertexArrays(1, &self->vao);
     glGenBuffers(1, &self->vbo);
     glGenBuffers(1, &self->ibo);
@@ -210,9 +187,13 @@ ilG_shape *ilG_icosahedron(ilG_renderman *rm)
     tgl_check("Unable to set vertex attrib pointer");
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(ico_index), ico_index, GL_STATIC_DRAW);
     tgl_check("Unable to upload index buffer data");
+}
 
-    rm->ico = self;
-    return self;
+void ilG_shape_free(ilG_shape *shape)
+{
+    glDeleteBuffers(1, &shape->vbo);
+    glDeleteBuffers(1, &shape->ibo);
+    glDeleteVertexArrays(1, &shape->vao);
 }
 
 void ilG_shape_bind(ilG_shape *shape)

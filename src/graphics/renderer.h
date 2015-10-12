@@ -106,7 +106,6 @@ typedef struct ilG_renderman {
     ilG_cosysid cursysid;
     void (*material_creation)(ilG_matid, void*);
     void *material_creation_data;
-    struct ilG_shape *box, *ico;
 } ilG_renderman;
 
 void ilG_renderman_free(ilG_renderman *rm);
@@ -156,7 +155,20 @@ void ilG_renderman_print(struct ilG_context *c, ilG_rendid root);
 
 struct ilA_img;
 struct ilA_mesh;
-struct ilG_shape;
+
+typedef struct ilG_shape {
+    GLuint vbo;
+    GLuint ibo;
+    GLuint vao;
+    GLenum mode;
+    GLsizei count;
+} ilG_shape;
+
+void ilG_box(ilG_shape *shape);
+void ilG_icosahedron(ilG_shape *shape);
+void ilG_shape_free(ilG_shape *shape);
+void ilG_shape_bind(ilG_shape *shape);
+void ilG_shape_draw(ilG_shape *shape);
 
 void ilG_geometry_bind(tgl_fbo *gbuffer);
 ilG_builder ilG_geometry_builder(struct ilG_context *context);
@@ -165,12 +177,13 @@ typedef struct ilG_skybox {
     ilG_tex texture;
     ilG_renderman *rm;
     ilG_matid mat;
+    ilG_shape *box;
 } ilG_skybox;
 
-bool ilG_skybox_build(ilG_skybox *skybox, ilG_renderman *rm, ilG_tex skytex, char **error);
+bool ilG_skybox_build(ilG_skybox *skybox, ilG_renderman *rm, ilG_tex skytex, ilG_shape *box, char **error);
 void ilG_skybox_draw(ilG_skybox *skybox, il_mat vp);
 void ilG_skybox_free(ilG_skybox *skybox);
-ilG_builder ilG_skybox_builder(ilG_skybox *skybox, ilG_tex skytex);
+ilG_builder ilG_skybox_builder(ilG_skybox *skybox, ilG_tex skytex, ilG_shape *box);
 
 typedef enum ilG_light_type {
     ILG_POINT,
@@ -194,7 +207,7 @@ typedef struct ilG_lighting {
     bool msaa;
 } ilG_lighting;
 
-bool ilG_lighting_build(ilG_lighting *lighting, ilG_renderman *rm,
+bool ilG_lighting_build(ilG_lighting *lighting, ilG_renderman *rm, ilG_shape *ico,
                         ilG_light_type type, bool msaa, char **error);
 void ilG_lighting_free(ilG_lighting *lighting);
 /* ILG_INVERSE | ILG_VIEW_R | ILG_PROJECTION
@@ -202,7 +215,7 @@ void ilG_lighting_free(ilG_lighting *lighting);
    ILG_MODEL_T | ILG_VP */
 void ilG_lighting_draw(ilG_lighting *lighting, const il_mat *ivp, const il_mat *mv,
                        const il_mat *vp, const ilG_light *lights, size_t count);
-ilG_builder ilG_lighting_builder(ilG_lighting *lighting, bool msaa, ilG_light_type type);
+ilG_builder ilG_lighting_builder(ilG_lighting *lighting, bool msaa, ilG_light_type type, ilG_shape *ico);
 
 typedef struct ilG_tonemapper {
     // update these
