@@ -52,71 +52,6 @@ ilG_builder ilG_builder_wrap(void *obj, const ilG_build_fn build)
     };
 }
 
-struct build_ctx {
-    ilG_builder self;
-    ilG_renderman *rm;
-    unsigned id;
-};
-static void build(void *ptr)
-{
-    struct build_ctx *self = ptr;
-    ilG_renderman_addRenderer(self->rm, self->id, self->self);
-    free(self);
-}
-
-ilG_handle ilG_build(ilG_builder self, ilG_renderman *rm)
-{
-    struct build_ctx *ctx = calloc(1, sizeof(struct build_ctx));
-    ctx->self = self;
-    ctx->rm = rm;
-    ctx->id = ++rm->curid;
-    ilG_renderman_upload(rm, build, ctx);
-    return (ilG_handle) {
-        .id = ctx->id,
-        .rm = rm
-    };
-}
-
-struct coordsys_ctx {
-    ilG_coordsys_builder builder;
-    ilG_context *context;
-    ilG_cosysid id;
-};
-static void coordsys_build(void *ptr)
-{
-    struct coordsys_ctx *ctx = ptr;
-    ilG_coordsys co;
-    bool res = ctx->builder.build(ctx->builder.obj, ctx->context->manager.coordsystems.length, ctx->context, &co);
-    co.id = ctx->id;
-    if (res) {
-        ilG_renderman_addCoordSys(&ctx->context->manager, co);
-    }
-    free(ctx);
-}
-
-ilG_cosysid ilG_coordsys_build(ilG_coordsys_builder self, struct ilG_context *context)
-{
-    struct coordsys_ctx *ctx = calloc(1, sizeof(struct coordsys_ctx));
-    ctx->builder = self;
-    ctx->context = context;
-    ctx->id = ++context->manager.cursysid;
-    ilG_renderman_upload(&context->manager, coordsys_build, ctx);
-    return ctx->id;
-}
-
-bool ilG_handle_ready(ilG_handle self)
-{
-    unsigned idx;
-    ilG_rendid id;
-    IL_FIND(self.rm->rendids, id, id == self.id, idx);
-    return idx < self.rm->renderers.length;
-}
-
-const char *ilG_handle_getName(ilG_handle self)
-{
-    return ilG_renderman_findName(self.rm, self.id);
-}
-
 #define log(...) do { fprintf(stderr, __VA_ARGS__); fputc('\n', stderr); } while (0)
 void ilG_material_print(ilG_material *mat)
 {
@@ -485,28 +420,6 @@ bool ilG_renderman_delMaterial(ilG_renderman *self, ilG_matid mat)
     return false; // TODO: Material deletion
 }
 
-bool ilG_renderman_upload(ilG_renderman *self, void (*fn)(void*), void* ptr)
-{
-    ilG_renderman_msg msg;
-    memset(&msg, 0, sizeof(msg));
-    msg.type = ILG_UPLOAD;
-    msg.v.upload.cb = fn;
-    msg.v.upload.ptr = ptr;
-    ilG_renderman_queue_produce(&self->queue, msg);
-    return true;
-}
-
-bool ilG_renderman_resize(ilG_renderman *self, int w, int h)
-{
-    ilG_renderman_msg msg;
-    memset(&msg, 0, sizeof(msg));
-    msg.type = ILG_RESIZE;
-    msg.v.resize[0] = w;
-    msg.v.resize[1] = h;
-    ilG_renderman_queue_produce(&self->queue, msg);
-    return true;
-}
-
 unsigned ilG_renderman_addRenderer(ilG_renderman *self, ilG_rendid id, ilG_builder builder)
 {
     ilG_buildresult b;
@@ -526,12 +439,6 @@ unsigned ilG_renderman_addRenderer(ilG_renderman *self, ilG_rendid id, ilG_build
         ilG_error e = (ilG_error) {id, b.error};
         il_error("Renderer failed: %s", b.error);
         IL_APPEND(self->failed, e);
-        ilG_client_msg msg;
-        memset(&msg, 0, sizeof(msg));
-        msg.type = ILG_FAILURE;
-        msg.v.failure.id = id;
-        msg.v.failure.msg = b.error;
-        ilG_client_queue_produce(&self->client, msg);
         return UINT_MAX;
     }
 
@@ -576,79 +483,5 @@ unsigned ilG_renderman_addRenderer(ilG_renderman *self, ilG_rendid id, ilG_build
     }
     IL_APPEND(self->renderers, r);
     IL_APPEND(self->rendids, id);
-    ilG_client_msg msg;
-    memset(&msg, 0, sizeof(msg));
-    msg.type = ILG_READY;
-    msg.v.ready = id;
-    ilG_client_queue_produce(&self->client, msg);
     return self->renderers.length - 1;
-}
-
-/////////////////////////////////////////////////////////////////////////////
-// Renderman Queue
-
-void ilG_renderman_queue_init(ilG_renderman_queue *queue)
-{
-    memset(queue, 0, sizeof(ilG_renderman_queue));
-    pthread_mutex_init(&queue->mutex, NULL);
-}
-
-void ilG_renderman_queue_free(ilG_renderman_queue *queue)
-{
-    IL_FREE(queue->read);
-    IL_FREE(queue->write);
-    pthread_mutex_destroy(&queue->mutex);
-}
-
-void ilG_renderman_queue_produce(ilG_renderman_queue *queue, ilG_renderman_msg msg)
-{
-    pthread_mutex_lock(&queue->mutex);
-    IL_APPEND(queue->write, msg);
-    pthread_mutex_unlock(&queue->mutex);
-}
-
-void ilG_renderman_queue_read(ilG_renderman_queue *queue)
-{
-    pthread_mutex_lock(&queue->mutex);
-    ilG_renderman_msgarray tmp = queue->read;
-    queue->read = queue->write;
-    tmp.length = 0;
-    queue->write = tmp;
-    pthread_mutex_unlock(&queue->mutex);
-}
-
-/////////////////////////////////////////////////////////////////////////////
-// Client Queue
-
-void ilG_client_queue_init(ilG_client_queue *queue)
-{
-    memset(queue, 0, sizeof(ilG_client_queue));
-    pthread_mutex_init(&queue->mutex, NULL);
-}
-
-void ilG_client_queue_free(ilG_client_queue *queue)
-{
-    IL_FREE(queue->read);
-    IL_FREE(queue->write);
-    pthread_mutex_destroy(&queue->mutex);
-}
-
-void ilG_client_queue_produce(ilG_client_queue *queue, ilG_client_msg msg)
-{
-    pthread_mutex_lock(&queue->mutex);
-    IL_APPEND(queue->write, msg);
-    pthread_mutex_unlock(&queue->mutex);
-    if (queue->notify) {
-        queue->notify(&queue->user);
-    }
-}
-
-void ilG_client_queue_read(ilG_client_queue *queue)
-{
-    pthread_mutex_lock(&queue->mutex);
-    ilG_client_msgarray tmp = queue->read;
-    queue->read = queue->write;
-    tmp.length = 0;
-    queue->write = tmp;
-    pthread_mutex_unlock(&queue->mutex);
 }

@@ -183,32 +183,24 @@ static void floatspace_objmats(void *ptr, const unsigned *objects, unsigned num_
     }
 }
 
-static bool floatspace_build(void *ptr, unsigned id, ilG_context *context, ilG_coordsys *out)
-{
-    (void)context;
-    memset(out, 0, sizeof(ilG_coordsys));
-    out->free = floatspace_free;
-    out->viewmats = floatspace_viewmats;
-    out->objmats = floatspace_objmats;
-    out->obj = ptr;
-    out->id = id;
-    return true;
-}
-
 void ilG_floatspace_build(ilG_floatspace *self, ilG_context *context)
 {
-    self->id = ilG_coordsys_build((ilG_coordsys_builder){
-        .build = floatspace_build,
-        .obj = self
-    }, context);
+    self->rm = &context->manager;
+    ilG_coordsys sys;
+    memset(&sys, 0, sizeof(sys));
+    sys.free = floatspace_free;
+    sys.viewmats = floatspace_viewmats;
+    sys.objmats = floatspace_objmats;
+    sys.obj = self;
+    ilG_renderman_addCoordSys(self->rm, sys);
 }
 
-void ilG_floatspace_addPos(ilG_floatspace *self, ilG_handle r, il_pos p)
+void ilG_floatspace_addPos(ilG_floatspace *self, ilG_rendid r, il_pos p)
 {
-    ilG_handle_addCoords(r, self->id, p.id);
+    ilG_renderman_addCoords(self->rm, r, self->id, p.id);
 }
 
-void ilG_floatspace_delPos(ilG_floatspace *self, ilG_handle r, il_pos p)
+void ilG_floatspace_delPos(ilG_floatspace *self, ilG_rendid r, il_pos p)
 {
-    ilG_handle_delCoords(r, self->id, p.id);
+    ilG_renderman_delCoords(self->rm, r, self->id, p.id);
 }

@@ -26,6 +26,7 @@ struct ilG_floatspace {
     il_mat projection;
     unsigned id;
     pthread_mutex_t mtx;
+    ilG_renderman *rm;
 };
 
 il_pos il_pos_new(ilG_floatspace *self);
@@ -43,7 +44,7 @@ ilG_floatspace *ilG_floatspace_new();
 void ilG_floatspace_init(ilG_floatspace *self, size_t prealloc);
 void ilG_floatspace_free(ilG_floatspace *self);
 void ilG_floatspace_build(ilG_floatspace *self, struct ilG_context *context);
-void ilG_floatspace_addPos(ilG_floatspace *self, ilG_handle r, il_pos p);
-void ilG_floatspace_delPos(ilG_floatspace *self, ilG_handle r, il_pos p);
+void ilG_floatspace_addPos(ilG_floatspace *self, ilG_rendid r, il_pos p);
+void ilG_floatspace_delPos(ilG_floatspace *self, ilG_rendid r, il_pos p);
 
 #endif

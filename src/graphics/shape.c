@@ -7,7 +7,6 @@
 #include "graphics/context.h"
 
 struct ilG_shape {
-    ilG_handle handle;
     GLuint vbo;
     GLuint ibo;
     GLuint vao;

@@ -49,8 +49,6 @@ void ilG_context_init(ilG_context *self)
     tgl_fbo_init(&self->gbuffer);
     tgl_fbo_init(&self->accum);
     ilG_renderman *rm = &self->manager;
-    ilG_renderman_queue_init(&rm->queue);
-    ilG_client_queue_init(&rm->client);
     ilG_renderman_addRenderer(rm, 0, ilG_builder_wrap(NULL, ilG_context_build));
     ilG_statrenderer stat = (ilG_statrenderer) {ilG_default_update};
     ilG_viewrenderer view = (ilG_viewrenderer) {
@@ -76,10 +74,6 @@ void ilG_context_init(ilG_context *self)
     IL_APPEND(rm->viewrenderers, view);
     IL_APPEND(rm->statrenderers, stat);
     IL_APPEND(rm->coordsystems, co);
-    self->root = (ilG_handle) {
-        .id = 0,
-        .rm = &self->manager
-    };
 }
 
 void ilG_context_hint(ilG_context *self, enum ilG_context_hint hint, int param)
@@ -115,7 +109,6 @@ void ilG_context_free(ilG_context *self)
     // private members
     tgl_fbo_free(&self->gbuffer);
     tgl_fbo_free(&self->accum);
-    ilG_renderman_queue_free(&self->manager.queue);
 
     SDL_GL_DeleteContext(self->context);
     SDL_DestroyWindow(self->window);
@@ -433,40 +426,12 @@ void *ilG_context_loop(void *ptr)
     ilG_context_localSetup(self);
     ilG_context_localResize(self, self->startWidth, self->startHeight);
 
-    while (self->valid) {
-        // Process messages
-        ilG_renderman_queue_read(&self->manager.queue);
-        for (unsigned i = 0; i < self->manager.queue.read.length; i++) {
-            ilG_renderman_msg msg = self->manager.queue.read.data[i];
-            ilG_renderman *rm = &self->manager;
-            switch (msg.type) {
-            case ILG_UPLOAD: msg.v.upload.cb(msg.v.upload.ptr); break;
-            case ILG_RESIZE: ilG_context_localResize(self, msg.v.resize[0], msg.v.resize[1]); break;
-            case ILG_STOP: goto stop;
-            case ILG_END: goto end;
-            case ILG_ADD_COORDS:
-                ilG_renderman_addCoords(rm, msg.v.coords.parent, msg.v.coords.cosys, msg.v.coords.codata);
-                break;
-            case ILG_DEL_COORDS:
-                ilG_renderman_delCoords(rm, msg.v.coords.parent, msg.v.coords.cosys, msg.v.coords.codata);
-                break;
-            case ILG_VIEW_COORDS:
-                ilG_renderman_viewCoords(rm, msg.v.coords.parent, msg.v.coords.cosys);
-                break;
-            case ILG_ADD_RENDERER:
-                ilG_renderman_addChild(rm, msg.v.renderer.parent, msg.v.renderer.child);
-                break;
-            case ILG_DEL_RENDERER:
-                ilG_renderman_delChild(rm, msg.v.renderer.parent, msg.v.renderer.child);
-                break;
-            case ILG_ADD_LIGHT:
-                ilG_renderman_addLight(rm, msg.v.light.parent, msg.v.light.child);
-                break;
-            case ILG_DEL_LIGHT:
-                ilG_renderman_delLight(rm, msg.v.light.parent, msg.v.light.child);
-                break;
-            }
-        }
+    if (!self->valid || !self->complete) {
+        il_error("Tried to render invalid context");
+        return NULL;
+    }
+
+    while (self->running) {
         int width, height;
         SDL_GetWindowSize(self->window, &width, &height);
         if (width != self->width || height != self->height) {
@@ -480,16 +445,6 @@ void *ilG_context_loop(void *ptr)
         }
     }
 
-    if (!self->valid || !self->complete) {
-        il_error("Tried to render invalid context");
-    }
-
-stop:
-    self->running = false;
-    return NULL;
-end:
-    self->running = false;
-    ilG_context_free(self);
     return NULL;
 }
 
@@ -510,19 +465,7 @@ bool ilG_context_start(ilG_context *self)
 
 void ilG_context_stop(ilG_context *self)
 {
-    ilG_renderman_msg msg;
-    memset(&msg, 0, sizeof(msg));
-    msg.type = ILG_STOP;
-    ilG_renderman_queue_produce(&self->manager.queue, msg);
-    pthread_join(self->thread, NULL);
-}
-
-void ilG_context_end(ilG_context *self)
-{
-    ilG_renderman_msg msg;
-    memset(&msg, 0, sizeof(msg));
-    msg.type = ILG_END;
-    ilG_renderman_queue_produce(&self->manager.queue, msg);
+    self->running = false;
     pthread_join(self->thread, NULL);
 }
 
@@ -538,5 +481,5 @@ void ilG_context_print(ilG_context *self)
         flag(forwardCompat), flag(debug_context), flag(experimental), flag(hdr),
         flag(use_default_fb), flag(debug_render), flag(vsync), flag(msaa));
 #undef flag
-    ilG_renderman_print(self, self->root.id);
+    ilG_renderman_print(self, 0);
 }

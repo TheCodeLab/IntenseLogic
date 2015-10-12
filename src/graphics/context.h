@@ -88,7 +88,6 @@ typedef struct ilG_context {
     /* Public members */
     int width, height;
     char *title;
-    ilG_handle root;
     float fovsquared; // Field of view in radians squared, needed by parts of renderer
     /* For rendering */
     ilG_renderman manager;
