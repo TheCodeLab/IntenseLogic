@@ -20,11 +20,6 @@ void ilG_tonemapper_free(ilG_tonemapper *tm)
     tgl_vao_free(&tm->vao);
 }
 
-static void tonemapper_free(void *ptr)
-{
-    ilG_tonemapper_free(ptr);
-}
-
 void ilG_tonemapper_draw(ilG_tonemapper *tm)
 {
     ilG_context *context = tm->context;
@@ -210,7 +205,6 @@ static bool tonemapper_build(void *ptr, ilG_rendid id, ilG_renderman *rm, ilG_bu
     }
 
     *tonemapper = (ilG_buildresult) {
-        .free = tonemapper_free,
         .update = tonemapper_update,
         .draw = NULL,
         .view = NULL,

@@ -12,9 +12,6 @@
 void ilG_renderman_free(ilG_renderman *rm)
 {
 #define foreach(list) for (unsigned i = 0; i < list.length; i++)
-    foreach(rm->renderers) {
-        rm->renderers.data[i].free(rm->renderers.data[i].data);
-    }
     IL_FREE(rm->renderers);
     foreach(rm->objrenderers) {
         free(rm->objrenderers.data[i].types);
@@ -32,9 +29,6 @@ void ilG_renderman_free(ilG_renderman *rm)
         free(rm->names.data[i]);
     }
     IL_FREE(rm->names);
-    foreach(rm->coordsystems) {
-        rm->coordsystems.data[i].free(rm->coordsystems.data[i].obj);
-    }
     IL_FREE(rm->coordsystems);
     foreach(rm->failed) {
         if (rm->failed.data[i].second) {
@@ -317,7 +311,6 @@ bool ilG_renderman_delRenderer(ilG_renderman *self, ilG_rendid id)
     IL_FIND(self->rendids, key, key == id, idx);
     if (idx < self->rendids.length) {
         ilG_renderer *r = &self->renderers.data[idx];
-        r->free(r->data);
         IL_FREE(r->children);
         IL_FREE(r->lights);
         if (r->obj) {
@@ -426,7 +419,6 @@ unsigned ilG_renderman_addRenderer(ilG_renderman *self, ilG_rendid id, ilG_build
     memset(&b, 0, sizeof(ilG_buildresult));
     bool res = builder.build(builder.obj, id, self, &b);
     ilG_renderer r = (ilG_renderer) {
-        .free = NULL,
         .children = {0,0,0},
         .lights = {0,0,0},
         .obj = 0,
@@ -442,7 +434,6 @@ unsigned ilG_renderman_addRenderer(ilG_renderman *self, ilG_rendid id, ilG_build
         return UINT_MAX;
     }
 
-    r.free = b.free;
     r.data = b.obj;
     if (b.update) {
         ilG_statrenderer s = (ilG_statrenderer) {

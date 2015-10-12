@@ -12,6 +12,5 @@ void ilG_default_multiupdate(void *, ilG_rendid, il_mat *);
 void ilG_default_draw(void *, ilG_rendid, il_mat **, const unsigned*, unsigned);
 void ilG_default_viewmats(void*, il_mat*, int*, unsigned);
 void ilG_default_objmats(void*, const unsigned*, unsigned, il_mat*, int);
-void ilG_default_free(void*);
 
 #endif

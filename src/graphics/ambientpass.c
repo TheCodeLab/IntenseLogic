@@ -9,11 +9,6 @@ void ilG_ambient_free(ilG_ambient *ambient)
     tgl_vao_free(&ambient->vao);
 }
 
-static void ambient_free(void *ptr)
-{
-    ilG_ambient_free(ptr);
-}
-
 enum {
     TEX_ALBEDO,
     TEX_EMISSION
@@ -84,7 +79,6 @@ static bool ambient_build(void *ptr, ilG_rendid id, ilG_renderman *rm, ilG_build
         return false;
     }
 
-    out->free = ambient_free;
     out->update = ambient_update;
     out->obj = ptr;
     out->name = strdup("Ambient Lighting");

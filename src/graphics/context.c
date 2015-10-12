@@ -64,7 +64,6 @@ void ilG_context_init(ilG_context *self)
         .num_types = 0
     };
     ilG_coordsys co = (ilG_coordsys) {
-        .free = ilG_default_free,
         .viewmats = ilG_default_viewmats,
         .objmats = ilG_default_objmats,
         .obj = NULL,

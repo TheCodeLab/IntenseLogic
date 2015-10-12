@@ -105,11 +105,6 @@ void ilG_floatspace_free(ilG_floatspace *self)
     IL_FREE(self->velocities);
 }
 
-static void floatspace_free(void *ptr)
-{
-    ilG_floatspace_free(ptr);
-}
-
 static void floatspace_viewmats(void *ptr, il_mat *out, int *types, unsigned num_types)
 {
     ilG_floatspace *self = ptr;
@@ -188,7 +183,6 @@ void ilG_floatspace_build(ilG_floatspace *self, ilG_context *context)
     self->rm = &context->manager;
     ilG_coordsys sys;
     memset(&sys, 0, sizeof(sys));
-    sys.free = floatspace_free;
     sys.viewmats = floatspace_viewmats;
     sys.objmats = floatspace_objmats;
     sys.obj = self;

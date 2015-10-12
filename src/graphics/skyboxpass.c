@@ -9,10 +9,9 @@
 #include "tgl/tgl.h"
 
 
-static void sky_free(void *ptr)
+void ilG_skybox_free(ilG_skybox *skybox)
 {
-    ilG_skybox *self = ptr;
-    ilG_renderman_delMaterial(self->rm, self->mat);
+    ilG_renderman_delMaterial(skybox->rm, skybox->mat);
 }
 
 void ilG_skybox_draw(ilG_skybox *skybox, il_mat vp)
@@ -74,16 +73,11 @@ static bool sky_build(void *ptr, ilG_rendid id, ilG_renderman *rm, ilG_buildresu
 
     int *types = malloc(1 * sizeof(int));
     types[0] = ILG_VIEW_R | ILG_PROJECTION;
-    *out = (ilG_buildresult) {
-        .free = sky_free,
-        .view = sky_view,
-        .update = NULL,
-        .draw = NULL,
-        .types = types,
-        .num_types = 1,
-        .obj = self,
-        .name = strdup("Skybox")
-    };
+    out->view = sky_view;
+    out->types = types;
+    out->num_types = 1;
+    out->obj = self;
+    out->name = strdup("Skybox");
     return true;
 }
 

@@ -7,11 +7,6 @@
 #include "graphics/arrayattrib.h"
 #include "tgl/tgl.h"
 
-static void geometry_free(void *ptr)
-{
-    (void)ptr;
-}
-
 void ilG_geometry_bind(tgl_fbo *gbuffer)
 {
     static const unsigned order[] = {
@@ -45,7 +40,6 @@ static bool geometry_build(void *ptr, ilG_rendid id, ilG_renderman *rm, ilG_buil
 {
     (void)id, (void)rm;
     *out = (ilG_buildresult) {
-        .free = geometry_free,
         .update = geometry_update,
         .types = NULL,
         .num_types = 0,

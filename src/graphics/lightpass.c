@@ -28,11 +28,6 @@ void ilG_lighting_free(ilG_lighting *lighting)
     tgl_quad_free(&lighting->quad);
 }
 
-static void lights_free(void *ptr)
-{
-    ilG_lighting_free(ptr);
-}
-
 void ilG_lighting_draw(ilG_lighting *lighting, const il_mat *ivp, const il_mat *mv,
                        const il_mat *vp, const ilG_light *lights, size_t count)
 {
@@ -150,7 +145,6 @@ static bool lights_build(void *ptr, ilG_rendid id, ilG_renderman *rm, ilG_buildr
     types[1] = ILG_MODEL_T | ILG_VIEW_T;
     types[2] = ILG_MODEL_T | ILG_VP;
     *out = (ilG_buildresult) {
-        .free = lights_free,
         .update = NULL,
         .draw = lights_draw,
         .view = NULL,

@@ -15,11 +15,6 @@ void ilG_heightmap_free(ilG_heightmap *hm)
     ilG_renderman_delMaterial(hm->rm, hm->mat);
 }
 
-static void heightmap_free(void *ptr)
-{
-    ilG_heightmap_free(ptr);
-}
-
 void ilG_heightmap_draw(ilG_heightmap *hm, il_mat mvp, il_mat imt)
 {
     ilG_tex_bind(&hm->height);
@@ -137,7 +132,6 @@ static bool heightmap_build(void *ptr, ilG_rendid id, ilG_renderman *rm, ilG_bui
     types[0] = ILG_MVP;
     types[1] = ILG_INVERSE | ILG_MODEL | ILG_TRANSPOSE;
     *out = (ilG_buildresult) {
-        .free = heightmap_free,
         .draw = heightmap_draw,
         .types = types,
         .num_types = 2,

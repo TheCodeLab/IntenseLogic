@@ -16,12 +16,10 @@ typedef unsigned ilG_rendid;
 typedef unsigned ilG_cosysid;
 typedef struct ilG_renderer ilG_renderer;
 
-typedef void (*ilG_free_fn)(void *);
 typedef void (*ilG_update_fn)(void *obj, ilG_rendid id);
 typedef void (*ilG_multiupdate_fn)(void *obj, ilG_rendid id, struct il_mat *mats);
 typedef void (*ilG_draw_fn)(void *obj, ilG_rendid id, struct il_mat **mats, const unsigned *objects, unsigned num_mats);
 typedef struct ilG_buildresult {
-    ilG_free_fn free;
     ilG_update_fn update;
     ilG_draw_fn draw;
     ilG_multiupdate_fn view;
@@ -39,7 +37,6 @@ typedef struct ilG_builder {
 } ilG_builder;
 
 typedef struct ilG_coordsys {
-    ilG_free_fn free;
     void (*viewmats)(void *, struct il_mat *out, int *types, unsigned num_types);
     void (*objmats)(void *, const unsigned *objects, unsigned num_objects, struct il_mat *out, int type);
     void *obj;
@@ -78,7 +75,6 @@ typedef struct ilG_statrenderer {
 } ilG_statrenderer;
 
 struct ilG_renderer {
-    ilG_free_fn free;
     IL_ARRAY(unsigned,) children;
     IL_ARRAY(ilG_light,) lights;
     unsigned obj, view, stat;
