@@ -22,11 +22,11 @@ void ilG_ambient_draw(ilG_ambient *ambient)
     glDepthMask(GL_FALSE);
 
     glActiveTexture(GL_TEXTURE0 + TEX_ALBEDO);
-    tgl_fbo_bindTex(&ambient->context->gbuffer, ILG_CONTEXT_ALBEDO);
+    tgl_fbo_bindTex(&ambient->rm->gbuffer, ILG_CONTEXT_ALBEDO);
     glActiveTexture(GL_TEXTURE0 + TEX_EMISSION);
-    tgl_fbo_bindTex(&ambient->context->gbuffer, ILG_CONTEXT_EMISSION);
+    tgl_fbo_bindTex(&ambient->rm->gbuffer, ILG_CONTEXT_EMISSION);
 
-    tgl_fbo_bind(&ambient->context->accum, TGL_FBO_RW);
+    tgl_fbo_bind(&ambient->rm->accum, TGL_FBO_RW);
     ilG_material_bind(ilG_renderman_findMaterial(ambient->rm, ambient->mat));
     tgl_vao_bind(&ambient->vao);
     glUniform3f(ambient->col_loc, ambient->color.x, ambient->color.y, ambient->color.z);
@@ -44,11 +44,10 @@ static void ambient_update(void *ptr, ilG_rendid id)
     ilG_ambient_draw(self);
 }
 
-bool ilG_ambient_build(ilG_ambient *ambient, ilG_context *context, char **error)
+bool ilG_ambient_build(ilG_ambient *ambient, ilG_renderman *rm, char **error)
 {
     memset(ambient, 0, sizeof(*ambient));
-    ambient->context = context;
-    ambient->rm = &context->manager;
+    ambient->rm = rm;
     ilG_material m;
     ilG_material_init(&m);
     ilG_material_name(&m, "Ambient Lighting");
@@ -75,7 +74,7 @@ static bool ambient_build(void *ptr, ilG_rendid id, ilG_renderman *rm, ilG_build
     (void)id, (void)rm;
     ilG_ambient *self = ptr;
 
-    if (!ilG_ambient_build(self, self->context, &out->error)) {
+    if (!ilG_ambient_build(self, rm, &out->error)) {
         return false;
     }
 
@@ -86,8 +85,7 @@ static bool ambient_build(void *ptr, ilG_rendid id, ilG_renderman *rm, ilG_build
     return true;
 }
 
-ilG_builder ilG_ambient_builder(ilG_ambient *ambient, ilG_context *context)
+ilG_builder ilG_ambient_builder(ilG_ambient *ambient)
 {
-    ambient->context = context;
     return ilG_builder_wrap(ambient, ambient_build);
 }

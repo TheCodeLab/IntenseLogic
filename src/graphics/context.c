@@ -31,21 +31,20 @@ void ilG_context_init(ilG_context *self)
 {
     memset(self, 0, sizeof(ilG_context));
     // hints
-    self->contextMajor = 3;
+    self->context_major = 3;
 #ifdef __APPLE__
-    self->forwardCompat = 1;
+    self->forward_compat = 1;
 #endif
-    self->contextMinor = 2;
+    self->context_minor = 2;
     self->profile = ILG_CONTEXT_NONE;
-    self->startWidth = 800;
-    self->startHeight = 600;
+    self->start_width = 800;
+    self->start_height = 600;
     self->vsync = 1;
-    self->initialTitle = "IntenseLogic";
+    self->title = strdup("IntenseLogic");
     self->srgb = true;
     // private
-    tgl_fbo_init(&self->gbuffer);
-    tgl_fbo_init(&self->accum);
     ilG_renderman *rm = &self->manager;
+    ilG_renderman_init(rm);
     ilG_renderman_addRenderer(rm, 0, ilG_builder_wrap(NULL, ilG_context_build));
     ilG_statrenderer stat = (ilG_statrenderer) {ilG_default_update};
     ilG_viewrenderer view = (ilG_viewrenderer) {
@@ -76,13 +75,13 @@ void ilG_context_hint(ilG_context *self, enum ilG_context_hint hint, int param)
 {
 #define HINT(v, f) case v: self->f = param; break
     switch (hint) {
-        HINT(ILG_CONTEXT_MAJOR, contextMajor);
-        HINT(ILG_CONTEXT_MINOR, contextMinor);
-        HINT(ILG_CONTEXT_FORWARD_COMPAT, forwardCompat);
+        HINT(ILG_CONTEXT_MAJOR, context_major);
+        HINT(ILG_CONTEXT_MINOR, context_minor);
+        HINT(ILG_CONTEXT_FORWARD_COMPAT, forward_compat);
         HINT(ILG_CONTEXT_PROFILE, profile);
         HINT(ILG_CONTEXT_DEBUG_CONTEXT, debug_context);
-        HINT(ILG_CONTEXT_WIDTH, startWidth);
-        HINT(ILG_CONTEXT_HEIGHT, startHeight);
+        HINT(ILG_CONTEXT_WIDTH, start_width);
+        HINT(ILG_CONTEXT_HEIGHT, start_height);
         HINT(ILG_CONTEXT_HDR, hdr);
         HINT(ILG_CONTEXT_USE_DEFAULT_FB, use_default_fb);
         HINT(ILG_CONTEXT_DEBUG_RENDER, debug_render);
@@ -101,10 +100,6 @@ void ilG_context_free(ilG_context *self)
 
     ilG_renderman_free(&self->manager);
 
-    // private members
-    tgl_fbo_free(&self->gbuffer);
-    tgl_fbo_free(&self->accum);
-
     SDL_GL_DeleteContext(self->context);
     SDL_DestroyWindow(self->window);
 }
@@ -114,20 +109,10 @@ void ilG_context_free(ilG_context *self)
 
 int ilG_context_localResize(ilG_context *self, int w, int h)
 {
-    self->width = w;
-    self->height = h;
-
     if (self->use_default_fb) {
         return 1;
     }
-
-    if (!tgl_fbo_build(&self->gbuffer, w, h) || !tgl_fbo_build(&self->accum, w, h)) {
-        self->complete = false;
-        return 0;
-    }
-    tgl_check("Error setting up screen");
-
-    return 1;
+    return ilG_renderman_resize(&self->manager, w, h) || (self->complete = false);
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -174,10 +159,10 @@ static void render_renderer(ilG_context *context, ilG_renderer *par)
 
 void ilG_context_renderFrame(ilG_context *context)
 {
-    glViewport(0, 0, context->width, context->height);
+    glViewport(0, 0, context->manager.width, context->manager.height);
 
     il_debug("Begin render");
-    tgl_fbo_bind(&context->accum, TGL_FBO_WRITE);
+    tgl_fbo_bind(&context->manager.accum, TGL_FBO_WRITE);
     glClearColor(0,0,0, 1.0);
     glClearDepth(1.0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -279,10 +264,10 @@ bool ilG_context_setupSDLWindow(ilG_context *self) // main thread
         il_error("Context already complete");
         return false;
     }
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, self->contextMajor);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, self->contextMinor);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, self->context_major);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, self->context_minor);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS,
-        (self->forwardCompat? SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG : 0) |
+        (self->forward_compat? SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG : 0) |
         (self->debug_context? SDL_GL_CONTEXT_DEBUG_FLAG : 0)
     );
     SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
@@ -307,17 +292,17 @@ bool ilG_context_setupSDLWindow(ilG_context *self) // main thread
         return false;
     }
     if (!(self->window = SDL_CreateWindow(
-            self->initialTitle,
+            self->title,
             SDL_WINDOWPOS_UNDEFINED,
             SDL_WINDOWPOS_UNDEFINED,
-            self->startWidth,
-            self->startHeight,
+            self->start_width,
+            self->start_height,
             SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE))) {
         il_error("SDL_CreateWindow: %s", SDL_GetError());
         return false;
     }
-    self->width = self->startWidth;
-    self->height = self->startHeight;
+    self->manager.width = self->start_width;
+    self->manager.height = self->start_height;
     SDL_SetWindowData(self->window, "context", self);
     return true;
 }
@@ -371,36 +356,7 @@ void ilG_context_localSetup(ilG_context *self)
     } else {
         il_log("KHR_debug missing");
     }
-    if (!self->use_default_fb) {
-        GLenum type = self->msaa? GL_TEXTURE_2D_MULTISAMPLE : GL_TEXTURE_RECTANGLE;
-        GLenum afmt = self->hdr? GL_RGBA16F : GL_RGBA8;
-        tgl_fbo_numTargets(&self->gbuffer, ILG_CONTEXT_NUMATTACHMENTS);
-        // Per GL 3.1 spec §4.2 (page 182, actual 195):
-        // Each COLOR_ATTACHMENTi adheres to COLOR_ATTACHMENTi = COLOR_ATTACHMENT0 + i.
-        tgl_fbo_texture(&self->gbuffer, ILG_CONTEXT_ALBEDO, type, GL_RGB8, GL_RGB,
-                        GL_COLOR_ATTACHMENT0 + ILG_CONTEXT_ALBEDO, GL_UNSIGNED_BYTE);
-        tgl_fbo_texture(&self->gbuffer, ILG_CONTEXT_NORMAL, type, GL_RGB8_SNORM, GL_RGB,
-                        GL_COLOR_ATTACHMENT0 + ILG_CONTEXT_NORMAL, GL_UNSIGNED_BYTE);
-        tgl_fbo_texture(&self->gbuffer, ILG_CONTEXT_REFRACTION, type, GL_R8, GL_RED,
-                        GL_COLOR_ATTACHMENT0 + ILG_CONTEXT_REFRACTION, GL_UNSIGNED_BYTE);
-        tgl_fbo_texture(&self->gbuffer, ILG_CONTEXT_GLOSS, type, GL_R16F, GL_RED,
-                        GL_COLOR_ATTACHMENT0 + ILG_CONTEXT_GLOSS, GL_FLOAT);
-        tgl_fbo_texture(&self->gbuffer, ILG_CONTEXT_EMISSION, type, GL_R16F, GL_RED,
-                        GL_COLOR_ATTACHMENT0 + ILG_CONTEXT_EMISSION, GL_FLOAT);
-        tgl_fbo_texture(&self->gbuffer, ILG_CONTEXT_DEPTH, type, GL_DEPTH_COMPONENT, GL_DEPTH_COMPONENT, GL_DEPTH_ATTACHMENT, GL_FLOAT);
-        tgl_fbo_numTargets(&self->accum, 1);
-        tgl_fbo_texture(&self->accum, 0, type, afmt, GL_RGBA, GL_COLOR_ATTACHMENT0, self->hdr? GL_FLOAT : GL_UNSIGNED_BYTE);
-        if (self->msaa) {
-            tgl_fbo_multisample(&self->gbuffer, ILG_CONTEXT_DEPTH, self->msaa, false);
-            tgl_fbo_multisample(&self->gbuffer, ILG_CONTEXT_NORMAL, self->msaa, false);
-            tgl_fbo_multisample(&self->gbuffer, ILG_CONTEXT_ALBEDO, self->msaa, false);
-            tgl_fbo_multisample(&self->gbuffer, ILG_CONTEXT_REFRACTION, self->msaa, false);
-            tgl_fbo_multisample(&self->gbuffer, ILG_CONTEXT_GLOSS, self->msaa, false);
-            tgl_fbo_multisample(&self->gbuffer, ILG_CONTEXT_EMISSION, self->msaa, false);
-            tgl_fbo_multisample(&self->accum, 0, self->msaa, false);
-        }
-        tgl_check("Unable to generate framebuffer");
-    }
+    ilG_renderman_setup(&self->manager, self->msaa, self->hdr);
     glClampColor(GL_CLAMP_READ_COLOR, GL_FALSE);
     self->complete = 1;
 }
@@ -418,7 +374,7 @@ void *ilG_context_loop(void *ptr)
     ilG_context_setupEpoxy(self);
 #endif
     ilG_context_localSetup(self);
-    ilG_context_localResize(self, self->startWidth, self->startHeight);
+    ilG_context_localResize(self, self->start_width, self->start_height);
 
     if (!self->complete) {
         il_error("Tried to render invalid context");
@@ -428,13 +384,13 @@ void *ilG_context_loop(void *ptr)
     while (self->running) {
         int width, height;
         SDL_GetWindowSize(self->window, &width, &height);
-        if (width != self->width || height != self->height) {
+        if ((unsigned)width != self->manager.width || (unsigned)height != self->manager.height) {
             ilG_context_localResize(self, width, height);
         }
         // Render
         ilG_context_renderFrame(self);
         if (self->use_default_fb) {
-            glViewport(0,0, self->width, self->height);
+            glViewport(0,0, width, height);
             SDL_GL_SwapWindow(self->window);
         }
     }
@@ -449,30 +405,24 @@ bool ilG_context_start(ilG_context *self)
     }
 
     self->running = true;
-    // Start thread
-    int res = pthread_create(&self->thread, NULL, ilG_context_loop, self);
-    if (res) {
-        il_error("pthread_create: %s", strerror(errno));
-    }
-    return res == 0;
+    ilG_context_loop(self);
+    return true;
 }
 
 void ilG_context_stop(ilG_context *self)
 {
     self->running = false;
-    pthread_join(self->thread, NULL);
 }
 
 void ilG_context_print(ilG_context *self)
 {
 #define log(fmt, ...) fprintf(stderr, fmt "\n", __VA_ARGS__)
-    log("resolution: %i x %i", self->width, self->height);
     log("title: %s", self->title);
-    log("gl version: %i.%i", self->contextMajor, self->contextMinor);
+    log("gl version: %i.%i", self->context_major, self->context_minor);
 #define flag(n) self->n? "+" #n : "-" #n
     log("%s %s", flag(running), flag(complete));
     log("flags: %s %s %s %s %s %s %s",
-        flag(forwardCompat), flag(debug_context), flag(hdr),
+        flag(forward_compat), flag(debug_context), flag(hdr),
         flag(use_default_fb), flag(debug_render), flag(vsync), flag(msaa));
 #undef flag
     ilG_renderman_print(self, 0);

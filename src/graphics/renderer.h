@@ -106,12 +106,15 @@ typedef struct ilG_renderman {
     ilG_cosysid cursysid;
     void (*material_creation)(ilG_matid, void*);
     void *material_creation_data;
+    unsigned width, height;
+    tgl_fbo gbuffer, accum;
 } ilG_renderman;
 
-void ilG_renderman_free(ilG_renderman *rm);
 ilG_builder ilG_builder_wrap(void *obj, const ilG_build_fn build);
-/** Resizes (and creates if first call) the context's framebuffers and calls the #ilG_context.resize event.
- * @return Success. */
+
+void ilG_renderman_free(ilG_renderman *rm);
+void ilG_renderman_init(ilG_renderman *rm);
+void ilG_renderman_setup(ilG_renderman *rm, bool msaa, bool hdr);
 bool ilG_renderman_resize(ilG_renderman *self, int w, int h);
 
 /* Rendering thread calls */
@@ -169,7 +172,7 @@ void ilG_shape_bind(ilG_shape *shape);
 void ilG_shape_draw(ilG_shape *shape);
 
 void ilG_geometry_bind(tgl_fbo *gbuffer);
-ilG_builder ilG_geometry_builder(struct ilG_context *context);
+ilG_builder ilG_geometry_builder(ilG_renderman *rm);
 
 typedef struct ilG_skybox {
     ilG_tex texture;
@@ -218,9 +221,10 @@ ilG_builder ilG_lighting_builder(ilG_lighting *lighting, bool msaa, ilG_light_ty
 typedef struct ilG_tonemapper {
     // update these
     float exposure, gamma;
+    bool debug_render;
     // end
     unsigned w, h;
-    struct ilG_context *context;
+    bool msaa;
     ilG_renderman *rm;
     ilG_matid tonemap, horizblur, vertblur;
     tgl_fbo front, result;
@@ -229,11 +233,11 @@ typedef struct ilG_tonemapper {
     GLuint t_size_loc, h_size_loc, v_size_loc, t_exposure_loc, h_exposure_loc, gamma_loc;
 } ilG_tonemapper;
 
-bool ilG_tonemapper_build(ilG_tonemapper *tm, struct ilG_context *context, char **error);
+bool ilG_tonemapper_build(ilG_tonemapper *tm, ilG_renderman *rm, bool msaa, char **error);
 void ilG_tonemapper_free(ilG_tonemapper *tm);
 void ilG_tonemapper_resize(ilG_tonemapper *tm, unsigned w, unsigned h);
 void ilG_tonemapper_draw(ilG_tonemapper *tm);
-ilG_builder ilG_tonemapper_builder(ilG_tonemapper *tm, struct ilG_context *context);
+ilG_builder ilG_tonemapper_builder(ilG_tonemapper *tm, bool msaa);
 
 typedef struct ilG_heightmap {
     ilG_tex height, normal, color;
@@ -266,7 +270,7 @@ void ilG_wireframe_free(ilG_wireframe *wf);
 void ilG_wireframe_data(ilG_wireframe *wf, const float *verts, size_t count);
 void ilG_wireframe_draw(ilG_wireframe *wf, il_mat mvp, const float col[3]);
 
-ilA_imgerr ilG_screenshot(struct ilG_context *context, ilA_img *out);
+ilA_imgerr ilG_screenshot(ilG_renderman *rm, ilA_img *out);
 
 typedef struct ilG_ambient {
     // public
@@ -276,14 +280,13 @@ typedef struct ilG_ambient {
     ilG_matid mat;
     GLuint col_loc, fovsquared_loc;
     ilG_renderman *rm;
-    struct ilG_context *context;
     tgl_quad quad;
     tgl_vao vao;
 } ilG_ambient;
 
-bool ilG_ambient_build(ilG_ambient *ambient, struct ilG_context *context, char **error);
+bool ilG_ambient_build(ilG_ambient *ambient, ilG_renderman *rm, char **error);
 void ilG_ambient_free(ilG_ambient *ambient);
 void ilG_ambient_draw(ilG_ambient *ambient);
-ilG_builder ilG_ambient_builder(ilG_ambient *ambient, struct ilG_context *context);
+ilG_builder ilG_ambient_builder(ilG_ambient *ambient);
 
 #endif

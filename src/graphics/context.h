@@ -82,29 +82,24 @@ struct ilG_context;
  * - Semi-public members, which should only be accessed by functions run on the rendering thread.
  * - Members used for hints at thread startup (window title, GL version). */
 typedef struct ilG_context {
-    /* Public members */
-    int width, height;
-    char *title;
     /* For rendering */
     ilG_renderman manager;
     /* Private */
-    tgl_fbo gbuffer, accum;
     SDL_Window *window;
     SDL_GLContext context;
-    pthread_t thread;
     bool running, complete, have_khr_debug;
     /* Creation parameters */
-    int contextMajor;
-    int contextMinor;
-    bool forwardCompat;
+    int context_major;
+    int context_minor;
+    bool forward_compat;
     enum ilG_context_profile profile;
     bool debug_context;
-    int startWidth;
-    int startHeight;
+    int start_width;
+    int start_height;
     bool hdr;
     bool use_default_fb;
     bool debug_render;
-    char *initialTitle;
+    char *title;
     bool vsync;
     bool msaa;
     bool srgb;
@@ -121,10 +116,8 @@ void ilG_context_hint(ilG_context *self, enum ilG_context_hint hint, int param);
 /** Start rendering.
  * @return Success. */
 bool ilG_context_start(ilG_context* self);
-/** Stops the render thread. Blocks. */
+/** Stops rendering. */
 void ilG_context_stop(ilG_context *self);
-/** Destroys the context and stops the render thread. Blocks. */
-void ilG_context_end(ilG_context *self);
 
 /** Render thread call for resizing framebuffer */
 int ilG_context_localResize(ilG_context *self, int w, int h);

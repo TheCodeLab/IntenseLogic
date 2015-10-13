@@ -36,6 +36,61 @@ void ilG_renderman_free(ilG_renderman *rm)
         }
     }
     IL_FREE(rm->failed);
+
+    tgl_fbo_free(&rm->gbuffer);
+    tgl_fbo_free(&rm->accum);
+}
+
+void ilG_renderman_init(ilG_renderman *rm)
+{
+    memset(rm, 0, sizeof(*rm));
+    tgl_fbo_init(&rm->gbuffer);
+    tgl_fbo_init(&rm->accum);
+}
+
+void ilG_renderman_setup(ilG_renderman *rm, bool msaa, bool hdr)
+{
+    GLenum type = msaa? GL_TEXTURE_2D_MULTISAMPLE : GL_TEXTURE_RECTANGLE;
+    GLenum afmt = hdr? GL_RGBA16F : GL_RGBA8;
+    tgl_fbo_numTargets(&rm->gbuffer, ILG_CONTEXT_NUMATTACHMENTS);
+    // Per GL 3.1 spec §4.2 (page 182, actual 195):
+    // Each COLOR_ATTACHMENTi adheres to COLOR_ATTACHMENTi = COLOR_ATTACHMENT0 + i.
+    tgl_fbo_texture(&rm->gbuffer, ILG_CONTEXT_ALBEDO, type, GL_RGB8, GL_RGB,
+                    GL_COLOR_ATTACHMENT0 + ILG_CONTEXT_ALBEDO, GL_UNSIGNED_BYTE);
+    tgl_fbo_texture(&rm->gbuffer, ILG_CONTEXT_NORMAL, type, GL_RGB8_SNORM, GL_RGB,
+                    GL_COLOR_ATTACHMENT0 + ILG_CONTEXT_NORMAL, GL_UNSIGNED_BYTE);
+    tgl_fbo_texture(&rm->gbuffer, ILG_CONTEXT_REFRACTION, type, GL_R8, GL_RED,
+                    GL_COLOR_ATTACHMENT0 + ILG_CONTEXT_REFRACTION, GL_UNSIGNED_BYTE);
+    tgl_fbo_texture(&rm->gbuffer, ILG_CONTEXT_GLOSS, type, GL_R16F, GL_RED,
+                    GL_COLOR_ATTACHMENT0 + ILG_CONTEXT_GLOSS, GL_FLOAT);
+    tgl_fbo_texture(&rm->gbuffer, ILG_CONTEXT_EMISSION, type, GL_R16F, GL_RED,
+                    GL_COLOR_ATTACHMENT0 + ILG_CONTEXT_EMISSION, GL_FLOAT);
+    tgl_fbo_texture(&rm->gbuffer, ILG_CONTEXT_DEPTH, type, GL_DEPTH_COMPONENT, GL_DEPTH_COMPONENT, GL_DEPTH_ATTACHMENT, GL_FLOAT);
+    tgl_fbo_numTargets(&rm->accum, 1);
+    tgl_fbo_texture(&rm->accum, 0, type, afmt, GL_RGBA, GL_COLOR_ATTACHMENT0, hdr? GL_FLOAT : GL_UNSIGNED_BYTE);
+    if (msaa) {
+        tgl_fbo_multisample(&rm->gbuffer, ILG_CONTEXT_DEPTH, msaa, false);
+        tgl_fbo_multisample(&rm->gbuffer, ILG_CONTEXT_NORMAL, msaa, false);
+        tgl_fbo_multisample(&rm->gbuffer, ILG_CONTEXT_ALBEDO, msaa, false);
+        tgl_fbo_multisample(&rm->gbuffer, ILG_CONTEXT_REFRACTION, msaa, false);
+        tgl_fbo_multisample(&rm->gbuffer, ILG_CONTEXT_GLOSS, msaa, false);
+        tgl_fbo_multisample(&rm->gbuffer, ILG_CONTEXT_EMISSION, msaa, false);
+        tgl_fbo_multisample(&rm->accum, 0, msaa, false);
+    }
+    tgl_check("Unable to generate framebuffer");
+}
+
+bool ilG_renderman_resize(ilG_renderman *self, int w, int h)
+{
+    self->width = w;
+    self->height = h;
+
+    if (!tgl_fbo_build(&self->gbuffer, w, h) || !tgl_fbo_build(&self->accum, w, h)) {
+        return false;
+    }
+    tgl_check("Error setting up screen");
+
+    return true;
 }
 
 ilG_builder ilG_builder_wrap(void *obj, const ilG_build_fn build)

@@ -22,19 +22,19 @@ void ilG_tonemapper_free(ilG_tonemapper *tm)
 
 void ilG_tonemapper_draw(ilG_tonemapper *tm)
 {
-    ilG_context *context = tm->context;
+    ilG_renderman *rm = tm->rm;
     unsigned i;
     int swapped = 0;
 
-    ilG_material *tonemap = ilG_renderman_findMaterial(tm->rm, tm->tonemap);
-    ilG_material *horizblur = ilG_renderman_findMaterial(tm->rm, tm->horizblur);
-    ilG_material *vertblur = ilG_renderman_findMaterial(tm->rm, tm->vertblur);
+    ilG_material *tonemap = ilG_renderman_findMaterial(rm, tm->tonemap);
+    ilG_material *horizblur = ilG_renderman_findMaterial(rm, tm->horizblur);
+    ilG_material *vertblur = ilG_renderman_findMaterial(rm, tm->vertblur);
 
-    tm->w = context->width;
-    tm->h = context->height;
+    tm->w = rm->width;
+    tm->h = rm->height;
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    if (context->debug_render) {
+    if (tm->debug_render) {
         glClearColor(0.196, 0.804, 0.196, 1.0); // lime green
     } else {
         glClearColor(0, 0, 0, 1.0);
@@ -48,7 +48,7 @@ void ilG_tonemapper_draw(ilG_tonemapper *tm)
     glActiveTexture(GL_TEXTURE0);
     // bind the framebuffer we want to display
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    tgl_fbo_bindTex(&context->accum, 0);
+    tgl_fbo_bindTex(&rm->accum, 0);
     ilG_material_bind(tonemap);
     glUniform2f(tm->t_size_loc, tm->w, tm->h);
     glUniform1f(tm->t_exposure_loc, tm->exposure);
@@ -60,16 +60,16 @@ void ilG_tonemapper_draw(ilG_tonemapper *tm)
         sprintf(buf, "Iteration %i", i);
         glPushDebugGroup(GL_DEBUG_SOURCE_THIRD_PARTY, 0, -1, buf);
 
-        unsigned w = context->width / (1<<i),
-            h = context->height / (1<<i);
+        unsigned w = rm->width / (1<<i),
+            h = rm->height / (1<<i);
         tm->w = w; tm->h = h;
 
         // Into the front buffer,
         tgl_fbo_bind(&tm->front, TGL_FBO_WRITE);
         // from the accumulation buffer,
-        tgl_fbo_bind(&context->accum, TGL_FBO_READ);
+        tgl_fbo_bind(&rm->accum, TGL_FBO_READ);
         // downscale.
-        glBlitFramebuffer(0,0, context->width,context->height,
+        glBlitFramebuffer(0,0, rm->width,rm->height,
                           0,0, w,h,
                           GL_COLOR_BUFFER_BIT,
                           GL_LINEAR);
@@ -89,7 +89,7 @@ void ilG_tonemapper_draw(ilG_tonemapper *tm)
 
         // Into the screen,
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        glViewport(0, 0, context->width, context->height);
+        glViewport(0, 0, rm->width, rm->height);
         // blend,
         glEnable(GL_BLEND);
         // additively,
@@ -121,13 +121,13 @@ void ilG_tonemapper_resize(ilG_tonemapper *tonemapper, unsigned w, unsigned h)
     tgl_fbo_build(&tonemapper->result, w, h);
 }
 
-bool ilG_tonemapper_build(ilG_tonemapper *tm, ilG_context *context, char **error)
+bool ilG_tonemapper_build(ilG_tonemapper *tm, ilG_renderman *rm, bool msaa, char **error)
 {
     memset(tm, 0, sizeof(*tm));
-    tm->context = context;
-    tm->rm = &context->manager;
+    tm->rm = rm;
+    tm->msaa = msaa;
     tgl_fbo *f;
-    GLenum fmt = context->msaa? GL_TEXTURE_2D_MULTISAMPLE : GL_TEXTURE_RECTANGLE;
+    GLenum fmt = msaa? GL_TEXTURE_2D_MULTISAMPLE : GL_TEXTURE_RECTANGLE;
 
     f = &tm->front;
     tgl_fbo_init(f);
@@ -139,14 +139,14 @@ bool ilG_tonemapper_build(ilG_tonemapper *tm, ilG_context *context, char **error
     tgl_fbo_numTargets(f, 1);
     tgl_fbo_texture(f, 0, fmt, GL_RGB8, GL_RGB, GL_COLOR_ATTACHMENT0, GL_UNSIGNED_BYTE);
 
-    if (context->msaa) {
-        tgl_fbo_multisample(&tm->front, 0, context->msaa, false);
-        tgl_fbo_multisample(&tm->result, 0, context->msaa, false);
+    if (msaa) {
+        tgl_fbo_multisample(&tm->front, 0, msaa, false);
+        tgl_fbo_multisample(&tm->result, 0, msaa, false);
     }
-    if (!tgl_fbo_build(&tm->front, context->width, context->height)) {
+    if (!tgl_fbo_build(&tm->front, rm->width, rm->height)) {
         return false;
     }
-    if (!tgl_fbo_build(&tm->result, context->width, context->height)) {
+    if (!tgl_fbo_build(&tm->result, rm->width, rm->height)) {
         return false;
     }
 
@@ -199,8 +199,7 @@ static bool tonemapper_build(void *ptr, ilG_rendid id, ilG_renderman *rm, ilG_bu
 {
     (void)id, (void)rm;
     ilG_tonemapper *self = ptr;
-    ilG_context *context = self->context;
-    if (!ilG_tonemapper_build(self, context, &tonemapper->error)) {
+    if (!ilG_tonemapper_build(self, rm, self->msaa, &tonemapper->error)) {
         return false;
     }
 
@@ -216,8 +215,8 @@ static bool tonemapper_build(void *ptr, ilG_rendid id, ilG_renderman *rm, ilG_bu
     return true;
 }
 
-ilG_builder ilG_tonemapper_builder(ilG_tonemapper *tonemapper, ilG_context *context)
+ilG_builder ilG_tonemapper_builder(ilG_tonemapper *tonemapper, bool msaa)
 {
-    tonemapper->context = context;
+    tonemapper->msaa = msaa;
     return ilG_builder_wrap(tonemapper, tonemapper_build);
 }
