@@ -13,7 +13,7 @@ typedef struct ilG_floatspace ilG_floatspace;
 
 typedef struct il_pos {
     ilG_floatspace *space;
-    size_t id;
+    unsigned id;
 } il_pos;
 
 struct ilG_floatspace {
@@ -43,8 +43,10 @@ void il_pos_setVelocity(il_pos *self, il_vec3 vel);
 ilG_floatspace *ilG_floatspace_new();
 void ilG_floatspace_init(ilG_floatspace *self, size_t prealloc);
 void ilG_floatspace_free(ilG_floatspace *self);
-void ilG_floatspace_build(ilG_floatspace *self, struct ilG_context *context);
+void ilG_floatspace_build(ilG_floatspace *self, ilG_renderman *rm);
 void ilG_floatspace_addPos(ilG_floatspace *self, ilG_rendid r, il_pos p);
 void ilG_floatspace_delPos(ilG_floatspace *self, ilG_rendid r, il_pos p);
+il_mat ilG_floatspace_viewmat(ilG_floatspace *self, int type);
+void ilG_floatspace_objmats(ilG_floatspace *self, il_mat *out, const unsigned *in, int type, size_t count);
 
 #endif

@@ -105,39 +105,34 @@ void ilG_floatspace_free(ilG_floatspace *self)
     IL_FREE(self->velocities);
 }
 
-static void floatspace_viewmats(void *ptr, il_mat *out, int *types, unsigned num_types)
+il_mat ilG_floatspace_viewmat(ilG_floatspace *self, int type)
 {
-    ilG_floatspace *self = ptr;
-    for (unsigned i = 0; i < num_types; i++) {
-        unsigned f = types[i];
-        il_mat m = f & ILG_PROJECTION? self->projection : il_mat_identity();
-        if (f & ILG_VIEW_R) {
-            il_quat q = il_pos_getRotation(&self->camera);
-            m = il_mat_mul(m, il_mat_rotate(q));
-        }
-        if (f & ILG_VIEW_T) {
-            il_vec4 v = il_vec3_to_vec4(il_pos_getPosition(&self->camera), 1.0);
-            v.x = -v.x;
-            v.y = -v.y;
-            v.z = -v.z;
-            m = il_mat_mul(m, il_mat_translate(v));
-        }
-        if (f & ILG_INVERSE) {
-            m = il_mat_invert(m);
-        }
-        if (f & ILG_TRANSPOSE) {
-            m = il_mat_transpose(m);
-        }
-        out[i] = m;
+    il_mat m = type & ILG_PROJECTION? self->projection : il_mat_identity();
+    if (type & ILG_VIEW_R) {
+        il_quat q = il_pos_getRotation(&self->camera);
+        m = il_mat_mul(m, il_mat_rotate(q));
     }
+    if (type & ILG_VIEW_T) {
+        il_vec4 v = il_vec3_to_vec4(il_pos_getPosition(&self->camera), 1.0);
+        v.x = -v.x;
+        v.y = -v.y;
+        v.z = -v.z;
+        m = il_mat_mul(m, il_mat_translate(v));
+    }
+    if (type & ILG_INVERSE) {
+        m = il_mat_invert(m);
+    }
+    if (type & ILG_TRANSPOSE) {
+        m = il_mat_transpose(m);
+    }
+    return m;
 }
 
-static void floatspace_objmats(void *ptr, const unsigned *objects, unsigned num_objects, il_mat *out, int type)
+void ilG_floatspace_objmats(ilG_floatspace *self, il_mat *out, const unsigned *objects, int type, size_t count)
 {
-    ilG_floatspace *self = ptr;
-#define mattype(matty) for (unsigned i = 0; i < num_objects && (type & matty); i++)
+#define mattype(matty) for (unsigned i = 0; i < count && (type & matty); i++)
     il_mat proj = self->projection;
-    for (unsigned i = 0; i < num_objects && !(type & ILG_PROJECTION); i++) {
+    for (unsigned i = 0; i < count && !(type & ILG_PROJECTION); i++) {
         out[i] = il_mat_identity();
     }
     mattype(ILG_PROJECTION) {
@@ -178,9 +173,21 @@ static void floatspace_objmats(void *ptr, const unsigned *objects, unsigned num_
     }
 }
 
-void ilG_floatspace_build(ilG_floatspace *self, ilG_context *context)
+static void floatspace_viewmats(void *ptr, il_mat *out, int *types, unsigned count)
 {
-    self->rm = &context->manager;
+    for (unsigned i = 0; i < count; i++) {
+        out[i] = ilG_floatspace_viewmat(ptr, types[i]);
+    }
+}
+
+static void floatspace_objmats(void *ptr, const unsigned *objects, unsigned count, il_mat *out, int type)
+{
+    ilG_floatspace_objmats(ptr, out, objects, type, count);
+}
+
+void ilG_floatspace_build(ilG_floatspace *self, ilG_renderman *rm)
+{
+    self->rm = rm;
     ilG_coordsys sys;
     memset(&sys, 0, sizeof(sys));
     sys.viewmats = floatspace_viewmats;
