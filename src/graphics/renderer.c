@@ -322,7 +322,9 @@ ilG_matid ilG_renderman_addMaterial(ilG_renderman *self, ilG_material mat)
     unsigned id = self->materials.length;
     IL_APPEND(self->materials, mat);
     ilG_matid matid = (ilG_matid){id};
-    self->material_creation(matid, self->material_creation_data);
+    if (self->material_creation) {
+        self->material_creation(matid, self->material_creation_data);
+    }
     return matid;
 }
 
