@@ -25,30 +25,3 @@ void ilG_geometry_bind(tgl_fbo *gbuffer)
     glFrontFace(GL_CCW);
     glCullFace(GL_BACK);
 }
-
-static void geometry_update(void *ptr, ilG_rendid id)
-{
-    (void)id;
-    ilG_renderman *rm = ptr;
-    tgl_check("Unknown");
-    ilG_geometry_bind(&rm->gbuffer);
-    tgl_check("Could not setup to draw geometry");
-}
-
-static bool geometry_build(void *ptr, ilG_rendid id, ilG_renderman *rm, ilG_buildresult *out)
-{
-    (void)id, (void)rm;
-    *out = (ilG_buildresult) {
-        .update = geometry_update,
-        .types = NULL,
-        .num_types = 0,
-        .obj = ptr,
-        .name = strdup("Geometry")
-    };
-    return true;
-}
-
-ilG_builder ilG_geometry_builder(ilG_renderman *rm)
-{
-    return ilG_builder_wrap(rm, geometry_build);
-}

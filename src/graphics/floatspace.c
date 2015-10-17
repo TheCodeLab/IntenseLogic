@@ -171,36 +171,3 @@ void ilG_floatspace_objmats(ilG_floatspace *self, il_mat *out, const unsigned *o
         out[i] = il_mat_transpose(out[i]);
     }
 }
-
-static void floatspace_viewmats(void *ptr, il_mat *out, int *types, unsigned count)
-{
-    for (unsigned i = 0; i < count; i++) {
-        out[i] = ilG_floatspace_viewmat(ptr, types[i]);
-    }
-}
-
-static void floatspace_objmats(void *ptr, const unsigned *objects, unsigned count, il_mat *out, int type)
-{
-    ilG_floatspace_objmats(ptr, out, objects, type, count);
-}
-
-void ilG_floatspace_build(ilG_floatspace *self, ilG_renderman *rm)
-{
-    self->rm = rm;
-    ilG_coordsys sys;
-    memset(&sys, 0, sizeof(sys));
-    sys.viewmats = floatspace_viewmats;
-    sys.objmats = floatspace_objmats;
-    sys.obj = self;
-    ilG_renderman_addCoordSys(self->rm, sys);
-}
-
-void ilG_floatspace_addPos(ilG_floatspace *self, ilG_rendid r, il_pos p)
-{
-    ilG_renderman_addCoords(self->rm, r, self->id, p.id);
-}
-
-void ilG_floatspace_delPos(ilG_floatspace *self, ilG_rendid r, il_pos p)
-{
-    ilG_renderman_delCoords(self->rm, r, self->id, p.id);
-}

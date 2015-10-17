@@ -109,13 +109,6 @@ void ilG_tonemapper_draw(ilG_tonemapper *tm)
     }
 }
 
-static void tonemapper_update(void *ptr, ilG_rendid id)
-{
-    (void)id;
-    ilG_tonemapper *self = ptr;
-    ilG_tonemapper_draw(self);
-}
-
 void ilG_tonemapper_resize(ilG_tonemapper *tonemapper, unsigned w, unsigned h)
 {
     tgl_fbo_build(&tonemapper->front, w, h);
@@ -194,30 +187,4 @@ bool ilG_tonemapper_build(ilG_tonemapper *tm, ilG_renderman *rm, bool msaa, char
     tgl_quad_init(&tm->quad, OUT_POSITION);
 
     return true;
-}
-
-static bool tonemapper_build(void *ptr, ilG_rendid id, ilG_renderman *rm, ilG_buildresult *tonemapper)
-{
-    (void)id, (void)rm;
-    ilG_tonemapper *self = ptr;
-    if (!ilG_tonemapper_build(self, rm, self->msaa, &tonemapper->error)) {
-        return false;
-    }
-
-    *tonemapper = (ilG_buildresult) {
-        .update = tonemapper_update,
-        .draw = NULL,
-        .view = NULL,
-        .types = NULL,
-        .num_types = 0,
-        .obj = self,
-        .name = strdup("Screen Tonemapperput")
-    };
-    return true;
-}
-
-ilG_builder ilG_tonemapper_builder(ilG_tonemapper *tonemapper, bool msaa)
-{
-    tonemapper->msaa = msaa;
-    return ilG_builder_wrap(tonemapper, tonemapper_build);
 }

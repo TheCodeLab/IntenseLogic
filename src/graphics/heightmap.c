@@ -28,14 +28,6 @@ void ilG_heightmap_draw(ilG_heightmap *hm, il_mat mvp, il_mat imt)
     ilG_mesh_draw(&hm->mesh);
 }
 
-static void heightmap_draw(void *ptr, ilG_rendid id, il_mat **mats, const unsigned *objects, unsigned num_mats)
-{
-    (void)id, (void)objects, (void)num_mats;
-    ilG_heightmap *self = ptr;
-    assert(num_mats == 1);
-    ilG_heightmap_draw(self, mats[0][0], mats[1][0]);
-}
-
 bool ilG_heightmap_build(ilG_heightmap *hm, ilG_renderman *rm, unsigned w, unsigned h,
                          ilG_tex height, ilG_tex normal, ilG_tex color, char **error)
 {
@@ -118,35 +110,4 @@ bool ilG_heightmap_build(ilG_heightmap *hm, ilG_renderman *rm, unsigned w, unsig
     }
 
     return true;
-}
-
-static bool heightmap_build(void *ptr, ilG_rendid id, ilG_renderman *rm, ilG_buildresult *out)
-{
-    (void)id;
-    ilG_heightmap *self = ptr;
-    if (!ilG_heightmap_build(self, rm, self->w, self->h, self->height, self->normal, self->color, &out->error)) {
-        return false;
-    }
-    int *types = malloc(sizeof(int) * 2);
-    types[0] = ILG_MVP;
-    types[1] = ILG_INVERSE | ILG_MODEL | ILG_TRANSPOSE;
-    *out = (ilG_buildresult) {
-        .draw = heightmap_draw,
-        .types = types,
-        .num_types = 2,
-        .obj = self,
-        .name = strdup("Heightmap")
-    };
-    return true;
-}
-
-ilG_builder ilG_heightmap_builder(ilG_heightmap *hm, unsigned w, unsigned h,
-                                  ilG_tex height, ilG_tex normal, ilG_tex color)
-{
-    hm->w = w;
-    hm->h = h;
-    hm->height = height;
-    hm->normal = normal;
-    hm->color = color;
-    return ilG_builder_wrap(hm, heightmap_build);
 }

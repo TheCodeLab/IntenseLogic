@@ -79,17 +79,6 @@ void ilG_lighting_draw(ilG_lighting *lighting, const il_mat *ivp, const il_mat *
     glDepthMask(GL_TRUE);
 }
 
-static void lights_draw(void *ptr, ilG_rendid id, il_mat **mats, const unsigned *objects, unsigned num_mats)
-{
-    (void)id, (void)objects;
-    ilG_lighting *self = ptr;
-
-    ilG_renderer *r = ilG_renderman_findRenderer(self->rm, id);
-    assert(r->lights.length == num_mats);
-    ilG_lighting_draw(self, mats[0], mats[1], mats[2], r->lights.data, num_mats);
-    tgl_check("Error drawing lights");
-}
-
 bool ilG_lighting_build(ilG_lighting *lighting, ilG_renderman *rm, ilG_shape *ico,
                         ilG_light_type type, bool msaa, char **error)
 {
@@ -128,36 +117,4 @@ bool ilG_lighting_build(ilG_lighting *lighting, ilG_renderman *rm, ilG_shape *ic
     tgl_quad_init(&lighting->quad, ILG_ARRATTR_POSITION);
 
     return true;
-}
-
-static bool lights_build(void *ptr, ilG_rendid id, ilG_renderman *rm, ilG_buildresult *out)
-{
-    (void)id;
-    ilG_lighting *self = ptr;
-    if (!ilG_lighting_build(self, rm, self->ico, self->type, self->msaa, &out->error)) {
-        return false;
-    }
-
-    int *types = malloc(sizeof(int) * 3);
-    types[0] = ILG_INVERSE | ILG_VIEW_R | ILG_PROJECTION;
-    types[1] = ILG_MODEL_T | ILG_VIEW_T;
-    types[2] = ILG_MODEL_T | ILG_VP;
-    *out = (ilG_buildresult) {
-        .update = NULL,
-        .draw = lights_draw,
-        .view = NULL,
-        .types = types,
-        .num_types = 3,
-        .obj = self,
-        .name = strdup("Deferred Shading")
-    };
-    return true;
-}
-
-ilG_builder ilG_lighting_builder(ilG_lighting *self, bool msaa, ilG_light_type type, ilG_shape *ico)
-{
-    self->type = type;
-    self->msaa = msaa;
-    self->ico = ico;
-    return ilG_builder_wrap(self, lights_build);
 }

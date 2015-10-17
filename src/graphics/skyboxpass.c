@@ -26,15 +26,6 @@ void ilG_skybox_draw(ilG_skybox *skybox, il_mat vp)
     glDepthMask(GL_TRUE);
 }
 
-static void sky_view(void *ptr, ilG_rendid id, il_mat *mats)
-{
-    (void)id;
-    ilG_skybox *self = ptr;
-
-    ilG_skybox_draw(self, mats[0]);
-    tgl_check("Unknown");
-}
-
 bool ilG_skybox_build(ilG_skybox *skybox, ilG_renderman *rm, ilG_tex skytex, ilG_shape *box, char **error)
 {
     memset(skybox, 0, sizeof(*skybox));
@@ -57,30 +48,4 @@ bool ilG_skybox_build(ilG_skybox *skybox, ilG_renderman *rm, ilG_tex skytex, ilG
     }
 
     return true;
-}
-
-static bool sky_build(void *ptr, ilG_rendid id, ilG_renderman *rm, ilG_buildresult *out)
-{
-    (void)id;
-    ilG_skybox *self = ptr;
-    ilG_tex skytex = self->texture;
-    if (!ilG_skybox_build(self, rm, skytex, self->box, &out->error)) {
-        return false;
-    }
-
-    int *types = malloc(1 * sizeof(int));
-    types[0] = ILG_VIEW_R | ILG_PROJECTION;
-    out->view = sky_view;
-    out->types = types;
-    out->num_types = 1;
-    out->obj = self;
-    out->name = strdup("Skybox");
-    return true;
-}
-
-ilG_builder ilG_skybox_builder(ilG_skybox *skybox, ilG_tex skytex, ilG_shape *box)
-{
-    skybox->texture = skytex;
-    skybox->box = box;
-    return ilG_builder_wrap(skybox, sky_build);
 }

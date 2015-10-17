@@ -35,13 +35,6 @@ void ilG_ambient_draw(ilG_ambient *ambient)
     glDepthMask(GL_TRUE);
 }
 
-static void ambient_update(void *ptr, ilG_rendid id)
-{
-    (void)id;
-    ilG_ambient *self = ptr;
-    ilG_ambient_draw(self);
-}
-
 bool ilG_ambient_build(ilG_ambient *ambient, ilG_renderman *rm, char **error)
 {
     memset(ambient, 0, sizeof(*ambient));
@@ -65,25 +58,4 @@ bool ilG_ambient_build(ilG_ambient *ambient, ilG_renderman *rm, char **error)
     tgl_quad_init(&ambient->quad, 0);
 
     return true;
-}
-
-static bool ambient_build(void *ptr, ilG_rendid id, ilG_renderman *rm, ilG_buildresult *out)
-{
-    (void)id, (void)rm;
-    ilG_ambient *self = ptr;
-
-    if (!ilG_ambient_build(self, rm, &out->error)) {
-        return false;
-    }
-
-    out->update = ambient_update;
-    out->obj = ptr;
-    out->name = strdup("Ambient Lighting");
-
-    return true;
-}
-
-ilG_builder ilG_ambient_builder(ilG_ambient *ambient)
-{
-    return ilG_builder_wrap(ambient, ambient_build);
 }
