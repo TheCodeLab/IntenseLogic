@@ -9,8 +9,6 @@
 #include "graphics/arrayattrib.h"
 #include "asset/node.h"
 
-struct ilG_context;
-
 typedef struct ilG_material_texunit {
     char *location;
     GLint uniform;

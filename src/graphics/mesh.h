@@ -6,7 +6,6 @@
 #include "tgl/gl.h"
 
 struct ilA_mesh;
-struct ilG_context;
 struct ilA_fs;
 
 typedef struct ilG_mesh {

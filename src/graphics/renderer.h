@@ -16,8 +16,6 @@ enum ilG_gbuffer_attachments {
     ILG_GBUFFER_NUMATTACHMENTS
 };
 
-struct ilG_renderman;
-
 #define il_pair(name, fst, snd) typedef struct name {fst first; snd second;} name
 
 typedef struct ilG_light {
@@ -35,8 +33,6 @@ typedef struct ilG_shadowdata {
 typedef struct ilG_matid {
     unsigned id;
 } ilG_matid;
-
-struct ilG_shape;
 
 typedef struct ilG_renderman {
     IL_ARRAY(ilG_material,)     materials;

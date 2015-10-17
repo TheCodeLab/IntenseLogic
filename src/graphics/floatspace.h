@@ -7,8 +7,6 @@
 #include "math/matrix.h"
 #include "math/vector.h"
 
-struct ilG_context;
-
 typedef struct ilG_floatspace ilG_floatspace;
 
 typedef struct il_pos {

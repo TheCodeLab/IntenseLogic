@@ -6,8 +6,6 @@
 #include "tgl/gl.h"
 #include "asset/image.h"
 
-struct ilG_context;
-
 typedef struct ilG_tex {
     unsigned unit;
     bool complete;
