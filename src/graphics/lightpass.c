@@ -3,7 +3,6 @@
 #include <assert.h>
 
 #include "graphics/arrayattrib.h"
-#include "graphics/context.h"
 #include "graphics/material.h"
 #include "graphics/transform.h"
 #include "math/matrix.h"
@@ -34,15 +33,15 @@ void ilG_lighting_draw(ilG_lighting *lighting, const il_mat *ivp, const il_mat *
     const bool point = lighting->type == ILG_POINT;
     ilG_material_bind(mat);
     glActiveTexture(GL_TEXTURE0 + TEX_DEPTH);
-    tgl_fbo_bindTex(lighting->gbuffer, ILG_CONTEXT_DEPTH);
+    tgl_fbo_bindTex(lighting->gbuffer, ILG_GBUFFER_DEPTH);
     glActiveTexture(GL_TEXTURE0 + TEX_NORMAL);
-    tgl_fbo_bindTex(lighting->gbuffer, ILG_CONTEXT_NORMAL);
+    tgl_fbo_bindTex(lighting->gbuffer, ILG_GBUFFER_NORMAL);
     glActiveTexture(GL_TEXTURE0 + TEX_ALBEDO);
-    tgl_fbo_bindTex(lighting->gbuffer, ILG_CONTEXT_ALBEDO);
+    tgl_fbo_bindTex(lighting->gbuffer, ILG_GBUFFER_ALBEDO);
     glActiveTexture(GL_TEXTURE0 + TEX_REFRACTION);
-    tgl_fbo_bindTex(lighting->gbuffer, ILG_CONTEXT_REFRACTION);
+    tgl_fbo_bindTex(lighting->gbuffer, ILG_GBUFFER_REFRACTION);
     glActiveTexture(GL_TEXTURE0 + TEX_GLOSS);
-    tgl_fbo_bindTex(lighting->gbuffer, ILG_CONTEXT_GLOSS);
+    tgl_fbo_bindTex(lighting->gbuffer, ILG_GBUFFER_GLOSS);
     tgl_fbo_bind(lighting->accum, TGL_FBO_RW);
     glEnable(GL_BLEND);
     glDisable(GL_DEPTH_TEST);

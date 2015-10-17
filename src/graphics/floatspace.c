@@ -2,7 +2,6 @@
 
 #include <assert.h>
 
-#include "graphics/context.h"
 #include "graphics/transform.h"
 #include "util/array.h"
 

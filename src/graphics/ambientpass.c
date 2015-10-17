@@ -1,7 +1,5 @@
 #include "renderer.h"
 
-#include "context.h"
-
 void ilG_ambient_free(ilG_ambient *ambient)
 {
     ilG_renderman_delMaterial(ambient->rm, ambient->mat);
@@ -22,9 +20,9 @@ void ilG_ambient_draw(ilG_ambient *ambient)
     glDepthMask(GL_FALSE);
 
     glActiveTexture(GL_TEXTURE0 + TEX_ALBEDO);
-    tgl_fbo_bindTex(&ambient->rm->gbuffer, ILG_CONTEXT_ALBEDO);
+    tgl_fbo_bindTex(&ambient->rm->gbuffer, ILG_GBUFFER_ALBEDO);
     glActiveTexture(GL_TEXTURE0 + TEX_EMISSION);
-    tgl_fbo_bindTex(&ambient->rm->gbuffer, ILG_CONTEXT_EMISSION);
+    tgl_fbo_bindTex(&ambient->rm->gbuffer, ILG_GBUFFER_EMISSION);
 
     tgl_fbo_bind(&ambient->rm->accum, TGL_FBO_RW);
     ilG_material_bind(ilG_renderman_findMaterial(ambient->rm, ambient->mat));

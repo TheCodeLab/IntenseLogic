@@ -4,7 +4,6 @@
 
 #include "tgl/tgl.h"
 #include "graphics/arrayattrib.h"
-#include "graphics/context.h"
 
 static const float cube[] = {
     // front

@@ -6,7 +6,16 @@
 #include "graphics/tex.h"
 #include "graphics/mesh.h"
 
-struct ilG_context;
+enum ilG_gbuffer_attachments {
+    ILG_GBUFFER_ALBEDO,     // Ratio of light reflected in RGB
+    ILG_GBUFFER_NORMAL,     // Surface normal in camera-local space (world space centered on camera position)
+    ILG_GBUFFER_REFRACTION, // Refractive index
+    ILG_GBUFFER_GLOSS,      // How shiny or glossy the surface should be
+    ILG_GBUFFER_EMISSION,   // Emission from the material itself, measured in radiant intensity (W/sr)
+    ILG_GBUFFER_DEPTH,
+    ILG_GBUFFER_NUMATTACHMENTS
+};
+
 struct ilG_renderer;
 struct ilG_renderman;
 
@@ -151,8 +160,8 @@ bool ilG_renderman_delMaterial      (ilG_renderman *self, ilG_matid mat);
 bool ilG_renderman_delShader        (ilG_renderman *self, unsigned id);
 
 void ilG_material_print(ilG_material *mat);
-void ilG_renderer_print(struct ilG_context *c, ilG_rendid root, unsigned depth);
-void ilG_renderman_print(struct ilG_context *c, ilG_rendid root);
+void ilG_renderer_print(ilG_renderman *rm, ilG_rendid root, unsigned depth);
+void ilG_renderman_print(ilG_renderman *rm, ilG_rendid root);
 
 struct ilA_img;
 struct ilA_mesh;

@@ -1,7 +1,6 @@
 #include "graphics/renderer.h"
 
 #include "graphics/arrayattrib.h"
-#include "graphics/context.h"
 #include "graphics/material.h"
 #include "graphics/tex.h"
 #include "graphics/transform.h"
@@ -51,8 +50,8 @@ bool ilG_skybox_build(ilG_skybox *skybox, ilG_renderman *rm, ilG_tex skytex, ilG
     ilG_material_arrayAttrib(mat, ILG_ARRATTR_POSITION, "in_Position");
     ilG_material_arrayAttrib(mat, ILG_ARRATTR_TEXCOORD, "in_Texcoord");
     ilG_material_textureUnit(mat, 0, "skytex");
-    ilG_material_fragData(mat, ILG_CONTEXT_NORMAL, "out_Normal");
-    ilG_material_fragData(mat, ILG_CONTEXT_ALBEDO, "out_Color");
+    ilG_material_fragData(mat, ILG_GBUFFER_NORMAL, "out_Normal");
+    ilG_material_fragData(mat, ILG_GBUFFER_ALBEDO, "out_Color");
     if (!ilG_renderman_addMaterialFromFile(rm, *mat, "skybox.vert", "skybox.frag", &skybox->mat, error)) {
         return false;
     }

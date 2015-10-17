@@ -2,7 +2,6 @@
 
 #include <assert.h>
 
-#include "graphics/context.h"
 #include "graphics/material.h"
 #include "asset/mesh.h"
 #include "graphics/mesh.h"
@@ -99,8 +98,8 @@ bool ilG_heightmap_build(ilG_heightmap *hm, ilG_renderman *rm, unsigned w, unsig
     ilG_material_textureUnit(&mat, 0, "height_tex");
     ilG_material_textureUnit(&mat, 1, "normal_tex");
     ilG_material_textureUnit(&mat, 2, "ambient_tex");
-    ilG_material_fragData(&mat, ILG_CONTEXT_NORMAL, "out_Normal");
-    ilG_material_fragData(&mat, ILG_CONTEXT_ALBEDO, "out_Albedo");
+    ilG_material_fragData(&mat, ILG_GBUFFER_NORMAL, "out_Normal");
+    ilG_material_fragData(&mat, ILG_GBUFFER_ALBEDO, "out_Albedo");
     if (!ilG_renderman_addMaterialFromFile(hm->rm, mat, "heightmap.vert", "heightmap.frag", &hm->mat, error)) {
         return false;
     }

@@ -1,8 +1,9 @@
 #include "graphics/renderer.h"
 
+#include <stdio.h>
+
 #include "tgl/tgl.h"
 #include "graphics/arrayattrib.h"
-#include "graphics/context.h"
 #include "graphics/material.h"
 
 enum {

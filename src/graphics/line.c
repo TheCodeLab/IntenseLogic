@@ -1,7 +1,6 @@
 #include "graphics/renderer.h"
 
 #include "tgl/tgl.h"
-#include "graphics/context.h"
 #include "graphics/material.h"
 #include "graphics/transform.h"
 
@@ -31,7 +30,7 @@ bool ilG_wireframe_build(ilG_wireframe *wf, ilG_renderman *rm, char **error)
     ilG_material_init(m);
     ilG_material_name(m, "Line Segment Shader");
     ilG_material_arrayAttrib(m, 0, "in_Position");
-    ilG_material_fragData(m, ILG_CONTEXT_ALBEDO, "out_Ambient");
+    ilG_material_fragData(m, ILG_GBUFFER_ALBEDO, "out_Ambient");
     if (!ilG_renderman_addMaterialFromFile(rm, *m, "line.vert", "line.frag", &wf->mat, error)) {
         return false;
     }

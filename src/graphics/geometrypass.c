@@ -2,7 +2,6 @@
 
 #include <sys/time.h>
 
-#include "graphics/context.h"
 #include "graphics/transform.h"
 #include "graphics/arrayattrib.h"
 #include "tgl/tgl.h"
@@ -10,11 +9,11 @@
 void ilG_geometry_bind(tgl_fbo *gbuffer)
 {
     static const unsigned order[] = {
-        ILG_CONTEXT_ALBEDO,
-        ILG_CONTEXT_NORMAL,
-        ILG_CONTEXT_REFRACTION,
-        ILG_CONTEXT_GLOSS,
-        ILG_CONTEXT_EMISSION,
+        ILG_GBUFFER_ALBEDO,
+        ILG_GBUFFER_NORMAL,
+        ILG_GBUFFER_REFRACTION,
+        ILG_GBUFFER_GLOSS,
+        ILG_GBUFFER_EMISSION,
     };
     tgl_fbo_bind_with(gbuffer, TGL_FBO_RW, 5, order);
     glClearDepth(1.0);

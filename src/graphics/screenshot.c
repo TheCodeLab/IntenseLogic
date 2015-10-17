@@ -1,7 +1,6 @@
 #include "graphics/renderer.h"
 
 #include "asset/image.h"
-#include "graphics/context.h"
 #include "util/log.h"
 
 ilA_imgerr ilG_screenshot(ilG_renderman *rm, ilA_img *out)

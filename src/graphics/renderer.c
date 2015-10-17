@@ -3,7 +3,6 @@
 #include <stdbool.h>
 #include <limits.h>
 
-#include "graphics/context.h"
 #include "graphics/transform.h"
 #include "graphics/material.h"
 #include "util/array.h"
@@ -52,29 +51,29 @@ void ilG_renderman_setup(ilG_renderman *rm, bool msaa, bool hdr)
 {
     GLenum type = msaa? GL_TEXTURE_2D_MULTISAMPLE : GL_TEXTURE_RECTANGLE;
     GLenum afmt = hdr? GL_RGBA16F : GL_RGBA8;
-    tgl_fbo_numTargets(&rm->gbuffer, ILG_CONTEXT_NUMATTACHMENTS);
+    tgl_fbo_numTargets(&rm->gbuffer, ILG_GBUFFER_NUMATTACHMENTS);
     // Per GL 3.1 spec §4.2 (page 182, actual 195):
     // Each COLOR_ATTACHMENTi adheres to COLOR_ATTACHMENTi = COLOR_ATTACHMENT0 + i.
-    tgl_fbo_texture(&rm->gbuffer, ILG_CONTEXT_ALBEDO, type, GL_RGB8, GL_RGB,
-                    GL_COLOR_ATTACHMENT0 + ILG_CONTEXT_ALBEDO, GL_UNSIGNED_BYTE);
-    tgl_fbo_texture(&rm->gbuffer, ILG_CONTEXT_NORMAL, type, GL_RGB8_SNORM, GL_RGB,
-                    GL_COLOR_ATTACHMENT0 + ILG_CONTEXT_NORMAL, GL_UNSIGNED_BYTE);
-    tgl_fbo_texture(&rm->gbuffer, ILG_CONTEXT_REFRACTION, type, GL_R8, GL_RED,
-                    GL_COLOR_ATTACHMENT0 + ILG_CONTEXT_REFRACTION, GL_UNSIGNED_BYTE);
-    tgl_fbo_texture(&rm->gbuffer, ILG_CONTEXT_GLOSS, type, GL_R16F, GL_RED,
-                    GL_COLOR_ATTACHMENT0 + ILG_CONTEXT_GLOSS, GL_FLOAT);
-    tgl_fbo_texture(&rm->gbuffer, ILG_CONTEXT_EMISSION, type, GL_R16F, GL_RED,
-                    GL_COLOR_ATTACHMENT0 + ILG_CONTEXT_EMISSION, GL_FLOAT);
-    tgl_fbo_texture(&rm->gbuffer, ILG_CONTEXT_DEPTH, type, GL_DEPTH_COMPONENT, GL_DEPTH_COMPONENT, GL_DEPTH_ATTACHMENT, GL_FLOAT);
+    tgl_fbo_texture(&rm->gbuffer, ILG_GBUFFER_ALBEDO, type, GL_RGB8, GL_RGB,
+                    GL_COLOR_ATTACHMENT0 + ILG_GBUFFER_ALBEDO, GL_UNSIGNED_BYTE);
+    tgl_fbo_texture(&rm->gbuffer, ILG_GBUFFER_NORMAL, type, GL_RGB8_SNORM, GL_RGB,
+                    GL_COLOR_ATTACHMENT0 + ILG_GBUFFER_NORMAL, GL_UNSIGNED_BYTE);
+    tgl_fbo_texture(&rm->gbuffer, ILG_GBUFFER_REFRACTION, type, GL_R8, GL_RED,
+                    GL_COLOR_ATTACHMENT0 + ILG_GBUFFER_REFRACTION, GL_UNSIGNED_BYTE);
+    tgl_fbo_texture(&rm->gbuffer, ILG_GBUFFER_GLOSS, type, GL_R16F, GL_RED,
+                    GL_COLOR_ATTACHMENT0 + ILG_GBUFFER_GLOSS, GL_FLOAT);
+    tgl_fbo_texture(&rm->gbuffer, ILG_GBUFFER_EMISSION, type, GL_R16F, GL_RED,
+                    GL_COLOR_ATTACHMENT0 + ILG_GBUFFER_EMISSION, GL_FLOAT);
+    tgl_fbo_texture(&rm->gbuffer, ILG_GBUFFER_DEPTH, type, GL_DEPTH_COMPONENT, GL_DEPTH_COMPONENT, GL_DEPTH_ATTACHMENT, GL_FLOAT);
     tgl_fbo_numTargets(&rm->accum, 1);
     tgl_fbo_texture(&rm->accum, 0, type, afmt, GL_RGBA, GL_COLOR_ATTACHMENT0, hdr? GL_FLOAT : GL_UNSIGNED_BYTE);
     if (msaa) {
-        tgl_fbo_multisample(&rm->gbuffer, ILG_CONTEXT_DEPTH, msaa, false);
-        tgl_fbo_multisample(&rm->gbuffer, ILG_CONTEXT_NORMAL, msaa, false);
-        tgl_fbo_multisample(&rm->gbuffer, ILG_CONTEXT_ALBEDO, msaa, false);
-        tgl_fbo_multisample(&rm->gbuffer, ILG_CONTEXT_REFRACTION, msaa, false);
-        tgl_fbo_multisample(&rm->gbuffer, ILG_CONTEXT_GLOSS, msaa, false);
-        tgl_fbo_multisample(&rm->gbuffer, ILG_CONTEXT_EMISSION, msaa, false);
+        tgl_fbo_multisample(&rm->gbuffer, ILG_GBUFFER_DEPTH, msaa, false);
+        tgl_fbo_multisample(&rm->gbuffer, ILG_GBUFFER_NORMAL, msaa, false);
+        tgl_fbo_multisample(&rm->gbuffer, ILG_GBUFFER_ALBEDO, msaa, false);
+        tgl_fbo_multisample(&rm->gbuffer, ILG_GBUFFER_REFRACTION, msaa, false);
+        tgl_fbo_multisample(&rm->gbuffer, ILG_GBUFFER_GLOSS, msaa, false);
+        tgl_fbo_multisample(&rm->gbuffer, ILG_GBUFFER_EMISSION, msaa, false);
         tgl_fbo_multisample(&rm->accum, 0, msaa, false);
     }
     tgl_check("Unable to generate framebuffer");
@@ -117,9 +116,8 @@ void print_tabs(unsigned n)
 
 #define tabbedn(n, ...) do { print_tabs(n); log(__VA_ARGS__); } while (0)
 #define tabbed(...) tabbedn(depth, __VA_ARGS__)
-void ilG_renderer_print(ilG_context *c, ilG_rendid root, unsigned depth)
+void ilG_renderer_print(ilG_renderman *rm, ilG_rendid root, unsigned depth)
 {
-    ilG_renderman *rm = &c->manager;
     tabbed("Renderer %u: %s", root, ilG_renderman_findName(rm, root));
     ilG_renderer *r = ilG_renderman_findRenderer(rm, root);
     const char *error = ilG_renderman_findError(rm, root);
@@ -131,7 +129,7 @@ void ilG_renderer_print(ilG_context *c, ilG_rendid root, unsigned depth)
         return;
     }
     if (r->obj) {
-        ilG_objrenderer *obj = &c->manager.objrenderers.data[r->obj];
+        ilG_objrenderer *obj = &rm->objrenderers.data[r->obj];
         tabbed("coordsys: %u", obj->coordsys);
         print_tabs(depth);
         fputs("types: [ ", stderr);
@@ -147,7 +145,7 @@ void ilG_renderer_print(ilG_context *c, ilG_rendid root, unsigned depth)
         fputs("]\n", stderr);
     }
     if (r->view) {
-        ilG_viewrenderer *view = &c->manager.viewrenderers.data[r->view];
+        ilG_viewrenderer *view = &rm->viewrenderers.data[r->view];
         tabbed("coordsys: %u", view->coordsys);
         print_tabs(depth);
         fputs("types: [ ", stderr);
@@ -168,7 +166,7 @@ void ilG_renderer_print(ilG_context *c, ilG_rendid root, unsigned depth)
     if (r->children.length > 0) {
         tabbed("children: [");
         for (unsigned i = 0; i < r->children.length; i++) {
-            ilG_renderer_print(c, c->manager.rendids.data[r->children.data[i]], depth + 1);
+            ilG_renderer_print(rm, rm->rendids.data[r->children.data[i]], depth + 1);
         }
         tabbed("]");
     } else {
@@ -176,15 +174,14 @@ void ilG_renderer_print(ilG_context *c, ilG_rendid root, unsigned depth)
     }
 }
 
-void ilG_renderman_print(ilG_context *c, ilG_rendid root)
+void ilG_renderman_print(ilG_renderman *rm, ilG_rendid root)
 {
-    ilG_renderman *rm = &c->manager;
     log("Materials:");
     for (unsigned i = 0; i < rm->materials.length; i++) {
         fprintf(stderr, "  %u: ", i);
         ilG_material_print(&rm->materials.data[i]);
     }
-    ilG_renderer_print(c, root, 0);
+    ilG_renderer_print(rm, root, 0);
 }
 
 /////////////////////////////////////////////////////////////////////////////
