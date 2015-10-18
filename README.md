@@ -1,29 +1,17 @@
 # IntenseLogic
-IntenseLogic is a library for developing a game engine written in C99, which runs on Linux, Windows, and OS X.
+IntenseLogic is a library for developing a game engine written in C99,
+which runs on Linux, Windows, and OS X.
 
-## Components
+## Features
 
-### Graphics
-A 3D graphics library for rendering scenes using OpenGL, which can run in its own thread.
-
-Supports deferred shading, HDR, MSAA.
-Can be extended with custom renderer types and custom coordinate systems
-(Only single precision floating point is provided but it is not hard to implement double precision or fixed point.)
-
-### Asset
-A VFS layer with importers for PNG and OBJ formats.
-Uses mmap or MapViewOfFile to map files into memory.
-
-### Util
-- Data structures: vectors, linked lists, hash tables from uthash
-- Third party code: uthash
-- Plugin loader
-- Event hook system
-- Command line option parsing
+- 3D graphics primitives for rendering scenes with OpenGL 3.2
+- Thread safe
+- Deferred shading, HDR, MSAA, bloom
+- Builtin primitives: heightmaps, wireframes, skyboxes, boxes,
+  icosahedrons
+- Never steals control flow
+- PNG and OBJ importers
 - Logging system with multiple sinks
-
-### Math
-Contains useful 3D graphics math: 3d/4d vectors, matrices, and quaternions.
 
 ## Demos
 
@@ -35,10 +23,8 @@ Demos can be found at https://github.com/TheCodeLab/IntenseLogicDemos
 
 - OpenGL 3.2
 - [tiffgl](https://github.com/tiffany352/tiffgl)
-- [SDL 2.0](http://libsdl.org/)
 - [libepoxy](https://github.com/anholt/libepoxy) (default) or [GLEW](http://glew.sourceforge.net/) (requires a special flag)
 - [libpng](http://libpng.org/)
-- pthread
 
 ### Building
 
@@ -48,7 +34,7 @@ Manual builds must satisfy the following:
 
 - The 'src' directory must be on the include path
 - Each dependency must be on the include path
-- Tiffgl requires you to decide whether you are using libepoxy or
+- TiffGL requires you to decide whether you are using libepoxy or
   GLFW through a compiler define
 - It is preferred to create statically linked libraries for IL, as it
   is not ABI or API compatible between versions. You should vendor
