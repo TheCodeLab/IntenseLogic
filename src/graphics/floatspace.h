@@ -1,8 +1,6 @@
 #ifndef ILG_FLOATSPACE_H
 #define ILG_FLOATSPACE_H
 
-#include <pthread.h>
-
 #include "graphics/renderer.h"
 #include "math/matrix.h"
 #include "math/vector.h"
@@ -23,7 +21,6 @@ struct ilG_floatspace {
     il_pos camera;
     il_mat projection;
     unsigned id;
-    pthread_mutex_t mtx;
     ilG_renderman *rm;
 };
 

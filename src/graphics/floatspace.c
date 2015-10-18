@@ -93,7 +93,6 @@ void ilG_floatspace_init(ilG_floatspace *self, size_t prealloc)
     IL_RESIZE(self->velocities, prealloc);
     self->camera = il_pos_new(self);
     self->projection = il_mat_identity();
-    pthread_mutex_init(&self->mtx, NULL);
 }
 
 void ilG_floatspace_free(ilG_floatspace *self)
