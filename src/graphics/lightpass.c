@@ -2,7 +2,6 @@
 
 #include <assert.h>
 
-#include "graphics/arrayattrib.h"
 #include "graphics/material.h"
 #include "graphics/transform.h"
 #include "math/matrix.h"
@@ -91,7 +90,7 @@ bool ilG_lighting_build(ilG_lighting *lighting, ilG_renderman *rm, ilG_shape *ic
     ilG_material m;
     ilG_material_init(&m);
     ilG_material_name(&m, "Deferred Lighting Shader");
-    ilG_material_arrayAttrib(&m, ILG_ARRATTR_POSITION, "in_Position");
+    ilG_material_arrayAttrib(&m, 0, "in_Position");
     ilG_material_textureUnit(&m, TEX_DEPTH, "depth");
     ilG_material_textureUnit(&m, TEX_NORMAL, "normal");
     ilG_material_textureUnit(&m, TEX_ALBEDO, "albedo");
@@ -114,7 +113,7 @@ bool ilG_lighting_build(ilG_lighting *lighting, ilG_renderman *rm, ilG_shape *ic
 
     tgl_vao_init(&lighting->vao);
     tgl_vao_bind(&lighting->vao);
-    tgl_quad_init(&lighting->quad, ILG_ARRATTR_POSITION);
+    tgl_quad_init(&lighting->quad, 0);
 
     return true;
 }

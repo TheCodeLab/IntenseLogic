@@ -6,7 +6,6 @@
 #include "tgl/tgl.h"
 #include "util/ilstring.h"
 #include "math/matrix.h"
-#include "graphics/arrayattrib.h"
 #include "asset/node.h"
 
 typedef struct ilG_material_texunit {
@@ -24,8 +23,7 @@ typedef struct ilG_shader {
 typedef struct ilG_material {
     GLuint program;
     unsigned vert, frag;
-    char *attriblocs[ILG_ARRATTR_NUMATTRS];
-    char *fraglocs[ILG_ARRATTR_NUMATTRS];
+    IL_ARRAY(char*,) attriblocs, fraglocs;
     IL_ARRAY(ilG_material_texunit,) texunits;
     char name[64];
 } ilG_material;

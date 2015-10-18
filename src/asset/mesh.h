@@ -44,7 +44,7 @@ typedef struct ilA_mesh {
     unsigned char (*specular)[4];
 } ilA_mesh;
 
-/** Create a new mesh using a bitvector of array attributes (see graphics/arrayattrib.h) to allocate and a number of vertices */
+/** Create a new mesh using a bitvector of array attributes to allocate and a number of vertices */
 ilA_mesh *ilA_mesh_new(enum ilA_mesh_attrib attribs, size_t vertices);
 /** Copies a mesh */
 ilA_mesh *ilA_mesh_copy(const ilA_mesh *mesh);

@@ -5,7 +5,6 @@
 
 #include "tgl/tgl.h"
 #include "asset/node.h"
-#include "graphics/arrayattrib.h"
 #include "graphics/graphics.h"
 #include "graphics/transform.h"
 #include "graphics/renderer.h"
@@ -71,9 +70,11 @@ void ilG_material_free(ilG_material *self)
         free(self->texunits.data[i].location);
     }
     IL_FREE(self->texunits);
-    for (unsigned i = 0; i < ILG_GBUFFER_NUMATTACHMENTS; i++) {
-        free(self->attriblocs[i]);
-        free(self->fraglocs[i]);
+    for (unsigned i = 0; i < self->attriblocs.length; i++) {
+        free(self->attriblocs.data[i]);
+    }
+    for (unsigned i = 0; i < self->fraglocs.length; i++) {
+        free(self->fraglocs.data[i]);
     }
     glDeleteProgram(self->program);
 }
@@ -85,12 +86,24 @@ void ilG_material_name(ilG_material *self, const char *name)
 
 void ilG_material_arrayAttrib(ilG_material* self, unsigned long attrib, const char *location)
 {
-    self->attriblocs[attrib] = strdup(location);
+    if (attrib >= self->attriblocs.length) {
+        IL_RESIZE(self->attriblocs, attrib + 1);
+    }
+    if (self->attriblocs.data[attrib]) {
+        free(self->attriblocs.data[attrib]);
+    }
+    self->attriblocs.data[attrib] = strdup(location);
 }
 
 void ilG_material_fragData(ilG_material* self, unsigned long attrib, const char *location)
 {
-    self->fraglocs[attrib] = strdup(location);
+    if (attrib >= self->fraglocs.length) {
+        IL_RESIZE(self->fraglocs, attrib + 1);
+    }
+    if (self->fraglocs.data[attrib]) {
+        free(self->fraglocs.data[attrib]);
+    }
+    self->fraglocs.data[attrib] = strdup(location);
 }
 
 void ilG_material_textureUnit(ilG_material* self, unsigned long unittype, const char *location)
@@ -138,15 +151,15 @@ bool ilG_material_link(ilG_material *self, ilG_shader *vert, ilG_shader *frag, c
     glAttachShader(po, frag->object);
     tgl_check("glAttachShader");
     unsigned int i;
-    for (i = 0; i < ILG_ARRATTR_NUMATTRS; i++) {
-        if (self->attriblocs[i]) {
-            glBindAttribLocation(po, i, self->attriblocs[i]);
+    for (i = 0; i < self->attriblocs.length; i++) {
+        if (self->attriblocs.data[i]) {
+            glBindAttribLocation(po, i, self->attriblocs.data[i]);
         }
     }
     tgl_check("Error binding array attributes");
-    for (i = 0; i < ILG_GBUFFER_NUMATTACHMENTS; i++) {
-        if (self->fraglocs[i]) {
-            glBindFragDataLocation(po, i, self->fraglocs[i]);
+    for (i = 0; i < self->fraglocs.length; i++) {
+        if (self->fraglocs.data[i]) {
+            glBindFragDataLocation(po, i, self->fraglocs.data[i]);
         }
     }
     tgl_check("Error binding fragment outputs");

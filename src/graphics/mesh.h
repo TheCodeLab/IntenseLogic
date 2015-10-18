@@ -16,13 +16,13 @@ typedef struct ilG_mesh {
 } ilG_mesh;
 
 enum ilG_mesh_attribs {
-    ILG_MESH_ERROR,
     ILG_MESH_POS,
     ILG_MESH_TEX,
     ILG_MESH_NORM,
     ILG_MESH_AMBIENT,
     ILG_MESH_DIFFUSE,
-    ILG_MESH_SPECULAR
+    ILG_MESH_SPECULAR,
+    ILG_MESH_ERROR
 };
 
 bool __attribute__((warn_unused_result)) ilG_mesh_init(ilG_mesh *mesh, const struct ilA_mesh *source);

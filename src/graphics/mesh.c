@@ -5,7 +5,6 @@
 #include "tgl/tgl.h"
 #include "asset/mesh.h"
 #include "asset/node.h"
-#include "graphics/arrayattrib.h"
 #include "graphics/renderer.h"
 
 bool ilG_mesh_init(ilG_mesh *mesh, const ilA_mesh* self)

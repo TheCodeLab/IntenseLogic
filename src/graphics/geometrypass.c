@@ -3,7 +3,6 @@
 #include <sys/time.h>
 
 #include "graphics/transform.h"
-#include "graphics/arrayattrib.h"
 #include "tgl/tgl.h"
 
 void ilG_geometry_bind(tgl_fbo *gbuffer)

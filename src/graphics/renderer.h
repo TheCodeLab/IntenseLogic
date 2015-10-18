@@ -68,6 +68,11 @@ void ilG_renderman_print(ilG_renderman *rm);
 struct ilA_img;
 struct ilA_mesh;
 
+enum ilG_shape_attrib {
+    ILG_SHAPE_POS,
+    ILG_SHAPE_TEX
+};
+
 typedef struct ilG_shape {
     GLuint vbo;
     GLuint ibo;

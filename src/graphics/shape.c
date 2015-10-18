@@ -3,7 +3,6 @@
 #include <stdlib.h>
 
 #include "tgl/tgl.h"
-#include "graphics/arrayattrib.h"
 
 static const float cube[] = {
     // front
@@ -155,10 +154,10 @@ void ilG_box(ilG_shape *self)
     glBufferSubData(GL_ARRAY_BUFFER, 0,             sizeof(cube), cube);
     glBufferSubData(GL_ARRAY_BUFFER, sizeof(cube),  sizeof(cube_texcoord), cube_texcoord);
     tgl_check("Unable to upload cube data");
-    glVertexAttribPointer(ILG_ARRATTR_POSITION, 3, GL_FLOAT, GL_FALSE, 0, NULL);
-    glVertexAttribPointer(ILG_ARRATTR_TEXCOORD, 3, GL_FLOAT, GL_FALSE, 0, (GLvoid*)sizeof(cube));
-    glEnableVertexAttribArray(ILG_ARRATTR_POSITION);
-    glEnableVertexAttribArray(ILG_ARRATTR_TEXCOORD);
+    glVertexAttribPointer(ILG_SHAPE_POS, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+    glVertexAttribPointer(ILG_SHAPE_TEX, 3, GL_FLOAT, GL_FALSE, 0, (GLvoid*)sizeof(cube));
+    glEnableVertexAttribArray(ILG_SHAPE_POS);
+    glEnableVertexAttribArray(ILG_SHAPE_TEX);
     tgl_check("Unable to set vertex attrib pointer");
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(cube_index), cube_index, GL_STATIC_DRAW);
     tgl_check("Unable to upload index buffer data");
@@ -180,9 +179,9 @@ void ilG_icosahedron(ilG_shape *self)
     glBufferSubData(GL_ARRAY_BUFFER, 0,             sizeof(ico), ico);
     //glBufferSubData(GL_ARRAY_BUFFER, sizeof(ico),   sizeof(cube_texcoord), cube_texcoord);
     tgl_check("Unable to upload icosahedron data");
-    glVertexAttribPointer(ILG_ARRATTR_POSITION, 3, GL_FLOAT, GL_FALSE, 0, NULL);
-    glEnableVertexAttribArray(ILG_ARRATTR_POSITION);
-    //glVertexAttribPointer(ILG_ARRATTR_TEXCOORD, 2, GL_FLOAT, GL_FALSE, 0, (GLvoid*)sizeof(cube));
+    glVertexAttribPointer(ILG_SHAPE_POS, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+    glEnableVertexAttribArray(ILG_SHAPE_POS);
+    //glVertexAttribPointer(ILG_SHAPE_TEX, 2, GL_FLOAT, GL_FALSE, 0, (GLvoid*)sizeof(cube));
     tgl_check("Unable to set vertex attrib pointer");
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(ico_index), ico_index, GL_STATIC_DRAW);
     tgl_check("Unable to upload index buffer data");
