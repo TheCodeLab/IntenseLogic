@@ -26,7 +26,62 @@ bool ilG_mesh_init(ilG_mesh *mesh, const ilA_mesh* self)
     };
     mesh->type = mapping[self->mode];
     mesh->count = self->num_vertices;
-    mesh->mesh = ilA_mesh_copy(self);
+
+    glGenVertexArrays(1, &mesh->vao);
+    glBindVertexArray(mesh->vao);
+    glGenBuffers(1, &mesh->vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo);
+    size_t per_vertex =
+        (sizeof(float) * 4 * !!self->position) +
+        (sizeof(float) * 4 * !!self->texcoord) +
+        (sizeof(float) * 4 * !!self->normal) +
+        (sizeof(unsigned char) * 4 * !!self->ambient) +
+        (sizeof(unsigned char) * 4 * !!self->diffuse) +
+        (sizeof(unsigned char) * 4 * !!self->specular);
+    glBufferData(GL_ARRAY_BUFFER, per_vertex * self->num_vertices, NULL, GL_STATIC_DRAW);
+    size_t offset = 0, size;
+    if (self->position) {
+        size = self->num_vertices * sizeof(float) * 4;
+        glBufferSubData(GL_ARRAY_BUFFER, offset, size, self->position);
+        glVertexAttribPointer(ILG_MESH_POS, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 4, (GLvoid*)offset);
+        glEnableVertexAttribArray(ILG_MESH_POS);
+        offset += size;
+    }
+    if (self->texcoord) {
+        size = self->num_vertices * sizeof(float) * 4;
+        glBufferSubData(GL_ARRAY_BUFFER, offset, size, self->texcoord);
+        glVertexAttribPointer(ILG_MESH_TEX, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 4, (GLvoid*)offset);
+        glEnableVertexAttribArray(ILG_MESH_TEX);
+        offset += size;
+    }
+    if (self->normal) {
+        size = self->num_vertices * sizeof(float) * 4;
+        glBufferSubData(GL_ARRAY_BUFFER, offset, size, self->normal);
+        glVertexAttribPointer(ILG_MESH_NORM, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 4, (GLvoid*)offset);
+        glEnableVertexAttribArray(ILG_MESH_NORM);
+        offset += size;
+    }
+    if (self->ambient) {
+        size = self->num_vertices * sizeof(unsigned char) * 4;
+        glBufferSubData(GL_ARRAY_BUFFER, offset, size, self->ambient);
+        glVertexAttribPointer(ILG_MESH_AMBIENT, 4, GL_UNSIGNED_BYTE, GL_TRUE, 0, (GLvoid*)offset);
+        glEnableVertexAttribArray(ILG_MESH_AMBIENT);
+        offset += size;
+    }
+    if (self->diffuse) {
+        size = self->num_vertices * sizeof(unsigned char) * 4;
+        glBufferSubData(GL_ARRAY_BUFFER, offset, size, self->diffuse);
+        glVertexAttribPointer(ILG_MESH_DIFFUSE, 4, GL_UNSIGNED_BYTE, GL_TRUE, 0, (GLvoid*)offset);
+        glEnableVertexAttribArray(ILG_MESH_DIFFUSE);
+        offset += size;
+    }
+    if (self->specular) {
+        size = self->num_vertices * sizeof(unsigned char) * 4;
+        glBufferSubData(GL_ARRAY_BUFFER, offset, size, self->specular);
+        glVertexAttribPointer(ILG_MESH_SPECULAR, 4, GL_UNSIGNED_BYTE, GL_TRUE, 0, (GLvoid*)offset);
+        glEnableVertexAttribArray(ILG_MESH_SPECULAR);
+        offset += size;
+    }
     return true;
 }
 
@@ -46,81 +101,6 @@ void ilG_mesh_free(ilG_mesh *mesh)
 {
     glDeleteBuffers(1, &mesh->vbo);
     glDeleteVertexArrays(1, &mesh->vao);
-    if (mesh->mesh) {
-        ilA_mesh_free(mesh->mesh);
-    }
-}
-
-enum ilG_mesh_attribs ilG_mesh_build(ilG_mesh *m)
-{
-    ilA_mesh *self = m->mesh;
-    tgl_check("Unknown");
-    glGenVertexArrays(1, &m->vao);
-    glBindVertexArray(m->vao);
-    glGenBuffers(1, &m->vbo);
-    glBindBuffer(GL_ARRAY_BUFFER, m->vbo);
-    size_t per_vertex =
-        (sizeof(float) * 4 * !!self->position) +
-        (sizeof(float) * 4 * !!self->texcoord) +
-        (sizeof(float) * 4 * !!self->normal) +
-        (sizeof(unsigned char) * 4 * !!self->ambient) +
-        (sizeof(unsigned char) * 4 * !!self->diffuse) +
-        (sizeof(unsigned char) * 4 * !!self->specular);
-    glBufferData(GL_ARRAY_BUFFER, per_vertex * self->num_vertices, NULL, GL_STATIC_DRAW);
-    size_t offset = 0, size;
-    unsigned attribs = 0;
-    if (self->position) {
-        attribs |= ILG_MESH_POS;
-        size = self->num_vertices * sizeof(float) * 4;
-        glBufferSubData(GL_ARRAY_BUFFER, offset, size, self->position);
-        glVertexAttribPointer(ILG_MESH_POS, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 4, (GLvoid*)offset);
-        glEnableVertexAttribArray(ILG_MESH_POS);
-        offset += size;
-    }
-    if (self->texcoord) {
-        attribs |= ILG_MESH_TEX;
-        size = self->num_vertices * sizeof(float) * 4;
-        glBufferSubData(GL_ARRAY_BUFFER, offset, size, self->texcoord);
-        glVertexAttribPointer(ILG_MESH_TEX, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 4, (GLvoid*)offset);
-        glEnableVertexAttribArray(ILG_MESH_TEX);
-        offset += size;
-    }
-    if (self->normal) {
-        attribs |= ILG_MESH_NORM;
-        size = self->num_vertices * sizeof(float) * 4;
-        glBufferSubData(GL_ARRAY_BUFFER, offset, size, self->normal);
-        glVertexAttribPointer(ILG_MESH_NORM, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 4, (GLvoid*)offset);
-        glEnableVertexAttribArray(ILG_MESH_NORM);
-        offset += size;
-    }
-    if (self->ambient) {
-        attribs |= ILG_MESH_AMBIENT;
-        size = self->num_vertices * sizeof(unsigned char) * 4;
-        glBufferSubData(GL_ARRAY_BUFFER, offset, size, self->ambient);
-        glVertexAttribPointer(ILG_MESH_AMBIENT, 4, GL_UNSIGNED_BYTE, GL_TRUE, 0, (GLvoid*)offset);
-        glEnableVertexAttribArray(ILG_MESH_AMBIENT);
-        offset += size;
-    }
-    if (self->diffuse) {
-        attribs |= ILG_MESH_DIFFUSE;
-        size = self->num_vertices * sizeof(unsigned char) * 4;
-        glBufferSubData(GL_ARRAY_BUFFER, offset, size, self->diffuse);
-        glVertexAttribPointer(ILG_MESH_DIFFUSE, 4, GL_UNSIGNED_BYTE, GL_TRUE, 0, (GLvoid*)offset);
-        glEnableVertexAttribArray(ILG_MESH_DIFFUSE);
-        offset += size;
-    }
-    if (self->specular) {
-        attribs |= ILG_MESH_SPECULAR;
-        size = self->num_vertices * sizeof(unsigned char) * 4;
-        glBufferSubData(GL_ARRAY_BUFFER, offset, size, self->specular);
-        glVertexAttribPointer(ILG_MESH_SPECULAR, 4, GL_UNSIGNED_BYTE, GL_TRUE, 0, (GLvoid*)offset);
-        glEnableVertexAttribArray(ILG_MESH_SPECULAR);
-        offset += size;
-    }
-    ilA_mesh_free(self);
-    m->mesh = NULL;
-    tgl_check("Error uploading mesh");
-    return attribs;
 }
 
 void ilG_mesh_bind(ilG_mesh *mesh)

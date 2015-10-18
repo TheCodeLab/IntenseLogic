@@ -107,9 +107,6 @@ bool ilG_heightmap_build(ilG_heightmap *hm, ilG_renderman *rm, unsigned w, unsig
         return false;
     }
     ilA_mesh_free(mesh);
-    if (ILG_MESH_ERROR & ilG_mesh_build(&hm->mesh)) {
-        return false;
-    }
 
     return true;
 }
