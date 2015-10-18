@@ -9,16 +9,25 @@
 #include "graphics/transform.h"
 #include "util/log.h"
 
+enum {
+    TEX_HEIGHT,
+    TEX_NORMAL,
+    TEX_COLOR
+};
+
 void ilG_heightmap_free(ilG_heightmap *hm)
 {
     ilG_renderman_delMaterial(hm->rm, hm->mat);
+    ilG_tex_free(&hm->height);
+    ilG_tex_free(&hm->normal);
+    ilG_tex_free(&hm->color);
 }
 
 void ilG_heightmap_draw(ilG_heightmap *hm, il_mat mvp, il_mat imt)
 {
-    ilG_tex_bind(&hm->height);
-    ilG_tex_bind(&hm->normal);
-    ilG_tex_bind(&hm->color);
+    ilG_tex_bind(&hm->height, TEX_HEIGHT);
+    ilG_tex_bind(&hm->normal, TEX_NORMAL);
+    ilG_tex_bind(&hm->color, TEX_COLOR);
     ilG_mesh_bind(&hm->mesh);
     ilG_material *shader = ilG_renderman_findMaterial(hm->rm, hm->mat);
     ilG_material_bind(shader);
@@ -71,25 +80,18 @@ bool ilG_heightmap_build(ilG_heightmap *hm, ilG_renderman *rm, unsigned w, unsig
 
     hm->w = w;
     hm->h = h;
-    height.unit = 0;
-    normal.unit = 1;
-    color.unit = 2;
     hm->height = height;
     hm->normal = normal;
     hm->color = color;
-
-    ilG_tex_build(&hm->height);
-    ilG_tex_build(&hm->normal);
-    ilG_tex_build(&hm->color);
 
     ilG_material mat;
     ilG_material_init(&mat);
     ilG_material_name(&mat, "Heightmap Shader");
     ilG_material_arrayAttrib(&mat, ILG_MESH_POS, "in_Position");
     ilG_material_arrayAttrib(&mat, ILG_MESH_TEX, "in_Texcoord");
-    ilG_material_textureUnit(&mat, 0, "height_tex");
-    ilG_material_textureUnit(&mat, 1, "normal_tex");
-    ilG_material_textureUnit(&mat, 2, "ambient_tex");
+    ilG_material_textureUnit(&mat, TEX_HEIGHT, "height_tex");
+    ilG_material_textureUnit(&mat, TEX_NORMAL, "normal_tex");
+    ilG_material_textureUnit(&mat, TEX_COLOR, "ambient_tex");
     ilG_material_fragData(&mat, ILG_GBUFFER_NORMAL, "out_Normal");
     ilG_material_fragData(&mat, ILG_GBUFFER_ALBEDO, "out_Albedo");
     if (!ilG_renderman_addMaterialFromFile(hm->rm, mat, "heightmap.vert", "heightmap.frag", &hm->mat, error)) {

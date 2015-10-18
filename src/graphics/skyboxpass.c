@@ -9,6 +9,7 @@
 void ilG_skybox_free(ilG_skybox *skybox)
 {
     ilG_renderman_delMaterial(skybox->rm, skybox->mat);
+    ilG_tex_free(&skybox->texture);
 }
 
 void ilG_skybox_draw(ilG_skybox *skybox, il_mat vp)
@@ -20,7 +21,7 @@ void ilG_skybox_draw(ilG_skybox *skybox, il_mat vp)
     ilG_material_bind(mat);
     ilG_material_bindMatrix(mat, ilG_material_getLoc(mat, "mat"), vp);
 
-    ilG_tex_bind(&skybox->texture);
+    ilG_tex_bind(&skybox->texture, 0);
     ilG_shape_draw(skybox->box);
     glEnable(GL_CULL_FACE);
     glDepthMask(GL_TRUE);
@@ -31,9 +32,7 @@ bool ilG_skybox_build(ilG_skybox *skybox, ilG_renderman *rm, ilG_tex skytex, ilG
     memset(skybox, 0, sizeof(*skybox));
     skybox->rm = rm;
     skybox->texture = skytex;
-    skybox->texture.unit = 0;
     skybox->box = box;
-    ilG_tex_build(&skybox->texture);
 
     ilG_material mat[1];
     ilG_material_init(mat);

@@ -91,6 +91,7 @@ typedef struct ilG_skybox {
     ilG_shape *box;
 } ilG_skybox;
 
+// takes ownership of skytex
 bool ilG_skybox_build(ilG_skybox *skybox, ilG_renderman *rm, ilG_tex skytex, ilG_shape *box, char **error);
 void ilG_skybox_draw(ilG_skybox *skybox, il_mat vp);
 void ilG_skybox_free(ilG_skybox *skybox);
@@ -155,6 +156,7 @@ typedef struct ilG_heightmap {
     GLenum mvp, imt, size;
 } ilG_heightmap;
 
+// takes ownership of textures
 bool ilG_heightmap_build(ilG_heightmap *hm, ilG_renderman *rm, unsigned w, unsigned h,
                          ilG_tex height, ilG_tex normal, ilG_tex color, char **error);
 void ilG_heightmap_free(ilG_heightmap *hm);

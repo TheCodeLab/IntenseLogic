@@ -2,14 +2,19 @@
 
 #include "util/log.h"
 
-ilA_imgerr ilG_tex_loadfile(ilG_tex *self, ilA_fs *fs, const char *file)
+void ilG_tex_free(ilG_tex *tex)
+{
+    glDeleteTextures(1, &tex->object);
+}
+
+ilA_imgerr ilG_tex_loadfile(ilG_tex *tex, ilA_fs *fs, const char *file)
 {
     ilA_img img;
     ilA_imgerr res = ilA_img_loadfile(&img, fs, file);
     if (res) {
         return res;
     }
-    ilG_tex_loadimage(self, img);
+    ilG_tex_loadimage(tex, img);
     return ILA_IMG_SUCCESS;
 }
 
@@ -72,9 +77,8 @@ static GLenum getImgIFormat(const ilA_img *img)
     return getImgFormat(img);
 }
 
-static void tex_cube_build(ilG_tex *self)
+void ilG_tex_loadcube(ilG_tex *tex, struct ilA_img faces[6])
 {
-    ilA_img *faces = self->data;
     static const GLenum targets[6] = {
         GL_TEXTURE_CUBE_MAP_POSITIVE_X,
         GL_TEXTURE_CUBE_MAP_NEGATIVE_X,
@@ -84,8 +88,9 @@ static void tex_cube_build(ilG_tex *self)
         GL_TEXTURE_CUBE_MAP_NEGATIVE_Z,
     };
 
-    glGenTextures(1, &self->object);
-    glBindTexture(GL_TEXTURE_CUBE_MAP, self->object);
+    tex->target = GL_TEXTURE_CUBE_MAP;
+    glGenTextures(1, &tex->object);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, tex->object);
     for (unsigned i = 0; i < 6; i++) {
         glTexImage2D(targets[i], 0, getImgIFormat(&faces[i]),
                      faces[i].width, faces[i].height, 0,
@@ -93,46 +98,33 @@ static void tex_cube_build(ilG_tex *self)
                      getImgType(&faces[i]), faces[i].data);
         ilA_img_free(faces[i]);
     }
-    free(faces);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 }
 
-void ilG_tex_loadcube(ilG_tex *self, struct ilA_img faces[6])
-{
-    ilA_img *ctx = calloc(6, sizeof(ilA_img));
-    memcpy(ctx, faces, sizeof(ilA_img) * 6);
-    self->target = GL_TEXTURE_CUBE_MAP;
-    self->data = ctx;
-    self->build = tex_cube_build;
-}
-
-void ilG_tex_loadimage(ilG_tex *self, struct ilA_img img)
+void ilG_tex_loadimage(ilG_tex *tex, struct ilA_img img)
 {
     GLenum format, internalformat, type;
 
     format = getImgFormat(&img);
     type = getImgType(&img);
     internalformat = getImgIFormat(&img);
-    ilG_tex_loaddata(self, GL_TEXTURE_2D, internalformat,
+    ilG_tex_loaddata(tex, GL_TEXTURE_2D, internalformat,
                      img.width, img.height, 1,
                      format, type, img.data);
 }
 
-struct data_ctx {
-    GLenum internal, format, type;
-    unsigned width, height, depth;
-    void *data;
-};
-static void tex_data_build(ilG_tex *self)
+void ilG_tex_loaddata(ilG_tex *tex, GLenum target, GLenum internalformat,
+                      unsigned width, unsigned height, unsigned depth,
+                      GLenum format, GLenum type, void *data)
 {
-    struct data_ctx *ctx = self->data;
-    glGenTextures(1, &self->object);
-    glBindTexture(self->target, self->object);
-    switch (self->target) {
+    tex->target = target;
+    glGenTextures(1, &tex->object);
+    glBindTexture(target, tex->object);
+    switch (target) {
         case GL_TEXTURE_1D:
         case GL_PROXY_TEXTURE_1D:
-        glTexImage1D(self->target, 0, ctx->internal, ctx->width, 0, ctx->format, ctx->type, ctx->data);
+        glTexImage1D(target, 0, internalformat, width, 0, format, type, data);
         break;
         case GL_TEXTURE_2D:
         case GL_PROXY_TEXTURE_2D:
@@ -147,52 +139,25 @@ static void tex_data_build(ilG_tex *self)
         case GL_TEXTURE_CUBE_MAP_POSITIVE_Z:
         case GL_TEXTURE_CUBE_MAP_NEGATIVE_Z:
         case GL_PROXY_TEXTURE_CUBE_MAP:
-        glTexImage2D(self->target, 0, ctx->internal, ctx->width, ctx->height, 0, ctx->format, ctx->type, ctx->data);
+        glTexImage2D(target, 0, internalformat, width, height, 0, format, type, data);
         break;
         case GL_TEXTURE_3D:
         case GL_PROXY_TEXTURE_3D:
         case GL_TEXTURE_2D_ARRAY:
         case GL_PROXY_TEXTURE_2D_ARRAY:
-        glTexImage3D(self->target, 0, ctx->internal, ctx->width, ctx->height, ctx->depth, 0, ctx->format, ctx->type, ctx->data);
+        glTexImage3D(target, 0, internalformat, width, height, depth, 0, format, type, data);
         break;
         default:
         il_error("Unknown texture format");
         return;
     }
-    free(ctx->data);
-    free(ctx);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 }
 
-void ilG_tex_loaddata(ilG_tex *self, GLenum target, GLenum internalformat, unsigned width, unsigned height, unsigned depth, GLenum format, GLenum type, void *data)
+void ilG_tex_bind(ilG_tex *tex, unsigned unit)
 {
-    self->target = target;
-    struct data_ctx *ctx = calloc(1, sizeof(struct data_ctx));
-    ctx->internal = internalformat;
-    ctx->width = width;
-    ctx->height = height;
-    ctx->depth = depth;
-    ctx->format = format;
-    ctx->type = type;
-    ctx->data = data;
-    self->build = tex_data_build;
-    self->data = ctx;
-}
-
-void ilG_tex_bind(ilG_tex *self)
-{
-    if (!self->complete) {
-        il_error("Incomplete texture");
-        return;
-    }
-    glActiveTexture(GL_TEXTURE0 + self->unit);
-    glBindTexture(self->target, self->object);
-}
-
-void ilG_tex_build(ilG_tex *self)
-{
-    self->build(self);
-    self->complete = 1;
+    glActiveTexture(GL_TEXTURE0 + unit);
+    glBindTexture(tex->target, tex->object);
 }
