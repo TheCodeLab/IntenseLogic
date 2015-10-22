@@ -2,7 +2,7 @@
 
 #include <assert.h>
 
-#ifdef WIN32
+#ifdef _WIN32
 #include <windows.h>
 #else
 #include <errno.h>
@@ -13,7 +13,7 @@
 
 #include "util/log.h"
 
-#ifdef WIN32
+#ifdef _WIN32
 char *strndup(const char*, size_t);
 #define last_error GetLastError()
 #else
@@ -65,7 +65,7 @@ static bool node_test(ilA_error *err,
                       const char *name, size_t namelen)
 {
     (void)namelen;
-#if defined(WIN32)
+#if defined(_WIN32)
 #elif defined(__APPLE__)
     char *fullpath = malloc(strlen(dir) + 1 + namelen + 1);
     snprintf(fullpath, sizeof(fullpath), "%s/%s", dir, name);
@@ -77,7 +77,7 @@ static bool node_test(ilA_error *err,
     return true;
 }
 
-#ifdef WIN32
+#ifdef _WIN32
 static char *windows_strerror()
 {
     char* pBuffer = NULL;
@@ -105,7 +105,7 @@ static bool node_open(ilA_filehandle *handle,
                       ilA_file_mode mode)
 {
     (void)namelen;
-#ifdef WIN32
+#ifdef _WIN32
     static const int flag_table[] = {
         -1,
         GENERIC_READ,
@@ -173,7 +173,7 @@ bool ilA_fileopen(ilA_fs *fs, ilA_file *file, const char *name, size_t namelen)
 
 void ilA_fileclose(ilA_file *file)
 {
-#ifdef WIN32
+#ifdef _WIN32
     CloseHandle(file->handle);
 #else
     if (file->err.type == ILA_STRERR) {
@@ -232,7 +232,7 @@ bool ilA_dir_mapfile(ilA_fs *fs, ilA_dirid id, ilA_map *map, ilA_file_mode mode,
     if (!node_open(&fh, &map->err, dir->dir, name, (size_t)namelen, mode)) {
         return false;
     }
-#ifdef WIN32
+#ifdef _WIN32
     static const int prot_table[] = {
         -1,                     // 0b000
         PAGE_READONLY,          // 0b001
@@ -299,7 +299,7 @@ bool ilA_dir_mapfile(ilA_fs *fs, ilA_dirid id, ilA_map *map, ilA_file_mode mode,
 bool ilA_mapopen(ilA_map *map, ilA_file_mode mode, ilA_file file)
 {
     memset(map, 0, sizeof(ilA_map));
-#ifdef WIN32
+#ifdef _WIN32
     static const int prot_table[] = {
         -1,                     // 0b000
         PAGE_READONLY,          // 0b001
@@ -382,7 +382,7 @@ bool ilA_mapopen(ilA_map *map, ilA_file_mode mode, ilA_file file)
 
 void ilA_unmapfile(ilA_map *map)
 {
-#ifdef WIN32
+#ifdef _WIN32
     UnmapViewOfFile(map->data);
     CloseHandle(map->h.mhandle);
     CloseHandle(map->h.fhandle);
@@ -433,7 +433,7 @@ ilA_dirid ilA_adddir(ilA_fs *fs, const char *path, size_t pathlen)
         pathlen = strlen(path);
     }
     d.pathlen = (size_t)pathlen;
-#if defined(WIN32) || defined(__APPLE__)
+#if defined(_WIN32) || defined(__APPLE__)
     d.dir = strdup(path);
 #else
     d.dir = open(path, O_DIRECTORY);
@@ -444,7 +444,7 @@ ilA_dirid ilA_adddir(ilA_fs *fs, const char *path, size_t pathlen)
 
 void ilA_deldir(ilA_fs *fs, ilA_dirid id)
 {
-#if defined(WIN32) || defined(__APPLE__)
+#if defined(_WIN32) || defined(__APPLE__)
     free(fs->dirs.data[id.id].dir);
 #else
     close(fs->dirs.data[id.id].dir);
@@ -484,7 +484,7 @@ int ilA_strerror(ilA_error *err, char *buf, size_t len)
         return snprintf(buf, len, "No error: Something reported an error when there is none");
         break;
     case ILA_ERRNOERR:
-#ifdef WIN32
+#ifdef _WIN32
         return snprintf(buf, len, "[%s:%i] %s: %s", err->file, err->line, err->func, windows_strerror(err->val.err));
 #else
         return snprintf(buf, len, "[%s:%i] %s: %s", err->file, err->line, err->func, strerror(err->val.err));
@@ -521,7 +521,7 @@ void ilA_printerror_real(ilA_error *err, const char *file, int line, const char 
         err("No error: Reported an error when there is none");
         break;
     case ILA_ERRNOERR:
-#ifdef WIN32
+#ifdef _WIN32
         err("From %s:%i (%s): %s", err->file, err->line, err->func, windows_strerror(err->val.err));
 #else
         err("From %s:%i (%s): %s", err->file, err->line, err->func, strerror(err->val.err));
