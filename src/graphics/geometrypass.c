@@ -1,7 +1,5 @@
 #include "graphics/renderer.h"
 
-#include <sys/time.h>
-
 #include "graphics/transform.h"
 #include "tgl/tgl.h"
 

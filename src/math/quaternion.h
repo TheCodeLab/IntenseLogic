@@ -7,7 +7,7 @@
 
 typedef struct il_quat {
   float x, y, z, w;
-}  __attribute__((aligned(16), packed)) il_quat;
+} il_quat;
 
 il_quat il_quat_new(float x, float y, float z, float w);
 il_quat il_quat_mul(il_quat a, il_quat b);
@@ -25,4 +25,3 @@ float il_quat_dot(il_quat a, il_quat b);
 char *il_quat_print(il_quat q, char *buf, unsigned len);
 
 #endif
-

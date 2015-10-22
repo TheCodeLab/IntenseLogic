@@ -65,10 +65,12 @@ static bool node_test(ilA_error *err,
                       const char *name, size_t namelen)
 {
     (void)namelen;
-#if defined(WIN32) || defined(__APPLE__)
-    char fullpath[strlen(dir) + 1 + namelen + 1];
+#if defined(WIN32)
+#elif defined(__APPLE__)
+    char *fullpath = malloc(strlen(dir) + 1 + namelen + 1);
     snprintf(fullpath, sizeof(fullpath), "%s/%s", dir, name);
     errno_check(*err, access(fullpath, F_OK));
+    free(fullpath);
 #else
     errno_check(*err, faccessat(dir, name, F_OK, AT_EACCESS));
 #endif
@@ -118,9 +120,10 @@ static bool node_open(ilA_filehandle *handle,
     const_check(*err, "Invalid mode flag", mode == 0);
     DWORD access = flag_table[mode & ILA_RWE];
     DWORD create = (mode & ILA_CREATE)? CREATE_NEW : OPEN_EXISTING;
-    char fullpath[strlen(dir) + 1 + namelen + 1];
+    char *fullpath = malloc(strlen(dir) + 1 + namelen + 1);
     snprintf(fullpath, sizeof(fullpath), "%s/%s", dir, name);
     *handle = CreateFileA(fullpath, access, 0, NULL, create, FILE_ATTRIBUTE_NORMAL, NULL);
+    free(fullpath);
     errno_check2(*err, "CreateFileA", !*handle);
 #else
     static const int flag_table[] = {  // 0bEWR
@@ -150,10 +153,10 @@ static bool node_open(ilA_filehandle *handle,
     return true;
 }
 
-bool ilA_fileopen(ilA_fs *fs, ilA_file *file, const char *name, ssize_t namelen)
+bool ilA_fileopen(ilA_fs *fs, ilA_file *file, const char *name, size_t namelen)
 {
     memset(file, 0, sizeof(ilA_file));
-    if (namelen < 0) {
+    if (namelen == (size_t)-1) {
         namelen = strlen(name);
     }
     for (unsigned i = 0; i < fs->dirs.length; i++) {
@@ -182,10 +185,10 @@ void ilA_fileclose(ilA_file *file)
 #endif
 }
 
-bool ilA_mapfile(ilA_fs *fs, ilA_map *map, ilA_file_mode mode, const char *name, ssize_t namelen)
+bool ilA_mapfile(ilA_fs *fs, ilA_map *map, ilA_file_mode mode, const char *name, size_t namelen)
 {
      memset(map, 0, sizeof(ilA_map));
-     if (namelen < 0) {
+     if (namelen == (size_t)-1) {
          namelen = strlen(name);
      }
      for (unsigned i = 0; i < fs->dirs.length; i++) {
@@ -200,11 +203,11 @@ bool ilA_mapfile(ilA_fs *fs, ilA_map *map, ilA_file_mode mode, const char *name,
      format_error(map->err, __func__, "No such file \"%s\"", name);
 }
 
-bool ilA_dir_fileopen(ilA_fs *fs, ilA_dirid id, ilA_file *file, const char *name, ssize_t namelen)
+bool ilA_dir_fileopen(ilA_fs *fs, ilA_dirid id, ilA_file *file, const char *name, size_t namelen)
 {
     memset(file, 0, sizeof(ilA_file));
     ilA_dir *dir = &fs->dirs.data[id.id];
-    if (namelen < 0) {
+    if (namelen == (size_t)-1) {
         namelen = strlen(name);
     }
     if (!node_open(&file->handle, &file->err, dir->dir, name, (size_t)namelen, ILA_READ)) {
@@ -218,12 +221,12 @@ bool ilA_dir_fileopen(ilA_fs *fs, ilA_dirid id, ilA_file *file, const char *name
     return true;
 }
 
-bool ilA_dir_mapfile(ilA_fs *fs, ilA_dirid id, ilA_map *map, ilA_file_mode mode, const char *name, ssize_t namelen)
+bool ilA_dir_mapfile(ilA_fs *fs, ilA_dirid id, ilA_map *map, ilA_file_mode mode, const char *name, size_t namelen)
 {
     memset(map, 0, sizeof(ilA_map));
     ilA_dir *dir = &fs->dirs.data[id.id];
     ilA_filehandle fh;
-    if (namelen < 0) {
+    if (namelen == (size_t)-1) {
         namelen = strlen(name);
     }
     if (!node_open(&fh, &map->err, dir->dir, name, (size_t)namelen, mode)) {
@@ -339,7 +342,7 @@ bool ilA_mapopen(ilA_map *map, ilA_file_mode mode, ilA_file file)
          TRUE, // can be inherited
          0); // options
     errno_check2(map->err, "DuplicateHandle", !res);
-LARGE_INTEGER size;
+    LARGE_INTEGER size;
     errno_check(map->err, GetFileSizeEx(map->h.fhandle, &size));
     map->size = (size_t)size.QuadPart;
     map->h.mhandle = CreateFileMapping(map->h.fhandle, NULL, prot, size.u.HighPart, size.u.LowPart, NULL);
@@ -394,9 +397,9 @@ void ilA_unmapfile(ilA_map *map)
 #endif
 }
 
-ilA_filehandle ilA_rawopen(ilA_fs *fs, ilA_error *err, ilA_file_mode mode, const char *name, ssize_t namelen)
+ilA_filehandle ilA_rawopen(ilA_fs *fs, ilA_error *err, ilA_file_mode mode, const char *name, size_t namelen)
 {
-     if (namelen < 0) {
+    if (namelen == (size_t)-1) {
          namelen = strlen(name);
      }
      for (unsigned i = 0; i < fs->dirs.length; i++) {
@@ -413,7 +416,7 @@ ilA_filehandle ilA_rawopen(ilA_fs *fs, ilA_error *err, ilA_file_mode mode, const
      return ilA_invalid_file;
 }
 
-ilA_filehandle ilA_dir_rawopen(ilA_fs *fs, ilA_dirid id, ilA_error *err, ilA_file_mode mode, const char *name, ssize_t namelen)
+ilA_filehandle ilA_dir_rawopen(ilA_fs *fs, ilA_dirid id, ilA_error *err, ilA_file_mode mode, const char *name, size_t namelen)
 {
     ilA_filehandle h;
     if (!node_open(&h, err, fs->dirs.data[id.id].dir, name, (size_t) namelen, mode)) {
@@ -422,11 +425,11 @@ ilA_filehandle ilA_dir_rawopen(ilA_fs *fs, ilA_dirid id, ilA_error *err, ilA_fil
     return h;
 }
 
-ilA_dirid ilA_adddir(ilA_fs *fs, const char *path, ssize_t pathlen)
+ilA_dirid ilA_adddir(ilA_fs *fs, const char *path, size_t pathlen)
 {
     ilA_dir d;
     d.path = strdup(path);
-    if (pathlen < 0) {
+    if (pathlen == (size_t)-1) {
         pathlen = strlen(path);
     }
     d.pathlen = (size_t)pathlen;
@@ -449,7 +452,7 @@ void ilA_deldir(ilA_fs *fs, ilA_dirid id)
     IL_REMOVE(fs->dirs, id.id);
 }
 
-ilA_dirid ilA_mkdir(ilA_fs *fs, const char *path, ssize_t pathlen)
+ilA_dirid ilA_mkdir(ilA_fs *fs, const char *path, size_t pathlen)
 {
     (void)fs, (void)path, (void)pathlen;
     assert(!"ilA_mkdir unimplemented");
@@ -462,13 +465,13 @@ void ilA_rmdir(ilA_fs *fs, ilA_dirid id)
     assert(!"ilA_rmdir unimplemented");
 }
 
-void ilA_delete(ilA_fs *fs, const char *name, ssize_t namelen)
+void ilA_delete(ilA_fs *fs, const char *name, size_t namelen)
 {
     (void)fs, (void)name, (void)namelen;
     assert(!"ilA_delete unimplemented");
 }
 
-void ilA_lookup(ilA_fs *fs, const char *pattern, ssize_t patlen, void (*cb)(void *user, ilA_dirid id, const char *name, size_t namelen), void *user)
+void ilA_lookup(ilA_fs *fs, const char *pattern, size_t patlen, void (*cb)(void *user, ilA_dirid id, const char *name, size_t namelen), void *user)
 {
     (void)fs, (void)pattern, (void)patlen, (void)cb, (void)user;
     assert(!"ilA_lookup unimplemented");

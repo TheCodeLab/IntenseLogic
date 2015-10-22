@@ -1,6 +1,6 @@
 #include <stdio.h>
 
-#include "opt.h"
+#include "util/opt.h"
 
 int main(int argc, char **argv)
 {
@@ -18,4 +18,3 @@ int main(int argc, char **argv)
         }
     }
 }
-

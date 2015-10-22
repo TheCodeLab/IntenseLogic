@@ -4,6 +4,7 @@
 #include <stdbool.h>
 
 #include "tgl/gl.h"
+#include "util/types.h"
 
 struct ilA_mesh;
 struct ilA_fs;
@@ -25,8 +26,8 @@ enum ilG_mesh_attribs {
 };
 
 void ilG_mesh_free(ilG_mesh *mesh);
-bool __attribute__((warn_unused_result)) ilG_mesh_init(ilG_mesh *mesh, const struct ilA_mesh *source);
-bool __attribute__((warn_unused_result)) ilG_mesh_fromfile(ilG_mesh *mesh, struct ilA_fs *fs, const char *name);
+bool IL_WARN_UNUSED ilG_mesh_init(ilG_mesh *mesh, const struct ilA_mesh *source);
+bool IL_WARN_UNUSED ilG_mesh_fromfile(ilG_mesh *mesh, struct ilA_fs *fs, const char *name);
 void ilG_mesh_bind(ilG_mesh *mesh);
 void ilG_mesh_draw(ilG_mesh *mesh);
 

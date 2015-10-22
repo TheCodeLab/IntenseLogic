@@ -4,12 +4,57 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+
+typedef struct logger_node {
+    il_logger *logger;
+    struct logger_node *next;
+} logger_node;
+
+#ifdef _WIN32
+
+#include <windows.h>
+static CRITICAL_SECTION il_logger_mutex;
+static bool il_logger_created = false;
+__declspec(thread) logger_node *il_logger_head;
+
+static void il_logger_lock()
+{
+    if (!il_logger_created) {
+        il_logger_created = true;
+        InitializeCriticalSection(&il_logger_mutex);
+    }
+    EnterCriticalSection(&il_logger_mutex);
+}
+
+static void il_logger_unlock()
+{
+    LeaveCriticalSection(&il_logger_mutex);
+}
+
+#else
+
 #include <pthread.h>
+static pthread_mutex_t il_logger_mutex;
+static bool il_logger_created = false;
+static __thread logger_node *il_logger_head;
+
+static void il_logger_lock()
+{
+    if (!il_logger_created) {
+        il_logger_created = true;
+        pthread_mutex_init(&il_logger_mutex, NULL);
+    }
+    pthread_mutex_lock(&il_logger_mutex);
+}
+
+static void il_logger_unlock()
+{
+    pthread_mutex_unlock(&il_logger_mutex);
+}
+
+#endif
 
 #include "util/array.h"
-
-pthread_mutex_t il_logger_stderr_mutex;
-bool il_logger_stderr_mutex_created = false;
 
 il_logger *il_logger_new(const char *name)
 {
@@ -63,11 +108,7 @@ bool il_logmsg_isLevel(const il_logmsg *self, enum il_loglevel level)
 
 static void log_stderr(il_logmsg *msg)
 {
-    if (!il_logger_stderr_mutex_created) {
-        il_logger_stderr_mutex_created = true;
-        pthread_mutex_init(&il_logger_stderr_mutex, NULL);
-    }
-    pthread_mutex_lock(&il_logger_stderr_mutex);
+    il_logger_lock();
     fputc('(', stderr);
     if (msg->file.len) {
         fprintf(stderr, "%s:%i", msg->file.str, msg->line);
@@ -92,7 +133,7 @@ static void log_stderr(il_logmsg *msg)
     if (msg->extra.len) {
         fputs(msg->extra.str, stderr);
     }
-    pthread_mutex_unlock(&il_logger_stderr_mutex);
+    il_logger_unlock();
 }
 
 il_logger il_logger_stderr = {
@@ -101,36 +142,28 @@ il_logger il_logger_stderr = {
     .name = "stderr"
 };
 
-typedef struct logger_node {
-    il_logger *logger;
-    struct logger_node *next;
-} logger_node;
-
-// portability: GNU extension right here
-__thread logger_node *head;
-
 il_logger *il_logger_cur()
 {
-    if (!head || !head->logger) {
+    if (!il_logger_head || !il_logger_head->logger) {
         return &il_logger_stderr;
     }
-    return head->logger;
+    return il_logger_head->logger;
 }
 
 void il_logger_push(il_logger *self)
 {
     logger_node *node = calloc(1, sizeof(logger_node));
     node->logger = self;
-    if (head) {
-        node->next = head;
+    if (il_logger_head) {
+        node->next = il_logger_head;
     }
-    head = node;
+    il_logger_head = node;
 }
 
 void il_logger_pop()
 {
-    logger_node *node = head;
-    assert(node && "No loggers left to pop: something has gone horribly wrong");
-    head = head->next;
+    logger_node *node = il_logger_head;
+    assert(node && "No loggers left to pop");
+    il_logger_head = il_logger_head->next;
     free(node);
 }

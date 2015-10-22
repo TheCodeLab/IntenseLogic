@@ -2,8 +2,7 @@ include_rules
 
 CCFLAGS += -I.
 
-: |> ^ Generating version.h^ sh gen_version.sh > %o |> version.c
-: foreach *.c | version.c |> !cc |>
+: foreach *.c |> !cc |>
 ifeq (@(TUP_PLATFORM),win32)
      : foreach win32/*.c |> !cc |>
 endif

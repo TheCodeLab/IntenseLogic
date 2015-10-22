@@ -8,7 +8,7 @@
 void il_log_real(const char *file, int line, const char *func, unsigned level, const char *fmt, ...)
 {
     il_logger *logger = il_logger_cur();
-    if (logger->filter < level) {
+    if ((unsigned)logger->filter < level) {
         return;
     }
     char* pos = strstr(file, "src/");

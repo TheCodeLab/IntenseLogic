@@ -35,9 +35,9 @@ void ilG_tonemapper_draw(ilG_tonemapper *tm)
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     if (tm->debug_render) {
-        glClearColor(0.196, 0.804, 0.196, 1.0); // lime green
+        glClearColor(0.196f, 0.804f, 0.196f, 1.0f); // lime green
     } else {
-        glClearColor(0, 0, 0, 1.0);
+        glClearColor(0.f, 0.f, 0.f, 1.f);
     }
     glClear(GL_COLOR_BUFFER_BIT);
     glDisable(GL_DEPTH_TEST);
@@ -57,7 +57,7 @@ void ilG_tonemapper_draw(ilG_tonemapper *tm)
 
     for (i = 0; i < 4; i++) {
         char buf[64];
-        sprintf(buf, "Iteration %i", i);
+        snprintf(buf, 64, "Iteration %i", i);
         glPushDebugGroup(GL_DEBUG_SOURCE_THIRD_PARTY, 0, -1, buf);
 
         unsigned w = rm->width / (1<<i),

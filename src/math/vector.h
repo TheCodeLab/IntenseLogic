@@ -10,15 +10,15 @@
 /** 16-byte double-precision 2-dimensional vector */
 typedef struct il_vec2 {
     float x, y;
-}  __attribute__((aligned(16), packed)) il_vec2;
+} il_vec2;
 /** 16-byte float-precision 4-dimensional vector */
 typedef struct il_vec4 {
     float x, y, z, w;
-}  __attribute__((aligned(16), packed)) il_vec4;
+} il_vec4;
 
 typedef struct il_vec3 {
     float x, y, z, w;
-} __attribute__((aligned(16), packed)) il_vec3;
+} il_vec3;
 
 /** Sets the components of an il_vec4 */
 il_vec4 il_vec4_new(float x, float y, float z, float w);
@@ -64,4 +64,3 @@ il_vec2 il_vec2_mul(il_vec2 a, il_vec2 b);
 il_vec2 il_vec2_div(il_vec2 a, il_vec2 b);
 
 #endif
-

@@ -29,7 +29,7 @@ il_vec4 il_vec4_fromarr(const float* arr)
     vec.y = arr[1];
     vec.z = arr[2];
     vec.w = arr[3];
-    return vec;    
+    return vec;
 }
 
 char *il_vec4_print(il_vec4 v, char *buf, unsigned length)
@@ -116,7 +116,7 @@ il_vec3 il_vec4_to_vec3(il_vec4 a)
 
 float il_vec4_len(const il_vec4 a)
 {
-    return sqrt(il_vec4_dot(a,a));
+    return sqrtf(il_vec4_dot(a,a));
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -178,14 +178,14 @@ il_vec3 il_vec3_rotate(il_vec3 a, il_quat q)
     /* From glm/gtc/quaternion.inl
                 typename detail::tquat<T>::value_type Two(2);
 
-		detail::tvec3<T> uv, uuv;
-		detail::tvec3<T> QuatVector(q.x, q.y, q.z);
-		uv = glm::cross(QuatVector, v);
-		uuv = glm::cross(QuatVector, uv);
-		uv *= (Two * q.w); 
-		uuv *= Two; 
+       detail::tvec3<T> uv, uuv;
+       detail::tvec3<T> QuatVector(q.x, q.y, q.z);
+       uv = glm::cross(QuatVector, v);
+       uuv = glm::cross(QuatVector, uv);
+       uv *= (Two * q.w);
+       uuv *= Two;
 
-		return v + uv + uuv;
+       return v + uv + uuv;
     */
     il_vec3 uv, uuv, qv, vec;
     qv = il_vec3_new(q.x, q.y, q.z);
@@ -294,5 +294,3 @@ il_vec2 il_vec2_div(il_vec2 a, il_vec2 b)
 #endif
     return vec;
 }
-
-

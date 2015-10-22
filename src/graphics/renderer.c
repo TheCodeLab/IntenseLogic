@@ -7,6 +7,7 @@
 #include "graphics/material.h"
 #include "util/array.h"
 #include "util/log.h"
+#include "util/types.h"
 
 void ilG_renderman_free(ilG_renderman *rm)
 {
@@ -107,7 +108,7 @@ ilG_matid ilG_renderman_addMaterial(ilG_renderman *self, ilG_material mat)
     return matid;
 }
 
-__attribute__((warn_unused_result))
+IL_WARN_UNUSED
 bool ilG_renderman_addMaterialFromShader(ilG_renderman *self, ilG_material mat, ilG_shader vert,
                                          ilG_shader frag, ilG_matid *out, char **error)
 {
@@ -120,7 +121,6 @@ bool ilG_renderman_addMaterialFromShader(ilG_renderman *self, ilG_material mat, 
     return true;
 }
 
-__attribute__((warn_unused_result))
 bool ilG_renderman_addMaterialFromFile(ilG_renderman *self, ilG_material mat, const char *vertpath,
                                        const char *fragpath, ilG_matid *out, char **error)
 {

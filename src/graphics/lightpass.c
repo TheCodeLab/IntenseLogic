@@ -61,7 +61,7 @@ void ilG_lighting_draw(ilG_lighting *lighting, const il_mat *ivp, const il_mat *
         ilG_material_bindMatrix(mat, lighting->ivp_loc, ivp[i]);
         ilG_material_bindMatrix(mat, lighting->mv_loc,  mv[i]);
         ilG_material_bindMatrix(mat, lighting->mvp_loc, vp[i]);
-        glUniform2f(lighting->size_loc, lighting->width, lighting->height);
+        glUniform2f(lighting->size_loc, (GLfloat)lighting->width, (GLfloat)lighting->height);
         const ilG_light *l = &lights[i];
         il_vec3 col = l->color;
         glUniform3f(lighting->color_loc, col.x, col.y, col.z);

@@ -1,6 +1,8 @@
 #ifndef ILG_RENDERER_H
 #define ILG_RENDERER_H
 
+#include "util/types.h"
+#include "tgl/tgl.h"
 #include "math/matrix.h"
 #include "graphics/material.h"
 #include "graphics/tex.h"
@@ -52,10 +54,11 @@ bool ilG_renderman_resize(ilG_renderman *self, int w, int h);
 ilG_material    *ilG_renderman_findMaterial       (ilG_renderman *self, ilG_matid mat);
 ilG_shader      *ilG_renderman_findShader         (ilG_renderman *self, unsigned id);
 ilG_matid ilG_renderman_addMaterial (ilG_renderman *self, ilG_material mat);
-__attribute__((warn_unused_result))
+
+IL_WARN_UNUSED
 bool ilG_renderman_addMaterialFromShader(ilG_renderman *self, ilG_material mat, ilG_shader vert,
                                          ilG_shader frag, ilG_matid *out, char **error);
-__attribute__((warn_unused_result))
+IL_WARN_UNUSED
 bool ilG_renderman_addMaterialFromFile(ilG_renderman *self, ilG_material mat, const char *vert,
                                        const char *frag, ilG_matid *out, char **error);
 unsigned  ilG_renderman_addShader   (ilG_renderman *self, ilG_shader shader);

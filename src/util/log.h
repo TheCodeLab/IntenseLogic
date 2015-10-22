@@ -8,7 +8,9 @@
 #include <string.h>
 #include <stdio.h>
 
-void il_log_real(const char *file, int line, const char *func, unsigned level, const char *fmt, ...) __attribute__((format(printf, 5, 6)));
+#include "util/types.h"
+
+void il_log_real(const char *file, int line, const char *func, unsigned level, const char *fmt, ...) IL_FORMAT_STRING(5,6);
 
 /** For information that would only be useful to someone debugging the module itself */
 #define il_debug(...)      il_log_real(__FILE__, __LINE__, __func__, 3, __VA_ARGS__)

@@ -128,7 +128,7 @@ ilA_imgerr ilA_img_fromdata(ilA_img *img, const void *data, unsigned w, unsigned
     return ILA_IMG_SUCCESS;
 }
 
-ilA_imgerr il_important ilA_img_alloc(ilA_img *self, unsigned w, unsigned h, ilA_imgformat fmt, ilA_imgchannel chans)
+ilA_imgerr IL_WARN_UNUSED ilA_img_alloc(ilA_img *self, unsigned w, unsigned h, ilA_imgformat fmt, ilA_imgchannel chans)
 {
     memset(self, 0, sizeof(ilA_img));
     self->width = w;
@@ -180,10 +180,9 @@ void ilA_img_free(ilA_img self)
     free(self.data);
 }
 
-static inline void __attribute__((always_inline))
-sample_pixel(unsigned char *dst, const unsigned char *src,
-             ilA_imgformat dstfmt, ilA_imgchannel dstchans,
-             ilA_imgformat srcfmt, ilA_imgchannel srcchans)
+static void sample_pixel(unsigned char *dst, const unsigned char *src,
+                         ilA_imgformat dstfmt, ilA_imgchannel dstchans,
+                         ilA_imgformat srcfmt, ilA_imgchannel srcchans)
 {
     assert(dstfmt == srcfmt); // TODO: Format translation
     (void)srcfmt;
@@ -193,22 +192,21 @@ sample_pixel(unsigned char *dst, const unsigned char *src,
     case ILA_IMG_U16: bytes = sizeof(uint16_t); break;
     case ILA_IMG_F32: bytes = sizeof(float);    break;
     }
-    for (unsigned i = 0; i < (dstchans < srcchans? dstchans : srcchans); i++) {
+    for (unsigned i = 0; i < (unsigned)(dstchans < srcchans? dstchans : srcchans); i++) {
         memcpy(dst, src, bytes);
         dst += bytes;
         src += bytes;
     }
-    for (unsigned i = 0; i < srcchans - dstchans; i++) {
+    for (unsigned i = 0; i < (unsigned)(srcchans - dstchans); i++) {
         memset(dst, 0, bytes);
         dst += bytes;
     }
 }
 
-static inline void __attribute__((always_inline))
-nearest_sample(ilA_img *dst, const ilA_img *src, int x, int y)
+static void nearest_sample(ilA_img *dst, const ilA_img *src, int x, int y)
 {
     float xp = (float)x/dst->width, yp = (float)y/dst->height;
-    int xs = xp * src->width, ys = yp * src->height;
+    int xs = (int)(xp * src->width), ys = (int)(yp * src->height);
     unsigned dstpix = y * ilA_img_pitch(dst) + x * ilA_img_stride(dst);
     unsigned srcpix = ys * ilA_img_pitch(src) + xs * ilA_img_stride(src);
     sample_pixel(dst->data + dstpix, src->data + srcpix,
@@ -241,7 +239,7 @@ ilA_imgerr ilA_img_resize(ilA_img *dst, const ilA_img *src, enum ilA_img_interpo
 
 static void decompose_pixel(ilA_imgformat fmt, ilA_imgchannel chans, const uint8_t *data, uint32_t out[4])
 {
-    for (unsigned i = 0; i < chans; i++) {
+    for (unsigned i = 0; i < (unsigned)chans; i++) {
         switch (fmt) {
         case ILA_IMG_U8:
             out[i] = ((const uint8_t*)data)[i];
@@ -258,7 +256,7 @@ static void decompose_pixel(ilA_imgformat fmt, ilA_imgchannel chans, const uint8
 
 static void compose_pixel(ilA_imgformat fmt, ilA_imgchannel chans, const uint32_t col[4], uint8_t *out)
 {
-    for (unsigned i = 0; i < chans; i++) {
+    for (unsigned i = 0; i < (unsigned)chans; i++) {
         switch (fmt) {
         case ILA_IMG_U8:
             ((uint8_t*)out)[i] = col[i];

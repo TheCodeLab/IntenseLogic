@@ -7,11 +7,11 @@
 
 #include <stdlib.h>
 #include <stdbool.h>
-#include <unistd.h>
 
 #include "util/array.h"
+#include "util/types.h"
 
-#ifdef WIN32
+#ifdef _WIN32
 #include <windows.h>
 typedef HANDLE ilA_filehandle;
 typedef struct ilA_maphandle {
@@ -21,12 +21,14 @@ typedef char *ilA_dirhandle;
 typedef DWORD ilA_errno_t;
 #define ilA_invalid_file NULL
 #elif __APPLE__
+#include <unistd.h>
 typedef int ilA_filehandle;
 typedef int ilA_maphandle;
 typedef char *ilA_dirhandle;
 typedef int ilA_errno_t;
 #define ilA_invalid_file -1
 #else
+#include <unistd.h>
 typedef int ilA_filehandle;
 typedef int ilA_maphandle;
 typedef int ilA_dirhandle;
@@ -92,21 +94,26 @@ typedef struct ilA_fs {
     IL_ARRAY(ilA_dir,) dirs;
 } ilA_fs;
 
-bool __attribute__((warn_unused_result)) ilA_fileopen(ilA_fs *fs, ilA_file *file, const char *name, ssize_t namelen);
+IL_WARN_UNUSED
+bool ilA_fileopen(ilA_fs *fs, ilA_file *file, const char *name, size_t namelen);
 void ilA_fileclose(ilA_file *file);
-bool __attribute__((warn_unused_result)) ilA_mapfile(ilA_fs *fs, ilA_map *map, ilA_file_mode mode, const char *name, ssize_t namelen);
-bool __attribute__((warn_unused_result)) ilA_dir_fileopen(ilA_fs *fs, ilA_dirid id, ilA_file *file, const char *name, ssize_t namelen);
-bool __attribute__((warn_unused_result)) ilA_dir_mapfile(ilA_fs *fs, ilA_dirid id, ilA_map *map, ilA_file_mode mode, const char *name, ssize_t namelen);
-bool __attribute__((warn_unused_result)) ilA_mapopen(ilA_map *map, ilA_file_mode mode, ilA_file file);
+IL_WARN_UNUSED
+bool ilA_mapfile(ilA_fs *fs, ilA_map *map, ilA_file_mode mode, const char *name, size_t namelen);
+IL_WARN_UNUSED
+bool ilA_dir_fileopen(ilA_fs *fs, ilA_dirid id, ilA_file *file, const char *name, size_t namelen);
+IL_WARN_UNUSED
+bool ilA_dir_mapfile(ilA_fs *fs, ilA_dirid id, ilA_map *map, ilA_file_mode mode, const char *name, size_t namelen);
+IL_WARN_UNUSED
+bool ilA_mapopen(ilA_map *map, ilA_file_mode mode, ilA_file file);
 void ilA_unmapfile(ilA_map *map);
-ilA_filehandle ilA_rawopen(ilA_fs *fs, ilA_error *err, ilA_file_mode mode, const char *name, ssize_t namelen);
-ilA_filehandle ilA_dir_rawopen(ilA_fs *fs, ilA_dirid id, ilA_error *err, ilA_file_mode mode, const char *name, ssize_t namelen);
-ilA_dirid ilA_adddir(ilA_fs *fs, const char *path, ssize_t pathlen);
+ilA_filehandle ilA_rawopen(ilA_fs *fs, ilA_error *err, ilA_file_mode mode, const char *name, size_t namelen);
+ilA_filehandle ilA_dir_rawopen(ilA_fs *fs, ilA_dirid id, ilA_error *err, ilA_file_mode mode, const char *name, size_t namelen);
+ilA_dirid ilA_adddir(ilA_fs *fs, const char *path, size_t pathlen);
 void ilA_deldir(ilA_fs *fs, ilA_dirid id);
-ilA_dirid ilA_mkdir(ilA_fs *fs, const char *path, ssize_t pathlen);
+ilA_dirid ilA_mkdir(ilA_fs *fs, const char *path, size_t pathlen);
 void ilA_rmdir(ilA_fs *fs, ilA_dirid id);
-void ilA_delete(ilA_fs *fs, const char *name, ssize_t namelen);
-void ilA_lookup(ilA_fs *fs, const char *pattern, ssize_t patlen, void (*cb)(void *user, ilA_dirid id, const char *name, size_t namelen), void *user);
+void ilA_delete(ilA_fs *fs, const char *name, size_t namelen);
+void ilA_lookup(ilA_fs *fs, const char *pattern, size_t patlen, void (*cb)(void *user, ilA_dirid id, const char *name, size_t namelen), void *user);
 int ilA_strerror(ilA_error *err, char *buf, size_t len);
 char *ilA_strerrora(ilA_error *err, size_t *len);
 void ilA_printerror_real(ilA_error *err, const char *file, int line, const char *func);

@@ -2,8 +2,7 @@
 
 #include "math/vector.h"
 
-static inline void __attribute__((always_inline))
-pixel_height_to_normal(ilA_img *restrict dst, const ilA_img *restrict src, unsigned x, unsigned y)
+static void pixel_height_to_normal(ilA_img *dst, const ilA_img *src, unsigned x, unsigned y)
 {
     size_t pitch = ilA_img_pitch(src), stride = ilA_img_stride(src);
     float height[3];
@@ -19,11 +18,11 @@ pixel_height_to_normal(ilA_img *restrict dst, const ilA_img *restrict src, unsig
         switch (src->format) {
         case ILA_IMG_U8:
             hvalu = *((uint8_t*)src->data + ly * pitch + lx * stride);
-            hvalf = hvalu / 255.0;
+            hvalf = hvalu / 255.f;
             break;
         case ILA_IMG_U16:
             hvalu = *((uint16_t*)src->data + ly * pitch + lx * stride);
-            hvalf = hvalu / 65535.0;
+            hvalf = hvalu / 65535.f;
             break;
         case ILA_IMG_F32:
             hvalf = *((float*)src->data + ly * pitch + lx * stride);
@@ -31,7 +30,7 @@ pixel_height_to_normal(ilA_img *restrict dst, const ilA_img *restrict src, unsig
         }
         height[i] = hvalf;
     }
-    float w = -1.0/src->width, h = -1.0/src->height;
+    float w = -1.f/src->width, h = -1.f/src->height;
     il_vec3 vx  = il_vec3_new(w, height[1] - height[0], 0);
     il_vec3 vy  = il_vec3_new(0, height[2] - height[0], h);
     il_vec3 res = il_vec3_cross(vy, vx);
@@ -46,7 +45,7 @@ pixel_height_to_normal(ilA_img *restrict dst, const ilA_img *restrict src, unsig
     }
 }
 
-ilA_imgerr ilA_img_height_to_normal(ilA_img *restrict dst, const ilA_img *restrict src)
+ilA_imgerr ilA_img_height_to_normal(ilA_img *dst, const ilA_img *src)
 {
     if (!src) {
         return ILA_IMG_NULL;

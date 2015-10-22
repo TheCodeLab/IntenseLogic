@@ -33,7 +33,7 @@ void ilG_heightmap_draw(ilG_heightmap *hm, il_mat mvp, il_mat imt)
     ilG_material_bind(shader);
     ilG_material_bindMatrix(shader, hm->mvp, mvp);
     ilG_material_bindMatrix(shader, hm->imt, imt);
-    glUniform2f(hm->size, hm->w, hm->h);
+    glUniform2f(hm->size, (GLfloat)hm->w, (GLfloat)hm->h);
     ilG_mesh_draw(&hm->mesh);
 }
 

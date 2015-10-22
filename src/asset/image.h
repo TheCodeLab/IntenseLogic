@@ -8,6 +8,7 @@
 #include <stdint.h>
 
 #include "asset/node.h"
+#include "util/types.h"
 
 typedef enum ilA_imgchannel {
     ILA_IMG_R = 1,
@@ -44,18 +45,16 @@ typedef struct ilA_img {
     unsigned char *data;
 } ilA_img;
 
-#define il_important __attribute__((warn_unused_result))
-
 /** Loads an image from memory */
-ilA_imgerr il_important ilA_img_load(ilA_img *self, const void *data, size_t size);
+ilA_imgerr IL_WARN_UNUSED ilA_img_load(ilA_img *self, const void *data, size_t size);
 /** Loads an image from a file path */
-ilA_imgerr il_important ilA_img_loadfile(ilA_img *self, ilA_fs *fs, const char *file);
+ilA_imgerr IL_WARN_UNUSED ilA_img_loadfile(ilA_img *self, ilA_fs *fs, const char *file);
 /** Creates a new image from raw data */
-ilA_imgerr il_important ilA_img_fromdata(ilA_img *self, const void *data, unsigned w, unsigned h, ilA_imgformat fmt, ilA_imgchannel chans);
+ilA_imgerr IL_WARN_UNUSED ilA_img_fromdata(ilA_img *self, const void *data, unsigned w, unsigned h, ilA_imgformat fmt, ilA_imgchannel chans);
 /** Allocates raw data for an image */
-ilA_imgerr il_important ilA_img_alloc(ilA_img *self, unsigned w, unsigned h, ilA_imgformat fmt, ilA_imgchannel chans);
+ilA_imgerr IL_WARN_UNUSED ilA_img_alloc(ilA_img *self, unsigned w, unsigned h, ilA_imgformat fmt, ilA_imgchannel chans);
 /** Allocates a copy of an image */
-ilA_imgerr il_important ilA_img_copy(ilA_img *dst, const ilA_img *src);
+ilA_imgerr IL_WARN_UNUSED ilA_img_copy(ilA_img *dst, const ilA_img *src);
 /** Calculates number of bytes used for a single channel of one pixel */
 size_t ilA_img_bytes_per_channel(const ilA_img *self);
 /** Calculates number of bytes used for one pixel */
@@ -67,13 +66,13 @@ size_t ilA_img_size(const ilA_img *self);
 /** Destroys all data associated with an image */
 void ilA_img_free(ilA_img self);
 /** Resizes an image using the specified interpolation methods */
-ilA_imgerr il_important ilA_img_resize(ilA_img *dst, const ilA_img *src, enum ilA_img_interpolation up, enum ilA_img_interpolation down, unsigned w, unsigned h);
+ilA_imgerr IL_WARN_UNUSED ilA_img_resize(ilA_img *dst, const ilA_img *src, enum ilA_img_interpolation up, enum ilA_img_interpolation down, unsigned w, unsigned h);
 /** Swizzles an image */
-ilA_imgerr il_important ilA_img_swizzle(ilA_img *dst, const ilA_img *src, uint16_t mask);
+ilA_imgerr IL_WARN_UNUSED ilA_img_swizzle(ilA_img *dst, const ilA_img *src, uint16_t mask);
 /** Converts from bgra to rgba */
-ilA_imgerr il_important ilA_img_bgra_to_rgba(ilA_img *dst, const ilA_img *src);
+ilA_imgerr IL_WARN_UNUSED ilA_img_bgra_to_rgba(ilA_img *dst, const ilA_img *src);
 /** Computes a normal map from a height map */
-ilA_imgerr il_important ilA_img_height_to_normal(ilA_img *dst, const ilA_img *src);
+ilA_imgerr IL_WARN_UNUSED ilA_img_height_to_normal(ilA_img *dst, const ilA_img *src);
 /** Returns a string for the error code */
 const char *ilA_img_strerror(ilA_imgerr err);
 
