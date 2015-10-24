@@ -78,21 +78,19 @@ static bool node_test(ilA_error *err,
 }
 
 #ifdef _WIN32
-static char *windows_strerror()
+static char *windows_strerror(DWORD error)
 {
-    char* pBuffer = NULL;
+    DWORD size = 1023;
+    char* pBuffer = calloc(1, size + 1);
 
-    DWORD dw = GetLastError();
-
-    FormatMessageA(
-        FORMAT_MESSAGE_ALLOCATE_BUFFER |
-        FORMAT_MESSAGE_FROM_SYSTEM |
-        FORMAT_MESSAGE_IGNORE_INSERTS,
+    size = FormatMessageA(
+        FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
         NULL,
-        dw,
+        error,
         MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-        (LPSTR)&pBuffer,
-        0, NULL );
+        pBuffer,
+        size, NULL );
+    pBuffer[size] = 0;
 
     return pBuffer;
 }
@@ -120,11 +118,12 @@ static bool node_open(ilA_filehandle *handle,
     const_check(*err, "Invalid mode flag", mode == 0);
     DWORD access = flag_table[mode & ILA_RWE];
     DWORD create = (mode & ILA_CREATE)? CREATE_NEW : OPEN_EXISTING;
-    char *fullpath = malloc(strlen(dir) + 1 + namelen + 1);
-    snprintf(fullpath, sizeof(fullpath), "%s/%s", dir, name);
+    size_t size = strlen(dir) + 1 + namelen + 1;
+    char *fullpath = malloc(size);
+    snprintf(fullpath, size, "%s/%s", dir, name);
     *handle = CreateFileA(fullpath, access, 0, NULL, create, FILE_ATTRIBUTE_NORMAL, NULL);
     free(fullpath);
-    errno_check2(*err, "CreateFileA", !*handle);
+    errno_check2(*err, "CreateFileA", INVALID_HANDLE_VALUE == *handle);
 #else
     static const int flag_table[] = {  // 0bEWR
         -1,                 // 0b000 no flags
@@ -300,6 +299,7 @@ bool ilA_mapopen(ilA_map *map, ilA_file_mode mode, ilA_file file)
 {
     memset(map, 0, sizeof(ilA_map));
 #ifdef _WIN32
+    assert(mode < 8);
     static const int prot_table[] = {
         -1,                     // 0b000
         PAGE_READONLY,          // 0b001
@@ -333,22 +333,22 @@ bool ilA_mapopen(ilA_map *map, ilA_file_mode mode, ilA_file file)
     DWORD prot = prot_table[mode & ILA_RWE];
     DWORD oflag = oflag_table[mode & ILA_RWE];
     DWORD access = flag_table[mode & ILA_RWE];
-    bool res = DuplicateHandle
+    BOOL res = DuplicateHandle
         (GetCurrentProcess(),
          file.handle,
          GetCurrentProcess(),
          &map->h.fhandle,
-         access,
-         TRUE, // can be inherited
-         0); // options
-    errno_check2(map->err, "DuplicateHandle", !res);
+         0,
+         FALSE, // can be inherited
+         DUPLICATE_SAME_ACCESS); // options
+    errno_check2(map->err, "DuplicateHandle", 0 == res);
     LARGE_INTEGER size;
-    errno_check(map->err, GetFileSizeEx(map->h.fhandle, &size));
+    errno_check(map->err, 0 == GetFileSizeEx(map->h.fhandle, &size));
     map->size = (size_t)size.QuadPart;
     map->h.mhandle = CreateFileMapping(map->h.fhandle, NULL, prot, size.u.HighPart, size.u.LowPart, NULL);
-    errno_check2(map->err, "CreateFileMapping", !map->h.mhandle);
+    errno_check2(map->err, "CreateFileMapping", NULL == map->h.mhandle);
     map->data = MapViewOfFile(map->h.mhandle, oflag, 0, 0, 0);
-    errno_check2(map->err, "MapViewOfFile", !map->data);
+    errno_check2(map->err, "MapViewOfFile", NULL == map->data);
 #else
     map->h = dup(file.handle);
     errno_check2(map->err, "dup", map->h == -1);
@@ -483,13 +483,17 @@ int ilA_strerror(ilA_error *err, char *buf, size_t len)
     case ILA_NOERR:
         return snprintf(buf, len, "No error: Something reported an error when there is none");
         break;
-    case ILA_ERRNOERR:
+    case ILA_ERRNOERR: {
 #ifdef _WIN32
-        return snprintf(buf, len, "[%s:%i] %s: %s", err->file, err->line, err->func, windows_strerror(err->val.err));
+        char *error = windows_strerror(err->val.err);
+        int res = snprintf(buf, len, "[%s:%i] %s: %s", err->file, err->line, err->func, error);
+        free(error);
+        return res;
 #else
         return snprintf(buf, len, "[%s:%i] %s: %s", err->file, err->line, err->func, strerror(err->val.err));
 #endif
         break;
+    }
     case ILA_STRERR:
     case ILA_CONSTERR:
         return snprintf(buf, len, "[%s:%i] %s: %s", err->file, err->line, err->func, err->val.cstr);
