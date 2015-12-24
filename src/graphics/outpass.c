@@ -58,7 +58,9 @@ void ilG_tonemapper_draw(ilG_tonemapper *tm)
     for (i = 0; i < 4; i++) {
         char buf[64];
         snprintf(buf, 64, "Iteration %i", i);
+        #ifndef __APPLE__
         glPushDebugGroup(GL_DEBUG_SOURCE_THIRD_PARTY, 0, -1, buf);
+        #endif
 
         unsigned w = rm->width / (1<<i),
             h = rm->height / (1<<i);
@@ -102,7 +104,10 @@ void ilG_tonemapper_draw(ilG_tonemapper *tm)
         glUniform2f(tm->v_size_loc, tm->w, tm->h);
         tgl_quad_draw_once(&tm->quad);
         glDisable(GL_BLEND);
+
+        #ifndef __APPLE__
         glPopDebugGroup();
+        #endif
 
         swapped = !swapped;
     }
