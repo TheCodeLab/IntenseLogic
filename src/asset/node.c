@@ -67,8 +67,9 @@ static bool node_test(ilA_error *err,
     (void)namelen;
 #if defined(_WIN32)
 #elif defined(__APPLE__)
-    char *fullpath = malloc(strlen(dir) + 1 + namelen + 1);
-    snprintf(fullpath, sizeof(fullpath), "%s/%s", dir, name);
+    size_t sizeof_fullpath = strlen(dir) + 1 + namelen + 1;
+    char *fullpath = malloc(sizeof_fullpath);
+    snprintf(fullpath, sizeof_fullpath, "%s/%s", dir, name);
     errno_check(*err, access(fullpath, F_OK));
     free(fullpath);
 #else
