@@ -41,19 +41,6 @@ Manual builds must satisfy the following:
   this repository as a submodule.
 - Code should be compiled as C with -std=gnu99.
 
-## Contact
-
-### IRC
-
-[Web Chat](https://webchat.freenode.net/?channels=##codelab)
-
-    Host: irc.freenode.net
-    Channel: ##codelab
-
-### Twitter
-
-[`@tiffany_public`](https://twitter.com/tiffany_public)
-
 ## License
 Copyright (c) 2012 IntenseLogic Development Team
 
